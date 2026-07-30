@@ -27,7 +27,7 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.9.3";
+  const GAME_VERSION = "0.9.4";
   const SAVE_VERSION = 3;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -40,6 +40,11 @@
   const CORE_MULTIPLIER_LATE_POWER = 0.45;
   const TRANSCEND_CORE_SOFT_CAP = 1e9;
   const TRANSCEND_CORE_LATE_POWER = 0.5;
+  const CRESCENT_MISSION_GOALS = Object.freeze({
+    manualClicks: 28,
+    skirmishWins: 1,
+    starportUpgrades: 1,
+  });
   const PRIMARY_PAGES = [
     "command",
     "fleet",
@@ -50,6 +55,15 @@
     "transcend",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.9.4",
+      theme: "超越后的隐藏信号",
+      changes: [
+        "首次完成奇点超越后，星港中可能出现一段未登记的隐藏内容。",
+        "彩蛋包含一项隐藏任务与一封特殊来信；触发方式和完成条件请自行探索。",
+        "隐藏内容会随本地存档保存，已经超越过的旧存档同样可以发现。",
+      ],
+    },
     {
       version: "0.9.3",
       theme: "游戏内版本更新记录",
@@ -1128,6 +1142,17 @@
     collapseGain: $("#collapse-gain"),
     collapseButton: $("#collapse-button"),
     transcendProtocolList: $("#transcend-protocol-list"),
+    crescentSignal: $("#crescent-signal"),
+    crescentMission: $("#crescent-mission"),
+    crescentMissionStatus: $("#crescent-mission-status"),
+    crescentClickProgress: $("#crescent-click-progress"),
+    crescentSkirmishProgress: $("#crescent-skirmish-progress"),
+    crescentStarportProgress: $("#crescent-starport-progress"),
+    crescentLetterButton: $("#crescent-letter-button"),
+    crescentLetterBackdrop: $("#crescent-letter-backdrop"),
+    crescentLetterSalutation: $("#crescent-letter-salutation"),
+    crescentLetterClose: $("#crescent-letter-close"),
+    crescentLetterConfirm: $("#crescent-letter-confirm"),
     starfield: $("#starfield"),
   };
 
@@ -1154,6 +1179,17 @@
       transcensions: 0,
       sectorLevel: 0,
       protocols: freshEndgameProtocolState(),
+    };
+  }
+
+  function freshCrescentSecretState() {
+    return {
+      unlocked: false,
+      completed: false,
+      letterRead: false,
+      manualClicks: 0,
+      skirmishWins: 0,
+      starportUpgrades: 0,
     };
   }
 
@@ -1224,6 +1260,7 @@
       starport: freshStarportState(),
       combat: freshCombatState(),
       endgame: freshEndgameState(),
+      crescentSecret: freshCrescentSecretState(),
       log: [
         {
           text: "拾荒单元 07 已上线。等待首条回收指令。",
@@ -1315,6 +1352,10 @@
       (targetState.endgame?.totalShards || 0) > 0 ||
       (targetState.endgame?.transcensions || 0) > 0
     );
+  }
+
+  function isCrescentMissionAvailable(targetState = state) {
+    return (targetState.endgame?.transcensions || 0) >= 1;
   }
 
   function getDiminishingSectorMultiplier(
@@ -1882,6 +1923,33 @@
         protocol.maxRank,
       );
     });
+    const rawCrescentSecret =
+      raw.crescentSecret && typeof raw.crescentSecret === "object"
+        ? raw.crescentSecret
+        : {};
+    merged.crescentSecret = {
+      unlocked: rawCrescentSecret.unlocked === true,
+      completed: rawCrescentSecret.completed === true,
+      letterRead: rawCrescentSecret.letterRead === true,
+      manualClicks: Math.min(
+        CRESCENT_MISSION_GOALS.manualClicks,
+        clampGameCount(rawCrescentSecret.manualClicks),
+      ),
+      skirmishWins: Math.min(
+        CRESCENT_MISSION_GOALS.skirmishWins,
+        clampGameCount(rawCrescentSecret.skirmishWins),
+      ),
+      starportUpgrades: Math.min(
+        CRESCENT_MISSION_GOALS.starportUpgrades,
+        clampGameCount(rawCrescentSecret.starportUpgrades),
+      ),
+    };
+    if (merged.crescentSecret.letterRead) {
+      merged.crescentSecret.completed = true;
+    }
+    if (merged.crescentSecret.completed) {
+      merged.crescentSecret.unlocked = true;
+    }
     merged.rebirths = clampGameCount(raw.rebirths);
     merged.playerName = normalizePlayerName(raw.playerName);
     merged.activePage = PRIMARY_PAGES.includes(raw.activePage)
@@ -2157,6 +2225,7 @@
     const amount = getClickValue();
     addDust(amount);
     state.lifetimeClicks = clampGameCount(state.lifetimeClicks + 1);
+    recordCrescentProgress("manualClicks");
     elements.collect.classList.add("pressed");
     window.setTimeout(() => elements.collect.classList.remove("pressed"), 80);
     createClickEffects(event, amount);
@@ -2407,6 +2476,12 @@
         addLog(
           `奇点坍缩完成，获得 ${formatNumber(gain, 0)} 枚碎片；第 ${state.endgame.transcensions} 个超越周期启动。`,
         );
+        if (
+          state.endgame.transcensions === 1 &&
+          !state.crescentSecret.unlocked
+        ) {
+          addLog("坍缩余波中出现一枚不在星图上的月牙信号。");
+        }
         checkAchievements();
         renderAll();
         activatePrimaryPage("command", {
@@ -2680,6 +2755,7 @@
       0,
       module.maxRank,
     );
+    recordCrescentProgress("starportUpgrades");
     const action = rank === 0 ? "建造" : "强化";
     const message = `${module.name}${action}完成，当前等级 ${rank + 1} / ${module.maxRank}。`;
     addLog(message);
@@ -2718,6 +2794,7 @@
       state.combat.skirmishWins = clampGameCount(
         state.combat.skirmishWins + 1,
       );
+      recordCrescentProgress("skirmishWins");
       state.combat.skirmishCooldownUntil =
         now + Math.round(4500 * cooldownMultiplier);
       const materialText = describeMaterials(drops);
@@ -3080,6 +3157,90 @@
     if (confirmed && callback) callback();
   }
 
+  function unlockCrescentMission() {
+    if (
+      !isCrescentMissionAvailable() ||
+      state.crescentSecret.unlocked
+    ) {
+      return;
+    }
+    state.crescentSecret.unlocked = true;
+    addLog("未登记的月牙信号已接入私人信道。");
+    showToast("私人信道已接通", "一项没有坐标的任务出现在超越终端。", "☾");
+    playAchievementTone();
+    renderCrescentSecret();
+    saveGame();
+  }
+
+  function hasCompletedCrescentMission() {
+    return (
+      state.crescentSecret.manualClicks >=
+        CRESCENT_MISSION_GOALS.manualClicks &&
+      state.crescentSecret.skirmishWins >=
+        CRESCENT_MISSION_GOALS.skirmishWins &&
+      state.crescentSecret.starportUpgrades >=
+        CRESCENT_MISSION_GOALS.starportUpgrades
+    );
+  }
+
+  function completeCrescentMission() {
+    if (
+      state.crescentSecret.completed ||
+      !hasCompletedCrescentMission()
+    ) {
+      return;
+    }
+    state.crescentSecret.completed = true;
+    addLog("月相校准完成，一封标注“只给抵达这里的人”的私人来信已解密。");
+    showToast("隐藏任务完成", "私人信道中有一封信正在等待你。", "☾");
+    playAchievementTone();
+    renderCrescentSecret();
+    saveGame();
+    window.setTimeout(() => openCrescentLetter(), 650);
+  }
+
+  function recordCrescentProgress(progressKey) {
+    if (
+      !state.crescentSecret.unlocked ||
+      state.crescentSecret.completed ||
+      !Object.prototype.hasOwnProperty.call(
+        CRESCENT_MISSION_GOALS,
+        progressKey,
+      )
+    ) {
+      return;
+    }
+    const goal = CRESCENT_MISSION_GOALS[progressKey];
+    state.crescentSecret[progressKey] = Math.min(
+      goal,
+      clampGameCount(state.crescentSecret[progressKey] + 1),
+    );
+    renderCrescentSecret();
+    completeCrescentMission();
+  }
+
+  function openCrescentLetter() {
+    if (!state.crescentSecret.completed) return;
+    state.crescentSecret.letterRead = true;
+    elements.crescentLetterSalutation.textContent =
+      `亲爱的${state.playerName || "指挥官"}：`;
+    elements.crescentLetterBackdrop.hidden = false;
+    document.body.classList.add("crescent-letter-open");
+    renderCrescentSecret();
+    saveGame();
+    window.requestAnimationFrame(() =>
+      elements.crescentLetterConfirm.focus(),
+    );
+  }
+
+  function closeCrescentLetter() {
+    elements.crescentLetterBackdrop.hidden = true;
+    document.body.classList.remove("crescent-letter-open");
+    if (!elements.crescentLetterButton.hidden) {
+      elements.crescentLetterButton.focus();
+    }
+  }
+
   function hasSeenCurrentPatchNotes() {
     if (patchNotesSeenThisSession) return true;
     try {
@@ -3166,7 +3327,8 @@
       !elements.modalBackdrop.hidden ||
       !elements.nameBackdrop.hidden ||
       !elements.tutorialBackdrop.hidden ||
-      !elements.patchNotesBackdrop.hidden
+      !elements.patchNotesBackdrop.hidden ||
+      !elements.crescentLetterBackdrop.hidden
     ) {
       window.setTimeout(showStartupNotices, 240);
       return;
@@ -3692,6 +3854,39 @@
     });
   }
 
+  function renderCrescentSecret() {
+    const available = isCrescentMissionAvailable();
+    const unlocked = available && state.crescentSecret.unlocked;
+    const completed = unlocked && state.crescentSecret.completed;
+
+    elements.crescentSignal.hidden =
+      !available || state.crescentSecret.unlocked;
+    elements.crescentMission.hidden = !unlocked;
+    if (!unlocked) return;
+
+    elements.crescentClickProgress.textContent =
+      `${state.crescentSecret.manualClicks} / ${CRESCENT_MISSION_GOALS.manualClicks}`;
+    elements.crescentSkirmishProgress.textContent =
+      `${state.crescentSecret.skirmishWins} / ${CRESCENT_MISSION_GOALS.skirmishWins}`;
+    elements.crescentStarportProgress.textContent =
+      `${state.crescentSecret.starportUpgrades} / ${CRESCENT_MISSION_GOALS.starportUpgrades}`;
+    elements.crescentMissionStatus.textContent = completed
+      ? "来信已解锁"
+      : "信号同步中";
+    elements.crescentMission.classList.toggle("completed", completed);
+    elements.crescentLetterButton.hidden = !completed;
+    if (completed) {
+      const label = elements.crescentLetterButton.querySelector("span");
+      const detail = elements.crescentLetterButton.querySelector("small");
+      label.textContent = state.crescentSecret.letterRead
+        ? "再次阅读私人来信"
+        : "读取私人来信";
+      detail.textContent = state.crescentSecret.letterRead
+        ? "已解密 · 可随时重读"
+        : "发件人 · 新月";
+    }
+  }
+
   function renderEndgame() {
     const unlocked = isEndgameUnlocked();
     const historicalCores = getHistoricalCores();
@@ -3706,6 +3901,7 @@
     );
     elements.transcendLocked.hidden = unlocked;
     elements.transcendContent.hidden = !unlocked;
+    renderCrescentSecret();
     elements.transcendUnlockBar.style.width = `${unlockProgress * 100}%`;
     elements.transcendUnlockLabel.textContent = `${formatNumber(
       historicalCores,
@@ -4614,6 +4810,8 @@
     });
     elements.sectorClaimButton.addEventListener("click", claimSector);
     elements.collapseButton.addEventListener("click", transcend);
+    elements.crescentSignal.addEventListener("click", unlockCrescentMission);
+    elements.crescentLetterButton.addEventListener("click", openCrescentLetter);
     elements.saveButton.addEventListener("click", () => saveGame(true));
     elements.soundButton.addEventListener("click", () => {
       state.sound = !state.sound;
@@ -4669,6 +4867,13 @@
     elements.patchNotesBackdrop.addEventListener("click", (event) => {
       if (event.target === elements.patchNotesBackdrop) closePatchNotes();
     });
+    elements.crescentLetterClose.addEventListener("click", closeCrescentLetter);
+    elements.crescentLetterConfirm.addEventListener("click", closeCrescentLetter);
+    elements.crescentLetterBackdrop.addEventListener("click", (event) => {
+      if (event.target === elements.crescentLetterBackdrop) {
+        closeCrescentLetter();
+      }
+    });
     elements.nameConfirm.addEventListener("click", savePlayerName);
     elements.nameCancel.addEventListener("click", closeNameDialog);
     elements.nameBackdrop.addEventListener("click", (event) => {
@@ -4691,7 +4896,8 @@
         event.code === "Space" &&
         (!elements.modalBackdrop.hidden ||
           !elements.nameBackdrop.hidden ||
-          !elements.patchNotesBackdrop.hidden)
+          !elements.patchNotesBackdrop.hidden ||
+          !elements.crescentLetterBackdrop.hidden)
       ) {
         return;
       }
@@ -4705,6 +4911,7 @@
       if (event.key === "Escape") {
         elements.settingsMenu.hidden = true;
         if (!elements.patchNotesBackdrop.hidden) closePatchNotes();
+        if (!elements.crescentLetterBackdrop.hidden) closeCrescentLetter();
         if (!elements.tutorialBackdrop.hidden) closeTutorial(false);
         if (!elements.modalBackdrop.hidden && !elements.modalCancel.hidden) closeModal(false);
         if (!elements.nameBackdrop.hidden) closeNameDialog();

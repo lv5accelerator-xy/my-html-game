@@ -639,6 +639,16 @@
               </span>
             </div>
           </div>
+          <button
+            id="crescent-signal"
+            class="crescent-signal"
+            type="button"
+            aria-label="调查一段微弱的月牙信号"
+            title="一段无法归档的微弱信号"
+            hidden
+          >
+            ☾
+          </button>
 
           <section id="transcend-locked" class="transcend-locked">
             <span class="singularity-lock-icon" aria-hidden="true">∞</span>
@@ -738,6 +748,36 @@
               <span>选择加速下一轮的方式</span>
             </div>
             <div id="transcend-protocol-list" class="transcend-protocol-list"></div>
+
+            <section id="crescent-mission" class="crescent-mission" hidden>
+              <header>
+                <span class="crescent-mission-icon" aria-hidden="true">☾</span>
+                <div>
+                  <small>未登记任务 · 私人信道</small>
+                  <h3>月相校准</h3>
+                </div>
+                <span id="crescent-mission-status">信号同步中</span>
+              </header>
+              <p>这段信号没有奖励坐标，只要求你重新走过星港最熟悉的三条航线。</p>
+              <ul class="crescent-objectives">
+                <li>
+                  <span>完成 28 次手动星尘回收</span>
+                  <strong id="crescent-click-progress">0 / 28</strong>
+                </li>
+                <li>
+                  <span>赢得 1 次近域清剿</span>
+                  <strong id="crescent-skirmish-progress">0 / 1</strong>
+                </li>
+                <li>
+                  <span>建造或强化 1 次星港附属建筑</span>
+                  <strong id="crescent-starport-progress">0 / 1</strong>
+                </li>
+              </ul>
+              <button id="crescent-letter-button" type="button" hidden>
+                <span>读取私人来信</span>
+                <small>发件人 · 新月</small>
+              </button>
+            </section>
           </div>
         </section>
       </main>
@@ -757,7 +797,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.9.3</span>
+        <span>航站协议 v0.9.4</span>
       </footer>
     </div>
 
@@ -801,7 +841,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.9.3</strong>
+          <strong id="patch-notes-current-version">v0.9.4</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -810,6 +850,46 @@
           <button id="patch-notes-confirm" class="primary-button" type="button">进入游戏</button>
         </footer>
       </section>
+    </div>
+
+    <div id="crescent-letter-backdrop" class="modal-backdrop crescent-letter-backdrop" hidden>
+      <article
+        class="crescent-letter"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="crescent-letter-title"
+      >
+        <button
+          id="crescent-letter-close"
+          class="crescent-letter-close"
+          type="button"
+          aria-label="关闭感谢信"
+        >
+          ×
+        </button>
+        <div class="crescent-letter-mark" aria-hidden="true">☾</div>
+        <p class="eyebrow">来自星港之外的私人来信</p>
+        <h2 id="crescent-letter-title">写给抵达这里的你</h2>
+        <div class="crescent-letter-copy">
+          <p id="crescent-letter-salutation">亲爱的指挥官：</p>
+          <p>你好，我是《星港拾荒者》的制作者，新月。</p>
+          <p>
+            谢谢你愿意在这片由代码和想象搭成的星海里停留，也谢谢你真的走到了这里。每一次采集、每一座建筑、每一场战斗，都因为有人亲手按下指令才有了意义。
+          </p>
+          <p>
+            做这个游戏时，我常常想象，会不会有人在忙碌的间隙回来看看自己的星港。现在我知道，至少有一个人真的来过，而这个人就是你。
+          </p>
+          <p>
+            愿你在游戏之外的世界里，也总能找到值得期待的下一次启航。感谢你玩《星港拾荒者》。
+          </p>
+          <p>如果有机会来找新月，记得告诉我你读到了这封信。新月请你吃饭。</p>
+          <p class="crescent-letter-signature">
+            制作者<br />
+            <strong>新月</strong>
+          </p>
+        </div>
+        <button id="crescent-letter-confirm" class="primary-button" type="button">收下这封信</button>
+      </article>
     </div>
 
     <div id="name-backdrop" class="modal-backdrop" hidden>

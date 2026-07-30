@@ -1,3 +1,4 @@
+# Publishes only the current game runtime; repository archives stay out of the public site.
 name: Deploy clean GitHub Pages site
 
 on:

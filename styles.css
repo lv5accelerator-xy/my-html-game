@@ -53,6 +53,10 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+body.patch-notes-open {
+  overflow: hidden;
+}
+
 @supports (overflow: clip) {
   html,
   body {
@@ -3447,6 +3451,173 @@ footer {
   display: none;
 }
 
+.patch-notes-backdrop {
+  z-index: 280;
+  padding: 16px;
+}
+
+.patch-notes-modal {
+  display: flex;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 32px);
+  max-height: min(820px, calc(100dvh - 32px));
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line-bright);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(98, 230, 255, 0.12), transparent 32%),
+    #081827;
+  box-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.65),
+    0 0 70px rgba(32, 201, 239, 0.08);
+  animation: modal-in 220ms ease-out;
+}
+
+.patch-notes-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.patch-notes-header h2 {
+  margin: 3px 0 5px;
+  font-size: calc(21px * var(--type-scale));
+}
+
+.patch-notes-header > div > p:last-child {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: calc(9px * var(--type-scale));
+}
+
+.patch-notes-close {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  cursor: pointer;
+  color: var(--muted);
+  background: rgba(15, 35, 53, 0.72);
+  font-size: calc(19px * var(--type-scale));
+}
+
+.patch-notes-close:hover {
+  border-color: var(--line-bright);
+  color: var(--text);
+}
+
+.patch-notes-current {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 24px 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(98, 230, 255, 0.17);
+  border-radius: 12px;
+  color: var(--muted);
+  background: rgba(98, 230, 255, 0.05);
+  font-size: calc(9px * var(--type-scale));
+}
+
+.patch-notes-current strong {
+  color: var(--cyan);
+  font-size: calc(12px * var(--type-scale));
+}
+
+.patch-notes-current small {
+  justify-self: end;
+  color: #6f91a7;
+}
+
+.patch-notes-list {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  margin-top: 14px;
+  padding: 0 24px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(98, 230, 255, 0.24) transparent;
+  scrollbar-width: thin;
+}
+
+.patch-note-card {
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(6, 19, 31, 0.72);
+}
+
+.patch-note-card:first-child {
+  border-color: rgba(98, 230, 255, 0.32);
+  background:
+    linear-gradient(135deg, rgba(98, 230, 255, 0.07), transparent 48%),
+    rgba(6, 19, 31, 0.82);
+}
+
+.patch-note-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.patch-note-heading strong {
+  color: var(--text);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.patch-note-heading span {
+  color: #9ab7c9;
+  font-size: calc(9px * var(--type-scale));
+}
+
+.patch-note-badge {
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: var(--cyan) !important;
+  background: rgba(98, 230, 255, 0.09);
+  font-size: calc(7px * var(--type-scale)) !important;
+}
+
+.patch-note-card ul {
+  display: grid;
+  gap: 5px;
+  margin: 11px 0 0;
+  padding-left: 19px;
+  color: #91adbe;
+  line-height: 1.55;
+  font-size: calc(9px * var(--type-scale));
+}
+
+.patch-note-card li::marker {
+  color: var(--cyan);
+}
+
+.patch-notes-footer {
+  align-items: center;
+  gap: 15px;
+  padding: 14px 24px 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.patch-notes-footer span {
+  line-height: 1.45;
+}
+
+.patch-notes-footer button {
+  flex: 0 0 auto;
+}
+
 .tutorial-backdrop {
   position: fixed;
   z-index: 250;
@@ -4203,6 +4374,48 @@ footer {
 
   .tutorial-modal {
     padding: 18px;
+  }
+
+  .patch-notes-backdrop {
+    padding: 8px;
+  }
+
+  .patch-notes-modal {
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 16px;
+  }
+
+  .patch-notes-header {
+    padding: 17px 16px 13px;
+  }
+
+  .patch-notes-current {
+    grid-template-columns: auto auto;
+    margin: 11px 16px 0;
+  }
+
+  .patch-notes-current small {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .patch-notes-list {
+    padding: 0 16px 16px;
+  }
+
+  .patch-note-card {
+    padding: 13px;
+  }
+
+  .patch-notes-footer {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 12px 16px 15px;
+  }
+
+  .patch-notes-footer button {
+    width: 100%;
   }
 
   .tutorial-visual {

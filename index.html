@@ -61,6 +61,7 @@
 
         <div class="settings-menu" id="settings-menu" hidden>
           <button id="guide-button" type="button">新手指引</button>
+          <button id="patch-notes-button" type="button">版本更新记录</button>
           <button id="rename-button" type="button">修改玩家名称</button>
           <button id="bgm-button" class="settings-toggle" type="button">
             <span>背景音乐</span>
@@ -756,7 +757,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.9.2</span>
+        <span>航站协议 v0.9.3</span>
       </footer>
     </div>
 
@@ -772,6 +773,42 @@
           <button id="modal-cancel" class="secondary-button" type="button">取消</button>
           <button id="modal-confirm" class="primary-button" type="button">确认</button>
         </div>
+      </section>
+    </div>
+
+    <div id="patch-notes-backdrop" class="modal-backdrop patch-notes-backdrop" hidden>
+      <section
+        class="patch-notes-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="patch-notes-title"
+        aria-describedby="patch-notes-description"
+      >
+        <header class="patch-notes-header">
+          <div>
+            <p class="eyebrow">航站更新档案</p>
+            <h2 id="patch-notes-title">版本更新记录</h2>
+            <p id="patch-notes-description">从最新版本向早期版本排列。</p>
+          </div>
+          <button
+            id="patch-notes-close"
+            class="patch-notes-close"
+            type="button"
+            aria-label="关闭版本更新记录"
+          >
+            ×
+          </button>
+        </header>
+        <div class="patch-notes-current">
+          <span>当前航站协议</span>
+          <strong id="patch-notes-current-version">v0.9.3</strong>
+          <small>本版本首次进入时自动显示一次</small>
+        </div>
+        <div id="patch-notes-list" class="patch-notes-list"></div>
+        <footer class="patch-notes-footer">
+          <span>完整记录同时保存在发行版 Patch Notes TXT 文件中。</span>
+          <button id="patch-notes-confirm" class="primary-button" type="button">进入游戏</button>
+        </footer>
       </section>
     </div>
 

@@ -26,6 +26,8 @@
     "stellarOutpostIdleSave_v1_backup_3",
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
+  const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
+  const GAME_VERSION = "0.9.3";
   const SAVE_VERSION = 3;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -46,6 +48,153 @@
     "core-shop",
     "combat",
     "transcend",
+  ];
+  const PATCH_NOTES = [
+    {
+      version: "0.9.3",
+      theme: "游戏内版本更新记录",
+      changes: [
+        "每次版本更新后首次进入游戏时，自动显示当期版本说明。",
+        "右上角菜单新增“版本更新记录”，可随时重新查看全部更新。",
+        "更新内容按新版本到旧版本排列，并在最新版本上显示醒目标记。",
+        "已读版本只记录在当前设备，不改变游戏数值或存档结构。",
+      ],
+    },
+    {
+      version: "0.9.2",
+      theme: "移动端触控与横向滚动适配",
+      changes: [
+        "连续点击中央信标不再触发移动浏览器的双击智能缩放。",
+        "限制页面横向溢出与边缘回弹，同时保留纵向滚动和双指缩放。",
+        "移除 320px 强制最小宽度，兼容更窄的手机视口。",
+      ],
+    },
+    {
+      version: "0.9.1",
+      theme: "后期数值收敛",
+      changes: [
+        "跃迁、星核、奇点碎片和星区倍率加入平滑软上限。",
+        "战斗成长与战利品改用递减曲线，避免轮回后战斗过于简单。",
+        "星港建筑增幅和材料成本重新平衡，继续承担资源回收作用。",
+      ],
+    },
+    {
+      version: "0.9.0",
+      theme: "轨道星港与近域清剿",
+      changes: [
+        "新增带原创贴图、指示线和六个附属建筑栏位的星港页面。",
+        "加入生产与战斗类星港建筑，以及四类专用建材。",
+        "新增六类初级主动战斗目标，掉落材料用于强化星港。",
+      ],
+    },
+    {
+      version: "0.8.0",
+      theme: "奇点超越与无限边境",
+      changes: [
+        "新增第三层轮回“奇点坍缩”和永久奇点碎片。",
+        "加入六条超越协议，可强化生产、星核、战斗和后续坍缩。",
+        "新增可循环挑战的无限边境星区与终局成长目标。",
+      ],
+    },
+    {
+      version: "0.7.1",
+      theme: "后台收益、存档韧性与数值安全",
+      changes: [
+        "后台收益统一按离线规则结算，并限制最长累计时间。",
+        "加入三份自动轮换存档备份和损坏存档自动恢复。",
+        "为后期资源、价格和战力加入有限值保护与科学计数显示。",
+      ],
+    },
+    {
+      version: "0.7.0",
+      theme: "轮回与战斗平衡、终局回收链",
+      changes: [
+        "轮回后自动化设施重建成本提高，历史星核收益改为递减曲线。",
+        "强化敌人成长、限制最高胜率并下调重复战斗奖励。",
+        "新增后期自动化设施、研究和多项资源回收渠道。",
+      ],
+    },
+    {
+      version: "0.6.3",
+      theme: "分页导航与滚动体验优化",
+      changes: [
+        "主要系统改为顶部分页导航，一次只显示当前功能页面。",
+        "导航栏在滚动时保持可见，并记住上次停留的页面。",
+        "移动端采用紧凑导航布局，减少长页面连续滚动。",
+      ],
+    },
+    {
+      version: "0.6.2",
+      theme: "玩家名称与入口优化",
+      changes: [
+        "玩家首次开始游戏时可建立指挥官名称。",
+        "右上角菜单支持随时改名，名称随本地存档保存。",
+        "游戏发行入口调整为一眼可识别的开始游戏文件。",
+      ],
+    },
+    {
+      version: "0.6.1",
+      theme: "版本规范与开始游戏入口",
+      changes: [
+        "开始游戏按钮文案统一，不再使用文明名称作为入口。",
+        "确立补丁、次版本和正式版的版本号规则。",
+        "规定每次正式版本更新都必须同步追加 Patch Notes。",
+      ],
+    },
+    {
+      version: "0.6.0",
+      theme: "星核经济与后期超越",
+      changes: [
+        "加强轮回奖励并加入星核兑换商店。",
+        "新增永久强化、里程碑和更长的后期成长路线。",
+        "扩展终局目标，提高挂机循环的长期可玩性。",
+      ],
+    },
+    {
+      version: "0.5.0",
+      theme: "边境战斗",
+      changes: [
+        "新增舰队攻击力、基地防御与资源强化系统。",
+        "加入基地袭击事件，防守失败会损失部分资源。",
+        "支持主动攻击行星怪物并获得战斗奖励。",
+      ],
+    },
+    {
+      version: "0.4.0",
+      theme: "原创深空音乐",
+      changes: [
+        "加入原创深空管风琴氛围音乐，不使用受版权保护的影视原声。",
+        "提供背景音乐开关和音量调节。",
+        "音乐设置随本地存档保存。",
+      ],
+    },
+    {
+      version: "0.3.0",
+      theme: "数字显示修复",
+      changes: [
+        "修复价格和产量末位数字被截断的问题。",
+        "统一大数缩写、整数和小数的显示规则。",
+        "改善设施卡片数值区域的宽度与对齐。",
+      ],
+    },
+    {
+      version: "0.2.0",
+      theme: "新手体验与界面升级",
+      changes: [
+        "新增分步新手指引，可从菜单随时重新打开。",
+        "全局字体放大至初版约 125%，提高可读性。",
+        "修复右上角菜单被下方内容遮挡的问题。",
+      ],
+    },
+    {
+      version: "0.1.0",
+      theme: "初始航站",
+      changes: [
+        "完成纯 HTML、CSS 与 JavaScript 的离线挂机游戏。",
+        "加入手动采集、自动化设施、研究、成就、轮回和本地存档。",
+        "建立《星港拾荒者》的基础视觉与数值循环。",
+      ],
+    },
   ];
 
   const BUILDINGS = [
@@ -879,6 +1028,7 @@
     menuButton: $("#menu-button"),
     settingsMenu: $("#settings-menu"),
     guideButton: $("#guide-button"),
+    patchNotesButton: $("#patch-notes-button"),
     renameButton: $("#rename-button"),
     playerNameDisplay: $("#player-name-display"),
     bgmButton: $("#bgm-button"),
@@ -896,6 +1046,11 @@
     modalMessage: $("#modal-message"),
     modalCancel: $("#modal-cancel"),
     modalConfirm: $("#modal-confirm"),
+    patchNotesBackdrop: $("#patch-notes-backdrop"),
+    patchNotesCurrentVersion: $("#patch-notes-current-version"),
+    patchNotesList: $("#patch-notes-list"),
+    patchNotesClose: $("#patch-notes-close"),
+    patchNotesConfirm: $("#patch-notes-confirm"),
     nameBackdrop: $("#name-backdrop"),
     nameModalTitle: $("#name-modal-title"),
     nameModalMessage: $("#name-modal-message"),
@@ -1091,6 +1246,8 @@
   let bgmChordIndex = 0;
   let tutorialIndex = 0;
   let nameDialogRequired = false;
+  let patchNotesAutoOpened = false;
+  let patchNotesSeenThisSession = false;
   let recoveredBackupIndex = -1;
   let backgroundStartedAt = document.hidden ? Date.now() : null;
 
@@ -2923,6 +3080,110 @@
     if (confirmed && callback) callback();
   }
 
+  function hasSeenCurrentPatchNotes() {
+    if (patchNotesSeenThisSession) return true;
+    try {
+      return localStorage.getItem(PATCH_NOTES_SEEN_KEY) === GAME_VERSION;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function markCurrentPatchNotesSeen() {
+    patchNotesSeenThisSession = true;
+    try {
+      localStorage.setItem(PATCH_NOTES_SEEN_KEY, GAME_VERSION);
+    } catch (error) {
+      // The in-memory marker still prevents repeated prompts in private mode.
+    }
+  }
+
+  function renderPatchNotes() {
+    elements.patchNotesCurrentVersion.textContent = `v${GAME_VERSION}`;
+    elements.patchNotesList.textContent = "";
+
+    PATCH_NOTES.forEach((note, index) => {
+      const card = document.createElement("article");
+      card.className = "patch-note-card";
+
+      const heading = document.createElement("header");
+      heading.className = "patch-note-heading";
+
+      const version = document.createElement("strong");
+      version.textContent = `v${note.version}`;
+
+      const theme = document.createElement("span");
+      theme.textContent = note.theme;
+      heading.append(version, theme);
+
+      if (index === 0) {
+        const badge = document.createElement("span");
+        badge.className = "patch-note-badge";
+        badge.textContent = "本次更新";
+        heading.appendChild(badge);
+      }
+
+      const changes = document.createElement("ul");
+      note.changes.forEach((change) => {
+        const item = document.createElement("li");
+        item.textContent = change;
+        changes.appendChild(item);
+      });
+
+      card.append(heading, changes);
+      elements.patchNotesList.appendChild(card);
+    });
+
+    elements.patchNotesList.scrollTop = 0;
+  }
+
+  function openPatchNotes({ automatic = false } = {}) {
+    patchNotesAutoOpened = automatic;
+    elements.settingsMenu.hidden = true;
+    elements.patchNotesConfirm.textContent = automatic ? "进入游戏" : "关闭记录";
+    renderPatchNotes();
+    document.body.classList.add("patch-notes-open");
+    elements.patchNotesBackdrop.hidden = false;
+    window.requestAnimationFrame(() => elements.patchNotesConfirm.focus());
+  }
+
+  function closePatchNotes() {
+    const continueStartup = patchNotesAutoOpened;
+    patchNotesAutoOpened = false;
+    markCurrentPatchNotesSeen();
+    elements.patchNotesBackdrop.hidden = true;
+    document.body.classList.remove("patch-notes-open");
+
+    if (continueStartup) {
+      window.setTimeout(showStartupNotices, 160);
+    } else {
+      elements.menuButton.focus();
+    }
+  }
+
+  function showStartupNotices() {
+    if (
+      !elements.modalBackdrop.hidden ||
+      !elements.nameBackdrop.hidden ||
+      !elements.tutorialBackdrop.hidden ||
+      !elements.patchNotesBackdrop.hidden
+    ) {
+      window.setTimeout(showStartupNotices, 240);
+      return;
+    }
+    if (!state.playerName) {
+      openNameDialog(true);
+      return;
+    }
+    if (!hasSeenCurrentPatchNotes()) {
+      openPatchNotes({ automatic: true });
+      return;
+    }
+    if (!state.tutorialSeen && state.lifetimeDust < 1) {
+      openTutorial(0);
+    }
+  }
+
   function updatePlayerNameDisplay() {
     elements.playerNameDisplay.textContent = state.playerName
       ? `指挥官 · ${state.playerName}`
@@ -2981,8 +3242,8 @@
       "⌖",
     );
 
-    if (isFirstName && !state.tutorialSeen && state.lifetimeDust < 1) {
-      window.setTimeout(() => openTutorial(0), 220);
+    if (isFirstName) {
+      window.setTimeout(showStartupNotices, 220);
     }
   }
 
@@ -4382,6 +4643,7 @@
       elements.settingsMenu.hidden = !elements.settingsMenu.hidden;
     });
     elements.guideButton.addEventListener("click", () => openTutorial(0));
+    elements.patchNotesButton.addEventListener("click", () => openPatchNotes());
     elements.renameButton.addEventListener("click", () => openNameDialog(false));
     document.addEventListener("click", (event) => {
       if (!elements.settingsMenu.contains(event.target) && event.target !== elements.menuButton) {
@@ -4401,6 +4663,11 @@
       if (event.target === elements.modalBackdrop && !elements.modalCancel.hidden) {
         closeModal(false);
       }
+    });
+    elements.patchNotesClose.addEventListener("click", closePatchNotes);
+    elements.patchNotesConfirm.addEventListener("click", closePatchNotes);
+    elements.patchNotesBackdrop.addEventListener("click", (event) => {
+      if (event.target === elements.patchNotesBackdrop) closePatchNotes();
     });
     elements.nameConfirm.addEventListener("click", savePlayerName);
     elements.nameCancel.addEventListener("click", closeNameDialog);
@@ -4422,7 +4689,9 @@
     document.addEventListener("keydown", (event) => {
       if (
         event.code === "Space" &&
-        (!elements.modalBackdrop.hidden || !elements.nameBackdrop.hidden)
+        (!elements.modalBackdrop.hidden ||
+          !elements.nameBackdrop.hidden ||
+          !elements.patchNotesBackdrop.hidden)
       ) {
         return;
       }
@@ -4435,6 +4704,7 @@
       }
       if (event.key === "Escape") {
         elements.settingsMenu.hidden = true;
+        if (!elements.patchNotesBackdrop.hidden) closePatchNotes();
         if (!elements.tutorialBackdrop.hidden) closeTutorial(false);
         if (!elements.modalBackdrop.hidden && !elements.modalCancel.hidden) closeModal(false);
         if (!elements.nameBackdrop.hidden) closeNameDialog();
@@ -4518,10 +4788,6 @@
       );
     }, 120);
   }
-  if (!state.playerName) {
-    window.setTimeout(() => openNameDialog(true), 260);
-  } else if (!state.tutorialSeen && state.lifetimeDust < 1) {
-    window.setTimeout(() => openTutorial(0), 320);
-  }
+  window.setTimeout(showStartupNotices, 260);
   requestAnimationFrame(gameLoop);
 })();

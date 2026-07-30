@@ -1,0 +1,62 @@
+name: Deploy clean GitHub Pages site
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Prepare public game files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site/assets
+          cp index.html styles.css game.js game-math.js _site/
+          cp -R assets/. _site/assets/
+
+          for optional_file in firebase-config.js cloud-save.js; do
+            if [[ -f "$optional_file" ]]; then
+              cp "$optional_file" _site/
+            fi
+          done
+
+          find . -maxdepth 1 -type f -name 'google*.html' -exec cp '{}' _site/ ';'
+          touch _site/.nojekyll
+
+          echo "Public artifact contents:"
+          find _site -type f -print | sort
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload public artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

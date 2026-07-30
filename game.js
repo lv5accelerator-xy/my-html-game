@@ -4307,6 +4307,7 @@
       true,
     );
     elements.collect.addEventListener("click", collect);
+    elements.collect.addEventListener("dblclick", (event) => event.preventDefault());
     elements.buildingList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-building-id]");
       if (button) buyBuilding(button.dataset.buildingId);

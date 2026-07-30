@@ -25,15 +25,24 @@
 }
 
 html {
-  min-width: 320px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
   background: var(--bg);
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
+  width: 100%;
+  max-width: 100%;
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
+  touch-action: pan-y pinch-zoom;
   color: var(--text);
   background:
     radial-gradient(circle at 48% 20%, rgba(21, 88, 122, 0.16), transparent 38%),
@@ -44,6 +53,13 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+@supports (overflow: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+}
+
 button,
 input {
   font: inherit;
@@ -51,6 +67,8 @@ input {
 
 button {
   color: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:focus-visible,
@@ -667,6 +685,8 @@ h2 {
     0 0 55px rgba(41, 204, 239, 0.16),
     inset 0 0 28px rgba(98, 230, 255, 0.08);
   transition: transform 90ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  touch-action: manipulation;
+  -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -3936,8 +3956,13 @@ footer {
 
 @media (max-width: 780px) {
   .app-shell {
-    width: min(100% - 22px, 620px);
+    width: min(620px, calc(100% - 22px));
     padding-top: 11px;
+  }
+
+  .beacon-zone,
+  .collect-button {
+    max-width: 100%;
   }
 
   .topbar {

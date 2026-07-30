@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
+    />
+    <meta name="theme-color" content="#07111f" />
+    <title>星港拾荒者 · 挂机小游戏</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="星港拾荒者首页">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span>
+          </span>
+          <span>
+            <strong>星港拾荒者</strong>
+            <small id="player-name-display">指挥官 · 未命名</small>
+          </span>
+        </a>
+
+        <div class="resource-strip" aria-label="资源概览">
+          <div class="resource-main">
+            <span class="resource-icon" aria-hidden="true">✦</span>
+            <span>
+              <small>星尘储量</small>
+              <strong id="dust-value">0</strong>
+            </span>
+          </div>
+          <div class="resource-stat">
+            <small>自动产量</small>
+            <strong id="rate-value">0 / 秒</strong>
+          </div>
+          <div class="resource-stat">
+            <small>星核</small>
+            <strong id="core-value">0</strong>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <button class="icon-button" id="sound-button" type="button" aria-label="关闭音效" title="操作音效">
+            <span aria-hidden="true">♪</span>
+          </button>
+          <button class="text-button" id="save-button" type="button">保存</button>
+          <button class="icon-button menu-button" id="menu-button" type="button" aria-label="打开设置" title="设置">
+            <span aria-hidden="true">•••</span>
+          </button>
+        </div>
+
+        <div class="settings-menu" id="settings-menu" hidden>
+          <button id="guide-button" type="button">新手指引</button>
+          <button id="rename-button" type="button">修改玩家名称</button>
+          <button id="bgm-button" class="settings-toggle" type="button">
+            <span>背景音乐</span>
+            <strong id="bgm-status">开</strong>
+          </button>
+          <label class="music-volume" for="bgm-volume">
+            <span>音乐音量</span>
+            <input id="bgm-volume" type="range" min="0" max="100" step="1" value="22" />
+            <output id="bgm-volume-value" for="bgm-volume">22%</output>
+          </label>
+          <div class="settings-divider" aria-hidden="true"></div>
+          <button id="export-button" type="button">导出存档</button>
+          <button id="import-button" type="button">导入存档</button>
+          <button id="reset-button" class="danger" type="button">清空进度</button>
+        </div>
+        <input id="import-file" type="file" accept=".json,application/json" hidden />
+      </header>
+
+      <nav id="primary-navigation" class="primary-navigation" aria-label="航站功能导航">
+        <div class="primary-tabs" role="tablist" aria-label="主要功能页">
+          <button
+            id="command-page-tab"
+            class="active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="command-page"
+            data-page="command"
+          >
+            <span class="navigation-icon" aria-hidden="true">✦</span>
+            <span>指挥台</span>
+          </button>
+          <button
+            id="fleet-page-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="fleet-page"
+            data-page="fleet"
+          >
+            <span class="navigation-icon" aria-hidden="true">◎</span>
+            <span>舰队</span>
+          </button>
+          <button
+            id="starport-page-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="starport-page"
+            data-page="starport"
+          >
+            <span class="navigation-icon" aria-hidden="true">⌬</span>
+            <span>星港</span>
+          </button>
+          <button
+            id="research-page-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="research-page"
+            data-page="research"
+          >
+            <span class="navigation-icon" aria-hidden="true">◒</span>
+            <span>研究</span>
+          </button>
+          <button
+            id="core-shop-page-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="core-shop-page"
+            data-page="core-shop"
+          >
+            <span class="navigation-icon" aria-hidden="true">✣</span>
+            <span>星核</span>
+          </button>
+          <button
+            id="combat-page-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="combat-page"
+            data-page="combat"
+          >
+            <span class="navigation-icon" aria-hidden="true">⬡</span>
+            <span>战斗</span>
+          </button>
+          <button
+            id="transcend-page-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="transcend-page"
+            data-page="transcend"
+          >
+            <span class="navigation-icon" aria-hidden="true">∞</span>
+            <span>超越</span>
+          </button>
+        </div>
+      </nav>
+
+      <main class="game-grid">
+        <section
+          id="command-page"
+          class="panel game-page command-panel"
+          role="tabpanel"
+          aria-labelledby="command-page-tab command-title"
+        >
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">主动采集</p>
+              <h1 id="command-title">信标指挥台</h1>
+            </div>
+            <span class="status-chip"><i></i> 在线</span>
+          </div>
+
+          <div class="beacon-zone">
+            <div class="orbit orbit-outer" aria-hidden="true"><i></i><b></b></div>
+            <div class="orbit orbit-inner" aria-hidden="true"><i></i></div>
+            <button id="collect-button" class="collect-button" type="button" aria-describedby="click-yield">
+              <span class="collect-glow" aria-hidden="true"></span>
+              <span class="collect-core" aria-hidden="true">
+                <span class="core-glyph">✦</span>
+              </span>
+              <strong>回收星尘</strong>
+              <small id="click-yield">每次 +1</small>
+            </button>
+          </div>
+
+          <div class="scan-card">
+            <div class="scan-copy">
+              <span class="scan-icon" aria-hidden="true">⌁</span>
+              <span>
+                <small>下一航标</small>
+                <strong id="next-goal-title">部署拾荒无人机</strong>
+              </span>
+            </div>
+            <span id="next-goal-label">0 / 15</span>
+            <div class="progress-track" aria-hidden="true">
+              <span id="next-goal-progress"></span>
+            </div>
+          </div>
+
+          <div class="boost-grid">
+            <div>
+              <small>永久增幅</small>
+              <strong id="permanent-boost">×1.00</strong>
+            </div>
+            <div>
+              <small>成就增幅</small>
+              <strong id="achievement-boost">×1.00</strong>
+            </div>
+            <div>
+              <small>本轮采集</small>
+              <strong id="run-dust">0</strong>
+            </div>
+          </div>
+
+          <section class="command-dashboard" aria-labelledby="command-dashboard-title">
+            <div class="command-dashboard-heading">
+              <div>
+                <p class="eyebrow">航站态势</p>
+                <h2 id="command-dashboard-title">指挥官总览</h2>
+              </div>
+              <span>实时同步</span>
+            </div>
+            <div class="command-metrics">
+              <div>
+                <small>自动化单元</small>
+                <strong id="command-unit-count">0</strong>
+                <span>当前航线设施总数</span>
+              </div>
+              <div>
+                <small>舰队战斗力</small>
+                <strong id="command-combat-power">30</strong>
+                <span>主动远征能力</span>
+              </div>
+              <div>
+                <small>基地防御力</small>
+                <strong id="command-defense-power">25</strong>
+                <span>自动抵御袭击</span>
+              </div>
+              <div class="command-raid-metric">
+                <small>边境雷达</small>
+                <strong id="command-raid-status">尚未解锁</strong>
+                <span>袭击接触倒计时</span>
+              </div>
+            </div>
+          </section>
+
+          <div class="prestige-card">
+            <div>
+              <p class="eyebrow">深空跃迁</p>
+              <h2>重启航线，提炼星核</h2>
+              <p id="prestige-description">本轮采集 75K 星尘后可获得第 1 枚星核。</p>
+            </div>
+            <button id="prestige-button" type="button" disabled>
+              <span>执行跃迁</span>
+              <small id="prestige-gain">+0 星核</small>
+            </button>
+          </div>
+        </section>
+
+        <section
+          id="fleet-page"
+          class="panel game-page fleet-panel"
+          role="tabpanel"
+          aria-labelledby="fleet-page-tab fleet-title"
+          hidden
+        >
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">自动化生产</p>
+              <h2 id="fleet-title">轨道舰队</h2>
+            </div>
+            <div class="buy-modes" aria-label="购买数量">
+              <button class="active" type="button" data-buy-mode="1">×1</button>
+              <button type="button" data-buy-mode="10">×10</button>
+              <button type="button" data-buy-mode="max">最大</button>
+            </div>
+          </div>
+
+          <div class="fleet-summary">
+            <div>
+              <span class="pulse-dot" aria-hidden="true"></span>
+              <span><strong id="unit-count">0</strong> 个单元正在工作</span>
+            </div>
+            <small id="fleet-flavor">轨道十分安静，等待你的第一道指令。</small>
+            <span class="reconstruction-factor">
+              重建成本 <strong id="reconstruction-cost">×1.00</strong>
+            </span>
+          </div>
+
+          <div id="building-list" class="building-list" aria-live="polite"></div>
+        </section>
+
+        <section
+          id="starport-page"
+          class="panel game-page starport-panel"
+          role="tabpanel"
+          aria-labelledby="starport-page-tab starport-title"
+          hidden
+        >
+          <div class="panel-heading starport-heading">
+            <div>
+              <p class="eyebrow">轨道扩建</p>
+              <h2 id="starport-title">星港附属建筑</h2>
+            </div>
+            <div class="starport-rank-badge">
+              <small>建筑总等级</small>
+              <strong id="starport-rank-total">0 / 72</strong>
+            </div>
+          </div>
+
+          <div class="starport-intro">
+            <p>完成近域清剿以回收专用材料。六个栏位对应星港的生产与战斗区域，附属建筑会在普通跃迁后继续工作。</p>
+            <span>奇点超越将重置建筑与材料</span>
+          </div>
+
+          <div
+            id="starport-material-list"
+            class="material-wallet"
+            aria-label="星港建筑材料"
+          ></div>
+
+          <div class="starport-blueprint">
+            <div class="starport-image-wrap">
+              <span class="starport-orbit orbit-a" aria-hidden="true"></span>
+              <span class="starport-orbit orbit-b" aria-hidden="true"></span>
+              <img
+                src="assets/starport.png"
+                alt="拥有六个放射状连接区的轨道星港"
+                class="starport-image"
+              />
+              <div class="starport-core-label" aria-hidden="true">
+                <small>中央指挥核</small>
+                <strong>OSU-07</strong>
+              </div>
+            </div>
+            <div
+              id="starport-slot-map"
+              class="starport-slot-map"
+              aria-live="polite"
+            ></div>
+          </div>
+
+          <div class="starport-effects" aria-label="星港当前增幅">
+            <div>
+              <small>自动生产</small>
+              <strong id="starport-production-boost">×1.00</strong>
+            </div>
+            <div>
+              <small>设施成本</small>
+              <strong id="starport-cost-efficiency">-0.0%</strong>
+            </div>
+            <div>
+              <small>舰队战斗</small>
+              <strong id="starport-attack-boost">×1.00</strong>
+            </div>
+            <div>
+              <small>基地防御</small>
+              <strong id="starport-defense-boost">×1.00</strong>
+            </div>
+            <div>
+              <small>材料掉落</small>
+              <strong id="starport-loot-boost">×1.00</strong>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="research-page"
+          class="panel game-page research-panel"
+          role="tabpanel"
+          aria-labelledby="research-page-tab research-title"
+          hidden
+        >
+          <div class="panel-heading research-heading">
+            <div>
+              <p class="eyebrow">长期进展</p>
+              <h2 id="research-title">研究终端</h2>
+            </div>
+            <span class="research-count" id="research-count">0 / 12</span>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="研究终端页面">
+            <button
+              id="upgrades-tab"
+              class="active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="upgrades-panel"
+            >
+              研究
+            </button>
+            <button
+              id="achievements-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="achievements-panel"
+            >
+              成就
+            </button>
+            <button
+              id="log-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="log-panel"
+            >
+              航行日志
+            </button>
+          </div>
+
+          <div id="upgrades-panel" class="tab-panel" role="tabpanel" aria-labelledby="upgrades-tab">
+            <div id="upgrade-list" class="upgrade-list"></div>
+          </div>
+          <div id="achievements-panel" class="tab-panel" role="tabpanel" aria-labelledby="achievements-tab" hidden>
+            <div id="achievement-list" class="achievement-list"></div>
+          </div>
+          <div id="log-panel" class="tab-panel" role="tabpanel" aria-labelledby="log-tab" hidden>
+            <div class="lifetime-stats">
+              <div><small>总计星尘</small><strong id="lifetime-dust">0</strong></div>
+              <div><small>手动回收</small><strong id="lifetime-clicks">0</strong></div>
+              <div><small>跃迁次数</small><strong id="rebirth-count">0</strong></div>
+              <div><small>航行时间</small><strong id="play-time">0分</strong></div>
+            </div>
+            <ol id="activity-log" class="activity-log"></ol>
+          </div>
+        </section>
+
+        <section
+          id="core-shop-page"
+          class="panel game-page core-shop-panel"
+          role="tabpanel"
+          aria-labelledby="core-shop-page-tab core-shop-title"
+          hidden
+        >
+          <div class="panel-heading core-shop-heading">
+            <div>
+              <p class="eyebrow">轮回经济</p>
+              <h2 id="core-shop-title">星核共鸣交易所</h2>
+            </div>
+            <div class="core-wallet">
+              <span aria-hidden="true">✣</span>
+              <span>
+                <small>可用星核</small>
+                <strong id="core-shop-balance">0</strong>
+              </span>
+            </div>
+          </div>
+
+          <div class="core-overview">
+            <div>
+              <small>历史获得星核</small>
+              <strong id="total-cores-earned">0</strong>
+              <span>消费星核不会降低该数值</span>
+            </div>
+            <div>
+              <small>当前星核产量</small>
+              <strong id="core-yield-multiplier">×1.00</strong>
+              <span>影响每次跃迁奖励</span>
+            </div>
+            <div>
+              <small>离线收益上限</small>
+              <strong id="offline-cap">8小时</strong>
+              <span>可通过商店继续扩展</span>
+            </div>
+          </div>
+
+          <div id="core-shop-list" class="core-shop-list"></div>
+
+          <div class="milestone-heading">
+            <div>
+              <small>无需消费 · 自动生效</small>
+              <h3>星核共鸣里程碑</h3>
+            </div>
+            <span>按历史星核总数解锁</span>
+          </div>
+          <div id="core-milestone-list" class="core-milestone-list"></div>
+        </section>
+
+        <section
+          id="combat-page"
+          class="panel game-page combat-panel"
+          role="tabpanel"
+          aria-labelledby="combat-page-tab combat-title"
+          hidden
+        >
+          <div class="panel-heading combat-heading">
+            <div>
+              <p class="eyebrow">边境防卫</p>
+              <h2 id="combat-title">轨道战斗指挥部</h2>
+            </div>
+            <div class="combat-record">
+              <span><small>胜利</small><strong id="combat-wins">0</strong></span>
+              <span><small>失利</small><strong id="combat-losses">0</strong></span>
+            </div>
+          </div>
+
+          <div class="combat-salvage-bar">
+            <div>
+              <small>星港建材</small>
+              <strong>近域战利品库存</strong>
+            </div>
+            <div
+              id="combat-material-list"
+              class="material-wallet combat-material-wallet"
+              aria-label="当前星港建筑材料"
+            ></div>
+          </div>
+
+          <div class="combat-layout">
+            <section class="armory-card" aria-labelledby="armory-title">
+              <div class="combat-section-title">
+                <span aria-hidden="true">⌁</span>
+                <div>
+                  <small>永久强化</small>
+                  <h3 id="armory-title">舰队军械库</h3>
+                </div>
+              </div>
+
+              <div class="power-readouts">
+                <div>
+                  <small>舰队战斗力</small>
+                  <strong id="combat-power">30</strong>
+                  <span id="attack-level">武器等级 0</span>
+                </div>
+                <div>
+                  <small>基地防御力</small>
+                  <strong id="defense-power">25</strong>
+                  <span id="defense-level">防御等级 0</span>
+                </div>
+              </div>
+
+              <div class="combat-upgrades">
+                <button id="attack-upgrade-button" type="button">
+                  <span class="upgrade-symbol" aria-hidden="true">↟</span>
+                  <span>
+                    <strong>强化舰炮</strong>
+                    <small>前 18 级约提高 42%，之后单级收益递减</small>
+                  </span>
+                  <span class="upgrade-price" id="attack-upgrade-cost">✦ 350</span>
+                </button>
+                <button id="defense-upgrade-button" type="button">
+                  <span class="upgrade-symbol shield" aria-hidden="true">⬡</span>
+                  <span>
+                    <strong>加固基地</strong>
+                    <small>前 18 级约提高 44%，之后单级收益递减</small>
+                  </span>
+                  <span class="upgrade-price" id="defense-upgrade-cost">✦ 300</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="raid-monitor" id="raid-monitor" aria-labelledby="raid-title">
+              <div class="combat-section-title">
+                <span aria-hidden="true">⌖</span>
+                <div>
+                  <small>自动防御</small>
+                  <h3 id="raid-title">边境雷达</h3>
+                </div>
+                <span class="raid-state" id="raid-state">扫描中</span>
+              </div>
+              <div class="radar-display" aria-hidden="true">
+                <i></i>
+                <b></b>
+                <span>⌖</span>
+              </div>
+              <strong id="raid-name">航道暂时安全</strong>
+              <p id="raid-description">累计采集 500 星尘后，敌对舰队可能袭击基地。</p>
+              <div class="raid-countdown">
+                <span id="raid-countdown-label">防卫系统待命</span>
+                <strong id="raid-countdown-value">--:--</strong>
+              </div>
+              <div class="raid-progress" aria-hidden="true">
+                <span id="raid-progress-bar"></span>
+              </div>
+            </section>
+
+            <section class="target-terminal skirmish-terminal" aria-labelledby="skirmish-title">
+              <div class="combat-section-title">
+                <span aria-hidden="true">⌬</span>
+                <div>
+                  <small>短程作战 · 掉落星港建材</small>
+                  <h3 id="skirmish-title">近域清剿</h3>
+                </div>
+                <span class="attack-cooldown" id="skirmish-cooldown">清剿小队就绪</span>
+              </div>
+              <p class="skirmish-help">六类初级威胁各自掉落不同材料；重复清剿后敌方会适度进化，收益仅小幅成长。</p>
+              <div id="skirmish-target-list" class="skirmish-target-list"></div>
+            </section>
+
+            <section class="target-terminal" aria-labelledby="targets-title">
+              <div class="combat-section-title">
+                <span aria-hidden="true">◎</span>
+                <div>
+                  <small>主动出击 · 敌人会随轮回进化</small>
+                  <h3 id="targets-title">行星目标</h3>
+                </div>
+                <span class="attack-cooldown" id="attack-cooldown">舰队就绪</span>
+              </div>
+              <div id="planet-target-list" class="planet-target-list"></div>
+            </section>
+          </div>
+
+          <div class="combat-report" id="combat-report" aria-live="polite">
+            <span aria-hidden="true">◈</span>
+            <div>
+              <small>最新战报</small>
+              <p id="combat-report-text">军械库已上线，等待第一项强化或作战命令。</p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="transcend-page"
+          class="panel game-page transcend-panel"
+          role="tabpanel"
+          aria-labelledby="transcend-page-tab transcend-title"
+          hidden
+        >
+          <div class="panel-heading transcend-heading">
+            <div>
+              <p class="eyebrow">终局航线</p>
+              <h2 id="transcend-title">奇点超越协议</h2>
+            </div>
+            <div class="singularity-wallet">
+              <span aria-hidden="true">∞</span>
+              <span>
+                <small>奇点碎片</small>
+                <strong id="singularity-shards">0</strong>
+              </span>
+            </div>
+          </div>
+
+          <section id="transcend-locked" class="transcend-locked">
+            <span class="singularity-lock-icon" aria-hidden="true">∞</span>
+            <div>
+              <p class="eyebrow">尚未建立奇点坐标</p>
+              <h3>历史获得 1M 星核后解锁</h3>
+              <p>超越会开启第三层永久成长、循环星区目标与新的后期资源消耗。</p>
+              <div class="transcend-unlock-progress" aria-hidden="true">
+                <span id="transcend-unlock-bar"></span>
+              </div>
+              <small id="transcend-unlock-label">0 / 1M 历史星核</small>
+            </div>
+          </section>
+
+          <div id="transcend-content" hidden>
+            <div class="transcend-overview">
+              <div>
+                <small>历史奇点碎片</small>
+                <strong id="total-singularity-shards">0</strong>
+                <span>消费不会降低长期记录</span>
+              </div>
+              <div>
+                <small>超越次数</small>
+                <strong id="transcend-count">0</strong>
+                <span>完成完整终局循环</span>
+              </div>
+              <div>
+                <small>边境星区</small>
+                <strong id="sector-level">0</strong>
+                <span>每一级强化全部系统</span>
+              </div>
+              <div>
+                <small>超越总增幅</small>
+                <strong id="transcend-production-boost">×1.00</strong>
+                <span id="transcend-core-boost">星核 ×1.00</span>
+              </div>
+            </div>
+
+            <div class="endgame-loop">
+              <section class="sector-mission" aria-labelledby="sector-title">
+                <div class="endgame-card-heading">
+                  <span aria-hidden="true">⌖</span>
+                  <div>
+                    <small>循环目标 · 永久扩展</small>
+                    <h3 id="sector-title">边境星区 1</h3>
+                  </div>
+                  <span id="sector-type">资源航道</span>
+                </div>
+                <p id="sector-description">建立足以穿越边境的星尘储备。</p>
+                <div class="sector-progress-copy">
+                  <strong id="sector-progress">0</strong>
+                  <span>/</span>
+                  <strong id="sector-target">1E</strong>
+                </div>
+                <div class="sector-progress-track" aria-hidden="true">
+                  <span id="sector-progress-bar"></span>
+                </div>
+                <button id="sector-claim-button" type="button" disabled>
+                  <span>完成星区</span>
+                  <small id="sector-reward">+1 奇点碎片</small>
+                </button>
+              </section>
+
+              <section class="collapse-card" aria-labelledby="collapse-title">
+                <div class="endgame-card-heading">
+                  <span aria-hidden="true">◉</span>
+                  <div>
+                    <small>第三层轮回</small>
+                    <h3 id="collapse-title">奇点坍缩</h3>
+                  </div>
+                </div>
+                <p>
+                  重置星尘、舰队、研究、星核、星核商店、战斗成长、星港建筑与材料，保留成就、星区和全部超越协议。
+                </p>
+                <div class="collapse-readout">
+                  <span>
+                    <small>当前历史星核</small>
+                    <strong id="collapse-current-cores">0</strong>
+                  </span>
+                  <span>
+                    <small>本次可获</small>
+                    <strong id="collapse-gain">+0 ∞</strong>
+                  </span>
+                </div>
+                <button id="collapse-button" type="button" disabled>
+                  <span>执行奇点坍缩</span>
+                  <small>1M 历史星核起步</small>
+                </button>
+              </section>
+            </div>
+
+            <div class="protocol-heading">
+              <div>
+                <small>永久保留 · 自由分配</small>
+                <h3>超越协议矩阵</h3>
+              </div>
+              <span>选择加速下一轮的方式</span>
+            </div>
+            <div id="transcend-protocol-list" class="transcend-protocol-list"></div>
+          </div>
+        </section>
+      </main>
+
+      <aside id="event-card" class="event-card" aria-live="polite">
+        <span class="event-signal" aria-hidden="true">◈</span>
+        <div>
+          <small>深空雷达</small>
+          <strong id="event-title">正在扫描航道</strong>
+          <p id="event-description">偶尔会发现漂流物资或短暂的能量涌流。</p>
+        </div>
+        <button id="event-button" type="button" disabled>
+          <span>扫描中</span>
+          <small id="event-countdown">--:--</small>
+        </button>
+      </aside>
+
+      <footer>
+        <span>本地离线运行 · 自动保存</span>
+        <span>航站协议 v0.9.1</span>
+      </footer>
+    </div>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="modal-backdrop" class="modal-backdrop" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <span class="modal-icon" id="modal-icon" aria-hidden="true">✦</span>
+        <p class="eyebrow" id="modal-eyebrow">航站简报</p>
+        <h2 id="modal-title">欢迎回来</h2>
+        <p id="modal-message"></p>
+        <div class="modal-actions">
+          <button id="modal-cancel" class="secondary-button" type="button">取消</button>
+          <button id="modal-confirm" class="primary-button" type="button">确认</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="name-backdrop" class="modal-backdrop" hidden>
+      <section
+        class="modal name-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="name-modal-title"
+        aria-describedby="name-modal-message"
+      >
+        <span class="modal-icon" aria-hidden="true">⌖</span>
+        <p class="eyebrow">指挥官档案</p>
+        <h2 id="name-modal-title">设置玩家名称</h2>
+        <p id="name-modal-message">这个名称会显示在星港顶部，并随本地存档保存。</p>
+        <label class="name-field" for="player-name-input">
+          <span>玩家名称</span>
+          <input
+            id="player-name-input"
+            type="text"
+            maxlength="12"
+            autocomplete="off"
+            placeholder="输入 1–12 个字符"
+          />
+        </label>
+        <small id="name-error" class="name-error" aria-live="polite"></small>
+        <div class="modal-actions">
+          <button id="name-cancel" class="secondary-button" type="button">取消</button>
+          <button id="name-confirm" class="primary-button" type="button">保存名称</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="tutorial-backdrop" class="tutorial-backdrop" hidden>
+      <section
+        class="tutorial-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tutorial-title"
+        aria-describedby="tutorial-message"
+      >
+        <header class="tutorial-header">
+          <span id="tutorial-step-label">新手指引 · 1 / 6</span>
+          <button id="tutorial-skip" type="button" aria-label="直接开始游戏">开始游戏</button>
+        </header>
+        <div class="tutorial-visual" aria-hidden="true">
+          <span id="tutorial-icon">✦</span>
+          <i></i>
+          <b></b>
+        </div>
+        <p class="eyebrow" id="tutorial-eyebrow">航站启动</p>
+        <h2 id="tutorial-title">欢迎来到星港</h2>
+        <p id="tutorial-message"></p>
+        <div class="tutorial-tip">
+          <span aria-hidden="true">⌁</span>
+          <p id="tutorial-tip"></p>
+        </div>
+        <div class="tutorial-footer">
+          <div id="tutorial-dots" class="tutorial-dots" aria-hidden="true"></div>
+          <div class="tutorial-actions">
+            <button id="tutorial-back" class="secondary-button" type="button">上一步</button>
+            <button id="tutorial-next" class="primary-button" type="button">下一步</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <noscript>
+      <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
+    </noscript>
+
+    <script src="game-math.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

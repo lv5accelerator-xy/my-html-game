@@ -27,7 +27,7 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.10.0";
+  const GAME_VERSION = "0.10.1";
   const SAVE_VERSION = 3;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -55,6 +55,15 @@
     "transcend",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.10.1",
+      theme: "云端窗口状态修复",
+      changes: [
+        "修复账号已经连接并完成同步后，窗口仍持续显示“正在连接”动画的问题。",
+        "连接状态现在会正确切换至账号信息、同步状态与云存档操作区域。",
+        "本次修复不改变玩家存档、云端数据、同步周期或 Firebase 安全规则。",
+      ],
+    },
     {
       version: "0.10.0",
       theme: "账号与云端航站",

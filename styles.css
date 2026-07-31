@@ -4026,6 +4026,10 @@ footer {
   font-size: calc(9px * var(--type-scale));
 }
 
+#account-loading-view[hidden] {
+  display: none;
+}
+
 .cloud-loading {
   display: flex;
   gap: 5px;

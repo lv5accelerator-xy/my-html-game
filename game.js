@@ -28,7 +28,7 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.11.0";
+  const GAME_VERSION = "0.11.1";
   const SAVE_VERSION = 4;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -63,6 +63,15 @@
     "transcend",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.11.1",
+      theme: "月牙信号引导优化",
+      changes: [
+        "首次完成奇点超越后会停留在超越界面，并提示玩家寻找其中出现的异常信号。",
+        "隐藏月牙信号移动至更容易看到的位置，并增加文字标识、亮度与雷达脉冲效果。",
+        "彩蛋任务条件、感谢信内容与存档进度保持不变。",
+      ],
+    },
     {
       version: "0.11.0",
       theme: "深空态势与双层袭击",
@@ -2661,6 +2670,9 @@
         state.endgame.transcensions = clampGameCount(
           state.endgame.transcensions + 1,
         );
+        const firstCrescentSignal =
+          state.endgame.transcensions === 1 &&
+          !state.crescentSecret.unlocked;
         state.dust = startingDust;
         state.runDust = startingDust;
         state.lifetimeDust = startingDust;
@@ -2688,15 +2700,12 @@
         addLog(
           `奇点坍缩完成，获得 ${formatNumber(gain, 0)} 枚碎片；第 ${state.endgame.transcensions} 个超越周期启动。`,
         );
-        if (
-          state.endgame.transcensions === 1 &&
-          !state.crescentSecret.unlocked
-        ) {
+        if (firstCrescentSignal) {
           addLog("坍缩余波中出现一枚不在星图上的月牙信号。");
         }
         checkAchievements();
         renderAll();
-        activatePrimaryPage("command", {
+        activatePrimaryPage(firstCrescentSignal ? "transcend" : "command", {
           persist: false,
           scroll: true,
         });
@@ -2709,6 +2718,20 @@
           "∞",
         );
         playAchievementTone();
+        if (firstCrescentSignal) {
+          window.setTimeout(() => {
+            if (state.crescentSecret.unlocked) return;
+            showModal({
+              eyebrow: "奇点余波异常",
+              icon: "☾",
+              title: "超越界面里似乎藏着什么",
+              message:
+                "雷达捕捉到一段无法归档的月牙信号。它就在当前超越界面中，找到发光的异常信号并点击它。",
+              confirmText: "开始寻找",
+              cancelText: null,
+            });
+          }, 520);
+        }
       },
     });
   }

@@ -2289,23 +2289,49 @@ h2 {
 }
 
 .crescent-signal {
-  position: absolute;
+  position: relative;
   z-index: 3;
-  right: 18px;
-  bottom: 18px;
-  display: grid;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  place-items: center;
-  border: 1px solid rgba(184, 140, 255, 0.14);
-  border-radius: 50%;
+  display: flex;
+  width: max-content;
+  min-height: 44px;
+  margin: 2px 0 14px auto;
+  padding: 7px 14px 7px 11px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(184, 140, 255, 0.58);
+  border-radius: 999px;
   cursor: pointer;
-  color: rgba(209, 184, 255, 0.68);
-  background: rgba(25, 19, 48, 0.46);
-  box-shadow: 0 0 18px rgba(184, 140, 255, 0.08);
-  font-size: calc(12px * var(--type-scale));
-  animation: crescent-whisper 4.2s ease-in-out infinite;
+  color: #eadcff;
+  background:
+    linear-gradient(120deg, rgba(86, 59, 142, 0.64), rgba(21, 62, 98, 0.56)),
+    rgba(25, 19, 48, 0.88);
+  box-shadow:
+    0 0 26px rgba(184, 140, 255, 0.24),
+    inset 0 1px rgba(255, 255, 255, 0.08);
+  animation: crescent-whisper 2.3s ease-in-out infinite;
+}
+
+.crescent-signal::before {
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(126, 214, 255, 0.24);
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+  animation: crescent-scan 2.3s ease-out infinite;
+}
+
+.crescent-signal > span {
+  font-size: calc(15px * var(--type-scale));
+  line-height: 1;
+  text-shadow: 0 0 14px rgba(224, 203, 255, 0.9);
+}
+
+.crescent-signal > small {
+  color: #d5f4ff;
+  font-size: calc(6.7px * var(--type-scale));
+  font-weight: 700;
+  letter-spacing: 0.12em;
 }
 
 .crescent-signal[hidden] {
@@ -2314,10 +2340,10 @@ h2 {
 
 .crescent-signal:hover,
 .crescent-signal:focus-visible {
-  border-color: rgba(209, 184, 255, 0.55);
-  color: #e0cbff;
-  background: rgba(78, 53, 118, 0.42);
-  box-shadow: 0 0 28px rgba(184, 140, 255, 0.25);
+  border-color: rgba(209, 184, 255, 0.95);
+  color: #fff;
+  background: rgba(88, 60, 140, 0.78);
+  box-shadow: 0 0 38px rgba(184, 140, 255, 0.44);
 }
 
 .crescent-mission {
@@ -5023,12 +5049,26 @@ footer {
 @keyframes crescent-whisper {
   0%,
   100% {
-    opacity: 0.42;
+    opacity: 0.78;
     transform: translateY(0);
   }
   50% {
-    opacity: 0.92;
-    transform: translateY(-2px);
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes crescent-scan {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  35% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.14);
   }
 }
 
@@ -5513,10 +5553,9 @@ footer {
   }
 
   .crescent-signal {
-    right: 13px;
-    bottom: 13px;
-    width: 36px;
-    height: 36px;
+    min-height: 42px;
+    margin: 4px 0 12px auto;
+    padding: 7px 12px 7px 10px;
   }
 
   .crescent-mission {

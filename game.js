@@ -28,8 +28,8 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.11.1";
-  const SAVE_VERSION = 4;
+  const GAME_VERSION = "0.12.0";
+  const SAVE_VERSION = 5;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const AUTOSAVE_INTERVAL = 10000;
@@ -61,8 +61,19 @@
     "core-shop",
     "combat",
     "transcend",
+    "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.12.0",
+      theme: "星海排行榜",
+      changes: [
+        "新增星海排行榜页面，支持累计星尘、最高综合战力与战斗次数三种排名。",
+        "新增跨奇点超越永久保留的生涯累计记录，旧存档会从当前有效进度自动补齐。",
+        "登录并确认云存档后自动发布成绩；排行榜只显示游戏内玩家名称，不显示账号邮箱。",
+        "排行榜成绩只增不减，清空全部进度时会同步删除当前账号的榜单记录。",
+      ],
+    },
     {
       version: "0.11.1",
       theme: "月牙信号引导优化",
@@ -630,7 +641,7 @@
       title: "欢迎来到星港",
       message:
         "你的目标是回收星尘、扩建轨道舰队，并通过一次次深空跃迁建立更强大的自动化航站。",
-      tip: "使用页面顶部的“指挥台、舰队、星港、研究、星核、战斗、超越”导航切换功能；游戏会记住你上次所在的页面。",
+      tip: "使用页面顶部的“指挥台、舰队、星港、研究、星核、战斗、超越、排行榜”导航切换功能；游戏会记住你上次所在的页面。",
     },
     {
       eyebrow: "第一步 · 主动采集",
@@ -1207,6 +1218,10 @@
     crescentLetterSalutation: $("#crescent-letter-salutation"),
     crescentLetterClose: $("#crescent-letter-close"),
     crescentLetterConfirm: $("#crescent-letter-confirm"),
+    leaderboardCareerDust: $("#leaderboard-career-dust"),
+    leaderboardHighestPower: $("#leaderboard-highest-power"),
+    leaderboardBattleCount: $("#leaderboard-battle-count"),
+    leaderboardCurrentPower: $("#leaderboard-current-power"),
     starfield: $("#starfield"),
   };
 
@@ -1296,6 +1311,9 @@
       dust: 0,
       runDust: 0,
       lifetimeDust: 0,
+      careerDust: 0,
+      careerBattles: 0,
+      highestCombinedPower: 0,
       lifetimeClicks: 0,
       buildings,
       upgrades: [],
@@ -1858,6 +1876,7 @@
     state.dust = safeAdd(state.dust, safeAmount);
     state.runDust = safeAdd(state.runDust, safeAmount);
     state.lifetimeDust = safeAdd(state.lifetimeDust, safeAmount);
+    state.careerDust = safeAdd(state.careerDust, safeAmount);
   }
 
   function addLog(text) {
@@ -1897,6 +1916,7 @@
   ) {
     try {
       const now = Date.now();
+      refreshCareerRecords();
       state.lastSeen = now;
       const serialized = JSON.stringify(state);
       const currentRaw = localStorage.getItem(SAVE_KEY);
@@ -1950,6 +1970,12 @@
     merged.runDust = clampGameNumber(raw.runDust);
     merged.lifetimeDust = clampGameNumber(
       Math.max(merged.runDust, Number(raw.lifetimeDust) || 0),
+    );
+    merged.careerDust = clampGameNumber(
+      Math.max(
+        merged.lifetimeDust,
+        Number(raw.careerDust) || 0,
+      ),
     );
     merged.lifetimeClicks = clampGameCount(raw.lifetimeClicks);
     merged.cores = clampGameNumber(Math.floor(Number(raw.cores) || 0));
@@ -2126,6 +2152,18 @@
           ? rawCombat.lastReport.slice(0, 220)
           : combatBase.lastReport,
     };
+    const currentCycleBattles = clampGameCount(
+      safeAdd(merged.combat.wins, merged.combat.losses),
+    );
+    merged.careerBattles = clampGameCount(
+      Math.max(currentCycleBattles, Number(raw.careerBattles) || 0),
+    );
+    merged.highestCombinedPower = clampGameNumber(
+      Math.max(
+        Number(raw.highestCombinedPower) || 0,
+        safeAdd(getCombatPower(merged), getDefensePower(merged)),
+      ),
+    );
     merged.buildings = { ...base.buildings };
     BUILDINGS.forEach((building) => {
       merged.buildings[building.id] = clampGameCount(
@@ -3016,6 +3054,7 @@
     const stats = getSkirmishStats(target);
     const success = Math.random() <= stats.chance;
     const cooldownMultiplier = getStarportCooldownMultiplier();
+    recordCareerBattle();
     if (success) {
       const reward = safeMultiply(stats.reward, 0.9 + Math.random() * 0.2);
       const drops = getSkirmishDrops(target);
@@ -3115,6 +3154,7 @@
 
     const stats = getPlanetStats(target);
     const success = Math.random() <= stats.chance;
+    recordCareerBattle();
     if (success) {
       const reward = safeMultiply(
         stats.reward,
@@ -3212,6 +3252,45 @@
     );
   }
 
+  function getCombinedPower(targetState = state) {
+    return clampGameNumber(
+      safeAdd(
+        getCombatPower(targetState),
+        getDefensePower(targetState),
+      ),
+    );
+  }
+
+  function refreshCareerRecords(targetState = state) {
+    targetState.careerDust = clampGameNumber(
+      Math.max(
+        Number(targetState.careerDust) || 0,
+        Number(targetState.lifetimeDust) || 0,
+        Number(targetState.runDust) || 0,
+      ),
+    );
+    targetState.careerBattles = clampGameCount(
+      Math.max(
+        Number(targetState.careerBattles) || 0,
+        safeAdd(
+          targetState.combat?.wins || 0,
+          targetState.combat?.losses || 0,
+        ),
+      ),
+    );
+    targetState.highestCombinedPower = clampGameNumber(
+      Math.max(
+        Number(targetState.highestCombinedPower) || 0,
+        getCombinedPower(targetState),
+      ),
+    );
+    return targetState;
+  }
+
+  function recordCareerBattle() {
+    state.careerBattles = clampGameCount(state.careerBattles + 1);
+  }
+
   function createRaidSnapshot(type, startedAt = Date.now()) {
     const pool = getRaidPool(type);
     const raider = pool[Math.floor(Math.random() * pool.length)];
@@ -3261,6 +3340,7 @@
     const raider = getRaidRaider(raid);
     const defense = getDefensePower();
     const defended = defense >= raid.power;
+    recordCareerBattle();
     if (major) {
       state.combat.majorRaidsFaced = clampGameCount(
         state.combat.majorRaidsFaced + 1,
@@ -4572,6 +4652,25 @@
     });
   }
 
+  function renderLeaderboardSummary() {
+    refreshCareerRecords();
+    const currentPower = getCombinedPower();
+    elements.leaderboardCareerDust.textContent = formatNumber(
+      state.careerDust,
+      0,
+    );
+    elements.leaderboardHighestPower.textContent = formatNumber(
+      state.highestCombinedPower,
+      0,
+    );
+    elements.leaderboardBattleCount.textContent = formatNumber(
+      state.careerBattles,
+      0,
+    );
+    elements.leaderboardCurrentPower.textContent =
+      `当前综合战力 ${formatNumber(currentPower, 0)}`;
+  }
+
   function renderAll() {
     renderBuildings();
     renderUpgrades();
@@ -4581,6 +4680,7 @@
     renderStarport();
     renderCombatTargets();
     renderLog();
+    renderLeaderboardSummary();
     updateBuyModeButtons();
     updateUi();
   }
@@ -4595,6 +4695,17 @@
       rebirths: clampGameCount(targetState.rebirths),
       transcensions: clampGameCount(targetState.endgame?.transcensions),
       lastSeen: finiteTimestamp(targetState.lastSeen),
+    };
+  }
+
+  function getLeaderboardEntry() {
+    refreshCareerRecords();
+    return {
+      playerName: normalizePlayerName(state.playerName) || "未命名指挥官",
+      careerDust: clampGameNumber(state.careerDust),
+      highestPower: clampGameNumber(state.highestCombinedPower),
+      battleCount: clampGameCount(state.careerBattles),
+      transcensions: clampGameCount(state.endgame?.transcensions),
     };
   }
 
@@ -4975,6 +5086,7 @@
         renderAll();
         activatePrimaryPage("command", { persist: false });
         saveGame();
+        window.dispatchEvent(new Event("stellar-career-reset"));
         showToast("新航线已建立", "全部进度已清空。", "✦");
         window.setTimeout(() => openNameDialog(true), 280);
       },
@@ -4999,6 +5111,10 @@
       if (selected && focus) tab.focus();
     });
     state.activePage = safePage;
+    if (safePage === "leaderboard") {
+      renderLeaderboardSummary();
+      window.dispatchEvent(new Event("stellar-leaderboard-open"));
+    }
     if (persist) saveGame();
     if (scroll) {
       const reduceMotion = window.matchMedia(
@@ -5425,6 +5541,9 @@
         renderEndgame();
         renderStarport();
         renderCombatTargets();
+        if (state.activePage === "leaderboard") {
+          renderLeaderboardSummary();
+        }
       }
       lastUi = now;
     }
@@ -5443,6 +5562,7 @@
     saveVersion: SAVE_VERSION,
     createSnapshot: createCloudSaveSnapshot,
     getMetadata: getCloudSaveMetadata,
+    getLeaderboardEntry,
     applySnapshot: applyCloudSaveSnapshot,
     notify: (title, message, icon = "☁") =>
       showToast(title, message, icon),

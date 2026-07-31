@@ -2,7 +2,10 @@ const FIREBASE_SDK_VERSION = "12.17.0";
 const FIREBASE_SDK_ROOT =
   `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}`;
 const CLOUD_COLLECTION = "saves";
+const LEADERBOARD_COLLECTION = "leaderboards";
 const AUTO_SYNC_DELAY = 45_000;
+const LEADERBOARD_SYNC_DELAY = 60_000;
+const LEADERBOARD_LIMIT = 50;
 const DEVICE_ID_KEY = "stellarOutpostCloudDeviceId_v1";
 
 const $ = (selector) => document.querySelector(selector);
@@ -40,6 +43,18 @@ const elements = {
   syncTime: $("#cloud-sync-time"),
   upload: $("#cloud-upload"),
   download: $("#cloud-download"),
+  leaderboardTab: $("#leaderboard-page-tab"),
+  leaderboardStatus: $("#leaderboard-status"),
+  leaderboardRefresh: $("#leaderboard-refresh"),
+  leaderboardLogin: $("#leaderboard-login-button"),
+  leaderboardServiceNote: $("#leaderboard-service-note"),
+  leaderboardServiceTitle: $("#leaderboard-service-note strong"),
+  leaderboardServiceMessage: $("#leaderboard-service-note p"),
+  leaderboardUpdatedAt: $("#leaderboard-updated-at"),
+  leaderboardList: $("#leaderboard-list"),
+  leaderboardCategories: Array.from(
+    document.querySelectorAll("[data-leaderboard-category]"),
+  ),
 };
 
 let bridge = null;
@@ -58,6 +73,9 @@ let syncTimer = null;
 let busy = false;
 let serviceConfigured = false;
 let serviceReady = false;
+let leaderboardCategory = "careerDust";
+let leaderboardTimer = null;
+let leaderboardBusy = false;
 
 function getDeviceId() {
   try {
@@ -215,6 +233,149 @@ function formatSaveTime(value) {
   });
 }
 
+const LEADERBOARD_CATEGORIES = Object.freeze({
+  careerDust: {
+    field: "careerDust",
+    label: "累计星尘",
+  },
+  highestPower: {
+    field: "highestPower",
+    label: "最高综合战力",
+  },
+  battleCount: {
+    field: "battleCount",
+    label: "战斗次数",
+  },
+});
+
+function setLeaderboardStatus(stateName, label) {
+  if (!elements.leaderboardStatus) return;
+  elements.leaderboardStatus.dataset.state = stateName;
+  elements.leaderboardStatus.textContent = label;
+}
+
+function setLeaderboardNote(title, message, { hidden = false } = {}) {
+  if (!elements.leaderboardServiceNote) return;
+  elements.leaderboardServiceTitle.textContent = title;
+  elements.leaderboardServiceMessage.textContent = message;
+  elements.leaderboardServiceNote.hidden = hidden;
+}
+
+function renderLeaderboardEmpty(message) {
+  if (!elements.leaderboardList) return;
+  elements.leaderboardList.textContent = "";
+  const item = document.createElement("li");
+  item.className = "leaderboard-empty";
+  item.textContent = message;
+  elements.leaderboardList.appendChild(item);
+}
+
+function leaderboardTimestamp(value) {
+  if (value && typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+  return Number(value) || 0;
+}
+
+function normalizeLeaderboardEntry(snapshot) {
+  const data = snapshot?.data?.();
+  if (!data || typeof data !== "object") return null;
+  return {
+    id: snapshot.id,
+    playerName: String(data.playerName || "未命名指挥官").slice(0, 12),
+    careerDust: Math.max(0, Number(data.careerDust) || 0),
+    highestPower: Math.max(0, Number(data.highestPower) || 0),
+    battleCount: Math.max(0, Math.floor(Number(data.battleCount) || 0)),
+    transcensions: Math.max(
+      0,
+      Math.floor(Number(data.transcensions) || 0),
+    ),
+    updatedAt: leaderboardTimestamp(data.updatedAt),
+  };
+}
+
+function renderLeaderboardRows(entries) {
+  if (!elements.leaderboardList) return;
+  elements.leaderboardList.textContent = "";
+  const category = LEADERBOARD_CATEGORIES[leaderboardCategory];
+  if (!entries.length) {
+    renderLeaderboardEmpty("这个分类还没有指挥官留下记录。");
+    return;
+  }
+  entries.forEach((entry, index) => {
+    const row = document.createElement("li");
+    row.className = `leaderboard-row${
+      entry.id === currentUser?.uid ? " is-current" : ""
+    }`;
+
+    const rank = document.createElement("span");
+    rank.className = "leaderboard-rank";
+    rank.textContent = `#${index + 1}`;
+
+    const identity = document.createElement("span");
+    identity.className = "leaderboard-identity";
+    const name = document.createElement("strong");
+    name.textContent = entry.playerName;
+    const detail = document.createElement("small");
+    detail.textContent = `奇点超越 ${entry.transcensions} 次${
+      entry.id === currentUser?.uid ? " · 当前账号" : ""
+    }`;
+    identity.append(name, detail);
+
+    const score = document.createElement("span");
+    score.className = "leaderboard-score";
+    const value = document.createElement("strong");
+    value.textContent = formatGameNumber(entry[category.field]);
+    const scoreLabel = document.createElement("small");
+    scoreLabel.textContent = category.label;
+    score.append(value, scoreLabel);
+
+    row.append(rank, identity, score);
+    elements.leaderboardList.appendChild(row);
+  });
+}
+
+function updateLeaderboardAccessState() {
+  if (!elements.leaderboardRefresh) return;
+  elements.leaderboardRefresh.disabled =
+    !currentUser || !serviceReady || !syncReady || leaderboardBusy;
+  elements.leaderboardLogin.hidden = Boolean(currentUser);
+  if (!serviceConfigured) {
+    setLeaderboardStatus("error", "服务未配置");
+    setLeaderboardNote(
+      "排行榜服务尚未配置",
+      "本地永久记录仍会正常保存，完成 Firebase 配置后即可参加排名。",
+    );
+  } else if (!serviceReady) {
+    setLeaderboardStatus("error", "连接异常");
+    setLeaderboardNote(
+      "排行榜暂时无法连接",
+      "请检查网络连接；本地游戏与永久记录不受影响。",
+    );
+  } else if (!currentUser) {
+    setLeaderboardStatus("local", "本地记录");
+    setLeaderboardNote(
+      "登录后查看跨设备排行榜",
+      "本地记录不会丢失，登录并确认云存档后才会发布成绩。",
+    );
+  } else if (!syncReady) {
+    setLeaderboardStatus("loading", "等待存档确认");
+    setLeaderboardNote(
+      "先确认本设备使用的存档",
+      "云端存档确认完成后，系统才会上传这份进度的排行榜成绩。",
+    );
+  } else if (elements.leaderboardStatus?.dataset.state !== "error") {
+    setLeaderboardNote("排行榜已连接", "当前成绩会定时更新。", {
+      hidden: true,
+    });
+  }
+}
+
+function refreshLeaderboardIfVisible(delay = 250) {
+  if (!elements.leaderboardTab?.classList.contains("active")) return;
+  window.setTimeout(() => refreshLeaderboard(), delay);
+}
+
 function renderSaveSummary(container, metadata) {
   container.textContent = "";
   const rows = [
@@ -252,6 +413,7 @@ function showConflict(record) {
     "检测到其他设备的云端记录",
     "!",
   );
+  updateLeaderboardAccessState();
   if (elements.backdrop.hidden) {
     window.setTimeout(openAccount, 300);
   }
@@ -294,6 +456,191 @@ async function readRemoteRecord() {
   );
   const snapshot = await firebaseFirestoreApi.getDoc(reference);
   return normalizeRemoteRecord(snapshot);
+}
+
+function getLocalLeaderboardEntry() {
+  if (!bridge?.getLeaderboardEntry) return null;
+  const entry = bridge.getLeaderboardEntry();
+  return {
+    playerName: String(entry.playerName || "未命名指挥官").slice(0, 12),
+    careerDust: Math.min(1e300, Math.max(0, Number(entry.careerDust) || 0)),
+    highestPower: Math.min(
+      1e300,
+      Math.max(0, Number(entry.highestPower) || 0),
+    ),
+    battleCount: Math.min(
+      Number.MAX_SAFE_INTEGER,
+      Math.max(0, Math.floor(Number(entry.battleCount) || 0)),
+    ),
+    transcensions: Math.min(
+      Number.MAX_SAFE_INTEGER,
+      Math.max(0, Math.floor(Number(entry.transcensions) || 0)),
+    ),
+  };
+}
+
+function clearLeaderboardTimer() {
+  if (leaderboardTimer !== null) {
+    window.clearTimeout(leaderboardTimer);
+    leaderboardTimer = null;
+  }
+}
+
+function scheduleLeaderboardPublish(delay = LEADERBOARD_SYNC_DELAY) {
+  if (
+    leaderboardTimer !== null ||
+    !currentUser ||
+    !syncReady ||
+    !navigator.onLine
+  ) {
+    return;
+  }
+  leaderboardTimer = window.setTimeout(() => {
+    leaderboardTimer = null;
+    publishLeaderboardEntry({ silent: true }).catch(() => {
+      // The leaderboard panel shows a recoverable status on the next visit.
+    });
+  }, Math.max(800, delay));
+}
+
+async function publishLeaderboardEntry({ silent = false } = {}) {
+  if (!currentUser || !db || !bridge || !syncReady) return false;
+  const localEntry = getLocalLeaderboardEntry();
+  if (!localEntry) return false;
+  const userId = currentUser.uid;
+  const reference = firebaseFirestoreApi.doc(
+    db,
+    LEADERBOARD_COLLECTION,
+    userId,
+  );
+  clearLeaderboardTimer();
+  if (!silent) setLeaderboardStatus("loading", "正在上传成绩");
+  try {
+    await firebaseFirestoreApi.runTransaction(
+      db,
+      async (transaction) => {
+        const remoteSnapshot = await transaction.get(reference);
+        const remote = remoteSnapshot.exists()
+          ? remoteSnapshot.data()
+          : {};
+        transaction.set(reference, {
+          gameVersion: bridge.gameVersion,
+          playerName: localEntry.playerName,
+          careerDust: Math.max(
+            localEntry.careerDust,
+            Number(remote.careerDust) || 0,
+          ),
+          highestPower: Math.max(
+            localEntry.highestPower,
+            Number(remote.highestPower) || 0,
+          ),
+          battleCount: Math.max(
+            localEntry.battleCount,
+            Math.floor(Number(remote.battleCount) || 0),
+          ),
+          transcensions: Math.max(
+            localEntry.transcensions,
+            Math.floor(Number(remote.transcensions) || 0),
+          ),
+          updatedAt: firebaseFirestoreApi.serverTimestamp(),
+        });
+      },
+    );
+    setLeaderboardStatus(
+      "online",
+      silent ? "成绩已同步" : "成绩已上传",
+    );
+    return true;
+  } catch (error) {
+    setLeaderboardStatus("error", "排行榜异常");
+    setLeaderboardNote(
+      "成绩暂时无法上传",
+      error?.code === "permission-denied"
+        ? "排行榜安全规则尚未生效，或当前登录状态已经过期。"
+        : friendlyError(error),
+    );
+    throw error;
+  } finally {
+    updateLeaderboardAccessState();
+  }
+}
+
+async function loadLeaderboard() {
+  updateLeaderboardAccessState();
+  if (!currentUser || !db || !serviceReady) {
+    renderLeaderboardEmpty("登录后即可读取排行榜。");
+    return;
+  }
+  if (!syncReady) {
+    renderLeaderboardEmpty("请先在账号窗口确认要使用的云端存档。");
+    return;
+  }
+  const category = LEADERBOARD_CATEGORIES[leaderboardCategory];
+  leaderboardBusy = true;
+  setLeaderboardStatus("loading", "正在读取排名");
+  updateLeaderboardAccessState();
+  try {
+    const rankingQuery = firebaseFirestoreApi.query(
+      firebaseFirestoreApi.collection(db, LEADERBOARD_COLLECTION),
+      firebaseFirestoreApi.orderBy(category.field, "desc"),
+      firebaseFirestoreApi.limit(LEADERBOARD_LIMIT),
+    );
+    const snapshot = await firebaseFirestoreApi.getDocs(rankingQuery);
+    const entries = snapshot.docs
+      .map(normalizeLeaderboardEntry)
+      .filter(Boolean);
+    renderLeaderboardRows(entries);
+    setLeaderboardStatus("online", "排行榜在线");
+    elements.leaderboardUpdatedAt.textContent =
+      `前 ${LEADERBOARD_LIMIT} 名 · 更新于 ${formatSaveTime(Date.now())}`;
+    setLeaderboardNote("排行榜已连接", "当前成绩会定时更新。", {
+      hidden: true,
+    });
+  } catch (error) {
+    setLeaderboardStatus("error", "读取失败");
+    renderLeaderboardEmpty("排行榜暂时无法读取，请稍后重试。");
+    setLeaderboardNote(
+      "排行榜暂时无法读取",
+      error?.code === "permission-denied"
+        ? "请确认已经登录，并部署最新的 Firestore 排行榜安全规则。"
+        : friendlyError(error),
+    );
+  } finally {
+    leaderboardBusy = false;
+    updateLeaderboardAccessState();
+  }
+}
+
+async function refreshLeaderboard() {
+  if (!currentUser || !syncReady || leaderboardBusy) return;
+  leaderboardBusy = true;
+  updateLeaderboardAccessState();
+  try {
+    await publishLeaderboardEntry({ silent: true });
+  } catch (error) {
+    // Loading may still succeed and show the last accepted score.
+  } finally {
+    leaderboardBusy = false;
+  }
+  await loadLeaderboard();
+}
+
+async function deleteLeaderboardEntry() {
+  clearLeaderboardTimer();
+  if (!currentUser || !db) return;
+  try {
+    const reference = firebaseFirestoreApi.doc(
+      db,
+      LEADERBOARD_COLLECTION,
+      currentUser.uid,
+    );
+    await firebaseFirestoreApi.deleteDoc(reference);
+    setLeaderboardStatus("online", "榜单记录已重置");
+    renderLeaderboardEmpty("当前账号的新纪录会在下一次同步后重新加入排行榜。");
+    scheduleLeaderboardPublish(2_000);
+  } catch (error) {
+    setLeaderboardStatus("error", "榜单重置失败");
+  }
 }
 
 function clearSyncTimer() {
@@ -374,6 +721,9 @@ async function uploadLocalSave({ force = false } = {}) {
       `最近同步 ${formatSaveTime(metadata.lastSeen)}`,
       "✓",
     );
+    scheduleLeaderboardPublish(1_500);
+    updateLeaderboardAccessState();
+    refreshLeaderboardIfVisible();
   } catch (error) {
     dirty = true;
     if (error?.code === "cloud/conflict") {
@@ -415,6 +765,9 @@ function applyRemoteSave(record, { claimCurrentDevice = false } = {}) {
   if (claimCurrentDevice) {
     scheduleCloudSync(1_500);
   }
+  scheduleLeaderboardPublish(1_800);
+  updateLeaderboardAccessState();
+  refreshLeaderboardIfVisible();
 }
 
 async function promptRemoteChoice() {
@@ -477,6 +830,7 @@ async function handleSignedIn(user) {
   dirty = false;
   hideConflict();
   setSyncStatus("syncing", "正在检查云端记录", "请稍候", "◇");
+  updateLeaderboardAccessState();
 
   try {
     const latest = await readRemoteRecord();
@@ -514,6 +868,9 @@ async function handleSignedIn(user) {
           "✓",
         );
       }
+      scheduleLeaderboardPublish(1_500);
+      updateLeaderboardAccessState();
+      refreshLeaderboardIfVisible();
       return;
     }
 
@@ -530,6 +887,7 @@ function handleSignedOut() {
   syncReady = false;
   dirty = false;
   clearSyncTimer();
+  clearLeaderboardTimer();
   hideConflict();
   setView("signed-out");
   setBanner(
@@ -544,6 +902,9 @@ function handleSignedOut() {
     "账号与云端存档 · 当前未登录",
   );
   clearAuthError();
+  updateLeaderboardAccessState();
+  renderLeaderboardEmpty("登录后即可读取排行榜。");
+  elements.leaderboardUpdatedAt.textContent = "等待连接排行榜服务";
 }
 
 async function signInWithGoogle() {
@@ -608,9 +969,38 @@ function bindUi() {
     }
   });
   elements.download.addEventListener("click", promptRemoteChoice);
+  elements.leaderboardLogin.addEventListener("click", openAccount);
+  elements.leaderboardRefresh.addEventListener("click", refreshLeaderboard);
+  elements.leaderboardCategories.forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextCategory = button.dataset.leaderboardCategory;
+      if (!LEADERBOARD_CATEGORIES[nextCategory]) return;
+      leaderboardCategory = nextCategory;
+      elements.leaderboardCategories.forEach((entry) => {
+        entry.classList.toggle(
+          "active",
+          entry.dataset.leaderboardCategory === leaderboardCategory,
+        );
+      });
+      loadLeaderboard();
+    });
+  });
+  window.addEventListener("stellar-leaderboard-open", () => {
+    if (currentUser && syncReady) {
+      refreshLeaderboard();
+    } else {
+      updateLeaderboardAccessState();
+    }
+  });
+  window.addEventListener("stellar-career-reset", () => {
+    deleteLeaderboardEntry();
+  });
   window.addEventListener("online", () => {
     if (currentUser && dirty && syncReady) {
       scheduleCloudSync(1_000);
+    }
+    if (currentUser && syncReady) {
+      scheduleLeaderboardPublish(1_200);
     }
   });
   window.addEventListener("offline", () => {
@@ -621,6 +1011,7 @@ function bindUi() {
         "本地存档继续工作，联网后会重新同步",
         "⌁",
       );
+      setLeaderboardStatus("error", "当前离线");
     }
   });
   window.addEventListener("stellar-local-save", (event) => {
@@ -629,6 +1020,9 @@ function bindUi() {
     const urgent =
       event.detail?.manual === true || event.detail?.urgent === true;
     scheduleCloudSync(urgent ? 750 : AUTO_SYNC_DELAY);
+    scheduleLeaderboardPublish(
+      urgent ? 1_500 : LEADERBOARD_SYNC_DELAY,
+    );
   });
 }
 
@@ -656,6 +1050,7 @@ async function initializeCloudService() {
       "游戏仍会正常使用本地自动存档，不会丢失当前进度。",
     );
     setCloudState("local", "本地", "账号与云端存档 · 尚未配置");
+    updateLeaderboardAccessState();
     return;
   }
 
@@ -675,6 +1070,7 @@ async function initializeCloudService() {
       firebaseAuthApi.browserLocalPersistence,
     );
     serviceReady = true;
+    updateLeaderboardAccessState();
     firebaseAuthApi.onAuthStateChanged(auth, (user) => {
       if (user) {
         handleSignedIn(user);
@@ -692,6 +1088,7 @@ async function initializeCloudService() {
       "本地自动存档仍在工作，请稍后检查网络或 Firebase 配置。",
     );
     setCloudState("error", "异常", "账号与云端存档 · 连接失败");
+    updateLeaderboardAccessState();
   }
 }
 

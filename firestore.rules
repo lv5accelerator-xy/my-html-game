@@ -63,5 +63,63 @@ service cloud.firestore {
       allow read, delete: if isOwner();
       allow create, update: if isOwner() && hasValidShape();
     }
+
+    match /leaderboards/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function hasValidLeaderboardShape() {
+        return request.resource.data.keys().hasAll([
+          "gameVersion",
+          "playerName",
+          "careerDust",
+          "highestPower",
+          "battleCount",
+          "transcensions",
+          "updatedAt"
+        ])
+        && request.resource.data.keys().hasOnly([
+          "gameVersion",
+          "playerName",
+          "careerDust",
+          "highestPower",
+          "battleCount",
+          "transcensions",
+          "updatedAt"
+        ])
+        && request.resource.data.gameVersion is string
+        && request.resource.data.gameVersion.size() <= 20
+        && request.resource.data.playerName is string
+        && request.resource.data.playerName.size() >= 1
+        && request.resource.data.playerName.size() <= 24
+        && request.resource.data.careerDust is number
+        && request.resource.data.careerDust >= 0
+        && request.resource.data.highestPower is number
+        && request.resource.data.highestPower >= 0
+        && request.resource.data.battleCount is int
+        && request.resource.data.battleCount >= 0
+        && request.resource.data.battleCount <= 9007199254740991
+        && request.resource.data.transcensions is int
+        && request.resource.data.transcensions >= 0
+        && request.resource.data.transcensions <= 9007199254740991
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedAt == request.time;
+      }
+
+      function doesNotLowerCareerRecords() {
+        return request.resource.data.careerDust >= resource.data.careerDust
+          && request.resource.data.highestPower >= resource.data.highestPower
+          && request.resource.data.battleCount >= resource.data.battleCount
+          && request.resource.data.transcensions >= resource.data.transcensions;
+      }
+
+      allow read: if request.auth != null;
+      allow create: if isOwner() && hasValidLeaderboardShape();
+      allow update: if isOwner()
+        && hasValidLeaderboardShape()
+        && doesNotLowerCareerRecords();
+      allow delete: if isOwner();
+    }
   }
 }

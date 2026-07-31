@@ -12,7 +12,7 @@
     />
     <meta name="theme-color" content="#07111f" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.11.1" />
+    <link rel="stylesheet" href="styles.css?v=0.12.0" />
   </head>
   <body>
     <canvas id="starfield" aria-hidden="true"></canvas>
@@ -174,6 +174,17 @@
           >
             <span class="navigation-icon" aria-hidden="true">∞</span>
             <span>超越</span>
+          </button>
+          <button
+            id="leaderboard-page-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="leaderboard-page"
+            data-page="leaderboard"
+          >
+            <span class="navigation-icon" aria-hidden="true">♜</span>
+            <span>排行榜</span>
           </button>
         </div>
       </nav>
@@ -796,6 +807,105 @@
             </section>
           </div>
         </section>
+
+        <section
+          id="leaderboard-page"
+          class="panel game-page leaderboard-panel"
+          role="tabpanel"
+          aria-labelledby="leaderboard-page-tab leaderboard-title"
+          hidden
+        >
+          <div class="panel-heading leaderboard-heading">
+            <div>
+              <p class="eyebrow">跨航站竞赛</p>
+              <h2 id="leaderboard-title">星海排行榜</h2>
+            </div>
+            <span id="leaderboard-status" class="leaderboard-status" data-state="local">
+              本地记录
+            </span>
+          </div>
+
+          <div class="leaderboard-intro">
+            <div>
+              <strong>与其他指挥官比较长期航站记录</strong>
+              <p>登录账号后上传成绩。排行榜只显示游戏内玩家名称，不公开邮箱。</p>
+            </div>
+            <button id="leaderboard-refresh" type="button" disabled>
+              <span aria-hidden="true">↻</span>
+              刷新排名
+            </button>
+          </div>
+
+          <section class="leaderboard-personal" aria-labelledby="leaderboard-personal-title">
+            <header>
+              <span aria-hidden="true">◇</span>
+              <div>
+                <small>我的永久记录</small>
+                <h3 id="leaderboard-personal-title">当前指挥官数据</h3>
+              </div>
+              <span id="leaderboard-current-power">当前综合战力 55</span>
+            </header>
+            <div class="leaderboard-personal-grid">
+              <article>
+                <span aria-hidden="true">✦</span>
+                <small>累计星尘</small>
+                <strong id="leaderboard-career-dust">0</strong>
+                <p>跨越普通跃迁与奇点超越永久累计</p>
+              </article>
+              <article>
+                <span aria-hidden="true">⬡</span>
+                <small>最高综合战力</small>
+                <strong id="leaderboard-highest-power">55</strong>
+                <p>历史最高舰队攻击力与基地防御力之和</p>
+              </article>
+              <article>
+                <span aria-hidden="true">◎</span>
+                <small>战斗次数</small>
+                <strong id="leaderboard-battle-count">0</strong>
+                <p>主动战斗、基地防卫及离线大袭击总计</p>
+              </article>
+            </div>
+          </section>
+
+          <div class="leaderboard-toolbar">
+            <div class="leaderboard-categories" role="group" aria-label="排行榜分类">
+              <button class="active" type="button" data-leaderboard-category="careerDust">
+                累计星尘
+              </button>
+              <button type="button" data-leaderboard-category="highestPower">
+                最高战力
+              </button>
+              <button type="button" data-leaderboard-category="battleCount">
+                战斗次数
+              </button>
+            </div>
+            <small id="leaderboard-updated-at">等待连接排行榜服务</small>
+          </div>
+
+          <div id="leaderboard-service-note" class="leaderboard-service-note">
+            <span aria-hidden="true">☁</span>
+            <div>
+              <strong>登录后查看跨设备排行榜</strong>
+              <p>本地记录不会丢失，登录并确认云存档后才会发布成绩。</p>
+            </div>
+            <button id="leaderboard-login-button" type="button">连接账号</button>
+          </div>
+
+          <div class="leaderboard-table" aria-live="polite">
+            <header aria-hidden="true">
+              <span>排名</span>
+              <span>指挥官</span>
+              <span>记录</span>
+            </header>
+            <ol id="leaderboard-list">
+              <li class="leaderboard-empty">登录后即可读取排行榜。</li>
+            </ol>
+          </div>
+
+          <p class="leaderboard-integrity-note">
+            排名数据来自玩家客户端存档，用于好友间比较与长期目标展示；异常记录可能被清理。
+          </p>
+        </section>
       </main>
 
       <aside id="event-card" class="event-card" aria-live="polite">
@@ -813,7 +923,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.11.1</span>
+        <span>航站协议 v0.12.0</span>
       </footer>
     </div>
 
@@ -857,7 +967,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.11.1</strong>
+          <strong id="patch-notes-current-version">v0.12.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1081,9 +1191,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.11.1"></script>
-    <script src="game.js?v=0.11.1"></script>
-    <script src="firebase-config.js?v=0.11.1"></script>
-    <script type="module" src="cloud-save.js?v=0.11.1"></script>
+    <script src="game-math.js?v=0.12.0"></script>
+    <script src="game.js?v=0.12.0"></script>
+    <script src="firebase-config.js?v=0.12.0"></script>
+    <script type="module" src="cloud-save.js?v=0.12.0"></script>
   </body>
 </html>

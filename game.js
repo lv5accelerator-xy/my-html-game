@@ -27,7 +27,7 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.9.4";
+  const GAME_VERSION = "0.10.0";
   const SAVE_VERSION = 3;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -55,6 +55,16 @@
     "transcend",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.10.0",
+      theme: "账号与云端航站",
+      changes: [
+        "新增 Google 账号登录与跨设备云端存档入口；登录密码只在 Google 的安全页面中处理。",
+        "本地自动存档继续作为离线主体，连接账号后可手动或定时同步至个人云端航站。",
+        "云存档使用修订号检测多设备覆盖，发生冲突时由玩家选择保留本地或云端进度。",
+        "加入独立的 Firestore 所有者规则，未连接云服务时会安全回退到原有本地存档。",
+      ],
+    },
     {
       version: "0.9.4",
       theme: "超越后的隐藏信号",
@@ -1065,6 +1075,9 @@
     patchNotesList: $("#patch-notes-list"),
     patchNotesClose: $("#patch-notes-close"),
     patchNotesConfirm: $("#patch-notes-confirm"),
+    accountButton: $("#account-button"),
+    accountBackdrop: $("#account-backdrop"),
+    accountClose: $("#account-close"),
     nameBackdrop: $("#name-backdrop"),
     nameModalTitle: $("#name-modal-title"),
     nameModalMessage: $("#name-modal-message"),
@@ -1859,10 +1872,20 @@
       }
       localStorage.setItem(SAVE_KEY, serialized);
       lastSave = now;
+      window.dispatchEvent(
+        new CustomEvent("stellar-local-save", {
+          detail: {
+            serialized,
+            manual: showFeedback,
+            urgent: forceBackup,
+            savedAt: now,
+          },
+        }),
+      );
       if (showFeedback) {
         showToast(
-          "航站记录已同步",
-          "当前进度已保存，并保留最近的轮换备份。",
+          "本地航站记录已保存",
+          "当前进度已保存在此设备，并保留最近的轮换备份。",
           "✓",
         );
         playTone(540, 0.05, "sine");
@@ -2354,7 +2377,7 @@
         addLog(`跃迁成功，航站获得 ${formatNumber(gain, 0)} 枚星核。`);
         checkAchievements();
         renderAll();
-        saveGame();
+        saveGame(false, { forceBackup: true });
         showToast("跃迁完成", `永久产量增幅提升至 ×${getCoreMultiplier().toFixed(2)}。`, "◒");
         playAchievementTone();
       },
@@ -3328,7 +3351,8 @@
       !elements.nameBackdrop.hidden ||
       !elements.tutorialBackdrop.hidden ||
       !elements.patchNotesBackdrop.hidden ||
-      !elements.crescentLetterBackdrop.hidden
+      !elements.crescentLetterBackdrop.hidden ||
+      !elements.accountBackdrop.hidden
     ) {
       window.setTimeout(showStartupNotices, 240);
       return;
@@ -3359,8 +3383,8 @@
       ? "设置玩家名称"
       : "修改玩家名称";
     elements.nameModalMessage.textContent = required
-      ? "为你的指挥官设置名称。名称会显示在星港顶部，并随本地存档保存。"
-      : "输入新的玩家名称，保存后会立即更新指挥官档案。";
+      ? "为你的指挥官设置名称。名称会显示在星港顶部，随本地存档保存，并在登录后同步至云端。"
+      : "输入新的玩家名称，保存后会立即更新指挥官档案和下一份云存档。";
     elements.playerNameInput.value = state.playerName;
     elements.nameError.textContent = "";
     elements.nameCancel.hidden = required;
@@ -4267,6 +4291,41 @@
     updateUi();
   }
 
+  function getCloudSaveMetadata(targetState = state) {
+    return {
+      playerName: normalizePlayerName(targetState.playerName) || "未命名指挥官",
+      playTime: clampGameNumber(targetState.playTime),
+      lifetimeDust: clampGameNumber(targetState.lifetimeDust),
+      cores: clampGameNumber(targetState.cores),
+      totalCores: clampGameNumber(targetState.totalCores),
+      rebirths: clampGameCount(targetState.rebirths),
+      transcensions: clampGameCount(targetState.endgame?.transcensions),
+      lastSeen: finiteTimestamp(targetState.lastSeen),
+    };
+  }
+
+  function createCloudSaveSnapshot() {
+    const snapshot = JSON.parse(JSON.stringify(state));
+    snapshot.lastSeen = Date.now();
+    return snapshot;
+  }
+
+  function applyCloudSaveSnapshot(rawSnapshot) {
+    const nextState = sanitizeState(rawSnapshot);
+    const cloudSavedAt = nextState.lastSeen;
+    state = nextState;
+    grantInactiveEarnings(cloudSavedAt, "none");
+    syncBgmState();
+    saveGame(false, { forceBackup: true });
+    renderAll();
+    activatePrimaryPage(state.activePage, { persist: false });
+    showToast("云端存档已载入", "本地航站已切换到所选的云端记录。", "☁");
+    if (!state.playerName) {
+      window.setTimeout(() => openNameDialog(true), 250);
+    }
+    return getCloudSaveMetadata();
+  }
+
   function updateGoal() {
     const nextBuilding = BUILDINGS.find(
       (building) => state.lifetimeDust < building.unlock,
@@ -4593,7 +4652,7 @@
       eyebrow: "危险操作",
       icon: "!",
       title: "清空全部航站记录？",
-      message: "这个操作会删除星尘、舰队、研究、成就和星核，且无法撤销。建议先导出存档。",
+      message: "这个操作会删除星尘、舰队、研究、成就和星核，且无法撤销。若已登录，清空后的记录会在下一次云同步时覆盖云端存档。建议先导出存档。",
       confirmText: "彻底清空",
       cancelText: "保留进度",
       onConfirm: () => {
@@ -4897,7 +4956,8 @@
         (!elements.modalBackdrop.hidden ||
           !elements.nameBackdrop.hidden ||
           !elements.patchNotesBackdrop.hidden ||
-          !elements.crescentLetterBackdrop.hidden)
+          !elements.crescentLetterBackdrop.hidden ||
+          !elements.accountBackdrop.hidden)
       ) {
         return;
       }
@@ -4912,6 +4972,7 @@
         elements.settingsMenu.hidden = true;
         if (!elements.patchNotesBackdrop.hidden) closePatchNotes();
         if (!elements.crescentLetterBackdrop.hidden) closeCrescentLetter();
+        if (!elements.accountBackdrop.hidden) elements.accountClose.click();
         if (!elements.tutorialBackdrop.hidden) closeTutorial(false);
         if (!elements.modalBackdrop.hidden && !elements.modalCancel.hidden) closeModal(false);
         if (!elements.nameBackdrop.hidden) closeNameDialog();
@@ -4985,6 +5046,16 @@
   setupStarfield();
   bindEvents();
   renderAll();
+  globalThis.StellarOutpostCloudBridge = Object.freeze({
+    gameVersion: GAME_VERSION,
+    saveVersion: SAVE_VERSION,
+    createSnapshot: createCloudSaveSnapshot,
+    getMetadata: getCloudSaveMetadata,
+    applySnapshot: applyCloudSaveSnapshot,
+    notify: (title, message, icon = "☁") =>
+      showToast(title, message, icon),
+  });
+  window.dispatchEvent(new Event("stellar-game-ready"));
   if (recoveredBackupIndex >= 0) {
     saveGame(false, { skipBackup: true });
     window.setTimeout(() => {

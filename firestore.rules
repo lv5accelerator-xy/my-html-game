@@ -1,0 +1,67 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /saves/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function hasValidShape() {
+        return request.resource.data.keys().hasAll([
+          "gameVersion",
+          "saveVersion",
+          "revision",
+          "updatedAt",
+          "clientSavedAt",
+          "deviceId",
+          "playerName",
+          "playTime",
+          "lifetimeDust",
+          "totalCores",
+          "transcensions",
+          "snapshot"
+        ])
+        && request.resource.data.keys().hasOnly([
+          "gameVersion",
+          "saveVersion",
+          "revision",
+          "updatedAt",
+          "clientSavedAt",
+          "deviceId",
+          "playerName",
+          "playTime",
+          "lifetimeDust",
+          "totalCores",
+          "transcensions",
+          "snapshot"
+        ])
+        && request.resource.data.gameVersion is string
+        && request.resource.data.gameVersion.size() <= 20
+        && request.resource.data.saveVersion is int
+        && request.resource.data.saveVersion >= 1
+        && request.resource.data.revision is int
+        && request.resource.data.revision >= 1
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.clientSavedAt is number
+        && request.resource.data.clientSavedAt >= 0
+        && request.resource.data.deviceId is string
+        && request.resource.data.deviceId.size() <= 80
+        && request.resource.data.playerName is string
+        && request.resource.data.playerName.size() <= 24
+        && request.resource.data.playTime is number
+        && request.resource.data.playTime >= 0
+        && request.resource.data.lifetimeDust is number
+        && request.resource.data.lifetimeDust >= 0
+        && request.resource.data.totalCores is number
+        && request.resource.data.totalCores >= 0
+        && request.resource.data.transcensions is int
+        && request.resource.data.transcensions >= 0
+        && request.resource.data.snapshot is map;
+      }
+
+      allow read, delete: if isOwner();
+      allow create, update: if isOwner() && hasValidShape();
+    }
+  }
+}

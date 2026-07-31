@@ -1,0 +1,110 @@
+《星港拾荒者》账号与云端存档配置说明
+适用版本：v0.10.0
+
+============================================================
+
+当前项目状态
+
+- Firebase 项目：stellar-outpost-idle
+- Web 应用：星港拾荒者 Web
+- 身份验证：Google 登录
+- 授权域名：lv5accelerator-xy.github.io
+- Firestore 区域：northamerica-northeast2 (Toronto)
+- Firestore 规则：已发布所有者隔离规则
+
+============================================================
+
+一、创建 Firebase 项目
+
+1. 打开 https://console.firebase.google.com/
+2. 选择“创建 Firebase 项目”。
+3. 项目名称建议使用：stellar-outpost-idle
+4. 本游戏不依赖 Google Analytics，可暂不启用。
+5. 项目创建完成后，在项目概览中选择“Web 应用”图标。
+6. 应用昵称建议使用：星港拾荒者-Web
+7. 不需要启用 Firebase Hosting；游戏继续由 GitHub Pages 托管。
+
+============================================================
+
+二、填写 Web 应用配置
+
+注册 Web 应用后，Firebase 会显示 firebaseConfig 对象。
+
+当前游戏根目录中的 firebase-config.js 已填写 stellar-outpost-idle 的四个公开 Web 配置字段。
+如果以后更换 Firebase 项目，请将其替换为新项目控制台提供的值：
+
+globalThis.STELLAR_FIREBASE_CONFIG = Object.freeze({
+  apiKey: "控制台中的 apiKey",
+  authDomain: "控制台中的 authDomain",
+  projectId: "控制台中的 projectId",
+  appId: "控制台中的 appId",
+});
+
+Firebase Web 配置用于识别项目，可以随网站前端发布。
+不要把 Firebase 服务账号 JSON、管理员私钥或 OAuth Client Secret 放入 GitHub。
+
+============================================================
+
+三、启用 Google 登录
+
+1. Firebase 控制台进入“Authentication”。
+2. 选择“开始使用”。
+3. 打开“登录方法”。
+4. 启用“Google”。
+5. 将项目公开名称设置为“星港拾荒者”，选择项目支持邮箱并保存。
+6. 在 Authentication 的 Authorized domains 中确认或添加：
+   lv5accelerator-xy.github.io
+
+============================================================
+
+四、创建 Cloud Firestore
+
+1. Firebase 控制台进入“Firestore Database”。
+2. 选择“创建数据库”。
+3. 使用 Native/标准模式。
+4. 选择生产模式，不要使用允许所有人读写的测试规则。
+5. 当前项目使用 northamerica-northeast2 (Toronto)；数据库区域创建后无法更改。
+
+============================================================
+
+五、发布安全规则
+
+本项目根目录已经包含 firestore.rules。
+
+方法 A：Firebase 控制台
+
+1. 进入 Firestore Database → Rules。
+2. 用 firestore.rules 的完整内容替换在线编辑器。
+3. 点击“发布”。
+
+方法 B：Firebase CLI
+
+1. 安装并登录 Firebase CLI。
+2. 在本项目目录关联 Firebase 项目。
+3. 执行：
+   firebase deploy --only firestore:rules
+
+规则会限制：
+
+- 必须先通过 Firebase Authentication 登录。
+- 每个账号只能读取和修改与自己 UID 相同的存档文档。
+- 云存档字段必须符合预期结构。
+- 未登录用户不能读取、写入或删除任何存档。
+
+============================================================
+
+六、上线前检查
+
+1. 将填好配置的 firebase-config.js 提交到 GitHub。
+2. 等待 GitHub Pages 更新。
+3. 使用一个 Google 测试账号登录。
+4. 确认首次登录会把当前本地存档上传到云端。
+5. 在另一台设备登录，确认出现本地/云端存档选择。
+6. 确认退出账号后本地游戏仍可继续。
+7. 在 Firestore 中确认存档路径为：
+   saves / Firebase用户UID
+
+============================================================
+
+云存档不会取代本地存档。
+浏览器 localStorage 仍会持续保存主存档和三份轮换备份；Firebase 用于账号识别、跨设备同步与云端恢复。

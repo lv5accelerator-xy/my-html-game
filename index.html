@@ -54,12 +54,27 @@
             <span aria-hidden="true">♪</span>
           </button>
           <button class="text-button" id="save-button" type="button">保存</button>
+          <button
+            class="icon-button account-button"
+            id="account-button"
+            type="button"
+            aria-label="打开账号与云端存档"
+            title="账号与云端存档"
+          >
+            <span aria-hidden="true">⌾</span>
+            <i id="cloud-status-dot" aria-hidden="true"></i>
+          </button>
           <button class="icon-button menu-button" id="menu-button" type="button" aria-label="打开设置" title="设置">
             <span aria-hidden="true">•••</span>
           </button>
         </div>
 
         <div class="settings-menu" id="settings-menu" hidden>
+          <button id="cloud-menu-button" class="settings-toggle" type="button">
+            <span>账号与云端存档</span>
+            <strong id="cloud-menu-status">本地</strong>
+          </button>
+          <div class="settings-divider" aria-hidden="true"></div>
           <button id="guide-button" type="button">新手指引</button>
           <button id="patch-notes-button" type="button">版本更新记录</button>
           <button id="rename-button" type="button">修改玩家名称</button>
@@ -797,7 +812,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.9.4</span>
+        <span>航站协议 v0.10.0</span>
       </footer>
     </div>
 
@@ -841,7 +856,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.9.4</strong>
+          <strong id="patch-notes-current-version">v0.10.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -849,6 +864,111 @@
           <span>完整记录同时保存在发行版 Patch Notes TXT 文件中。</span>
           <button id="patch-notes-confirm" class="primary-button" type="button">进入游戏</button>
         </footer>
+      </section>
+    </div>
+
+    <div id="account-backdrop" class="modal-backdrop account-backdrop" hidden>
+      <section
+        class="account-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="account-title"
+        aria-describedby="account-description"
+      >
+        <header class="account-header">
+          <div>
+            <p class="eyebrow">跨设备航站</p>
+            <h2 id="account-title">账号与云端存档</h2>
+            <p id="account-description">本地存档始终保留，登录后可同步到个人云端。</p>
+          </div>
+          <button id="account-close" class="account-close" type="button" aria-label="关闭账号窗口">×</button>
+        </header>
+
+        <div id="cloud-service-banner" class="cloud-service-banner" aria-live="polite">
+          <span id="cloud-service-icon" aria-hidden="true">◇</span>
+          <div>
+            <strong id="cloud-service-title">正在检查云端航站</strong>
+            <small id="cloud-service-message">本地自动存档不受影响。</small>
+          </div>
+        </div>
+
+        <div id="account-loading-view" class="account-view">
+          <div class="cloud-loading" aria-hidden="true"><i></i><i></i><i></i></div>
+          <p>正在连接身份验证与云存档服务……</p>
+        </div>
+
+        <div id="account-unconfigured-view" class="account-view account-empty-view" hidden>
+          <span aria-hidden="true">⌁</span>
+          <h3>云端航站尚未启用</h3>
+          <p>当前游戏继续使用浏览器本地自动存档。完成 Firebase 项目配置后，登录与跨设备同步会自动开放。</p>
+        </div>
+
+        <div id="account-signed-out-view" class="account-view" hidden>
+          <div class="google-signin-panel">
+            <span class="google-signin-orbit" aria-hidden="true">◎</span>
+            <div class="google-signin-copy">
+              <h3>连接你的云端航站</h3>
+              <p>使用 Google 账号登录后，可在电脑和手机之间同步同一份游戏进度。</p>
+            </div>
+            <small id="account-error" class="account-error" aria-live="polite"></small>
+            <button id="account-google-login" class="primary-button google-signin-button" type="button">
+              <span class="google-signin-mark" aria-hidden="true">G</span>
+              <span id="account-google-login-label">使用 Google 登录</span>
+            </button>
+          </div>
+          <p class="account-privacy">登录会在 Google/Firebase 的安全窗口中完成；游戏页面不会读取或保存你的 Google 密码。</p>
+        </div>
+
+        <div id="account-signed-in-view" class="account-view" hidden>
+          <div class="account-identity">
+            <span aria-hidden="true">⌾</span>
+            <div>
+              <small>当前账号</small>
+              <strong id="account-user-email">—</strong>
+            </div>
+            <button id="account-sign-out" type="button">退出</button>
+          </div>
+
+          <section id="cloud-conflict-panel" class="cloud-conflict-panel" hidden>
+            <header>
+              <span aria-hidden="true">!</span>
+              <div>
+                <strong>检测到两个航站记录</strong>
+                <small>请选择要继续使用的进度，系统不会自动覆盖。</small>
+              </div>
+            </header>
+            <div class="cloud-save-comparison">
+              <article>
+                <small>此设备</small>
+                <strong id="local-save-name">本地存档</strong>
+                <dl id="local-save-summary"></dl>
+                <button id="choose-local-save" class="primary-button" type="button">使用本地并上传</button>
+              </article>
+              <article>
+                <small>云端航站</small>
+                <strong id="remote-save-name">云端存档</strong>
+                <dl id="remote-save-summary"></dl>
+                <button id="choose-cloud-save" class="secondary-button" type="button">载入云端</button>
+              </article>
+            </div>
+          </section>
+
+          <section id="cloud-sync-panel" class="cloud-sync-panel">
+            <div class="cloud-sync-readout">
+              <span id="cloud-sync-icon" aria-hidden="true">☁</span>
+              <div>
+                <small>同步状态</small>
+                <strong id="cloud-sync-status">等待首次同步</strong>
+                <span id="cloud-sync-time">尚无云端记录</span>
+              </div>
+            </div>
+            <div class="cloud-sync-actions">
+              <button id="cloud-upload" class="primary-button" type="button">上传本地存档</button>
+              <button id="cloud-download" class="secondary-button" type="button">载入云端存档</button>
+            </div>
+            <p>自动云保存每 45 秒合并一次；跃迁、超越或手动保存后会优先同步。</p>
+          </section>
+        </div>
       </section>
     </div>
 
@@ -962,5 +1082,7 @@
 
     <script src="game-math.js"></script>
     <script src="game.js"></script>
+    <script src="firebase-config.js"></script>
+    <script type="module" src="cloud-save.js"></script>
   </body>
 </html>

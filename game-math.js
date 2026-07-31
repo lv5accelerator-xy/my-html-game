@@ -224,6 +224,22 @@
     return amount;
   }
 
+  function countFixedIntervalEvents(nextAt, endAt, interval, maxEvents) {
+    var safeNextAt = Math.max(0, Number(nextAt) || 0);
+    var safeEndAt = Math.max(0, Number(endAt) || 0);
+    var safeInterval = Math.max(1, Number(interval) || 1);
+    var safeMaxEvents = Math.max(0, clampGameCount(maxEvents));
+    if (safeMaxEvents === 0 || safeNextAt > safeEndAt) {
+      return { count: 0, nextAt: safeNextAt };
+    }
+    var dueCount = Math.floor((safeEndAt - safeNextAt) / safeInterval) + 1;
+    var count = Math.min(safeMaxEvents, clampGameCount(dueCount));
+    return {
+      count: count,
+      nextAt: safeNextAt + count * safeInterval
+    };
+  }
+
   return {
     MAX_GAME_NUMBER: MAX_GAME_NUMBER,
     MAX_GAME_COUNT: MAX_GAME_COUNT,
@@ -237,6 +253,7 @@
     expandSoftCappedGameNumber: expandSoftCappedGameNumber,
     formatNumber: formatNumber,
     geometricSeriesCost: geometricSeriesCost,
-    maxAffordableGeometric: maxAffordableGeometric
+    maxAffordableGeometric: maxAffordableGeometric,
+    countFixedIntervalEvents: countFixedIntervalEvents
   };
 });

@@ -10,6 +10,8 @@
   --muted: #7f9db4;
   --cyan: #62e6ff;
   --cyan-strong: #20c9ef;
+  --blue: #638dff;
+  --violet: #9f73ff;
   --gold: #ffc968;
   --purple: #b88cff;
   --success: #73efb2;
@@ -36,6 +38,7 @@ html {
 }
 
 body {
+  position: relative;
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
@@ -45,12 +48,32 @@ body {
   touch-action: pan-y pinch-zoom;
   color: var(--text);
   background:
-    radial-gradient(circle at 48% 20%, rgba(21, 88, 122, 0.16), transparent 38%),
-    linear-gradient(160deg, #07111f 0%, #040912 55%, #080713 100%);
+    radial-gradient(circle at 15% 12%, rgba(55, 108, 217, 0.22), transparent 34%),
+    radial-gradient(circle at 82% 28%, rgba(126, 72, 205, 0.2), transparent 38%),
+    radial-gradient(circle at 48% 78%, rgba(25, 117, 157, 0.15), transparent 42%),
+    linear-gradient(145deg, #071226 0%, #040813 48%, #0b071b 100%);
+  background-attachment: fixed;
+  background-size: 125% 125%;
+  animation: cosmic-background 26s ease-in-out infinite alternate;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     "Microsoft YaHei", sans-serif;
   font-variant-numeric: tabular-nums;
+}
+
+body::before {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  opacity: 0.13;
+  background-image:
+    linear-gradient(rgba(99, 141, 255, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(159, 115, 255, 0.09) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(circle at 50% 38%, #000 0, transparent 78%);
+  mask-image: radial-gradient(circle at 50% 38%, #000 0, transparent 78%);
 }
 
 body.patch-notes-open,
@@ -89,7 +112,9 @@ a:focus-visible {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  opacity: 0.72;
+  z-index: 0;
+  opacity: 0.92;
+  filter: saturate(1.2) contrast(1.05);
 }
 
 .ambient {
@@ -100,7 +125,8 @@ a:focus-visible {
   border-radius: 50%;
   pointer-events: none;
   filter: blur(110px);
-  opacity: 0.09;
+  opacity: 0.14;
+  animation: ambient-drift 20s ease-in-out infinite alternate;
 }
 
 .ambient-one {
@@ -113,6 +139,8 @@ a:focus-visible {
   bottom: -260px;
   left: 2%;
   background: var(--purple);
+  animation-duration: 25s;
+  animation-direction: alternate-reverse;
 }
 
 .app-shell {
@@ -139,6 +167,19 @@ a:focus-visible {
   backdrop-filter: blur(22px);
   isolation: isolate;
   overflow: visible;
+}
+
+.topbar::after {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 32%;
+  height: 1px;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(90deg, transparent, var(--cyan), var(--violet), transparent);
+  box-shadow: 0 0 13px rgba(98, 230, 255, 0.62);
+  animation: signal-scan 8s linear infinite;
 }
 
 .brand {
@@ -476,9 +517,11 @@ a:focus-visible {
   top: 10px;
   margin-top: 14px;
   padding: 5px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(111, 151, 255, 0.2);
   border-radius: 17px;
-  background: rgba(7, 17, 29, 0.9);
+  background:
+    linear-gradient(90deg, rgba(63, 102, 198, 0.06), rgba(122, 72, 180, 0.07)),
+    rgba(7, 17, 29, 0.9);
   box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(22px);
 }
@@ -579,16 +622,31 @@ a:focus-visible {
 }
 
 .panel {
+  position: relative;
   min-height: 680px;
   padding: 22px;
   overflow: hidden;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(105, 150, 255, 0.17);
   border-radius: var(--radius);
   background:
-    linear-gradient(145deg, rgba(20, 45, 67, 0.25), transparent 36%),
+    radial-gradient(circle at 92% 7%, rgba(146, 93, 234, 0.09), transparent 31%),
+    linear-gradient(145deg, rgba(30, 66, 112, 0.27), transparent 38%),
     var(--panel);
   box-shadow: var(--shadow);
   backdrop-filter: blur(22px);
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+@media (hover: hover) {
+  .panel:hover {
+    border-color: rgba(119, 170, 255, 0.29);
+    box-shadow:
+      var(--shadow),
+      0 0 54px rgba(77, 109, 217, 0.06),
+      inset 0 0 36px rgba(145, 88, 225, 0.025);
+  }
 }
 
 .panel-heading {
@@ -1027,6 +1085,18 @@ h2 {
 
 .command-raid-metric.alert strong {
   color: var(--danger);
+}
+
+.command-raid-metric.major-alert {
+  border-color: rgba(184, 140, 255, 0.4);
+  background:
+    linear-gradient(120deg, rgba(184, 140, 255, 0.12), rgba(255, 114, 133, 0.07)),
+    rgba(15, 14, 32, 0.72);
+}
+
+.command-raid-metric.major-alert strong {
+  color: #d6b8ff;
+  text-shadow: 0 0 12px rgba(184, 140, 255, 0.5);
 }
 
 .prestige-card {
@@ -3128,6 +3198,17 @@ h2 {
     rgba(18, 19, 31, 0.76);
 }
 
+.raid-monitor.incoming.major {
+  border-color: rgba(184, 140, 255, 0.52);
+  background:
+    radial-gradient(circle at 50% 22%, rgba(91, 104, 255, 0.15), transparent 42%),
+    linear-gradient(145deg, rgba(184, 140, 255, 0.15), rgba(255, 114, 133, 0.07)),
+    rgba(15, 14, 32, 0.84);
+  box-shadow:
+    inset 0 0 38px rgba(105, 96, 255, 0.06),
+    0 0 34px rgba(130, 87, 225, 0.09);
+}
+
 .raid-monitor .combat-section-title {
   text-align: left;
 }
@@ -3146,6 +3227,11 @@ h2 {
 .raid-monitor.incoming .raid-state {
   color: var(--danger);
   background: rgba(255, 114, 133, 0.08);
+}
+
+.raid-monitor.incoming.major .raid-state {
+  color: #d7bbff;
+  background: rgba(184, 140, 255, 0.12);
 }
 
 .radar-display {
@@ -3210,6 +3296,16 @@ h2 {
   animation: raid-alert 0.85s ease-in-out infinite;
 }
 
+.raid-monitor.incoming.major .radar-display {
+  border-color: rgba(184, 140, 255, 0.48);
+  background:
+    repeating-radial-gradient(circle, transparent 0 13px, rgba(184, 140, 255, 0.1) 14px 15px),
+    conic-gradient(from 220deg, rgba(91, 124, 255, 0.36), rgba(184, 140, 255, 0.14), transparent 92deg);
+  box-shadow:
+    0 0 30px rgba(114, 105, 255, 0.18),
+    inset 0 0 22px rgba(184, 140, 255, 0.08);
+}
+
 .raid-monitor > strong {
   display: block;
   font-size: calc(10px * var(--type-scale));
@@ -3240,6 +3336,10 @@ h2 {
   color: var(--danger);
 }
 
+.raid-monitor.incoming.major .raid-countdown strong {
+  color: #d7bbff;
+}
+
 .raid-progress {
   height: 3px;
   margin-top: 5px;
@@ -3260,6 +3360,11 @@ h2 {
 .raid-monitor.incoming .raid-progress span {
   background: var(--danger);
   box-shadow: 0 0 8px rgba(255, 114, 133, 0.55);
+}
+
+.raid-monitor.incoming.major .raid-progress span {
+  background: linear-gradient(90deg, var(--blue), var(--violet), var(--danger));
+  box-shadow: 0 0 12px rgba(184, 140, 255, 0.72);
 }
 
 .target-terminal {
@@ -4856,6 +4961,39 @@ footer {
   to {
     opacity: 0;
     transform: translateX(20px);
+  }
+}
+
+@keyframes cosmic-background {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 12% 8%;
+  }
+}
+
+@keyframes ambient-drift {
+  0% {
+    transform: translate3d(-3%, -2%, 0) scale(0.94);
+  }
+  100% {
+    transform: translate3d(5%, 4%, 0) scale(1.08);
+  }
+}
+
+@keyframes signal-scan {
+  0% {
+    opacity: 0;
+    transform: translateX(-80%);
+  }
+  12%,
+  84% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(310%);
   }
 }
 

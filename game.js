@@ -17,6 +17,7 @@
     formatNumber,
     geometricSeriesCost,
     maxAffordableGeometric,
+    countFixedIntervalEvents,
   } = numeric;
 
   const SAVE_KEY = "stellarOutpostIdleSave_v1";
@@ -27,12 +28,19 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.10.1";
-  const SAVE_VERSION = 3;
+  const GAME_VERSION = "0.11.0";
+  const SAVE_VERSION = 4;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const AUTOSAVE_INTERVAL = 10000;
   const UI_INTERVAL = 100;
+  const MINOR_RAID_MIN_INTERVAL = 3 * 60 * 1000;
+  const MINOR_RAID_MAX_INTERVAL = 11 * 60 * 1000;
+  const MINOR_RAID_WARNING = 24 * 1000;
+  const MAJOR_RAID_INTERVAL = 60 * 60 * 1000;
+  const MAJOR_RAID_WARNING = 60 * 1000;
+  const MAX_OFFLINE_MAJOR_RAIDS = 24;
+  const MAX_OFFLINE_RAID_LOSS_RATIO = 0.35;
   const BUILDING_GROWTH = 1.15;
   const PRESTIGE_RATIO_SOFT_CAP = 1e6;
   const PRESTIGE_LATE_POWER = 0.55;
@@ -55,6 +63,16 @@
     "transcend",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.11.0",
+      theme: "深空态势与双层袭击",
+      changes: [
+        "重绘动态星空表现，加入蓝紫星云、科技网格、星光闪烁与偶发流星。",
+        "小规模基地袭击改为时间跨度更大的随机遭遇，不再按照短周期频繁出现。",
+        "新增每小时一次的大袭击；已解锁战斗后，离线期间同样会按周期结算攻防结果。",
+        "离线报告会汇总大袭击胜负与资源变化，同时限制单次离线结算的累计掠夺比例。",
+      ],
+    },
     {
       version: "0.10.1",
       theme: "云端窗口状态修复",
@@ -634,8 +652,8 @@
       icon: "⬡",
       title: "强化舰队，守护基地",
       message:
-        "用星尘永久强化战斗力和基地防御。敌对舰队会提前发出袭击预警；防御不足会损失当前星尘，也可主动挑战行星怪物夺取战利品。",
-      tip: "敌人会随胜场、星核和轮回次数成长；战斗回收只适合作为补给，自动化生产才是主要资源来源。",
+        "用星尘永久强化战斗力和基地防御。小规模袭击会在随机时间出现，大袭击每小时来临一次；防御不足会损失当前星尘，也可主动挑战行星怪物夺取战利品。",
+      tip: "大袭击在离线期间也会结算，请保持基地防御；离线累计掠夺设有保护上限。战斗回收只适合作为补给，自动化生产才是主要资源来源。",
     },
     {
       eyebrow: "第五步 · 扩建星港",
@@ -871,6 +889,11 @@
     { id: "swarm", name: "自复制机械蜂群", icon: "✣" },
     { id: "cult", name: "熵蚀者远征军", icon: "◈" },
     { id: "wraith", name: "相位幽灵编队", icon: "◌" },
+  ];
+  const MAJOR_RAIDERS = [
+    { id: "siegeFleet", name: "裂隙攻城舰群", icon: "◆" },
+    { id: "marauderCarrier", name: "深空掠夺母舰", icon: "◉" },
+    { id: "entropyArmada", name: "熵蚀者主力舰队", icon: "⬢" },
   ];
   const CORE_SHOP_ITEMS = [
     {
@@ -1229,6 +1252,7 @@
 
   function freshCombatState() {
     const enemyVictories = {};
+    const now = Date.now();
     [...SKIRMISH_TARGETS, ...PLANET_TARGETS].forEach((target) => {
       enemyVictories[target.id] = 0;
     });
@@ -1240,8 +1264,12 @@
       activeWins: 0,
       skirmishWins: 0,
       raidsSurvived: 0,
+      majorRaidsFaced: 0,
+      majorRaidsSurvived: 0,
       enemyVictories,
-      nextRaidAt: Date.now() + randomBetween(90000, 135000),
+      nextRaidAt:
+        now + randomBetween(MINOR_RAID_MIN_INTERVAL, MINOR_RAID_MAX_INTERVAL),
+      nextMajorRaidAt: now + MAJOR_RAID_INTERVAL,
       incomingRaid: null,
       attackCooldownUntil: 0,
       skirmishCooldownUntil: 0,
@@ -2029,7 +2057,11 @@
         rawCombat.enemyVictories?.[target.id],
       );
     });
-    const incomingRaider = RAIDERS.find(
+    const savedRaidType =
+      rawCombat.incomingRaid?.type === "major" ? "major" : "minor";
+    const savedRaiderPool =
+      savedRaidType === "major" ? MAJOR_RAIDERS : RAIDERS;
+    const incomingRaider = savedRaiderPool.find(
       (raider) => raider.id === rawCombat.incomingRaid?.raiderId,
     );
     merged.combat = {
@@ -2040,13 +2072,21 @@
       activeWins: clampGameCount(rawCombat.activeWins),
       skirmishWins: clampGameCount(rawCombat.skirmishWins),
       raidsSurvived: clampGameCount(rawCombat.raidsSurvived),
+      majorRaidsFaced: clampGameCount(rawCombat.majorRaidsFaced),
+      majorRaidsSurvived: clampGameCount(rawCombat.majorRaidsSurvived),
       enemyVictories,
       nextRaidAt: finiteTimestamp(
         rawCombat.nextRaidAt,
-        Date.now() + randomBetween(90000, 135000),
+        Date.now() +
+          randomBetween(MINOR_RAID_MIN_INTERVAL, MINOR_RAID_MAX_INTERVAL),
+      ),
+      nextMajorRaidAt: finiteTimestamp(
+        rawCombat.nextMajorRaidAt,
+        Date.now() + MAJOR_RAID_INTERVAL,
       ),
       incomingRaid: incomingRaider
         ? {
+            type: savedRaidType,
             raiderId: incomingRaider.id,
             power: Math.max(
               1,
@@ -2057,7 +2097,10 @@
             startedAt: finiteTimestamp(rawCombat.incomingRaid.startedAt),
             arrivesAt: finiteTimestamp(
               rawCombat.incomingRaid.arrivesAt,
-              Date.now() + 20000,
+              Date.now() +
+                (savedRaidType === "major"
+                  ? MAJOR_RAID_WARNING
+                  : MINOR_RAID_WARNING),
             ),
           }
         : null,
@@ -2141,8 +2184,16 @@
   function resumeCombatTimers(savedAt, returnTime) {
     if (state.combat.incomingRaid) {
       const remaining = state.combat.incomingRaid.arrivesAt - savedAt;
+      const maximumWarning =
+        state.combat.incomingRaid.type === "major"
+          ? MAJOR_RAID_WARNING
+          : MINOR_RAID_WARNING;
       const resumedRemaining =
-        remaining > 0 ? clamp(remaining, 1000, 24000) : 18000;
+        remaining > 0
+          ? clamp(remaining, 1000, maximumWarning)
+          : state.combat.incomingRaid.type === "major"
+            ? 45000
+            : 18000;
       state.combat.incomingRaid.startedAt = returnTime;
       state.combat.incomingRaid.arrivesAt = returnTime + resumedRemaining;
       return;
@@ -2150,7 +2201,107 @@
     const remaining = state.combat.nextRaidAt - savedAt;
     state.combat.nextRaidAt =
       returnTime +
-      (remaining > 0 ? remaining : randomBetween(25000, 45000));
+      (remaining > 0
+        ? clamp(
+            remaining,
+            30000,
+            MINOR_RAID_MAX_INTERVAL,
+          )
+        : randomBetween(MINOR_RAID_MIN_INTERVAL, MINOR_RAID_MAX_INTERVAL));
+  }
+
+  function resolveOfflineMajorRaids(
+    savedAt,
+    returnTime,
+    elapsedSeconds,
+    combatWasUnlocked,
+  ) {
+    const report = {
+      count: 0,
+      defended: 0,
+      breached: 0,
+      reward: 0,
+      loss: 0,
+    };
+    if (!combatWasUnlocked || elapsedSeconds <= 0) {
+      if (state.combat.nextMajorRaidAt <= returnTime) {
+        state.combat.nextMajorRaidAt = returnTime + MAJOR_RAID_INTERVAL;
+      }
+      return report;
+    }
+
+    const eligibleUntil = Math.min(
+      returnTime,
+      savedAt + elapsedSeconds * 1000,
+    );
+    const initialDust = state.dust;
+    let remainingLossBudget = safeMultiply(
+      initialDust,
+      MAX_OFFLINE_RAID_LOSS_RATIO,
+    );
+    const recordOutcome = (outcome) => {
+      report.count += 1;
+      if (outcome.defended) report.defended += 1;
+      else report.breached += 1;
+      report.reward = safeAdd(report.reward, outcome.reward);
+      report.loss = safeAdd(report.loss, outcome.loss);
+      remainingLossBudget = Math.max(0, remainingLossBudget - outcome.loss);
+    };
+
+    if (
+      state.combat.incomingRaid?.type === "major" &&
+      state.combat.incomingRaid.arrivesAt <= eligibleUntil
+    ) {
+      recordOutcome(
+        applyRaidOutcome(state.combat.incomingRaid, {
+          offline: true,
+          maxLoss: remainingLossBudget,
+        }),
+      );
+      state.combat.incomingRaid = null;
+    }
+
+    const lastEligibleSignal = eligibleUntil - MAJOR_RAID_WARNING;
+    const firstSignalAt = state.combat.nextMajorRaidAt;
+    const schedule = countFixedIntervalEvents(
+      firstSignalAt,
+      lastEligibleSignal,
+      MAJOR_RAID_INTERVAL,
+      MAX_OFFLINE_MAJOR_RAIDS,
+    );
+    for (let index = 0; index < schedule.count; index += 1) {
+      const raid = createRaidSnapshot(
+        "major",
+        firstSignalAt + index * MAJOR_RAID_INTERVAL,
+      );
+      recordOutcome(
+        applyRaidOutcome(raid, {
+          offline: true,
+          maxLoss: remainingLossBudget,
+        }),
+      );
+    }
+    if (schedule.count > 0) {
+      state.combat.nextMajorRaidAt = schedule.nextAt;
+    }
+
+    const offlineWindowWasCapped = eligibleUntil < returnTime;
+    if (offlineWindowWasCapped) {
+      state.combat.nextMajorRaidAt = returnTime + MAJOR_RAID_INTERVAL;
+    } else if (state.combat.nextMajorRaidAt <= returnTime) {
+      state.combat.nextMajorRaidAt = returnTime;
+    }
+
+    if (report.count > 0) {
+      const summary = `离线期间遭遇 ${report.count} 次大袭击：守住 ${
+        report.defended
+      } 次，失守 ${report.breached} 次，回收 ${formatNumber(
+        report.reward,
+      )} 星尘，损失 ${formatNumber(report.loss)} 星尘。`;
+      state.combat.lastReport = summary;
+      addLog(summary);
+    }
+    return report;
   }
 
   function grantInactiveEarnings(savedAt, presentation = "none") {
@@ -2161,35 +2312,64 @@
       0,
       offlineLimit,
     );
+    const combatWasUnlocked = state.lifetimeDust >= COMBAT_UNLOCK_DUST;
     const offlineRate = calculateRate(state, false);
     const offlineGain = safeMultiply(offlineRate, elapsed);
     if (offlineGain > 0) {
       addDust(offlineGain);
     }
+    const raidReport = resolveOfflineMajorRaids(
+      savedAt,
+      returnTime,
+      elapsed,
+      combatWasUnlocked,
+    );
     if (offlineGain > 0.1 && elapsed > 10) {
       addLog(
         `${presentation === "background" ? "后台" : "离线"}舰队带回了 ${formatNumber(
           offlineGain,
         )} 星尘。`,
       );
+    }
+    if ((offlineGain > 0.1 && elapsed > 10) || raidReport.count > 0) {
+      const productionSummary =
+        offlineGain > 0.1
+          ? `舰队持续工作了 ${formatDuration(elapsed)}，回收 ${formatNumber(
+              offlineGain,
+            )} 星尘。`
+          : `航站离线了 ${formatDuration(elapsed)}。`;
+      const raidSummary =
+        raidReport.count > 0
+          ? `期间发生 ${raidReport.count} 次大袭击：守住 ${
+              raidReport.defended
+            } 次、失守 ${raidReport.breached} 次；残骸收益 ${formatNumber(
+              raidReport.reward,
+            )}，资源损失 ${formatNumber(raidReport.loss)} 星尘。`
+          : "期间没有需要结算的大袭击。";
       if (presentation === "load") {
         window.setTimeout(() => {
           showModal({
             eyebrow: "离线报告",
-            icon: "⌁",
+            icon: raidReport.count > 0 ? "◆" : "⌁",
             title: "欢迎返回星港",
-            message: `舰队持续工作了 ${formatDuration(elapsed)}，为你回收了 ${formatNumber(
-              offlineGain,
-            )} 星尘。当前离线收益最多累计 ${formatDuration(offlineLimit)}。`,
+            message: `${productionSummary}${raidSummary}当前离线收益与袭击结算最多累计 ${formatDuration(
+              offlineLimit,
+            )}。`,
             confirmText: "接收物资",
             cancelText: null,
           });
         }, 250);
       } else if (presentation === "background") {
         showToast(
-          "后台收益已结算",
-          `${formatDuration(elapsed)}内回收了 ${formatNumber(offlineGain)} 星尘。`,
-          "⌁",
+          raidReport.count > 0 ? "后台态势已结算" : "后台收益已结算",
+          raidReport.count > 0
+            ? `${raidReport.count} 次大袭击，损失 ${formatNumber(
+                raidReport.loss,
+              )} 星尘。`
+            : `${formatDuration(elapsed)}内回收了 ${formatNumber(
+                offlineGain,
+              )} 星尘。`,
+          raidReport.count > 0 ? "◆" : "⌁",
         );
       }
     }
@@ -2197,7 +2377,7 @@
     state.lastSeen = returnTime;
     if (state.event?.expires < returnTime) state.event = null;
     if (state.buff?.expires < returnTime) state.buff = null;
-    return { elapsed, offlineGain };
+    return { elapsed, offlineGain, raidReport };
   }
 
   function loadGame() {
@@ -2957,106 +3137,177 @@
     saveGame();
   }
 
-  function scheduleNextRaid() {
-    state.combat.incomingRaid = null;
-    state.combat.nextRaidAt = Date.now() + randomBetween(105000, 175000);
+  function scheduleNextMinorRaid(fromTime = Date.now()) {
+    state.combat.nextRaidAt =
+      fromTime +
+      randomBetween(MINOR_RAID_MIN_INTERVAL, MINOR_RAID_MAX_INTERVAL);
   }
 
-  function createRaid() {
+  function getRaidPool(type) {
+    return type === "major" ? MAJOR_RAIDERS : RAIDERS;
+  }
+
+  function getRaidRaider(raid) {
+    const pool = getRaidPool(raid?.type);
+    return pool.find((entry) => entry.id === raid?.raiderId) || pool[0];
+  }
+
+  function calculateRaidPower(type = "minor") {
+    const major = type === "major";
+    const progressThreat = safeAdd(
+      20,
+      safeMultiply(Math.log2(safeAdd(1, state.lifetimeDust)), 4),
+      safeMultiply(Math.log2(safeAdd(1, getHistoricalCores())), 7),
+      safeMultiply(state.combat.raidsSurvived, 3),
+      major ? safeMultiply(state.combat.majorRaidsFaced, 8) : 0,
+    );
+    const adaptiveFactor = major
+      ? clamp(
+          0.9 +
+            state.combat.majorRaidsSurvived * 0.018 +
+            state.rebirths * 0.03,
+          0.9,
+          1.32,
+        )
+      : clamp(
+          0.68 +
+            state.combat.raidsSurvived * 0.01 +
+            state.rebirths * 0.02,
+          0.68,
+          1.12,
+        );
+    const scaledProgress = safeMultiply(progressThreat, major ? 1.45 : 1);
+    const adaptiveThreat = safeMultiply(getDefensePower(), adaptiveFactor);
+    const variance = major
+      ? 0.92 + Math.random() * 0.26
+      : 0.86 + Math.random() * 0.3;
+    return Math.max(
+      major ? 60 : 30,
+      Math.round(
+        safeMultiply(Math.max(scaledProgress, adaptiveThreat), variance),
+      ),
+    );
+  }
+
+  function createRaidSnapshot(type, startedAt = Date.now()) {
+    const pool = getRaidPool(type);
+    const raider = pool[Math.floor(Math.random() * pool.length)];
+    const warning = type === "major" ? MAJOR_RAID_WARNING : MINOR_RAID_WARNING;
+    return {
+      type,
+      raiderId: raider.id,
+      power: calculateRaidPower(type),
+      startedAt,
+      arrivesAt: startedAt + warning,
+    };
+  }
+
+  function createRaid(type = "minor") {
+    const now = Date.now();
     if (state.lifetimeDust < COMBAT_UNLOCK_DUST) {
-      state.combat.nextRaidAt = Date.now() + 30000;
+      scheduleNextMinorRaid(now);
+      state.combat.nextMajorRaidAt = now + MAJOR_RAID_INTERVAL;
       return;
     }
-    const raider = RAIDERS[Math.floor(Math.random() * RAIDERS.length)];
-    const adaptiveFactor = clamp(
-      0.76 +
-        state.combat.raidsSurvived * 0.015 +
-        state.rebirths * 0.035,
-      0.76,
-      1.28,
-    );
-    const progressThreat = safeAdd(
-      30,
-      safeMultiply(
-        Math.log2(safeAdd(1, state.lifetimeDust)),
-        12,
-      ),
-      safeMultiply(
-        Math.log2(safeAdd(1, getHistoricalCores())),
-        15,
-      ),
-      safeMultiply(state.combat.raidsSurvived, 9),
-    );
-    const adaptiveThreat = safeMultiply(
-      getDefensePower(),
-      adaptiveFactor,
-    );
-    const power = Math.max(
-      30,
-      Math.round(
-        safeMultiply(
-          Math.max(progressThreat, adaptiveThreat),
-          0.92 + Math.random() * 0.2,
-        ),
-      ),
-    );
-    const now = Date.now();
-    state.combat.incomingRaid = {
-      raiderId: raider.id,
-      power,
-      startedAt: now,
-      arrivesAt: now + 24000,
-    };
+    if (type === "major") {
+      const schedule = countFixedIntervalEvents(
+        state.combat.nextMajorRaidAt,
+        now,
+        MAJOR_RAID_INTERVAL,
+        MAX_OFFLINE_MAJOR_RAIDS,
+      );
+      state.combat.nextMajorRaidAt =
+        schedule.count > 0 ? schedule.nextAt : now + MAJOR_RAID_INTERVAL;
+    }
+    const raid = createRaidSnapshot(type, now);
+    const raider = getRaidRaider(raid);
+    state.combat.incomingRaid = raid;
+    const warningSeconds = Math.ceil((raid.arrivesAt - now) / 1000);
+    const label = type === "major" ? "大袭击" : "随机袭击";
     setCombatReport(
-      `袭击预警：${raider.name}将在 24 秒后抵达，敌方战力 ${formatNumber(power)}。`,
+      `${label}预警：${raider.name}将在 ${warningSeconds} 秒后抵达，敌方战力 ${formatNumber(
+        raid.power,
+      )}。`,
     );
-    showToast("基地袭击预警", `${raider.name}正在逼近！`, raider.icon);
-    playTone(175, 0.35, "sawtooth", 0.032);
+    showToast(`${label}预警`, `${raider.name}正在逼近！`, raider.icon);
+    playTone(type === "major" ? 122 : 175, type === "major" ? 0.55 : 0.35, "sawtooth", 0.032);
   }
 
-  function resolveRaid() {
-    const raid = state.combat.incomingRaid;
-    if (!raid) return;
-    const raider =
-      RAIDERS.find((entry) => entry.id === raid.raiderId) || RAIDERS[0];
+  function applyRaidOutcome(raid, { offline = false, maxLoss = Infinity } = {}) {
+    const major = raid.type === "major";
+    const raider = getRaidRaider(raid);
     const defense = getDefensePower();
-    if (defense >= raid.power) {
-      const reward =
-        safeMultiply(
-          Math.max(
-            50,
-            safeMultiply(raid.power, 0.5),
-            safeMultiply(calculateRate(), 2),
-          ),
-          getBattleRewardMultiplier(),
-        );
+    const defended = defense >= raid.power;
+    if (major) {
+      state.combat.majorRaidsFaced = clampGameCount(
+        state.combat.majorRaidsFaced + 1,
+      );
+    }
+
+    if (defended) {
+      const reward = safeMultiply(
+        Math.max(
+          major ? 120 : 35,
+          safeMultiply(raid.power, major ? 0.42 : 0.32),
+          safeMultiply(calculateRate(), major ? 4 : 1.4),
+        ),
+        getBattleRewardMultiplier(),
+      );
       addDust(reward);
       state.combat.wins = clampGameCount(state.combat.wins + 1);
       state.combat.raidsSurvived = clampGameCount(
         state.combat.raidsSurvived + 1,
       );
-      const message = `防卫成功：基地击退${raider.name}，回收残骸获得 ${formatNumber(
-        reward,
-      )} 星尘。`;
-      setCombatReport(message);
-      addLog(message);
-      showToast("基地防卫成功", `残骸收益 +${formatNumber(reward)} 星尘`, "⬡");
-      playAchievementTone();
-    } else {
-      const deficit = (raid.power - defense) / raid.power;
-      const lossRatio = clamp(0.08 + deficit * 0.34, 0.08, 0.4);
-      const loss = safeMultiply(state.dust, lossRatio);
-      state.dust = clampGameNumber(state.dust - loss);
-      state.combat.losses = clampGameCount(state.combat.losses + 1);
-      const message = `基地失守：${raider.name}突破防线，掠走 ${formatNumber(
-        loss,
-      )} 星尘。`;
-      setCombatReport(message);
-      addLog(message);
-      showToast("基地遭到掠夺", `损失 ${formatNumber(loss)} 星尘`, "!");
-      playTone(82, 0.5, "sawtooth", 0.038);
+      if (major) {
+        state.combat.majorRaidsSurvived = clampGameCount(
+          state.combat.majorRaidsSurvived + 1,
+        );
+      }
+      const message = `${major ? "大袭击" : "防卫"}成功：基地击退${
+        raider.name
+      }，回收残骸获得 ${formatNumber(reward)} 星尘。`;
+      state.combat.lastReport = message;
+      if (!offline) {
+        addLog(message);
+        showToast(
+          major ? "大袭击防卫成功" : "基地防卫成功",
+          `残骸收益 +${formatNumber(reward)} 星尘`,
+          major ? "◆" : "⬡",
+        );
+        playAchievementTone();
+      }
+      return { defended: true, reward, loss: 0, raider, major };
     }
-    scheduleNextRaid();
+
+    const deficit = (raid.power - defense) / Math.max(1, raid.power);
+    const lossRatio = major
+      ? clamp(0.12 + deficit * 0.24, 0.12, 0.32)
+      : clamp(0.055 + deficit * 0.18, 0.055, 0.22);
+    const loss = Math.min(safeMultiply(state.dust, lossRatio), maxLoss);
+    state.dust = clampGameNumber(state.dust - loss);
+    state.combat.losses = clampGameCount(state.combat.losses + 1);
+    const message = `${major ? "大袭击失守" : "基地失守"}：${
+      raider.name
+    }突破防线，掠走 ${formatNumber(loss)} 星尘。`;
+    state.combat.lastReport = message;
+    if (!offline) {
+      addLog(message);
+      showToast(
+        major ? "大袭击突破防线" : "基地遭到掠夺",
+        `损失 ${formatNumber(loss)} 星尘`,
+        "!",
+      );
+      playTone(major ? 68 : 82, major ? 0.68 : 0.5, "sawtooth", 0.038);
+    }
+    return { defended: false, reward: 0, loss, raider, major };
+  }
+
+  function resolveRaid() {
+    const raid = state.combat.incomingRaid;
+    if (!raid) return;
+    applyRaidOutcome(raid);
+    state.combat.incomingRaid = null;
+    if (raid.type !== "major") scheduleNextMinorRaid();
     checkAchievements();
     renderCombatTargets();
     updateCombatUi();
@@ -3065,11 +3316,22 @@
 
   function processCombatEvents() {
     const now = Date.now();
+    if (state.lifetimeDust < COMBAT_UNLOCK_DUST) {
+      if (state.combat.nextRaidAt <= now) scheduleNextMinorRaid(now);
+      if (state.combat.nextMajorRaidAt <= now) {
+        state.combat.nextMajorRaidAt = now + MAJOR_RAID_INTERVAL;
+      }
+      return;
+    }
     if (state.combat.incomingRaid) {
       if (now >= state.combat.incomingRaid.arrivesAt) resolveRaid();
       return;
     }
-    if (now >= state.combat.nextRaidAt) createRaid();
+    if (now >= state.combat.nextMajorRaidAt) {
+      createRaid("major");
+    } else if (now >= state.combat.nextRaidAt) {
+      createRaid("minor");
+    }
   }
 
   function scheduleEvent() {
@@ -4455,48 +4717,59 @@
     const now = Date.now();
     const raid = state.combat.incomingRaid;
     if (raid) {
-      const raider =
-        RAIDERS.find((entry) => entry.id === raid.raiderId) || RAIDERS[0];
+      const major = raid.type === "major";
+      const raider = getRaidRaider(raid);
       const remainingMs = Math.max(0, raid.arrivesAt - now);
       const totalMs = Math.max(1, raid.arrivesAt - raid.startedAt);
       const progress = clamp(1 - remainingMs / totalMs, 0, 1);
       const seconds = Math.ceil(remainingMs / 1000);
       elements.raidMonitor.classList.add("incoming");
-      elements.raidState.textContent = "红色警报";
+      elements.raidMonitor.classList.toggle("major", major);
+      elements.raidState.textContent = major ? "大袭击警报" : "随机遭遇";
       elements.raidName.textContent = `${raider.icon} ${raider.name}`;
       elements.raidDescription.textContent = `敌方战力 ${formatNumber(
         raid.power,
-      )}，基地防御 ${formatNumber(defensePower)}。强化防御仍可改变战果。`;
+      )}，基地防御 ${formatNumber(defensePower)}。${
+        major
+          ? "这是每小时一次的主力进攻。"
+          : "这是随机出现的小规模袭击。"
+      }强化防御仍可改变战果。`;
       elements.raidCountdownLabel.textContent = "距离接触";
       elements.raidCountdownValue.textContent = `${seconds}秒`;
       elements.raidProgressBar.style.width = `${progress * 100}%`;
     } else {
       elements.raidMonitor.classList.remove("incoming");
+      elements.raidMonitor.classList.remove("major");
       elements.raidState.textContent =
-        state.lifetimeDust >= COMBAT_UNLOCK_DUST ? "扫描中" : "未解锁";
+        state.lifetimeDust >= COMBAT_UNLOCK_DUST ? "随机巡逻" : "未解锁";
       elements.raidName.textContent =
         state.lifetimeDust >= COMBAT_UNLOCK_DUST
-          ? "航道暂时安全"
+          ? "边境防卫周期运行中"
           : "边境雷达尚未激活";
       if (state.lifetimeDust >= COMBAT_UNLOCK_DUST) {
         const seconds = Math.max(
           0,
-          Math.ceil((state.combat.nextRaidAt - now) / 1000),
+          Math.ceil((state.combat.nextMajorRaidAt - now) / 1000),
         );
         const minutesText = String(Math.floor(seconds / 60)).padStart(2, "0");
         const secondsText = String(seconds % 60).padStart(2, "0");
         elements.raidDescription.textContent =
-          "袭击只在游戏开启时结算，雷达会提前 24 秒发出警报。";
-        elements.raidCountdownLabel.textContent = "预计下次信号";
+          "小规模袭击会在随机时间出现；大袭击每小时一次，离线期间同样结算。";
+        elements.raidCountdownLabel.textContent = "下次大袭击信号";
         elements.raidCountdownValue.textContent = `${minutesText}:${secondsText}`;
+        elements.raidProgressBar.style.width = `${clamp(
+          1 - seconds * 1000 / MAJOR_RAID_INTERVAL,
+          0,
+          1,
+        ) * 100}%`;
       } else {
         elements.raidDescription.textContent = `累计采集 ${formatNumber(
           COMBAT_UNLOCK_DUST,
         )} 星尘后，敌对舰队可能袭击基地。`;
         elements.raidCountdownLabel.textContent = "防卫系统待命";
         elements.raidCountdownValue.textContent = "--:--";
+        elements.raidProgressBar.style.width = "0%";
       }
-      elements.raidProgressBar.style.width = "0%";
     }
   }
 
@@ -4535,20 +4808,26 @@
         0,
         Math.ceil((state.combat.incomingRaid.arrivesAt - Date.now()) / 1000),
       );
-      elements.commandRaidStatus.textContent = `警报 · ${seconds}秒`;
+      const major = state.combat.incomingRaid.type === "major";
+      elements.commandRaidStatus.textContent = `${
+        major ? "大袭击" : "遭遇"
+      } · ${seconds}秒`;
       commandRaidMetric.classList.add("alert");
+      commandRaidMetric.classList.toggle("major-alert", major);
     } else if (state.lifetimeDust >= COMBAT_UNLOCK_DUST) {
       const seconds = Math.max(
         0,
-        Math.ceil((state.combat.nextRaidAt - Date.now()) / 1000),
+        Math.ceil((state.combat.nextMajorRaidAt - Date.now()) / 1000),
       );
       const minutesText = String(Math.floor(seconds / 60)).padStart(2, "0");
       const secondsText = String(seconds % 60).padStart(2, "0");
-      elements.commandRaidStatus.textContent = `${minutesText}:${secondsText}`;
+      elements.commandRaidStatus.textContent = `大袭击 ${minutesText}:${secondsText}`;
       commandRaidMetric.classList.remove("alert");
+      commandRaidMetric.classList.remove("major-alert");
     } else {
       elements.commandRaidStatus.textContent = "尚未解锁";
       commandRaidMetric.classList.remove("alert");
+      commandRaidMetric.classList.remove("major-alert");
     }
     elements.fleetFlavor.textContent =
       units === 0
@@ -4775,45 +5054,126 @@
     const context = canvas.getContext("2d");
     if (!context) return;
     let stars = [];
+    let meteors = [];
+    let viewportWidth = window.innerWidth;
+    let viewportHeight = window.innerHeight;
+    let nextMeteorAt = performance.now() + randomBetween(5000, 14000);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const starColors = [
+      [120, 222, 255],
+      [112, 152, 255],
+      [190, 139, 255],
+      [224, 238, 255],
+    ];
 
     function resize() {
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.floor(window.innerWidth * ratio);
-      canvas.height = Math.floor(window.innerHeight * ratio);
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
+      viewportWidth = window.innerWidth;
+      viewportHeight = window.innerHeight;
+      canvas.width = Math.floor(viewportWidth * ratio);
+      canvas.height = Math.floor(viewportHeight * ratio);
+      canvas.style.width = `${viewportWidth}px`;
+      canvas.style.height = `${viewportHeight}px`;
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      const count = Math.min(170, Math.floor((window.innerWidth * window.innerHeight) / 9000));
+      const count = Math.min(
+        210,
+        Math.max(58, Math.floor((viewportWidth * viewportHeight) / 7200)),
+      );
       stars = Array.from({ length: count }, () => ({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        size: Math.random() * 1.3 + 0.2,
-        alpha: Math.random() * 0.55 + 0.12,
-        speed: Math.random() * 0.035 + 0.008,
+        x: Math.random() * viewportWidth,
+        y: Math.random() * viewportHeight,
+        size: Math.random() * 1.55 + 0.22,
+        alpha: Math.random() * 0.58 + 0.16,
+        speed: Math.random() * 0.045 + 0.01,
+        drift: (Math.random() - 0.5) * 0.012,
+        phase: Math.random() * Math.PI * 2,
+        color: starColors[Math.floor(Math.random() * starColors.length)],
       }));
-      draw();
+      meteors = [];
+      draw(performance.now());
     }
 
-    function draw() {
-      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    function draw(timestamp) {
+      context.clearRect(0, 0, viewportWidth, viewportHeight);
       stars.forEach((star) => {
+        const twinkle = reduceMotion
+          ? 1
+          : 0.74 + Math.sin(timestamp * 0.0014 + star.phase) * 0.26;
+        const [red, green, blue] = star.color;
         context.beginPath();
-        context.fillStyle = `rgba(157, 222, 255, ${star.alpha})`;
+        context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${
+          star.alpha * twinkle
+        })`;
         context.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         context.fill();
       });
+
+      meteors.forEach((meteor) => {
+        const tailX = meteor.x - meteor.length;
+        const tailY = meteor.y - meteor.length * 0.42;
+        const gradient = context.createLinearGradient(
+          meteor.x,
+          meteor.y,
+          tailX,
+          tailY,
+        );
+        gradient.addColorStop(0, `rgba(${meteor.color}, ${meteor.alpha})`);
+        gradient.addColorStop(0.18, `rgba(${meteor.color}, ${meteor.alpha * 0.7})`);
+        gradient.addColorStop(1, `rgba(${meteor.color}, 0)`);
+        context.beginPath();
+        context.moveTo(meteor.x, meteor.y);
+        context.lineTo(tailX, tailY);
+        context.lineWidth = meteor.width;
+        context.lineCap = "round";
+        context.strokeStyle = gradient;
+        context.shadowColor = `rgba(${meteor.color}, 0.7)`;
+        context.shadowBlur = 12;
+        context.stroke();
+        context.shadowBlur = 0;
+      });
     }
 
-    function animate() {
+    function spawnMeteor() {
+      const purple = Math.random() < 0.38;
+      meteors.push({
+        x: Math.random() * viewportWidth * 0.62 - viewportWidth * 0.12,
+        y: Math.random() * viewportHeight * 0.22 - 60,
+        velocityX: Math.random() * 3.8 + 7.2,
+        velocityY: Math.random() * 1.8 + 3.1,
+        length: Math.random() * 95 + 105,
+        width: Math.random() * 1.2 + 1.1,
+        alpha: Math.random() * 0.22 + 0.62,
+        color: purple ? "184, 140, 255" : "98, 230, 255",
+      });
+    }
+
+    function animate(timestamp) {
       stars.forEach((star) => {
         star.y += star.speed;
-        if (star.y > window.innerHeight + 2) {
+        star.x += star.drift;
+        if (star.y > viewportHeight + 2) {
           star.y = -2;
-          star.x = Math.random() * window.innerWidth;
+          star.x = Math.random() * viewportWidth;
         }
+        if (star.x < -2) star.x = viewportWidth + 2;
+        if (star.x > viewportWidth + 2) star.x = -2;
       });
-      draw();
+      if (timestamp >= nextMeteorAt && meteors.length < 2) {
+        spawnMeteor();
+        nextMeteorAt = timestamp + randomBetween(14000, 42000);
+      }
+      meteors.forEach((meteor) => {
+        meteor.x += meteor.velocityX;
+        meteor.y += meteor.velocityY;
+        meteor.alpha *= 0.994;
+      });
+      meteors = meteors.filter(
+        (meteor) =>
+          meteor.alpha > 0.08 &&
+          meteor.x - meteor.length < viewportWidth + 80 &&
+          meteor.y - meteor.length < viewportHeight + 80,
+      );
+      draw(timestamp);
       requestAnimationFrame(animate);
     }
 

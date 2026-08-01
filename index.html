@@ -12,12 +12,12 @@
     />
     <meta name="theme-color" content="#07111f" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.13.2" />
+    <link rel="stylesheet" href="styles.css?v=0.13.3" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/stellar-outpost-bgm.mp3?v=0.13.2"
+      src="assets/stellar-outpost-bgm.mp3?v=0.13.3"
       preload="auto"
       loop
       playsinline
@@ -86,6 +86,10 @@
           <button id="guide-button" type="button">新手指引</button>
           <button id="patch-notes-button" type="button">版本更新记录</button>
           <button id="rename-button" type="button">修改玩家名称</button>
+          <button id="performance-button" class="settings-toggle" type="button">
+            <span>画面与耗电</span>
+            <strong id="performance-status">省电</strong>
+          </button>
           <button id="bgm-button" class="settings-toggle" type="button">
             <span>背景音乐</span>
             <strong id="bgm-status">开</strong>
@@ -931,7 +935,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.13.2</span>
+        <span>航站协议 v0.13.3</span>
       </footer>
     </div>
 
@@ -975,7 +979,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.13.2</strong>
+          <strong id="patch-notes-current-version">v0.13.3</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1199,9 +1203,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.13.2"></script>
-    <script src="game.js?v=0.13.2"></script>
-    <script src="firebase-config.js?v=0.13.2"></script>
-    <script type="module" src="cloud-save.js?v=0.13.2"></script>
+    <script src="game-math.js?v=0.13.3"></script>
+    <script src="game.js?v=0.13.3"></script>
+    <script src="firebase-config.js?v=0.13.3"></script>
+    <script type="module" src="cloud-save.js?v=0.13.3"></script>
   </body>
 </html>

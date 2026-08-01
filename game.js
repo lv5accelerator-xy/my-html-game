@@ -30,12 +30,16 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.13.2";
+  const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
+  const GAME_VERSION = "0.13.3";
   const SAVE_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const AUTOSAVE_INTERVAL = 10000;
-  const UI_INTERVAL = 100;
+  const QUALITY_GAME_TICK_INTERVAL = 100;
+  const ECO_GAME_TICK_INTERVAL = 250;
+  const QUALITY_STARFIELD_FPS = 60;
+  const ECO_STARFIELD_FPS = 24;
   const MINOR_RAID_MIN_INTERVAL = 3 * 60 * 1000;
   const MINOR_RAID_MAX_INTERVAL = 11 * 60 * 1000;
   const MINOR_RAID_WARNING = 24 * 1000;
@@ -88,6 +92,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.13.3",
+      theme: "移动端省电与低温运行",
+      changes: [
+        "手机与触控设备首次运行默认启用省电模式，设置中可随时切换省电与高画质。",
+        "省电模式将星空限制为 24 FPS、1 倍像素密度和最多 72 颗星；高画质也封顶为 60 FPS。",
+        "游戏逻辑改为省电模式每秒 4 次、高画质每秒 10 次，并按真实时间差精确结算收益。",
+        "周期刷新只重绘当前功能页；后台时停止游戏计时器与星空循环，返回后统一补算后台收益。",
+        "省电模式关闭大面积动态渐变、环境光晕与背景模糊，降低移动端 CPU 和 GPU 持续占用。",
+      ],
+    },
     {
       version: "0.13.2",
       theme: "奇点解锁显示修复",
@@ -1163,6 +1178,8 @@
     patchNotesButton: $("#patch-notes-button"),
     renameButton: $("#rename-button"),
     playerNameDisplay: $("#player-name-display"),
+    performanceButton: $("#performance-button"),
+    performanceStatus: $("#performance-status"),
     bgmButton: $("#bgm-button"),
     bgmStatus: $("#bgm-status"),
     bgmVolume: $("#bgm-volume"),
@@ -1408,7 +1425,8 @@
   }
 
   let state = freshState();
-  let lastFrame = performance.now();
+  let performanceMode = loadPerformanceMode();
+  document.documentElement.dataset.performanceMode = performanceMode;
   let lastWallClock = Date.now();
   let lastUi = 0;
   let lastSave = Date.now();
@@ -1420,6 +1438,9 @@
   let patchNotesSeenThisSession = false;
   let recoveredBackupIndex = -1;
   let backgroundStartedAt = document.hidden ? Date.now() : null;
+  let gameLoopTimer = null;
+  let gameTickCount = 0;
+  let starfieldController = null;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -1436,6 +1457,68 @@
       numericValue >= 0 &&
       numericValue <= 8640000000000000;
     return valid ? numericValue : fallback;
+  }
+
+  function isLikelyMobileDevice() {
+    return (
+      window.matchMedia("(pointer: coarse)").matches ||
+      window.matchMedia("(max-width: 820px)").matches
+    );
+  }
+
+  function loadPerformanceMode() {
+    try {
+      const savedMode = localStorage.getItem(PERFORMANCE_MODE_KEY);
+      if (savedMode === "eco" || savedMode === "quality") return savedMode;
+    } catch (error) {
+      // Storage can be unavailable in strict privacy modes; device defaults remain safe.
+    }
+    return isLikelyMobileDevice() ? "eco" : "quality";
+  }
+
+  function getGameTickInterval() {
+    return performanceMode === "eco"
+      ? ECO_GAME_TICK_INTERVAL
+      : QUALITY_GAME_TICK_INTERVAL;
+  }
+
+  function updatePerformanceControls() {
+    if (!elements.performanceButton || !elements.performanceStatus) return;
+    const eco = performanceMode === "eco";
+    elements.performanceStatus.textContent = eco ? "省电" : "高画质";
+    elements.performanceButton.classList.toggle("off", eco);
+    elements.performanceButton.setAttribute(
+      "aria-label",
+      eco ? "当前省电模式，点击切换高画质" : "当前高画质，点击切换省电模式",
+    );
+    elements.performanceButton.title = eco
+      ? "24 FPS 星空 · 4 次/秒逻辑更新"
+      : "60 FPS 星空 · 10 次/秒逻辑更新";
+  }
+
+  function setPerformanceMode(nextMode, { announce = true } = {}) {
+    const safeMode = nextMode === "quality" ? "quality" : "eco";
+    const changed = safeMode !== performanceMode;
+    performanceMode = safeMode;
+    document.documentElement.dataset.performanceMode = performanceMode;
+    try {
+      localStorage.setItem(PERFORMANCE_MODE_KEY, performanceMode);
+    } catch (error) {
+      // The active session can still use the selected mode without persistence.
+    }
+    updatePerformanceControls();
+    starfieldController?.setMode(performanceMode);
+    restartGameLoop();
+    if (announce && changed) {
+      const eco = performanceMode === "eco";
+      showToast(
+        eco ? "省电模式已启用" : "高画质已启用",
+        eco
+          ? "星空 24 FPS，逻辑每秒更新 4 次，并关闭高耗能背景效果。"
+          : "星空 60 FPS，逻辑每秒更新 10 次。手机发热时建议切回省电模式。",
+        eco ? "◒" : "✦",
+      );
+    }
   }
 
   function normalizePlayerName(value) {
@@ -2705,7 +2788,12 @@
         addLog(`成就解锁：${achievement.name}。`);
         showToast("成就解锁", `${achievement.name} · 全产量永久 +2%`, achievement.icon);
         playAchievementTone();
-        renderAchievements();
+        if (
+          state.activePage === "research" &&
+          !elements.achievementList.closest("#achievements-panel").hidden
+        ) {
+          renderAchievements();
+        }
       }
     });
   }
@@ -2759,7 +2847,6 @@
     playAchievementTone();
     checkAchievements();
     renderCoreShop();
-    renderCombatTargets();
     updateUi();
     saveGame();
   }
@@ -3268,8 +3355,6 @@
     playAchievementTone();
     checkAchievements();
     renderStarport();
-    renderBuildings();
-    renderCombatTargets();
     updateUi();
     saveGame();
   }
@@ -3332,7 +3417,6 @@
       playTone(115, 0.22, "sawtooth", 0.028);
     }
     checkAchievements();
-    renderStarport();
     renderCombatTargets();
     updateCombatUi();
     saveGame();
@@ -3340,7 +3424,9 @@
 
   function setCombatReport(message) {
     state.combat.lastReport = message;
-    elements.combatReportText.textContent = message;
+    if (state.activePage === "combat") {
+      elements.combatReportText.textContent = message;
+    }
   }
 
   function upgradeCombat(type) {
@@ -3665,8 +3751,10 @@
     state.combat.incomingRaid = null;
     if (raid.type !== "major") scheduleNextMinorRaid();
     checkAchievements();
-    renderCombatTargets();
-    updateCombatUi();
+    if (state.activePage === "combat") {
+      renderCombatTargets();
+      updateCombatUi();
+    }
     saveGame();
   }
 
@@ -4833,17 +4921,44 @@
       `当前综合战力 ${formatNumber(currentPower, 0)}`;
   }
 
+  function renderActivePageDetails(pageId = state.activePage) {
+    switch (pageId) {
+      case "fleet":
+        renderBuildings();
+        break;
+      case "starport":
+        renderStarport();
+        break;
+      case "research": {
+        const selectedResearchTab = document.querySelector(
+          ".research-panel .tabs [aria-selected='true']",
+        )?.id;
+        if (selectedResearchTab === "achievements-tab") renderAchievements();
+        else if (selectedResearchTab === "log-tab") renderLog();
+        else renderUpgrades();
+        break;
+      }
+      case "core-shop":
+        renderCoreShop();
+        break;
+      case "combat":
+        renderCombatTargets();
+        break;
+      case "transcend":
+        renderEndgame();
+        break;
+      case "leaderboard":
+        renderLeaderboardSummary();
+        break;
+      default:
+        break;
+    }
+  }
+
   function renderAll() {
-    renderBuildings();
-    renderUpgrades();
-    renderAchievements();
-    renderCoreShop();
-    renderEndgame();
-    renderStarport();
-    renderCombatTargets();
-    renderLog();
-    renderLeaderboardSummary();
+    renderActivePageDetails();
     updateBuyModeButtons();
+    updatePerformanceControls();
     updateUi();
   }
 
@@ -5072,106 +5187,110 @@
     }
   }
 
-  function updateUi() {
-    const rate = calculateRate();
-    const clickValue = getClickValue();
-    const gain = getPrestigeGain();
-    const units = getTotalUnits();
+  function updateUi(rateOverride = null) {
+    const rate = Number.isFinite(rateOverride) ? rateOverride : calculateRate();
 
     updatePlayerNameDisplay();
     elements.dust.textContent = formatNumber(state.dust);
     elements.rate.textContent = `${formatNumber(rate)} / 秒`;
     elements.cores.textContent = formatNumber(state.cores, 0);
-    elements.clickYield.textContent = `每次 +${formatNumber(clickValue)}`;
-    elements.permanentBoost.textContent = `×${formatNumber(
-      safeMultiply(
-        getCoreMultiplier(),
-        getEndgameProductionMultiplier(),
-      ),
-    )}`;
-    elements.achievementBoost.textContent = `×${getAchievementMultiplier().toFixed(2)}`;
-    elements.runDust.textContent = formatNumber(state.runDust);
-    elements.unitCount.textContent = formatNumber(units, 0);
-    elements.reconstructionCost.textContent = `×${safeMultiply(
-      getReconstructionCostMultiplier(),
-      getStarportBuildingCostMultiplier(),
-    ).toFixed(2)}`;
-    elements.commandUnitCount.textContent = formatNumber(units, 0);
-    elements.commandCombatPower.textContent = formatNumber(getCombatPower(), 0);
-    elements.commandDefensePower.textContent = formatNumber(getDefensePower(), 0);
-    const commandRaidMetric = elements.commandRaidStatus.closest(
-      ".command-raid-metric",
-    );
-    if (state.combat.incomingRaid) {
-      const seconds = Math.max(
-        0,
-        Math.ceil((state.combat.incomingRaid.arrivesAt - Date.now()) / 1000),
-      );
-      const major = state.combat.incomingRaid.type === "major";
-      elements.commandRaidStatus.textContent = `${
-        major ? "大袭击" : "遭遇"
-      } · ${seconds}秒`;
-      commandRaidMetric.classList.add("alert");
-      commandRaidMetric.classList.toggle("major-alert", major);
-    } else if (state.lifetimeDust >= COMBAT_UNLOCK_DUST) {
-      const seconds = Math.max(
-        0,
-        Math.ceil((state.combat.nextMajorRaidAt - Date.now()) / 1000),
-      );
-      const minutesText = String(Math.floor(seconds / 60)).padStart(2, "0");
-      const secondsText = String(seconds % 60).padStart(2, "0");
-      elements.commandRaidStatus.textContent = `大袭击 ${minutesText}:${secondsText}`;
-      commandRaidMetric.classList.remove("alert");
-      commandRaidMetric.classList.remove("major-alert");
-    } else {
-      elements.commandRaidStatus.textContent = "尚未解锁";
-      commandRaidMetric.classList.remove("alert");
-      commandRaidMetric.classList.remove("major-alert");
-    }
-    elements.fleetFlavor.textContent =
-      units === 0
-        ? "轨道十分安静，等待你的第一道指令。"
-        : rate < 100
-          ? "近地回收网络运转正常。"
-          : rate < 10000
-            ? "舰队的航迹正照亮整片轨道。"
-            : rate < 10000000
-              ? "星环拆解与深空回收网络正在协同运行。"
-              : rate < 10000000000
-                ? "裂隙捕获网正从空间潮汐中持续回收物资。"
-                : "视界矿场与宇宙弦织取机已接管终极回收链。";
 
-    elements.prestigeButton.disabled = gain < 1;
-    elements.prestigeGain.textContent = `+${formatNumber(gain, 0)} 星核`;
-    if (gain > 0) {
-      const projectedState = {
-        ...state,
-        totalCores: state.totalCores + gain,
-      };
-      elements.prestigeDescription.textContent = `现在跃迁可获得 ${formatNumber(
-        gain,
-        0,
-      )} 枚可用星核；历史增幅将提升至 ×${formatNumber(getCoreMultiplier(
-        projectedState,
-      ))}。`;
-    } else {
-      const remaining = Math.max(0, PRESTIGE_BASE_DUST - state.runDust);
-      elements.prestigeDescription.textContent = `还需 ${formatNumber(
-        remaining,
-      )} 星尘即可获得第 1 枚星核。`;
+    if (state.activePage === "command") {
+      const clickValue = getClickValue();
+      const gain = getPrestigeGain();
+      const units = getTotalUnits();
+      elements.clickYield.textContent = `每次 +${formatNumber(clickValue)}`;
+      elements.permanentBoost.textContent = `×${formatNumber(
+        safeMultiply(
+          getCoreMultiplier(),
+          getEndgameProductionMultiplier(),
+        ),
+      )}`;
+      elements.achievementBoost.textContent = `×${getAchievementMultiplier().toFixed(2)}`;
+      elements.runDust.textContent = formatNumber(state.runDust);
+      elements.commandUnitCount.textContent = formatNumber(units, 0);
+      elements.commandCombatPower.textContent = formatNumber(getCombatPower(), 0);
+      elements.commandDefensePower.textContent = formatNumber(getDefensePower(), 0);
+      const commandRaidMetric = elements.commandRaidStatus.closest(
+        ".command-raid-metric",
+      );
+      if (state.combat.incomingRaid) {
+        const seconds = Math.max(
+          0,
+          Math.ceil((state.combat.incomingRaid.arrivesAt - Date.now()) / 1000),
+        );
+        const major = state.combat.incomingRaid.type === "major";
+        elements.commandRaidStatus.textContent = `${
+          major ? "大袭击" : "遭遇"
+        } · ${seconds}秒`;
+        commandRaidMetric.classList.add("alert");
+        commandRaidMetric.classList.toggle("major-alert", major);
+      } else if (state.lifetimeDust >= COMBAT_UNLOCK_DUST) {
+        const seconds = Math.max(
+          0,
+          Math.ceil((state.combat.nextMajorRaidAt - Date.now()) / 1000),
+        );
+        const minutesText = String(Math.floor(seconds / 60)).padStart(2, "0");
+        const secondsText = String(seconds % 60).padStart(2, "0");
+        elements.commandRaidStatus.textContent = `大袭击 ${minutesText}:${secondsText}`;
+        commandRaidMetric.classList.remove("alert", "major-alert");
+      } else {
+        elements.commandRaidStatus.textContent = "尚未解锁";
+        commandRaidMetric.classList.remove("alert", "major-alert");
+      }
+      elements.prestigeButton.disabled = gain < 1;
+      elements.prestigeGain.textContent = `+${formatNumber(gain, 0)} 星核`;
+      if (gain > 0) {
+        const projectedState = {
+          ...state,
+          totalCores: state.totalCores + gain,
+        };
+        elements.prestigeDescription.textContent = `现在跃迁可获得 ${formatNumber(
+          gain,
+          0,
+        )} 枚可用星核；历史增幅将提升至 ×${formatNumber(getCoreMultiplier(
+          projectedState,
+        ))}。`;
+      } else {
+        const remaining = Math.max(0, PRESTIGE_BASE_DUST - state.runDust);
+        elements.prestigeDescription.textContent = `还需 ${formatNumber(
+          remaining,
+        )} 星尘即可获得第 1 枚星核。`;
+      }
+      updateGoal();
+      updateEvent();
+    } else if (state.activePage === "fleet") {
+      const units = getTotalUnits();
+      elements.unitCount.textContent = formatNumber(units, 0);
+      elements.reconstructionCost.textContent = `×${safeMultiply(
+        getReconstructionCostMultiplier(),
+        getStarportBuildingCostMultiplier(),
+      ).toFixed(2)}`;
+      elements.fleetFlavor.textContent =
+        units === 0
+          ? "轨道十分安静，等待你的第一道指令。"
+          : rate < 100
+            ? "近地回收网络运转正常。"
+            : rate < 10000
+              ? "舰队的航迹正照亮整片轨道。"
+              : rate < 10000000
+                ? "星环拆解与深空回收网络正在协同运行。"
+                : rate < 10000000000
+                  ? "裂隙捕获网正从空间潮汐中持续回收物资。"
+                  : "视界矿场与宇宙弦织取机已接管终极回收链。";
+    } else if (state.activePage === "research") {
+      elements.lifetimeDust.textContent = formatNumber(state.lifetimeDust);
+      elements.lifetimeClicks.textContent = formatNumber(state.lifetimeClicks, 0);
+      elements.rebirthCount.textContent = formatNumber(state.rebirths, 0);
+      elements.playTime.textContent = formatDuration(state.playTime);
+    } else if (state.activePage === "combat") {
+      updateCombatUi();
     }
 
-    elements.lifetimeDust.textContent = formatNumber(state.lifetimeDust);
-    elements.lifetimeClicks.textContent = formatNumber(state.lifetimeClicks, 0);
-    elements.rebirthCount.textContent = formatNumber(state.rebirths, 0);
-    elements.playTime.textContent = formatDuration(state.playTime);
     elements.soundButton.querySelector("span").textContent = state.sound ? "♪" : "×";
     elements.soundButton.setAttribute("aria-label", state.sound ? "关闭音效" : "开启音效");
     updateBgmControls();
-
-    updateGoal();
-    updateEvent();
-    updateCombatUi();
+    updatePerformanceControls();
   }
 
   function updateBuyModeButtons() {
@@ -5276,8 +5395,9 @@
       if (selected && focus) tab.focus();
     });
     state.activePage = safePage;
+    renderActivePageDetails(safePage);
+    updateUi();
     if (safePage === "leaderboard") {
-      renderLeaderboardSummary();
       window.dispatchEvent(new Event("stellar-leaderboard-open"));
     }
     if (persist) saveGame();
@@ -5332,7 +5452,10 @@
           panel.hidden = !selected;
         });
         if (focus) tab.focus();
-        if (tab.id === "log-tab") renderLog();
+        if (state.activePage === "research") {
+          renderActivePageDetails("research");
+          updateUi();
+        }
       };
 
       tabs.forEach((tab, index) => {
@@ -5361,6 +5484,10 @@
     let meteors = [];
     let viewportWidth = window.innerWidth;
     let viewportHeight = window.innerHeight;
+    let actualPixelRatio = 1;
+    let frameTimer = null;
+    let lastStarfieldFrame = 0;
+    let renderedFrames = 0;
     let nextMeteorAt = performance.now() + randomBetween(5000, 14000);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const starColors = [
@@ -5370,8 +5497,36 @@
       [224, 238, 255],
     ];
 
+    function getProfile() {
+      if (performanceMode === "eco") {
+        return {
+          fps: ECO_STARFIELD_FPS,
+          maxPixelRatio: 1,
+          minStars: 32,
+          maxStars: 72,
+          starArea: 14000,
+          maxMeteors: 1,
+          meteorShadow: 0,
+        };
+      }
+      return {
+        fps: QUALITY_STARFIELD_FPS,
+        maxPixelRatio: 2,
+        minStars: 58,
+        maxStars: 210,
+        starArea: 7200,
+        maxMeteors: 2,
+        meteorShadow: 12,
+      };
+    }
+
     function resize() {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const profile = getProfile();
+      const ratio = Math.min(
+        window.devicePixelRatio || 1,
+        profile.maxPixelRatio,
+      );
+      actualPixelRatio = ratio;
       viewportWidth = window.innerWidth;
       viewportHeight = window.innerHeight;
       canvas.width = Math.floor(viewportWidth * ratio);
@@ -5380,8 +5535,11 @@
       canvas.style.height = `${viewportHeight}px`;
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       const count = Math.min(
-        210,
-        Math.max(58, Math.floor((viewportWidth * viewportHeight) / 7200)),
+        profile.maxStars,
+        Math.max(
+          profile.minStars,
+          Math.floor((viewportWidth * viewportHeight) / profile.starArea),
+        ),
       );
       stars = Array.from({ length: count }, () => ({
         x: Math.random() * viewportWidth,
@@ -5394,7 +5552,7 @@
         color: starColors[Math.floor(Math.random() * starColors.length)],
       }));
       meteors = [];
-      draw(performance.now());
+      if (!document.hidden) draw(performance.now());
     }
 
     function draw(timestamp) {
@@ -5413,6 +5571,7 @@
       });
 
       meteors.forEach((meteor) => {
+        const profile = getProfile();
         const tailX = meteor.x - meteor.length;
         const tailY = meteor.y - meteor.length * 0.42;
         const gradient = context.createLinearGradient(
@@ -5431,7 +5590,7 @@
         context.lineCap = "round";
         context.strokeStyle = gradient;
         context.shadowColor = `rgba(${meteor.color}, 0.7)`;
-        context.shadowBlur = 12;
+        context.shadowBlur = profile.meteorShadow;
         context.stroke();
         context.shadowBlur = 0;
       });
@@ -5452,9 +5611,14 @@
     }
 
     function animate(timestamp) {
+      if (document.hidden || reduceMotion) return;
+      const profile = getProfile();
+      const frameScale = lastStarfieldFrame
+        ? clamp((timestamp - lastStarfieldFrame) / (1000 / 60), 0.25, 4)
+        : 1;
       stars.forEach((star) => {
-        star.y += star.speed;
-        star.x += star.drift;
+        star.y += star.speed * frameScale;
+        star.x += star.drift * frameScale;
         if (star.y > viewportHeight + 2) {
           star.y = -2;
           star.x = Math.random() * viewportWidth;
@@ -5462,14 +5626,14 @@
         if (star.x < -2) star.x = viewportWidth + 2;
         if (star.x > viewportWidth + 2) star.x = -2;
       });
-      if (timestamp >= nextMeteorAt && meteors.length < 2) {
+      if (timestamp >= nextMeteorAt && meteors.length < profile.maxMeteors) {
         spawnMeteor();
         nextMeteorAt = timestamp + randomBetween(14000, 42000);
       }
       meteors.forEach((meteor) => {
-        meteor.x += meteor.velocityX;
-        meteor.y += meteor.velocityY;
-        meteor.alpha *= 0.994;
+        meteor.x += meteor.velocityX * frameScale;
+        meteor.y += meteor.velocityY * frameScale;
+        meteor.alpha *= Math.pow(0.994, frameScale);
       });
       meteors = meteors.filter(
         (meteor) =>
@@ -5478,12 +5642,66 @@
           meteor.y - meteor.length < viewportHeight + 80,
       );
       draw(timestamp);
-      requestAnimationFrame(animate);
+      lastStarfieldFrame = timestamp;
+      renderedFrames += 1;
+      scheduleFrame();
+    }
+
+    function scheduleFrame() {
+      if (
+        reduceMotion ||
+        document.hidden ||
+        frameTimer !== null
+      ) {
+        return;
+      }
+      const interval = 1000 / getProfile().fps;
+      const elapsed = lastStarfieldFrame
+        ? performance.now() - lastStarfieldFrame
+        : interval;
+      frameTimer = window.setTimeout(() => {
+        frameTimer = null;
+        if (document.hidden) return;
+        animate(performance.now());
+      }, Math.max(0, interval - elapsed));
+    }
+
+    function pause() {
+      if (frameTimer !== null) {
+        window.clearTimeout(frameTimer);
+        frameTimer = null;
+      }
+    }
+
+    function resume() {
+      if (reduceMotion || document.hidden) return;
+      lastStarfieldFrame = performance.now();
+      scheduleFrame();
+    }
+
+    function setMode() {
+      pause();
+      lastStarfieldFrame = 0;
+      resize();
+      resume();
     }
 
     window.addEventListener("resize", resize, { passive: true });
     resize();
-    if (!reduceMotion) requestAnimationFrame(animate);
+    starfieldController = Object.freeze({
+      pause,
+      resume,
+      setMode,
+      getDiagnostics: () => ({
+        targetFps: getProfile().fps,
+        pixelRatio: actualPixelRatio,
+        starCount: stars.length,
+        maxMeteors: getProfile().maxMeteors,
+        scheduled: frameTimer !== null,
+        renderedFrames,
+      }),
+    });
+    resume();
   }
 
   function bindEvents() {
@@ -5549,6 +5767,9 @@
       state.sound = !state.sound;
       updateUi();
       if (state.sound) playTone(520, 0.08);
+    });
+    elements.performanceButton.addEventListener("click", () => {
+      setPerformanceMode(performanceMode === "eco" ? "quality" : "eco");
     });
     elements.bgmButton.addEventListener("click", () => {
       state.bgmEnabled = !state.bgmEnabled;
@@ -5655,14 +5876,17 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         backgroundStartedAt = Date.now();
+        pauseGameLoop();
+        starfieldController?.pause();
         saveGame();
       } else if (backgroundStartedAt !== null) {
         grantInactiveEarnings(backgroundStartedAt, "background");
         backgroundStartedAt = null;
         saveGame();
+        starfieldController?.resume();
       }
-      lastFrame = performance.now();
       lastWallClock = Date.now();
+      if (!document.hidden) restartGameLoop();
     });
     const unlockBgm = () => {
       if (state.bgmEnabled) startBgm();
@@ -5671,16 +5895,30 @@
     document.addEventListener("keydown", unlockBgm, { once: true, capture: true });
   }
 
+  function pauseGameLoop() {
+    if (gameLoopTimer === null) return;
+    window.clearTimeout(gameLoopTimer);
+    gameLoopTimer = null;
+  }
+
+  function scheduleGameLoop(delay = getGameTickInterval()) {
+    if (document.hidden || gameLoopTimer !== null) return;
+    gameLoopTimer = window.setTimeout(() => {
+      gameLoopTimer = null;
+      gameLoop(performance.now());
+    }, Math.max(0, delay));
+  }
+
+  function restartGameLoop() {
+    pauseGameLoop();
+    if (!document.hidden) scheduleGameLoop(0);
+  }
+
   function gameLoop(now) {
-    if (document.hidden) {
-      lastFrame = now;
-      lastWallClock = Date.now();
-      requestAnimationFrame(gameLoop);
-      return;
-    }
+    if (document.hidden) return;
     const wallNow = Date.now();
     const wallDelta = Math.max(0, (wallNow - lastWallClock) / 1000);
-    let delta = clamp((now - lastFrame) / 1000, 0, 0.25);
+    let delta = wallDelta;
     if (wallDelta > 1) {
       grantInactiveEarnings(
         wallNow - wallDelta * 1000,
@@ -5688,32 +5926,24 @@
       );
       delta = 0;
     }
-    lastFrame = now;
     lastWallClock = wallNow;
     const rate = calculateRate();
     if (rate > 0) addDust(safeMultiply(rate, delta));
     state.playTime = safeAdd(state.playTime, delta);
 
-    if (now - lastUi >= UI_INTERVAL) {
+    if (now - lastUi >= getGameTickInterval()) {
       expireTimedEffects();
       processCombatEvents();
       checkAchievements();
-      updateUi();
+      updateUi(rate);
       if (Math.floor(now / 1000) !== Math.floor(lastUi / 1000)) {
-        renderBuildings();
-        renderUpgrades();
-        renderCoreShop();
-        renderEndgame();
-        renderStarport();
-        renderCombatTargets();
-        if (state.activePage === "leaderboard") {
-          renderLeaderboardSummary();
-        }
+        renderActivePageDetails();
       }
       lastUi = now;
     }
     if (Date.now() - lastSave >= AUTOSAVE_INTERVAL) saveGame();
-    requestAnimationFrame(gameLoop);
+    gameTickCount += 1;
+    scheduleGameLoop();
   }
 
   loadGame();
@@ -5728,6 +5958,14 @@
     createSnapshot: createCloudSaveSnapshot,
     getMetadata: getCloudSaveMetadata,
     getLeaderboardEntry,
+    getPerformanceDiagnostics: () => ({
+      mode: performanceMode,
+      gameTickInterval: getGameTickInterval(),
+      gameLoopScheduled: gameLoopTimer !== null,
+      gameTickCount,
+      hidden: document.hidden,
+      starfield: starfieldController?.getDiagnostics() || null,
+    }),
     applySnapshot: applyCloudSaveSnapshot,
     notify: (title, message, icon = "☁") =>
       showToast(title, message, icon),
@@ -5744,5 +5982,5 @@
     }, 120);
   }
   window.setTimeout(showStartupNotices, 260);
-  requestAnimationFrame(gameLoop);
+  scheduleGameLoop(0);
 })();

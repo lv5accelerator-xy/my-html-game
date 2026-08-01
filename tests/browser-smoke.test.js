@@ -60,7 +60,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.2");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.3");
   }, {
     version: 5,
     dust: 57e18,
@@ -107,13 +107,17 @@ async function main() {
       contentRects: document.querySelector("#transcend-content").getClientRects().length,
       saveVersion: window.StellarOutpostCloudBridge.saveVersion,
       gameVersion: window.StellarOutpostCloudBridge.gameVersion,
+      performance: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
       metadata: window.StellarOutpostCloudBridge.getMetadata(),
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.13.2");
+    assert.equal(snapshot.gameVersion, "0.13.3");
     assert.equal(snapshot.saveVersion, 6);
-    assert.match(snapshot.footer, /v0\.13\.2/);
+    assert.equal(snapshot.performance.mode, "quality");
+    assert.equal(snapshot.performance.gameTickInterval, 100);
+    assert.equal(snapshot.performance.starfield.targetFps, 60);
+    assert.match(snapshot.footer, /v0\.13\.3/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");

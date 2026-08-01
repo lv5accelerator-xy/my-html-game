@@ -42,6 +42,10 @@ const legacyDustSoftCap = readConstant("LEGACY_DUST_SOFT_CAP");
 const legacyDustPower = readConstant("LEGACY_DUST_LATE_POWER");
 const legacyCoreSoftCap = readConstant("LEGACY_CORE_SOFT_CAP");
 const legacyCorePower = readConstant("LEGACY_CORE_LATE_POWER");
+const qualityTickInterval = readConstant("QUALITY_GAME_TICK_INTERVAL");
+const ecoTickInterval = readConstant("ECO_GAME_TICK_INTERVAL");
+const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
+const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
 assert.equal(readConstant("SAVE_VERSION"), 6, "save migration must stay enabled");
 assert.ok(dustCap < 1e9, "active dust reserve must remain below B notation");
@@ -50,6 +54,11 @@ assert.ok(maxBuildingUnitCost < dustCap, "one facility must always be affordable
 assert.ok(maxCombatUpgradeCost < dustCap, "one combat upgrade must stay affordable");
 assert.doesNotMatch(math.formatNumber(dustCap), /[BTP]/);
 assert.doesNotMatch(math.formatNumber(careerDustCap), /[BTP]/);
+assert.equal(qualityTickInterval, 100, "quality logic must be capped at 10 Hz");
+assert.equal(ecoTickInterval, 250, "eco logic must be capped at 4 Hz");
+assert.equal(qualityStarfieldFps, 60, "quality starfield must be capped at 60 FPS");
+assert.equal(ecoStarfieldFps, 24, "eco starfield must be capped at 24 FPS");
+assert.doesNotMatch(source, /requestAnimationFrame\(gameLoop\)/);
 
 for (const building of buildings) {
   assert.ok(building.baseCost <= 16e6, `${building.id} base cost is too large`);

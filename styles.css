@@ -80,6 +80,10 @@ html[data-performance-mode="eco"] * {
   backdrop-filter: none !important;
 }
 
+html[data-performance-mode="eco"] .command-companion {
+  animation-play-state: paused;
+}
+
 body::before {
   position: fixed;
   z-index: 0;
@@ -756,6 +760,167 @@ h2 {
     transparent 1px 30px
   );
   mask-image: radial-gradient(circle, black, transparent 72%);
+}
+
+.command-companion-system {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 310px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.command-companion-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.command-companion-caption {
+  position: absolute;
+  z-index: 6;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  border: 1px solid rgba(184, 140, 255, 0.18);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(6, 16, 29, 0.7);
+  box-shadow: 0 0 20px rgba(159, 115, 255, 0.08);
+  font-size: calc(8px * var(--type-scale));
+  letter-spacing: 0.06em;
+}
+
+.command-companion-caption strong {
+  color: var(--purple);
+  font-size: inherit;
+}
+
+.command-companion {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--companion-color);
+  background: transparent;
+  animation: command-companion-orbit var(--companion-duration) linear infinite;
+  animation-delay: var(--companion-delay);
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.command-companion.reverse {
+  animation-direction: reverse;
+}
+
+.command-companion-body {
+  position: relative;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--companion-color) 68%, transparent);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.82), transparent 13%),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--companion-color) 33%, #0a1728), #07111f 72%);
+  box-shadow:
+    0 0 8px var(--companion-glow),
+    0 0 22px color-mix(in srgb, var(--companion-glow) 58%, transparent),
+    inset 0 0 10px color-mix(in srgb, var(--companion-color) 28%, transparent);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.command-companion-body::before {
+  position: absolute;
+  width: 44px;
+  height: 16px;
+  border: 1px solid color-mix(in srgb, var(--companion-color) 48%, transparent);
+  border-radius: 50%;
+  content: "";
+  opacity: 0.62;
+  transform: rotate(-18deg);
+}
+
+.command-companion-body::after {
+  position: absolute;
+  z-index: -1;
+  right: 25px;
+  width: 18px;
+  height: 6px;
+  border-radius: 50%;
+  content: "";
+  opacity: 0.55;
+  background: linear-gradient(90deg, transparent, var(--companion-color));
+  filter: blur(2px);
+}
+
+.command-companion-glyph {
+  position: relative;
+  z-index: 2;
+  color: var(--companion-color);
+  text-shadow: 0 0 8px var(--companion-glow);
+  font-size: calc(13px * var(--type-scale));
+  line-height: 1;
+}
+
+.command-companion-name {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  width: max-content;
+  max-width: 110px;
+  padding: 4px 7px;
+  border: 1px solid color-mix(in srgb, var(--companion-color) 36%, transparent);
+  border-radius: 7px;
+  opacity: 0;
+  color: var(--text);
+  background: rgba(4, 12, 23, 0.92);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  font-size: calc(8px * var(--type-scale));
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.command-companion:hover .command-companion-body,
+.command-companion:focus-visible .command-companion-body {
+  transform: scale(1.16);
+  box-shadow:
+    0 0 12px var(--companion-glow),
+    0 0 32px var(--companion-glow),
+    inset 0 0 12px color-mix(in srgb, var(--companion-color) 36%, transparent);
+}
+
+.command-companion:hover .command-companion-name,
+.command-companion:focus-visible .command-companion-name {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.command-companion:focus-visible {
+  outline: 2px solid var(--companion-color);
+  outline-offset: 4px;
+}
+
+@media (hover: hover) {
+  .beacon-zone:hover .command-companion {
+    animation-play-state: paused;
+  }
 }
 
 .orbit {
@@ -5428,6 +5593,15 @@ footer {
   }
 }
 
+@keyframes command-companion-orbit {
+  from {
+    transform: rotate(0deg) translateX(var(--companion-radius)) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(var(--companion-radius)) rotate(-360deg);
+  }
+}
+
 @keyframes float-up {
   0% {
     opacity: 0;
@@ -5836,6 +6010,10 @@ footer {
 }
 
 @media (max-width: 460px) {
+  .command-companion-system {
+    transform: translate(-50%, -50%) scale(0.86);
+  }
+
   .brand strong {
     font-size: calc(13px * var(--type-scale));
   }
@@ -6253,6 +6431,12 @@ footer {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .command-companion {
+    animation-duration: var(--companion-duration) !important;
+    animation-iteration-count: infinite !important;
+    animation-play-state: paused !important;
+  }
+
   *,
   *::before,
   *::after {

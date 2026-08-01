@@ -60,7 +60,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.1");
   }, {
     version: 5,
     dust: 57e18,
@@ -105,9 +105,9 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.13.0");
+    assert.equal(snapshot.gameVersion, "0.13.1");
     assert.equal(snapshot.saveVersion, 6);
-    assert.match(snapshot.footer, /v0\.13\.0/);
+    assert.match(snapshot.footer, /v0\.13\.1/);
     assert.equal(snapshot.locked, true, "migrated cores should retain endgame access");
     assert.match(snapshot.bgmPath, /stellar-outpost-bgm\.mp3$/);
     assert.ok(snapshot.metadata.lifetimeDust < 1e9);

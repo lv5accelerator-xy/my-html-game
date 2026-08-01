@@ -36,6 +36,8 @@ const careerDustCap = readConstant("CAREER_DUST_CAP");
 const productionSoftCap = readConstant("PRODUCTION_SOFT_CAP");
 const productionPower = readConstant("PRODUCTION_LATE_POWER");
 const maxAutoRate = readConstant("MAX_AUTO_RATE");
+const maxBuildingUnitCost = readConstant("MAX_BUILDING_UNIT_COST");
+const maxCombatUpgradeCost = readConstant("MAX_COMBAT_UPGRADE_COST");
 const legacyDustSoftCap = readConstant("LEGACY_DUST_SOFT_CAP");
 const legacyDustPower = readConstant("LEGACY_DUST_LATE_POWER");
 const legacyCoreSoftCap = readConstant("LEGACY_CORE_SOFT_CAP");
@@ -44,6 +46,8 @@ const legacyCorePower = readConstant("LEGACY_CORE_LATE_POWER");
 assert.equal(readConstant("SAVE_VERSION"), 6, "save migration must stay enabled");
 assert.ok(dustCap < 1e9, "active dust reserve must remain below B notation");
 assert.ok(careerDustCap < 1e9, "career dust must remain below B notation");
+assert.ok(maxBuildingUnitCost < dustCap, "one facility must always be affordable");
+assert.ok(maxCombatUpgradeCost < dustCap, "one combat upgrade must stay affordable");
 assert.doesNotMatch(math.formatNumber(dustCap), /[BTP]/);
 assert.doesNotMatch(math.formatNumber(careerDustCap), /[BTP]/);
 
@@ -51,6 +55,27 @@ for (const building of buildings) {
   assert.ok(building.baseCost <= 16e6, `${building.id} base cost is too large`);
   assert.ok(building.unlock <= 50e6, `${building.id} unlock is too large`);
   assert.ok(building.baseRate <= 36000, `${building.id} base rate is too large`);
+  const lateUnitCost = math.cappedGeometricSeriesCost(
+    building.baseCost,
+    1.12,
+    10000,
+    1,
+    3,
+    maxBuildingUnitCost,
+  );
+  assert.equal(lateUnitCost, maxBuildingUnitCost, `${building.id} cap failed`);
+  assert.equal(
+    math.maxAffordableCappedGeometric(
+      building.baseCost,
+      1.12,
+      dustCap,
+      10000,
+      3,
+      maxBuildingUnitCost,
+    ),
+    1,
+    `${building.id} should remain purchasable one at a time`,
+  );
 }
 
 for (const upgrade of upgrades) {
@@ -92,6 +117,17 @@ const legacyCores = math.softCapGameNumber(
 assert.ok(legacyCores < 100000, "10.6M legacy cores should migrate to K scale");
 
 assert.doesNotMatch(source, /1e18|1e12/);
+
+assert.equal(
+  math.cappedGeometricSeriesCost(100, 2, 0, 4, 1, 250),
+  800,
+  "batch cost must sum each capped unit",
+);
+assert.equal(
+  math.maxAffordableCappedGeometric(100, 2, 550, 0, 1, 250),
+  3,
+  "max purchase must use the same capped batch curve",
+);
 
 console.log(
   `numeric balance ok: rate=${math.formatNumber(compressedRate)}, ` +

@@ -224,6 +224,92 @@
     return amount;
   }
 
+  function cappedGeometricSeriesCost(
+    baseCost,
+    growth,
+    owned,
+    amount,
+    multiplier,
+    unitCap
+  ) {
+    var safeAmount = clampGameCount(amount);
+    if (safeAmount <= 0) return 0;
+
+    var safeGrowth = Math.max(1, Number(growth) || 1);
+    var safeMultiplier = arguments.length > 4 ? multiplier : 1;
+    var safeUnitCap = Math.max(1, clampGameNumber(unitCap, 1));
+    var firstCost = safeMultiply(
+      baseCost,
+      safePow(safeGrowth, clampGameCount(owned)),
+      safeMultiplier
+    );
+    var cappedFirstCost = Math.min(firstCost, safeUnitCap);
+    if (safeGrowth === 1 || firstCost >= safeUnitCap) {
+      return safeMultiply(cappedFirstCost, safeAmount);
+    }
+
+    var rawUncappedCount = Math.ceil(
+      Math.log(safeUnitCap / firstCost) / Math.log(safeGrowth) - 1e-12
+    );
+    var uncappedCount = Math.min(
+      safeAmount,
+      clampGameCount(rawUncappedCount)
+    );
+    var uncappedCost = geometricSeriesCost(
+      baseCost,
+      safeGrowth,
+      owned,
+      uncappedCount,
+      safeMultiplier
+    );
+    var cappedCount = safeAmount - uncappedCount;
+    return safeAdd(
+      uncappedCost,
+      safeMultiply(safeUnitCap, cappedCount)
+    );
+  }
+
+  function maxAffordableCappedGeometric(
+    baseCost,
+    growth,
+    available,
+    owned,
+    multiplier,
+    unitCap
+  ) {
+    var safeAvailable = clampGameNumber(available);
+    var safeGrowth = Math.max(1, Number(growth) || 1);
+    var safeOwned = clampGameCount(owned);
+    var safeMultiplier = arguments.length > 4 ? multiplier : 1;
+    var safeUnitCap = Math.max(1, clampGameNumber(unitCap, 1));
+    var firstCost = Math.min(
+      safeMultiply(
+        baseCost,
+        safePow(safeGrowth, safeOwned),
+        safeMultiplier
+      ),
+      safeUnitCap
+    );
+    if (firstCost <= 0 || safeAvailable < firstCost) return 0;
+
+    var low = 0;
+    var high = clampGameCount(Math.floor(safeAvailable / firstCost));
+    while (low < high) {
+      var middle = low + Math.ceil((high - low) / 2);
+      var cost = cappedGeometricSeriesCost(
+        baseCost,
+        safeGrowth,
+        safeOwned,
+        middle,
+        safeMultiplier,
+        safeUnitCap
+      );
+      if (cost <= safeAvailable) low = middle;
+      else high = middle - 1;
+    }
+    return low;
+  }
+
   function countFixedIntervalEvents(nextAt, endAt, interval, maxEvents) {
     var safeNextAt = Math.max(0, Number(nextAt) || 0);
     var safeEndAt = Math.max(0, Number(endAt) || 0);
@@ -254,6 +340,8 @@
     formatNumber: formatNumber,
     geometricSeriesCost: geometricSeriesCost,
     maxAffordableGeometric: maxAffordableGeometric,
+    cappedGeometricSeriesCost: cappedGeometricSeriesCost,
+    maxAffordableCappedGeometric: maxAffordableCappedGeometric,
     countFixedIntervalEvents: countFixedIntervalEvents
   };
 });

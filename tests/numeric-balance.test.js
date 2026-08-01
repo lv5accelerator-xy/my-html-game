@@ -29,6 +29,8 @@ function readArray(name, nextName) {
 
 const buildings = readArray("BUILDINGS", "UPGRADES");
 const upgrades = readArray("UPGRADES", "ACHIEVEMENTS");
+const starportMaterials = readArray("STARPORT_MATERIALS", "STARPORT_MODULES");
+const starportModules = readArray("STARPORT_MODULES", "SKIRMISH_TARGETS");
 const skirmishes = readArray("SKIRMISH_TARGETS", "PLANET_TARGETS");
 
 const dustCap = readConstant("DUST_RESERVE_CAP");
@@ -93,11 +95,52 @@ for (const upgrade of upgrades) {
 }
 
 for (const target of skirmishes) {
+  assert.equal(
+    Object.keys(target.drops).length,
+    1,
+    `${target.id} must drop exactly one dedicated material`,
+  );
   for (const [material, range] of Object.entries(target.drops)) {
     assert.ok(range[0] >= 1, `${target.id}/${material} can still drop zero`);
     assert.ok(range[1] >= range[0], `${target.id}/${material} range is invalid`);
   }
 }
+
+assert.equal(starportMaterials.length, 6, "starport needs six material types");
+assert.equal(starportModules.length, 6, "starport needs six module slots");
+const materialIds = new Set(starportMaterials.map((material) => material.id));
+const moduleMaterialIds = new Set();
+for (const module of starportModules) {
+  const requiredMaterials = Object.keys(module.baseCost);
+  assert.equal(
+    requiredMaterials.length,
+    1,
+    `${module.id} must require exactly one dedicated material`,
+  );
+  assert.ok(
+    materialIds.has(requiredMaterials[0]),
+    `${module.id} references an unknown material`,
+  );
+  moduleMaterialIds.add(requiredMaterials[0]);
+  assert.ok(module.baseDustCost >= 30000, `${module.id} dust cost is not substantial`);
+  const finalDustCost = Math.ceil(
+    module.baseDustCost * module.dustGrowth ** (module.maxRank - 1),
+  );
+  assert.ok(
+    finalDustCost <= maxBuildingUnitCost,
+    `${module.id} final dust cost exceeds the affordable cap`,
+  );
+}
+assert.deepEqual(
+  [...moduleMaterialIds].sort(),
+  [...materialIds].sort(),
+  "each module must consume a different material",
+);
+assert.deepEqual(
+  [...new Set(skirmishes.flatMap((target) => Object.keys(target.drops)))].sort(),
+  [...materialIds].sort(),
+  "near-zone targets must cover every starport material exactly once",
+);
 
 const screenshotRawRate = 90.4e15;
 const compressedRate = Math.min(

@@ -93,6 +93,16 @@ for (const building of buildings) {
 }
 
 assert.equal(companions.length, 8, "singularity collapse needs eight collectible companions");
+assert.ok(
+  companions.every(
+    (companion) =>
+      typeof companion.color === "string" &&
+      companion.color.startsWith("#") &&
+      typeof companion.glow === "string" &&
+      companion.glow.startsWith("rgba("),
+  ),
+  "every companion needs a distinct physical display palette",
+);
 assert.equal(
   new Set(companions.map((companion) => companion.id)).size,
   companions.length,

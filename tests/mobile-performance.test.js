@@ -58,7 +58,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.7");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.8");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
@@ -145,6 +145,39 @@ async function main() {
       `eco starfield must not exceed its 24 FPS target; got ${ecoFrameDelta}`,
     );
 
+    const ecoCompanions = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const companionSave = bridge.createSnapshot();
+      companionSave.activePage = "command";
+      companionSave.endgame.companions = [
+        "dustMoth",
+        "prismJelly",
+        "riftRay",
+        "orbitFox",
+        "echoWhale",
+        "voidCat",
+        "novaFinch",
+        "moonHare",
+      ];
+      bridge.applySnapshot(companionSave);
+      const bodies = [
+        ...document.querySelectorAll("#command-companion-stage .command-companion"),
+      ];
+      return {
+        count: bodies.length,
+        hidden: document.querySelector("#command-companion-system").hidden,
+        animationStates: bodies.map(
+          (body) => getComputedStyle(body).animationPlayState,
+        ),
+      };
+    });
+    assert.equal(ecoCompanions.count, 8);
+    assert.equal(ecoCompanions.hidden, false);
+    assert.ok(
+      ecoCompanions.animationStates.every((state) => state === "paused"),
+      "eco mode must freeze companion orbits while keeping companions visible",
+    );
+
     await page.click("#menu-button");
     await page.click("#performance-button");
     await page.waitForTimeout(120);
@@ -153,6 +186,9 @@ async function main() {
       mode: document.documentElement.dataset.performanceMode,
       savedMode: localStorage.getItem("stellarOutpostIdlePerformanceMode"),
       status: document.querySelector("#performance-status").textContent,
+      companionAnimationStates: [
+        ...document.querySelectorAll("#command-companion-stage .command-companion"),
+      ].map((body) => getComputedStyle(body).animationPlayState),
     }));
     assert.equal(quality.mode, "quality");
     assert.equal(quality.savedMode, "quality");
@@ -160,6 +196,20 @@ async function main() {
     assert.equal(quality.diagnostics.gameTickInterval, 100);
     assert.equal(quality.diagnostics.starfield.targetFps, 60);
     assert.equal(quality.diagnostics.starfield.pixelRatio, 2);
+    assert.ok(
+      quality.companionAnimationStates.every((state) => state === "running"),
+      "quality mode must animate visible companion orbits",
+    );
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const reducedMotionCompanions = await page.evaluate(() =>
+      [...document.querySelectorAll("#command-companion-stage .command-companion")]
+        .map((body) => getComputedStyle(body).animationPlayState),
+    );
+    assert.ok(
+      reducedMotionCompanions.every((state) => state === "paused"),
+      "reduced-motion mode must keep companions visible on static orbits",
+    );
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.waitForTimeout(1000);
     const qualityAfter = await page.evaluate(
       () => window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),

@@ -60,7 +60,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.7");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.8");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -118,12 +118,12 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.13.7");
+    assert.equal(snapshot.gameVersion, "0.13.8");
     assert.equal(snapshot.saveVersion, 6);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
-    assert.match(snapshot.footer, /v0\.13\.7/);
+    assert.match(snapshot.footer, /v0\.13\.8/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -282,6 +282,22 @@ async function main() {
       delete companionSave.endgame.companions;
       bridge.applySnapshot(companionSave);
 
+      const companionName = document.querySelector(
+        "#singularity-companion-name",
+      ).textContent;
+      const companionDescription = document.querySelector(
+        "#singularity-companion-description",
+      ).textContent;
+      const collapsePreview = document.querySelector(
+        "#collapse-button small",
+      ).textContent;
+      const commandCompanionSave = bridge.createSnapshot();
+      commandCompanionSave.activePage = "command";
+      bridge.applySnapshot(commandCompanionSave);
+      const commandCompanionBodies = [
+        ...document.querySelectorAll("#command-companion-stage .command-companion"),
+      ];
+
       return {
         dust: document.querySelector("#dust-value").textContent,
         topRate,
@@ -291,11 +307,21 @@ async function main() {
         combatMaterialCount: Object.keys(afterLoot).length,
         beforeLoot,
         afterLoot,
-        companionName: document.querySelector("#singularity-companion-name").textContent,
-        companionDescription: document.querySelector(
-          "#singularity-companion-description",
+        companionName,
+        companionDescription,
+        collapsePreview,
+        commandCompanionHidden: document.querySelector(
+          "#command-companion-system",
+        ).hidden,
+        commandCompanionCount: document.querySelector(
+          "#command-companion-count",
         ).textContent,
-        collapsePreview: document.querySelector("#collapse-button small").textContent,
+        commandCompanionNames: commandCompanionBodies.map(
+          (body) => body.dataset.companionName,
+        ),
+        commandCompanionAnimation: getComputedStyle(
+          commandCompanionBodies[0],
+        ).animationName,
       };
     });
     assert.equal(fleetAndCombatCheck.dust, "900M");
@@ -313,6 +339,20 @@ async function main() {
     assert.equal(fleetAndCombatCheck.companionName, "棱镜水母");
     assert.match(fleetAndCombatCheck.companionDescription, /图鉴 2\/8/);
     assert.match(fleetAndCombatCheck.collapsePreview, /唤醒裂隙鳐/);
+    assert.equal(fleetAndCombatCheck.commandCompanionHidden, false);
+    assert.equal(fleetAndCombatCheck.commandCompanionCount, "2 / 8");
+    assert.deepEqual(fleetAndCombatCheck.commandCompanionNames, [
+      "尘光蛾",
+      "棱镜水母",
+    ]);
+    assert.equal(
+      fleetAndCombatCheck.commandCompanionAnimation,
+      "command-companion-orbit",
+    );
+    await page.hover(".beacon-zone");
+    await page.click('[data-companion-id="prismJelly"]');
+    assert.match(await page.locator("#toast-region").textContent(), /棱镜水母/);
+    assert.match(await page.locator("#toast-region").textContent(), /纯观赏/);
 
     const starportCheck = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;

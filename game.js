@@ -31,7 +31,7 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.13.7";
+  const GAME_VERSION = "0.13.8";
   const SAVE_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -93,6 +93,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.13.8",
+      theme: "指挥台实体伴星",
+      changes: [
+        "已经唤醒的奇点伴星会作为实体天体出现在指挥台信标周围，不再只存在于超越页文字图鉴中。",
+        "八只伴星拥有各自的颜色、光晕、轨道半径与运行节奏，并会随收藏进度逐只加入航迹。",
+        "点击或触摸伴星可查看名称与介绍；伴星继续保持纯观赏设定，不提供数值加成。",
+        "移动端省电模式会冻结伴星轨道但保留实体显示，高画质模式下恢复缓慢运行。",
+      ],
+    },
     {
       version: "0.13.7",
       theme: "舰队产量成长修复",
@@ -1136,48 +1146,64 @@
       id: "dustMoth",
       name: "尘光蛾",
       icon: "✧",
+      color: "#ffe7a3",
+      glow: "rgba(255, 201, 104, 0.68)",
       description: "会绕着坍缩余辉安静盘旋。",
     },
     {
       id: "prismJelly",
       name: "棱镜水母",
       icon: "◈",
+      color: "#8fe7ff",
+      glow: "rgba(98, 230, 255, 0.72)",
       description: "透明触须会折射遥远星光。",
     },
     {
       id: "riftRay",
       name: "裂隙鳐",
       icon: "⌁",
+      color: "#c2a0ff",
+      glow: "rgba(159, 115, 255, 0.72)",
       description: "把微小的空间裂隙当作海浪。",
     },
     {
       id: "orbitFox",
       name: "环轨狐",
       icon: "◇",
+      color: "#ffae75",
+      glow: "rgba(255, 151, 96, 0.7)",
       description: "尾迹会画出一圈短暂星环。",
     },
     {
       id: "echoWhale",
       name: "回声幼鲸",
       icon: "◒",
+      color: "#72b9ff",
+      glow: "rgba(99, 141, 255, 0.72)",
       description: "只能听见来自上一周期的歌声。",
     },
     {
       id: "voidCat",
       name: "虚空猫",
       icon: "◉",
+      color: "#d0a8ff",
+      glow: "rgba(184, 140, 255, 0.72)",
       description: "喜欢趴在没有引力的地方打盹。",
     },
     {
       id: "novaFinch",
       name: "新星雀",
       icon: "✦",
+      color: "#ff8d7a",
+      glow: "rgba(255, 114, 133, 0.74)",
       description: "羽毛里藏着不会灼伤人的火花。",
     },
     {
       id: "moonHare",
       name: "月隙兔",
       icon: "☾",
+      color: "#edf6ff",
+      glow: "rgba(218, 238, 255, 0.72)",
       description: "总在雷达刚刚移开时探出耳朵。",
     },
   ];
@@ -1261,6 +1287,9 @@
     commandCombatPower: $("#command-combat-power"),
     commandDefensePower: $("#command-defense-power"),
     commandRaidStatus: $("#command-raid-status"),
+    commandCompanionSystem: $("#command-companion-system"),
+    commandCompanionStage: $("#command-companion-stage"),
+    commandCompanionCount: $("#command-companion-count"),
     buildingList: $("#building-list"),
     upgradeList: $("#upgrade-list"),
     achievementList: $("#achievement-list"),
@@ -1537,6 +1566,7 @@
   let state = freshState();
   let performanceMode = loadPerformanceMode();
   document.documentElement.dataset.performanceMode = performanceMode;
+  let renderedCommandCompanionSignature = null;
   let lastWallClock = Date.now();
   let lastUi = 0;
   let lastSave = Date.now();
@@ -1784,6 +1814,64 @@
         (companion) => !unlockedIds.has(companion.id),
       ) || null
     );
+  }
+
+  function renderCommandCompanions(targetState = state) {
+    const companions = getSingularityCompanions(targetState);
+    const signature = companions.map((companion) => companion.id).join("|");
+    if (signature === renderedCommandCompanionSignature) return;
+    renderedCommandCompanionSignature = signature;
+
+    elements.commandCompanionStage.replaceChildren();
+    elements.commandCompanionSystem.hidden = companions.length === 0;
+    elements.commandCompanionCount.textContent = `${companions.length} / ${SINGULARITY_COMPANIONS.length}`;
+    if (companions.length === 0) return;
+
+    const fragment = document.createDocumentFragment();
+    const orbitRadii = [108, 126, 142, 116, 136, 148, 122, 144];
+    companions.forEach((companion, index) => {
+      const orbitDuration = 19 + (index % 4) * 4.5;
+      const body = document.createElement("button");
+      body.type = "button";
+      body.className = "command-companion";
+      body.dataset.companionId = companion.id;
+      body.dataset.companionName = companion.name;
+      body.setAttribute(
+        "aria-label",
+        `${companion.name}：${companion.description} 纯观赏，无数值加成。`,
+      );
+      body.title = `${companion.name} · 点击查看介绍`;
+      body.style.setProperty("--companion-color", companion.color);
+      body.style.setProperty("--companion-glow", companion.glow);
+      body.style.setProperty("--companion-radius", `${orbitRadii[index]}px`);
+      body.style.setProperty("--companion-duration", `${orbitDuration}s`);
+      body.style.setProperty(
+        "--companion-delay",
+        `${-(orbitDuration * index) / Math.max(1, companions.length)}s`,
+      );
+      if (index % 2 === 1) body.classList.add("reverse");
+
+      const shell = document.createElement("span");
+      shell.className = "command-companion-body";
+      const glyph = document.createElement("span");
+      glyph.className = "command-companion-glyph";
+      glyph.setAttribute("aria-hidden", "true");
+      glyph.textContent = companion.icon;
+      const name = document.createElement("span");
+      name.className = "command-companion-name";
+      name.textContent = companion.name;
+      shell.append(glyph, name);
+      body.append(shell);
+      body.addEventListener("click", () => {
+        showToast(
+          companion.name,
+          `${companion.description} · 永久收藏，纯观赏，无数值加成。`,
+          companion.icon,
+        );
+      });
+      fragment.append(body);
+    });
+    elements.commandCompanionStage.append(fragment);
   }
 
   function getTranscendGain(targetState = state) {
@@ -5489,6 +5577,7 @@
     updateEvent();
 
     if (state.activePage === "command") {
+      renderCommandCompanions();
       const clickValue = getClickValue();
       const gain = getPrestigeGain();
       const units = getTotalUnits();

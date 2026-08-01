@@ -12,9 +12,17 @@
     />
     <meta name="theme-color" content="#07111f" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.12.0" />
+    <link rel="stylesheet" href="styles.css?v=0.13.0" />
   </head>
   <body>
+    <audio
+      id="bgm-audio"
+      src="assets/stellar-outpost-bgm.mp3?v=0.13.0"
+      preload="auto"
+      loop
+      playsinline
+      hidden
+    ></audio>
     <canvas id="starfield" aria-hidden="true"></canvas>
     <div class="ambient ambient-one" aria-hidden="true"></div>
     <div class="ambient ambient-two" aria-hidden="true"></div>
@@ -35,7 +43,7 @@
           <div class="resource-main">
             <span class="resource-icon" aria-hidden="true">✦</span>
             <span>
-              <small>星尘储量</small>
+              <small>星尘储量 · 上限 100M</small>
               <strong id="dust-value">0</strong>
             </span>
           </div>
@@ -282,7 +290,7 @@
             <div>
               <p class="eyebrow">深空跃迁</p>
               <h2>重启航线，提炼星核</h2>
-              <p id="prestige-description">本轮采集 75K 星尘后可获得第 1 枚星核。</p>
+              <p id="prestige-description">本轮采集 25K 星尘后可获得第 1 枚星核。</p>
             </div>
             <button id="prestige-button" type="button" disabled>
               <span>执行跃迁</span>
@@ -681,12 +689,12 @@
             <span class="singularity-lock-icon" aria-hidden="true">∞</span>
             <div>
               <p class="eyebrow">尚未建立奇点坐标</p>
-              <h3>历史获得 1M 星核后解锁</h3>
+              <h3>历史获得 5K 星核后解锁</h3>
               <p>超越会开启第三层永久成长、循环星区目标与新的后期资源消耗。</p>
               <div class="transcend-unlock-progress" aria-hidden="true">
                 <span id="transcend-unlock-bar"></span>
               </div>
-              <small id="transcend-unlock-label">0 / 1M 历史星核</small>
+              <small id="transcend-unlock-label">0 / 5K 历史星核</small>
             </div>
           </section>
 
@@ -728,7 +736,7 @@
                 <div class="sector-progress-copy">
                   <strong id="sector-progress">0</strong>
                   <span>/</span>
-                  <strong id="sector-target">1E</strong>
+                  <strong id="sector-target">2M</strong>
                 </div>
                 <div class="sector-progress-track" aria-hidden="true">
                   <span id="sector-progress-bar"></span>
@@ -762,7 +770,7 @@
                 </div>
                 <button id="collapse-button" type="button" disabled>
                   <span>执行奇点坍缩</span>
-                  <small>1M 历史星核起步</small>
+                  <small>5K 历史星核起步</small>
                 </button>
               </section>
             </div>
@@ -923,7 +931,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.12.0</span>
+        <span>航站协议 v0.13.0</span>
       </footer>
     </div>
 
@@ -967,7 +975,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.12.0</strong>
+          <strong id="patch-notes-current-version">v0.13.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1191,9 +1199,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.12.0"></script>
-    <script src="game.js?v=0.12.0"></script>
-    <script src="firebase-config.js?v=0.12.0"></script>
-    <script type="module" src="cloud-save.js?v=0.12.0"></script>
+    <script src="game-math.js?v=0.13.0"></script>
+    <script src="game.js?v=0.13.0"></script>
+    <script src="firebase-config.js?v=0.13.0"></script>
+    <script type="module" src="cloud-save.js?v=0.13.0"></script>
   </body>
 </html>

@@ -28,8 +28,8 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.12.0";
-  const SAVE_VERSION = 5;
+  const GAME_VERSION = "0.13.0";
+  const SAVE_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const AUTOSAVE_INTERVAL = 10000;
@@ -41,13 +41,33 @@
   const MAJOR_RAID_WARNING = 60 * 1000;
   const MAX_OFFLINE_MAJOR_RAIDS = 24;
   const MAX_OFFLINE_RAID_LOSS_RATIO = 0.35;
-  const BUILDING_GROWTH = 1.15;
-  const PRESTIGE_RATIO_SOFT_CAP = 1e6;
-  const PRESTIGE_LATE_POWER = 0.55;
-  const CORE_MULTIPLIER_SOFT_CAP = 10000;
-  const CORE_MULTIPLIER_LATE_POWER = 0.45;
-  const TRANSCEND_CORE_SOFT_CAP = 1e9;
-  const TRANSCEND_CORE_LATE_POWER = 0.5;
+  const BUILDING_GROWTH = 1.12;
+  const PRESTIGE_BASE_DUST = 25000;
+  const PRESTIGE_RATIO_SOFT_CAP = 400;
+  const PRESTIGE_LATE_POWER = 0.25;
+  const CORE_MULTIPLIER_SOFT_CAP = 250;
+  const CORE_MULTIPLIER_LATE_POWER = 0.25;
+  const TRANSCEND_CORE_SOFT_CAP = 25000;
+  const TRANSCEND_CORE_LATE_POWER = 0.3;
+  const PRODUCTION_SOFT_CAP = 10000;
+  const PRODUCTION_LATE_POWER = 0.1;
+  const MAX_AUTO_RATE = 999000;
+  const CLICK_SOFT_CAP = 1000;
+  const CLICK_LATE_POWER = 0.12;
+  const MAX_CLICK_VALUE = 99900;
+  const COMBAT_POWER_SOFT_CAP = 1000000;
+  const COMBAT_POWER_LATE_POWER = 0.18;
+  const MAX_COMBAT_POWER = 999000000;
+  const COMBAT_COST_SOFT_CAP = 12000000;
+  const COMBAT_COST_LATE_POWER = 0.25;
+  const DUST_RESERVE_CAP = 99999999;
+  const CAREER_DUST_CAP = 999000000;
+  const CORE_RESERVE_CAP = 999000000;
+  const ENDGAME_RESOURCE_CAP = 999000000;
+  const LEGACY_DUST_SOFT_CAP = 10000000;
+  const LEGACY_DUST_LATE_POWER = 0.1;
+  const LEGACY_CORE_SOFT_CAP = 5000;
+  const LEGACY_CORE_LATE_POWER = 0.25;
   const CRESCENT_MISSION_GOALS = Object.freeze({
     manualClicks: 28,
     skirmishWins: 1,
@@ -64,6 +84,27 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.13.0",
+      theme: "近域补给与后期数值压缩",
+      changes: [
+        "近域清剿的基础材料掉落提高约 2 至 3 倍，量子芯片与异星构件不再出现成功后掉落 0 个的空奖励。",
+        "后期设施、研究和战斗强化需求压回百万级，终局解锁由 1M 历史星核下调至 5K。",
+        "自动与手动产量、战力、轮回和超越倍率加入更强递减，星尘储量上限调整为 100M 以内。",
+        "边境星区改为统计本星区新增星尘、自动化单元或战斗胜场，不再要求 1E、1T 等膨胀数值。",
+        "第 6 版存档会一次性折算旧版超大数值，但保留建筑、研究、材料、战绩、星港与超越进度。",
+      ],
+    },
+    {
+      version: "0.12.1",
+      theme: "自定义航站乐章",
+      changes: [
+        "使用随游戏发布的 MP3 音轨替换原有程序化深空乐章。",
+        "背景音乐继续支持循环播放、独立开关和音量调节。",
+        "浏览器阻止自动播放时，会在首次点击或键盘操作后启动音乐。",
+        "保留 v0.12.0 的云存档、星港、离线袭击和排行榜功能，存档结构仍为第 5 版。",
+      ],
+    },
     {
       version: "0.12.0",
       theme: "星海排行榜",
@@ -284,7 +325,7 @@
       icon: "◇",
       description: "以恒星风驱动大面积静电捕获网。",
       baseCost: 110,
-      baseRate: 1.6,
+      baseRate: 1.4,
       unlock: 60,
     },
     {
@@ -292,72 +333,72 @@
       name: "晶体分析舱",
       icon: "⬡",
       description: "从陨晶碎片中分离高纯度星尘。",
-      baseCost: 850,
-      baseRate: 8.5,
-      unlock: 550,
+      baseCost: 800,
+      baseRate: 6.5,
+      unlock: 500,
     },
     {
       id: "forge",
       name: "量子熔铸站",
       icon: "◫",
       description: "折叠微观空间，重铸失落的轨道残骸。",
-      baseCost: 7200,
-      baseRate: 44,
-      unlock: 5200,
+      baseCost: 5500,
+      baseRate: 28,
+      unlock: 4000,
     },
     {
       id: "relay",
       name: "深空中继环",
       icon: "◎",
       description: "接入远方无人舰队的共享回收网络。",
-      baseCost: 64000,
-      baseRate: 235,
-      unlock: 48000,
+      baseCost: 32000,
+      baseRate: 120,
+      unlock: 25000,
     },
     {
       id: "dyson",
       name: "戴森收束阵列",
       icon: "☼",
       description: "截取恒星能量，将光直接凝聚为物质。",
-      baseCost: 580000,
-      baseRate: 1280,
-      unlock: 420000,
+      baseCost: 180000,
+      baseRate: 520,
+      unlock: 140000,
     },
     {
       id: "ringYard",
       name: "行星环拆解场",
       icon: "◑",
       description: "从行星环中分拣冰晶、稀有金属与远古残骸。",
-      baseCost: 5200000,
-      baseRate: 8500,
-      unlock: 3500000,
+      baseCost: 850000,
+      baseRate: 2200,
+      unlock: 650000,
     },
     {
       id: "riftNet",
       name: "裂隙捕获网",
       icon: "⌬",
       description: "在空间裂隙边缘截获被潮汐撕碎的漂流物资。",
-      baseCost: 52000000,
-      baseRate: 72000,
-      unlock: 36000000,
+      baseCost: 2600000,
+      baseRate: 6500,
+      unlock: 1900000,
     },
     {
       id: "horizonMine",
       name: "视界潮汐矿场",
       icon: "◉",
       description: "利用黑洞潮汐力拆解高密度天体并回收奇异物质。",
-      baseCost: 560000000,
-      baseRate: 610000,
-      unlock: 380000000,
+      baseCost: 7200000,
+      baseRate: 16000,
+      unlock: 5200000,
     },
     {
       id: "cosmicLoom",
       name: "宇宙弦织取机",
       icon: "≋",
       description: "沿宇宙弦抽取真空涨落，将其编织成稳定星尘。",
-      baseCost: 6400000000,
-      baseRate: 5400000,
-      unlock: 4200000000,
+      baseCost: 16000000,
+      baseRate: 36000,
+      unlock: 11500000,
     },
   ];
 
@@ -394,8 +435,8 @@
       name: "超薄聚光层",
       icon: "◈",
       description: "光帆采集器产量 ×2",
-      cost: 2800,
-      unlock: 2100,
+      cost: 2500,
+      unlock: 1800,
       effect: { building: "sail", multiplier: 2 },
     },
     {
@@ -403,8 +444,8 @@
       name: "零重力流水线",
       icon: "∞",
       description: "所有自动产量 ×1.5",
-      cost: 16500,
-      unlock: 12000,
+      cost: 12000,
+      unlock: 8500,
       effect: { global: 1.5 },
     },
     {
@@ -412,8 +453,8 @@
       name: "陨晶共振",
       icon: "⬡",
       description: "分析舱与熔铸站产量 ×2",
-      cost: 88000,
-      unlock: 65000,
+      cost: 60000,
+      unlock: 45000,
       effect: { buildings: ["lab", "forge"], multiplier: 2 },
     },
     {
@@ -421,8 +462,8 @@
       name: "中继共享协议",
       icon: "◎",
       description: "深空中继环产量 ×3",
-      cost: 540000,
-      unlock: 390000,
+      cost: 260000,
+      unlock: 190000,
       effect: { building: "relay", multiplier: 3 },
     },
     {
@@ -430,8 +471,8 @@
       name: "局部时间折叠",
       icon: "◌",
       description: "所有自动产量 ×2",
-      cost: 3200000,
-      unlock: 2200000,
+      cost: 1100000,
+      unlock: 800000,
       effect: { global: 2 },
     },
     {
@@ -439,8 +480,8 @@
       name: "星环剥离协议",
       icon: "◑",
       description: "行星环拆解场产量 ×2",
-      cost: 24000000,
-      unlock: 16000000,
+      cost: 4200000,
+      unlock: 3000000,
       effect: { building: "ringYard", multiplier: 2 },
     },
     {
@@ -448,8 +489,8 @@
       name: "裂隙谐振捕获",
       icon: "⌬",
       description: "裂隙捕获网产量 ×2",
-      cost: 240000000,
-      unlock: 160000000,
+      cost: 12000000,
+      unlock: 8000000,
       effect: { building: "riftNet", multiplier: 2 },
     },
     {
@@ -457,8 +498,8 @@
       name: "事件视界锚定",
       icon: "◉",
       description: "视界潮汐矿场产量 ×2",
-      cost: 2500000000,
-      unlock: 1650000000,
+      cost: 36000000,
+      unlock: 24000000,
       effect: { building: "horizonMine", multiplier: 2 },
     },
     {
@@ -466,8 +507,8 @@
       name: "终末回收协议",
       icon: "≋",
       description: "宇宙弦织取机产量 ×3",
-      cost: 26000000000,
-      unlock: 17000000000,
+      cost: 78000000,
+      unlock: 50000000,
       effect: { building: "cosmicLoom", multiplier: 3 },
     },
   ];
@@ -664,7 +705,7 @@
       icon: "◒",
       title: "研究、成就与深空跃迁",
       message:
-        "完成研究能显著提高产量；成就提供永久增幅。采集 75K 星尘后，可跃迁并提炼永久生效的星核。",
+        "完成研究能显著提高产量；成就提供永久增幅。采集 25K 星尘后，可跃迁并提炼永久生效的星核。",
       tip: "星核既能提供历史累计增幅，也能在交易所兑换永久强化；消费后不会降低历史增幅。",
     },
     {
@@ -688,20 +729,11 @@
       icon: "∞",
       title: "建立跨周期的终局航线",
       message:
-        "历史获得 1M 星核后，“超越”页会解锁。奇点坍缩将重置前两层成长，换取永久碎片，并开启持续扩展的边境星区目标。",
+        "历史获得 5K 星核后，“超越”页会解锁。奇点坍缩将重置前两层成长，换取永久碎片，并开启持续扩展的边境星区目标。",
       tip: "先完成一次高收益跃迁再坍缩通常能获得更多碎片；协议矩阵可自由选择下一周期的生产、星核、战斗或重建速度。",
     },
   ];
 
-  // An original generative score: no sampled audio and no borrowed melody.
-  const BGM_CHORDS = [
-    [110, 164.81, 220, 246.94],
-    [87.31, 130.81, 164.81, 220],
-    [73.42, 110, 146.83, 164.81],
-    [98, 146.83, 196, 220],
-    [82.41, 123.47, 164.81, 196],
-  ];
-  const BGM_CHORD_SECONDS = 7.2;
   const COMBAT_UNLOCK_DUST = 500;
   const STARPORT_MATERIALS = [
     { id: "alloy", name: "星港合金", shortName: "合金", icon: "⬡" },
@@ -785,9 +817,9 @@
       name: "战术雷达",
       icon: "⌖",
       category: "战斗",
-      description: "分析近域目标，每级提高 5% 材料掉落并缩短 1.5% 清剿整备时间。",
+      description: "分析近域目标，每级提高 8% 材料掉落并缩短 2% 清剿整备时间。",
       effect: "材料掉落",
-      effectPerRank: 5,
+      effectPerRank: 8,
       unlock: 20000,
       position: "lower-right",
       baseCost: { alloy: 7, crystal: 5, circuit: 3 },
@@ -804,7 +836,7 @@
       basePower: 28,
       baseReward: 45,
       unlock: 0,
-      drops: { alloy: [1, 3] },
+      drops: { alloy: [3, 6] },
     },
     {
       id: "courierDrone",
@@ -814,7 +846,7 @@
       basePower: 50,
       baseReward: 70,
       unlock: 100,
-      drops: { alloy: [1, 3], crystal: [1, 2] },
+      drops: { alloy: [3, 6], crystal: [2, 4] },
     },
     {
       id: "beltRaider",
@@ -824,7 +856,7 @@
       basePower: 90,
       baseReward: 120,
       unlock: 400,
-      drops: { alloy: [2, 4], circuit: [0, 1] },
+      drops: { alloy: [4, 8], circuit: [1, 2] },
     },
     {
       id: "sporeCloud",
@@ -834,7 +866,7 @@
       basePower: 145,
       baseReward: 190,
       unlock: 1200,
-      drops: { crystal: [2, 4], circuit: [0, 2] },
+      drops: { crystal: [4, 8], circuit: [1, 3] },
     },
     {
       id: "smugglerFrigate",
@@ -844,7 +876,7 @@
       basePower: 235,
       baseReward: 320,
       unlock: 4000,
-      drops: { alloy: [2, 5], crystal: [1, 3], circuit: [1, 2] },
+      drops: { alloy: [5, 9], crystal: [3, 6], circuit: [2, 4] },
     },
     {
       id: "dormantSentinel",
@@ -854,7 +886,7 @@
       basePower: 380,
       baseReward: 520,
       unlock: 12000,
-      drops: { crystal: [2, 5], circuit: [1, 3], relic: [0, 1] },
+      drops: { crystal: [5, 9], circuit: [3, 5], relic: [1, 2] },
     },
   ];
   const PLANET_TARGETS = [
@@ -1003,13 +1035,13 @@
       description: "全部产量 ×2，战斗与防御 ×1.25",
     },
   ];
-  const ENDGAME_UNLOCK_CORES = 1e6;
+  const ENDGAME_UNLOCK_CORES = 5000;
   const ENDGAME_PROTOCOLS = [
     {
       id: "production",
       name: "奇点生产矩阵",
       icon: "✦",
-      description: "每级使手动与自动星尘产量 ×1.65",
+      description: "每级使手动与自动星尘产量 ×1.22",
       maxRank: 20,
       baseCost: 1,
       growth: 1.7,
@@ -1018,7 +1050,7 @@
       id: "core",
       name: "超维精炼回路",
       icon: "✣",
-      description: "每级使深空跃迁星核产量 ×1.22",
+      description: "每级使深空跃迁星核产量 ×1.12",
       maxRank: 15,
       baseCost: 1,
       growth: 1.85,
@@ -1036,7 +1068,7 @@
       id: "combat",
       name: "跨周期战术记忆",
       icon: "⬡",
-      description: "每级使舰队战斗力与基地防御力 ×1.28",
+      description: "每级使舰队战斗力与基地防御力 ×1.16",
       maxRank: 15,
       baseCost: 1,
       growth: 1.8,
@@ -1111,6 +1143,7 @@
     bgmStatus: $("#bgm-status"),
     bgmVolume: $("#bgm-volume"),
     bgmVolumeValue: $("#bgm-volume-value"),
+    bgmAudio: $("#bgm-audio"),
     exportButton: $("#export-button"),
     importButton: $("#import-button"),
     importFile: $("#import-file"),
@@ -1247,6 +1280,9 @@
       totalShards: 0,
       transcensions: 0,
       sectorLevel: 0,
+      sectorDust: 0,
+      sectorUnits: 0,
+      sectorWins: 0,
       protocols: freshEndgameProtocolState(),
     };
   }
@@ -1354,10 +1390,6 @@
   let lastSave = Date.now();
   let modalCallback = null;
   let audioContext = null;
-  let bgmMaster = null;
-  let bgmTimer = null;
-  let bgmNextChordAt = 0;
-  let bgmChordIndex = 0;
   let tutorialIndex = 0;
   let nameDialogRequired = false;
   let patchNotesAutoOpened = false;
@@ -1450,7 +1482,7 @@
 
   function getEndgameProductionMultiplier(targetState = state) {
     const protocolMultiplier = safePow(
-      1.65,
+      1.22,
       getEndgameProtocolRank("production", targetState),
     );
     const sectorMultiplier = getDiminishingSectorMultiplier(
@@ -1463,7 +1495,7 @@
 
   function getEndgameCoreMultiplier(targetState = state) {
     const protocolMultiplier = safePow(
-      1.22,
+      1.12,
       getEndgameProtocolRank("core", targetState),
     );
     const sectorMultiplier = getDiminishingSectorMultiplier(
@@ -1476,7 +1508,7 @@
 
   function getEndgameCombatMultiplier(targetState = state) {
     const protocolMultiplier = safePow(
-      1.28,
+      1.16,
       getEndgameProtocolRank("combat", targetState),
     );
     const sectorMultiplier = getDiminishingSectorMultiplier(
@@ -1490,7 +1522,10 @@
   function getEndgameStartingDust(targetState = state) {
     const rank = getEndgameProtocolRank("launch", targetState);
     if (rank <= 0) return 0;
-    return safeMultiply(1000, safePow(8, rank - 1));
+    return Math.min(
+      DUST_RESERVE_CAP,
+      safeMultiply(2000, safePow(2.2, rank - 1)),
+    );
   }
 
   function getEndgameProtocolCost(protocol, targetState = state) {
@@ -1533,46 +1568,49 @@
       1 + Math.floor(Math.sqrt(level) / 3),
     );
     if (typeIndex === 0) {
-      const target = safeMultiply(
-        1e18,
-        safePow(safeAdd(1, band), 6),
+      const target = Math.min(
+        80000000,
+        Math.round(
+          softCapGameNumber(
+            safeMultiply(2000000, safePow(1.45, band)),
+            20000000,
+            0.35,
+          ),
+        ),
       );
       return {
         level,
         type: "资源航道",
         title: `边境星区 ${level + 1}`,
-        description: "在当前航线积累足够星尘，稳定远距离补给通道。",
-        current: targetState.runDust,
+        description: "在本星区回收指定星尘，稳定远距离补给通道。",
+        current: targetState.endgame?.sectorDust || 0,
         target,
         reward,
       };
     }
     if (typeIndex === 1) {
       const target = clampGameCount(
-        Math.round(
-          safeMultiply(2500, safePow(safeAdd(1, band), 1.65)),
-        ),
+        Math.min(2500, 40 + band * 10),
       );
       return {
         level,
         type: "建设航道",
         title: `边境星区 ${level + 1}`,
-        description: "部署指定规模的自动化单元，建立边境工业网络。",
-        current: getTotalUnits(targetState),
+        description: "在本星区新增自动化单元，建立边境工业网络。",
+        current: targetState.endgame?.sectorUnits || 0,
         target,
         reward,
       };
     }
-    const target = safeMultiply(
-      1e12,
-      safePow(safeAdd(1, band), 4.2),
+    const target = clampGameCount(
+      Math.min(200, 5 + Math.floor(safePow(band + 1, 0.72) * 2)),
     );
     return {
       level,
       type: "武装航道",
       title: `边境星区 ${level + 1}`,
-      description: "提升舰队战斗力，清除阻挡跃迁坐标的行星威胁。",
-      current: getCombatPower(targetState),
+      description: "在本星区赢得战斗，清除阻挡跃迁坐标的威胁。",
+      current: targetState.endgame?.sectorWins || 0,
       target,
       reward,
     };
@@ -1638,7 +1676,10 @@
 
   function getReconstructionCostMultiplier(targetState = state) {
     const rebirths = Math.max(0, targetState.rebirths || 0);
-    return safeAdd(1, safeMultiply(0.25, safePow(rebirths, 0.66)));
+    return Math.min(
+      3,
+      safeAdd(1, safeMultiply(0.12, safePow(rebirths, 0.45))),
+    );
   }
 
   function getStarportRank(id, targetState = state) {
@@ -1697,14 +1738,14 @@
   function getStarportLootMultiplier(targetState = state) {
     return safeAdd(
       1,
-      safeMultiply(getStarportRank("radar", targetState), 0.05),
+      safeMultiply(getStarportRank("radar", targetState), 0.08),
     );
   }
 
   function getStarportCooldownMultiplier(targetState = state) {
     return Math.max(
-      0.82,
-      1 - getStarportRank("radar", targetState) * 0.015,
+      0.76,
+      1 - getStarportRank("radar", targetState) * 0.02,
     );
   }
 
@@ -1781,7 +1822,10 @@
     if (targetState.buff?.id === "precision" && targetState.buff.expires > Date.now()) {
       multiplier = safeMultiply(multiplier, 5);
     }
-    return multiplier;
+    return Math.min(
+      MAX_CLICK_VALUE,
+      softCapGameNumber(multiplier, CLICK_SOFT_CAP, CLICK_LATE_POWER),
+    );
   }
 
   function getBuildingMultiplier(buildingId, targetState = state) {
@@ -1831,7 +1875,10 @@
     ) {
       rate = safeMultiply(rate, 2);
     }
-    return rate;
+    return Math.min(
+      MAX_AUTO_RATE,
+      softCapGameNumber(rate, PRODUCTION_SOFT_CAP, PRODUCTION_LATE_POWER),
+    );
   }
 
   function buildingCost(building, owned, amount, targetState = state) {
@@ -1872,11 +1919,36 @@
 
   function addDust(amount) {
     const safeAmount = clampGameNumber(amount);
-    if (safeAmount <= 0) return;
-    state.dust = safeAdd(state.dust, safeAmount);
-    state.runDust = safeAdd(state.runDust, safeAmount);
-    state.lifetimeDust = safeAdd(state.lifetimeDust, safeAmount);
-    state.careerDust = safeAdd(state.careerDust, safeAmount);
+    if (safeAmount <= 0) return 0;
+    const previousDust = state.dust;
+    state.dust = Math.min(
+      DUST_RESERVE_CAP,
+      safeAdd(state.dust, safeAmount),
+    );
+    const appliedAmount = Math.max(0, state.dust - previousDust);
+    if (appliedAmount <= 0) return 0;
+    state.runDust = Math.min(
+      DUST_RESERVE_CAP,
+      safeAdd(state.runDust, appliedAmount),
+    );
+    state.lifetimeDust = Math.min(
+      DUST_RESERVE_CAP,
+      safeAdd(state.lifetimeDust, appliedAmount),
+    );
+    state.careerDust = Math.min(
+      CAREER_DUST_CAP,
+      safeAdd(state.careerDust, appliedAmount),
+    );
+    if (
+      isEndgameUnlocked() &&
+      state.endgame.sectorLevel % 3 === 0
+    ) {
+      state.endgame.sectorDust = Math.min(
+        DUST_RESERVE_CAP,
+        safeAdd(state.endgame.sectorDust, appliedAmount),
+      );
+    }
+    return appliedAmount;
   }
 
   function addLog(text) {
@@ -1964,25 +2036,73 @@
   function sanitizeState(raw) {
     const base = freshState();
     if (!raw || typeof raw !== "object") return base;
+    const sourceVersion = Math.max(0, Math.floor(Number(raw.version) || 0));
+    const needsNumericMigration = sourceVersion < SAVE_VERSION;
+    const sanitizeBalancedNumber = (
+      value,
+      cap,
+      softCapStart,
+      softCapPower,
+    ) => {
+      const safeValue = clampGameNumber(value);
+      const balancedValue = needsNumericMigration
+        ? softCapGameNumber(safeValue, softCapStart, softCapPower)
+        : safeValue;
+      return Math.min(cap, balancedValue);
+    };
+    const sanitizeDustNumber = (value, cap = DUST_RESERVE_CAP) =>
+      sanitizeBalancedNumber(
+        value,
+        cap,
+        LEGACY_DUST_SOFT_CAP,
+        LEGACY_DUST_LATE_POWER,
+      );
+    const sanitizeCoreNumber = (value) =>
+      Math.floor(
+        sanitizeBalancedNumber(
+          value,
+          CORE_RESERVE_CAP,
+          LEGACY_CORE_SOFT_CAP,
+          LEGACY_CORE_LATE_POWER,
+        ),
+      );
+    const sanitizePowerNumber = (value) =>
+      Math.round(
+        sanitizeBalancedNumber(
+          value,
+          MAX_COMBAT_POWER,
+          COMBAT_POWER_SOFT_CAP,
+          COMBAT_POWER_LATE_POWER,
+        ),
+      );
     const merged = { ...base, ...raw };
     merged.version = SAVE_VERSION;
-    merged.dust = clampGameNumber(raw.dust);
-    merged.runDust = clampGameNumber(raw.runDust);
-    merged.lifetimeDust = clampGameNumber(
-      Math.max(merged.runDust, Number(raw.lifetimeDust) || 0),
+    merged.dust = sanitizeDustNumber(raw.dust);
+    merged.runDust = sanitizeDustNumber(raw.runDust);
+    merged.lifetimeDust = Math.max(
+      merged.runDust,
+      sanitizeDustNumber(raw.lifetimeDust),
     );
-    merged.careerDust = clampGameNumber(
-      Math.max(
-        merged.lifetimeDust,
-        Number(raw.careerDust) || 0,
-      ),
+    merged.careerDust = Math.max(
+      merged.lifetimeDust,
+      sanitizeDustNumber(raw.careerDust, CAREER_DUST_CAP),
     );
     merged.lifetimeClicks = clampGameCount(raw.lifetimeClicks);
-    merged.cores = clampGameNumber(Math.floor(Number(raw.cores) || 0));
-    merged.totalCores = clampGameNumber(Math.max(
-      merged.cores,
-      Math.floor(Number(raw.totalCores) || merged.cores),
-    ));
+    const rawAvailableCores = clampGameNumber(
+      Math.floor(Number(raw.cores) || 0),
+    );
+    const rawTotalCores = Math.max(
+      rawAvailableCores,
+      clampGameNumber(Math.floor(Number(raw.totalCores) || rawAvailableCores)),
+    );
+    merged.totalCores = sanitizeCoreNumber(rawTotalCores);
+    merged.cores = Math.min(
+      merged.totalCores,
+      Math.floor(
+        merged.totalCores *
+          (rawTotalCores > 0 ? rawAvailableCores / rawTotalCores : 0),
+      ),
+    );
     merged.coreShop = freshCoreShopState();
     CORE_SHOP_ITEMS.forEach((item) => {
       merged.coreShop[item.id] = clamp(
@@ -1994,21 +2114,46 @@
     const rawEndgame =
       raw.endgame && typeof raw.endgame === "object" ? raw.endgame : {};
     merged.endgame = freshEndgameState();
-    merged.endgame.shards = clampGameNumber(
+    const rawAvailableShards = clampGameNumber(
       Math.floor(Number(rawEndgame.shards) || 0),
     );
-    merged.endgame.totalShards = clampGameNumber(
-      Math.max(
-        merged.endgame.shards,
-        Math.floor(
-          Number(rawEndgame.totalShards) || merged.endgame.shards,
-        ),
+    const rawTotalShards = Math.max(
+      rawAvailableShards,
+      clampGameNumber(
+        Math.floor(Number(rawEndgame.totalShards) || rawAvailableShards),
+      ),
+    );
+    merged.endgame.totalShards = Math.floor(
+      sanitizeBalancedNumber(
+        rawTotalShards,
+        ENDGAME_RESOURCE_CAP,
+        10000,
+        0.25,
+      ),
+    );
+    merged.endgame.shards = Math.min(
+      merged.endgame.totalShards,
+      Math.floor(
+        merged.endgame.totalShards *
+          (rawTotalShards > 0 ? rawAvailableShards / rawTotalShards : 0),
       ),
     );
     merged.endgame.transcensions = clampGameCount(
       rawEndgame.transcensions,
     );
     merged.endgame.sectorLevel = clampGameCount(rawEndgame.sectorLevel);
+    merged.endgame.sectorDust = needsNumericMigration
+      ? 0
+      : Math.min(
+          DUST_RESERVE_CAP,
+          clampGameNumber(rawEndgame.sectorDust),
+        );
+    merged.endgame.sectorUnits = needsNumericMigration
+      ? 0
+      : clampGameCount(rawEndgame.sectorUnits);
+    merged.endgame.sectorWins = needsNumericMigration
+      ? 0
+      : clampGameCount(rawEndgame.sectorWins);
     ENDGAME_PROTOCOLS.forEach((protocol) => {
       merged.endgame.protocols[protocol.id] = clamp(
         Math.floor(
@@ -2125,9 +2270,7 @@
             raiderId: incomingRaider.id,
             power: Math.max(
               1,
-              clampGameNumber(
-                Math.floor(Number(rawCombat.incomingRaid.power) || 1),
-              ),
+              sanitizePowerNumber(rawCombat.incomingRaid.power),
             ),
             startedAt: finiteTimestamp(rawCombat.incomingRaid.startedAt),
             arrivesAt: finiteTimestamp(
@@ -2158,9 +2301,10 @@
     merged.careerBattles = clampGameCount(
       Math.max(currentCycleBattles, Number(raw.careerBattles) || 0),
     );
-    merged.highestCombinedPower = clampGameNumber(
+    merged.highestCombinedPower = Math.min(
+      MAX_COMBAT_POWER,
       Math.max(
-        Number(raw.highestCombinedPower) || 0,
+        sanitizePowerNumber(raw.highestCombinedPower),
         safeAdd(getCombatPower(merged), getDefensePower(merged)),
       ),
     );
@@ -2187,6 +2331,13 @@
             time: finiteTimestamp(entry.time),
           }))
       : base.log;
+    if (needsNumericMigration && sourceVersion > 0) {
+      merged.log.unshift({
+        text: "v0.13.0 已完成后期数值折算；建筑、研究、材料与战绩均已保留。",
+        time: Date.now(),
+      });
+      merged.log = merged.log.slice(0, 14);
+    }
     if (raw.event && EVENTS.some((event) => event.id === raw.event.id)) {
       merged.event = {
         id: raw.event.id,
@@ -2361,10 +2512,9 @@
     );
     const combatWasUnlocked = state.lifetimeDust >= COMBAT_UNLOCK_DUST;
     const offlineRate = calculateRate(state, false);
-    const offlineGain = safeMultiply(offlineRate, elapsed);
-    if (offlineGain > 0) {
-      addDust(offlineGain);
-    }
+    const potentialOfflineGain = safeMultiply(offlineRate, elapsed);
+    const offlineGain =
+      potentialOfflineGain > 0 ? addDust(potentialOfflineGain) : 0;
     const raidReport = resolveOfflineMajorRaids(
       savedAt,
       returnTime,
@@ -2453,6 +2603,14 @@
     state.buildings[id] = clampGameCount(
       state.buildings[id] + purchase.amount,
     );
+    if (
+      isEndgameUnlocked() &&
+      state.endgame.sectorLevel % 3 === 1
+    ) {
+      state.endgame.sectorUnits = clampGameCount(
+        state.endgame.sectorUnits + purchase.amount,
+      );
+    }
     if (wasEmpty) {
       addLog(`首座${building.name}已投入运行。`);
     }
@@ -2481,8 +2639,7 @@
   }
 
   function collect(event) {
-    const amount = getClickValue();
-    addDust(amount);
+    const amount = addDust(getClickValue());
     state.lifetimeClicks = clampGameCount(state.lifetimeClicks + 1);
     recordCrescentProgress("manualClicks");
     elements.collect.classList.add("pressed");
@@ -2528,14 +2685,14 @@
   }
 
   function getPrestigeGain() {
-    if (state.runDust < 75000) return 0;
-    const dustRatio = state.runDust / 75000;
+    if (state.runDust < PRESTIGE_BASE_DUST) return 0;
+    const dustRatio = state.runDust / PRESTIGE_BASE_DUST;
     const effectiveRatio = softCapGameNumber(
       dustRatio,
       PRESTIGE_RATIO_SOFT_CAP,
       PRESTIGE_LATE_POWER,
     );
-    const baseGain = safePow(effectiveRatio, 0.55);
+    const baseGain = safePow(effectiveRatio, 0.5);
     return Math.floor(safeMultiply(baseGain, getCoreGainMultiplier()));
   }
 
@@ -2543,7 +2700,7 @@
     const multiplier = Math.max(0.01, getCoreGainMultiplier(targetState));
     const effectiveRatio = safePow(
       targetGain / multiplier,
-      1 / 0.55,
+      1 / 0.5,
     );
     const dustRatio = expandSoftCappedGameNumber(
       effectiveRatio,
@@ -2551,7 +2708,7 @@
       PRESTIGE_LATE_POWER,
     );
     return safeMultiply(
-      75000,
+      PRESTIGE_BASE_DUST,
       dustRatio,
     );
   }
@@ -2598,8 +2755,14 @@
       confirmText: "确认跃迁",
       cancelText: "暂不跃迁",
       onConfirm: () => {
-        state.cores = safeAdd(state.cores, gain);
-        state.totalCores = safeAdd(state.totalCores, gain);
+        state.cores = Math.min(
+          CORE_RESERVE_CAP,
+          safeAdd(state.cores, gain),
+        );
+        state.totalCores = Math.min(
+          CORE_RESERVE_CAP,
+          safeAdd(state.totalCores, gain),
+        );
         state.rebirths = clampGameCount(state.rebirths + 1);
         state.dust = 0;
         state.runDust = 0;
@@ -2660,17 +2823,20 @@
     if (!isEndgameUnlocked()) return;
     const objective = getSectorObjective();
     if (objective.current < objective.target) return;
-    state.endgame.shards = safeAdd(
-      state.endgame.shards,
-      objective.reward,
+    state.endgame.shards = Math.min(
+      ENDGAME_RESOURCE_CAP,
+      safeAdd(state.endgame.shards, objective.reward),
     );
-    state.endgame.totalShards = safeAdd(
-      state.endgame.totalShards,
-      objective.reward,
+    state.endgame.totalShards = Math.min(
+      ENDGAME_RESOURCE_CAP,
+      safeAdd(state.endgame.totalShards, objective.reward),
     );
     state.endgame.sectorLevel = clampGameCount(
       state.endgame.sectorLevel + 1,
     );
+    state.endgame.sectorDust = 0;
+    state.endgame.sectorUnits = 0;
+    state.endgame.sectorWins = 0;
     addLog(
       `边境星区 ${objective.level + 1} 已稳定，获得 ${objective.reward} 枚奇点碎片。`,
     );
@@ -2700,10 +2866,13 @@
       confirmText: "确认坍缩",
       cancelText: "继续当前周期",
       onConfirm: () => {
-        state.endgame.shards = safeAdd(state.endgame.shards, gain);
-        state.endgame.totalShards = safeAdd(
-          state.endgame.totalShards,
-          gain,
+        state.endgame.shards = Math.min(
+          ENDGAME_RESOURCE_CAP,
+          safeAdd(state.endgame.shards, gain),
+        );
+        state.endgame.totalShards = Math.min(
+          ENDGAME_RESOURCE_CAP,
+          safeAdd(state.endgame.totalShards, gain),
         );
         state.endgame.transcensions = clampGameCount(
           state.endgame.transcensions + 1,
@@ -2790,13 +2959,21 @@
         0.1,
       ),
     );
-    return Math.round(
-      safeMultiply(
+    const rawPower = safeMultiply(
         30,
         safePow(1.42, effectiveLevel),
         coreBoost,
         getCombatCoreMultiplier(targetState),
         getStarportAttackMultiplier(targetState),
+      );
+    return Math.round(
+      Math.min(
+        MAX_COMBAT_POWER,
+        softCapGameNumber(
+          rawPower,
+          COMBAT_POWER_SOFT_CAP,
+          COMBAT_POWER_LATE_POWER,
+        ),
       ),
     );
   }
@@ -2811,13 +2988,21 @@
         0.1,
       ),
     );
-    return Math.round(
-      safeMultiply(
+    const rawPower = safeMultiply(
         25,
         safePow(1.44, effectiveLevel),
         coreBoost,
         getCombatCoreMultiplier(targetState),
         getStarportDefenseMultiplier(targetState),
+      );
+    return Math.round(
+      Math.min(
+        MAX_COMBAT_POWER,
+        softCapGameNumber(
+          rawPower,
+          COMBAT_POWER_SOFT_CAP,
+          COMBAT_POWER_LATE_POWER,
+        ),
       ),
     );
   }
@@ -2829,20 +3014,25 @@
         : targetState.combat.defenseLevel;
     const earlyLevel = Math.min(level, 18);
     const lateLevel = Math.max(0, level - 18);
-    if (type === "attack") {
-      return Math.round(
-        safeMultiply(
+    const rawCost = type === "attack"
+      ? safeMultiply(
           350,
           safePow(1.72, earlyLevel),
-          safePow(1.38, lateLevel),
-        ),
-      );
-    }
-    return Math.round(
-      safeMultiply(
+          safePow(1.25, lateLevel),
+        )
+      : safeMultiply(
         300,
         safePow(1.7, earlyLevel),
-        safePow(1.37, lateLevel),
+          safePow(1.24, lateLevel),
+        );
+    return Math.round(
+      Math.min(
+        DUST_RESERVE_CAP,
+        softCapGameNumber(
+          rawCost,
+          COMBAT_COST_SOFT_CAP,
+          COMBAT_COST_LATE_POWER,
+        ),
       ),
     );
   }
@@ -2864,8 +3054,7 @@
         0.12,
       ),
     );
-    const power = Math.round(
-      safeMultiply(
+    const rawPower = safeMultiply(
         target.basePower,
         safePow(
           1.3,
@@ -2874,6 +3063,15 @@
         ),
         coreScale,
         rebirthScale,
+      );
+    const power = Math.round(
+      Math.min(
+        MAX_COMBAT_POWER,
+        softCapGameNumber(
+          rawPower,
+          COMBAT_POWER_SOFT_CAP,
+          COMBAT_POWER_LATE_POWER,
+        ),
       ),
     );
     const reward = safeMultiply(
@@ -2913,8 +3111,7 @@
         0.05,
       ),
     );
-    const power = Math.round(
-      safeMultiply(
+    const rawPower = safeMultiply(
         target.basePower,
         safePow(
           1.16,
@@ -2923,6 +3120,15 @@
         ),
         coreScale,
         rebirthScale,
+      );
+    const power = Math.round(
+      Math.min(
+        MAX_COMBAT_POWER,
+        softCapGameNumber(
+          rawPower,
+          COMBAT_POWER_SOFT_CAP,
+          COMBAT_POWER_LATE_POWER,
+        ),
       ),
     );
     const reward = safeMultiply(
@@ -2996,8 +3202,8 @@
       )}%`;
     }
     if (module.id === "radar") {
-      return `掉落 +${formatNumber(rank * 5, 0)}% · 整备 -${formatNumber(
-        rank * 1.5,
+      return `掉落 +${formatNumber(rank * 8, 0)}% · 整备 -${formatNumber(
+        rank * 2,
         1,
       )}%`;
     }
@@ -3068,6 +3274,7 @@
       state.combat.skirmishWins = clampGameCount(
         state.combat.skirmishWins + 1,
       );
+      recordSectorWin();
       recordCrescentProgress("skirmishWins");
       state.combat.skirmishCooldownUntil =
         now + Math.round(4500 * cooldownMultiplier);
@@ -3168,6 +3375,7 @@
       state.combat.activeWins = clampGameCount(
         state.combat.activeWins + 1,
       );
+      recordSectorWin();
       state.combat.attackCooldownUntil = now + 12000;
       const message = `远征胜利：击退${target.name}，夺取 ${formatNumber(
         reward,
@@ -3244,16 +3452,20 @@
     const variance = major
       ? 0.92 + Math.random() * 0.26
       : 0.86 + Math.random() * 0.3;
-    return Math.max(
-      major ? 60 : 30,
-      Math.round(
-        safeMultiply(Math.max(scaledProgress, adaptiveThreat), variance),
+    return Math.min(
+      MAX_COMBAT_POWER,
+      Math.max(
+        major ? 60 : 30,
+        Math.round(
+          safeMultiply(Math.max(scaledProgress, adaptiveThreat), variance),
+        ),
       ),
     );
   }
 
   function getCombinedPower(targetState = state) {
-    return clampGameNumber(
+    return Math.min(
+      MAX_COMBAT_POWER,
       safeAdd(
         getCombatPower(targetState),
         getDefensePower(targetState),
@@ -3262,7 +3474,8 @@
   }
 
   function refreshCareerRecords(targetState = state) {
-    targetState.careerDust = clampGameNumber(
+    targetState.careerDust = Math.min(
+      CAREER_DUST_CAP,
       Math.max(
         Number(targetState.careerDust) || 0,
         Number(targetState.lifetimeDust) || 0,
@@ -3278,7 +3491,8 @@
         ),
       ),
     );
-    targetState.highestCombinedPower = clampGameNumber(
+    targetState.highestCombinedPower = Math.min(
+      MAX_COMBAT_POWER,
       Math.max(
         Number(targetState.highestCombinedPower) || 0,
         getCombinedPower(targetState),
@@ -3289,6 +3503,18 @@
 
   function recordCareerBattle() {
     state.careerBattles = clampGameCount(state.careerBattles + 1);
+  }
+
+  function recordSectorWin() {
+    if (
+      !isEndgameUnlocked() ||
+      state.endgame.sectorLevel % 3 !== 2
+    ) {
+      return;
+    }
+    state.endgame.sectorWins = clampGameCount(
+      state.endgame.sectorWins + 1,
+    );
   }
 
   function createRaidSnapshot(type, startedAt = Date.now()) {
@@ -3361,6 +3587,7 @@
       state.combat.raidsSurvived = clampGameCount(
         state.combat.raidsSurvived + 1,
       );
+      recordSectorWin();
       if (major) {
         state.combat.majorRaidsSurvived = clampGameCount(
           state.combat.majorRaidsSurvived + 1,
@@ -3872,111 +4099,20 @@
     }
   }
 
-  function scheduleBgmChord(chord, startTime) {
-    if (!audioContext || !bgmMaster) return;
-    const duration = BGM_CHORD_SECONDS + 0.8;
-
-    chord.forEach((frequency, index) => {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      oscillator.type = index === 0 ? "sine" : "triangle";
-      oscillator.frequency.setValueAtTime(frequency, startTime);
-      oscillator.detune.setValueAtTime((index - 1.5) * 2.5, startTime);
-      const peak = index === 0 ? 0.045 : 0.018;
-      gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(peak, startTime + 1.7);
-      gain.gain.setValueAtTime(peak, startTime + duration - 2.1);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-      oscillator.connect(gain);
-      gain.connect(bgmMaster);
-      oscillator.start(startTime);
-      oscillator.stop(startTime + duration + 0.05);
-    });
-
-    const pulseOrder = [0, 2, 1, 3, 2, 1, 3, 1];
-    pulseOrder.forEach((noteIndex, step) => {
-      const noteStart = startTime + 0.42 + step * 0.79;
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(chord[noteIndex] * 2, noteStart);
-      gain.gain.setValueAtTime(0.0001, noteStart);
-      gain.gain.exponentialRampToValueAtTime(0.018, noteStart + 0.055);
-      gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.72);
-      oscillator.connect(gain);
-      gain.connect(bgmMaster);
-      oscillator.start(noteStart);
-      oscillator.stop(noteStart + 0.76);
-    });
-  }
-
-  function scheduleBgm() {
-    if (!audioContext || !bgmMaster || !state.bgmEnabled) return;
-    const now = audioContext.currentTime;
-    if (bgmNextChordAt < now - 0.5) bgmNextChordAt = now + 0.08;
-    while (bgmNextChordAt < now + 0.45) {
-      scheduleBgmChord(BGM_CHORDS[bgmChordIndex % BGM_CHORDS.length], bgmNextChordAt);
-      bgmChordIndex += 1;
-      bgmNextChordAt += BGM_CHORD_SECONDS;
-    }
-  }
-
   function setBgmVolume() {
-    if (!audioContext || !bgmMaster) return;
-    const now = audioContext.currentTime;
-    const currentVolume = Math.max(0.0001, bgmMaster.gain.value);
-    bgmMaster.gain.cancelScheduledValues(now);
-    bgmMaster.gain.setValueAtTime(currentVolume, now);
-    bgmMaster.gain.linearRampToValueAtTime(
-      Math.max(0.0001, state.bgmVolume),
-      now + 0.16,
-    );
+    elements.bgmAudio.volume = clamp(state.bgmVolume, 0, 1);
   }
 
   function startBgm() {
-    if (!state.bgmEnabled || bgmTimer !== null || !ensureAudioContext()) return;
-    const filter = audioContext.createBiquadFilter();
-    const compressor = audioContext.createDynamicsCompressor();
-    bgmMaster = audioContext.createGain();
-    bgmMaster.gain.setValueAtTime(0.0001, audioContext.currentTime);
-    bgmMaster.gain.exponentialRampToValueAtTime(
-      Math.max(0.0001, state.bgmVolume),
-      audioContext.currentTime + 1.2,
-    );
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(1850, audioContext.currentTime);
-    filter.Q.setValueAtTime(0.7, audioContext.currentTime);
-    compressor.threshold.setValueAtTime(-20, audioContext.currentTime);
-    compressor.knee.setValueAtTime(18, audioContext.currentTime);
-    compressor.ratio.setValueAtTime(3, audioContext.currentTime);
-    bgmMaster.connect(filter);
-    filter.connect(compressor);
-    compressor.connect(audioContext.destination);
-    bgmNextChordAt = audioContext.currentTime + 0.08;
-    bgmChordIndex = 0;
-    scheduleBgm();
-    bgmTimer = window.setInterval(scheduleBgm, 180);
+    if (!state.bgmEnabled || !elements.bgmAudio.paused) return;
+    setBgmVolume();
+    elements.bgmAudio.play().catch(() => {
+      // Browsers can require a pointer or keyboard gesture before media playback.
+    });
   }
 
   function stopBgm() {
-    if (bgmTimer !== null) {
-      window.clearInterval(bgmTimer);
-      bgmTimer = null;
-    }
-    if (!audioContext || !bgmMaster) return;
-    const fadingMaster = bgmMaster;
-    bgmMaster = null;
-    const now = audioContext.currentTime;
-    fadingMaster.gain.cancelScheduledValues(now);
-    fadingMaster.gain.setValueAtTime(Math.max(0.0001, fadingMaster.gain.value), now);
-    fadingMaster.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
-    window.setTimeout(() => {
-      try {
-        fadingMaster.disconnect();
-      } catch (error) {
-        // The node may already be disconnected when the page closes.
-      }
-    }, 750);
+    elements.bgmAudio.pause();
   }
 
   function updateBgmControls() {
@@ -3995,8 +4131,8 @@
 
   function syncBgmState() {
     if (state.bgmEnabled) {
-      if (audioContext) startBgm();
       setBgmVolume();
+      startBgm();
     } else {
       stopBgm();
     }
@@ -4364,7 +4500,7 @@
     elements.collapseButton.querySelector("small").textContent =
       collapseGain > 0
         ? `当前可获得 ${formatNumber(collapseGain, 0)} 枚碎片`
-        : "1M 历史星核起步";
+        : `${formatNumber(ENDGAME_UNLOCK_CORES, 0)} 历史星核起步`;
 
     elements.transcendProtocolList.textContent = "";
     ENDGAME_PROTOCOLS.forEach((protocol) => {
@@ -4762,9 +4898,12 @@
       return;
     }
     const gain = getPrestigeGain();
-    const nextCoreTarget = Math.max(
-      75000,
-      getCoreTargetForGain(gain + 1),
+    const nextCoreTarget = Math.min(
+      DUST_RESERVE_CAP,
+      Math.max(
+        PRESTIGE_BASE_DUST,
+        getCoreTargetForGain(gain + 1),
+      ),
     );
     elements.goalTitle.textContent = "提炼下一枚星核";
     elements.goalLabel.textContent = `${formatNumber(state.runDust)} / ${formatNumber(
@@ -4990,7 +5129,7 @@
         projectedState,
       ))}。`;
     } else {
-      const remaining = Math.max(0, 75000 - state.runDust);
+      const remaining = Math.max(0, PRESTIGE_BASE_DUST - state.runDust);
       elements.prestigeDescription.textContent = `还需 ${formatNumber(
         remaining,
       )} 星尘即可获得第 1 枚星核。`;
@@ -5389,7 +5528,7 @@
       state.bgmEnabled = !state.bgmEnabled;
       if (state.bgmEnabled) {
         startBgm();
-        showToast("背景音乐已开启", "原创深空管风琴乐章开始播放。", "♫");
+        showToast("背景音乐已开启", "自定义航站乐章开始播放。", "♫");
       } else {
         stopBgm();
         showToast("背景音乐已关闭", "操作音效仍可单独使用。", "×");

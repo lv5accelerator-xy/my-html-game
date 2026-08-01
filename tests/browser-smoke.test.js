@@ -60,9 +60,11 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.3");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.4");
   }, {
     version: 5,
+    playerName: "测试指挥官",
+    tutorialSeen: true,
     dust: 57e18,
     runDust: 58.6e18,
     lifetimeDust: 58.6e18,
@@ -85,6 +87,10 @@ async function main() {
     },
     upgrades: [],
     achievements: [],
+    starport: {
+      materials: { alloy: 11, crystal: 12, circuit: 13, relic: 14 },
+      modules: {},
+    },
     combat: { attackLevel: 28, defenseLevel: 30 },
     lastSeen: Date.now(),
   });
@@ -112,12 +118,12 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.13.3");
+    assert.equal(snapshot.gameVersion, "0.13.4");
     assert.equal(snapshot.saveVersion, 6);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
-    assert.match(snapshot.footer, /v0\.13\.3/);
+    assert.match(snapshot.footer, /v0\.13\.4/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -128,6 +134,110 @@ async function main() {
     assert.ok(snapshot.metadata.lifetimeDust < 1e9);
     assert.ok(snapshot.metadata.totalCores >= 5000);
     assert.doesNotMatch(`${snapshot.dust} ${snapshot.rate} ${snapshot.cores}`, /[BTP]/);
+
+    const starportCheck = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const baseline = bridge.getStarportDiagnostics();
+      const boostedSave = bridge.createSnapshot();
+      boostedSave.activePage = "starport";
+      boostedSave.starport.modules.refinery = 1;
+      boostedSave.starport.modules.droneDock = 1;
+      boostedSave.starport.modules.battery = 1;
+      boostedSave.starport.modules.shield = 1;
+      boostedSave.starport.modules.radar = 1;
+      bridge.applySnapshot(boostedSave);
+      const boosted = bridge.getStarportDiagnostics();
+      return {
+        baseline,
+        boosted,
+        materialCount: document.querySelectorAll(
+          "#starport-material-list .material-chip",
+        ).length,
+        buttonLabels: [...document.querySelectorAll("[data-starport-module]")].map(
+          (button) => button.textContent,
+        ),
+        effectLabels: [...document.querySelectorAll(".starport-slot-footer > span")].map(
+          (label) => label.textContent,
+        ),
+      };
+    });
+    assert.equal(starportCheck.materialCount, 6);
+    assert.equal(starportCheck.baseline.materials.alloy, 11);
+    assert.equal(starportCheck.baseline.materials.crystal, 12);
+    assert.equal(starportCheck.baseline.materials.circuit, 13);
+    assert.equal(starportCheck.baseline.materials.relic, 14);
+    assert.equal(starportCheck.baseline.materials.prism, 0);
+    assert.equal(starportCheck.baseline.materials.sensor, 0);
+    assert.ok(
+      starportCheck.buttonLabels.every((label) => label.includes("星尘")),
+      "every starport build action must show a dust cost",
+    );
+    assert.ok(
+      starportCheck.effectLabels.every((label) => label.includes("→")),
+      "starport cards must preview the next effective bonus",
+    );
+    assert.equal(starportCheck.boosted.productionMultiplier, 1.08 * 1.04);
+    assert.equal(starportCheck.boosted.clickMultiplier, 1.08);
+    assert.equal(starportCheck.boosted.attackMultiplier, 1.08);
+    assert.equal(starportCheck.boosted.defenseMultiplier, 1.08);
+    assert.equal(starportCheck.boosted.lootMultiplier, 1.08);
+    assert.ok(
+      Math.abs(
+        starportCheck.boosted.automaticRate /
+          starportCheck.baseline.automaticRate -
+          1.08 * 1.04,
+      ) < 0.001,
+      "production starport bonus must apply after late-game compression",
+    );
+    assert.ok(
+      Math.abs(
+        starportCheck.boosted.attackPower /
+          starportCheck.baseline.attackPower -
+          1.08,
+      ) < 0.002,
+      "attack starport bonus must apply after late-game compression",
+    );
+    assert.ok(
+      Math.abs(
+        starportCheck.boosted.defensePower /
+          starportCheck.baseline.defensePower -
+          1.08,
+      ) < 0.002,
+      "defense starport bonus must apply after late-game compression",
+    );
+
+    const purchaseBefore = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const purchaseSave = bridge.createSnapshot();
+      purchaseSave.activePage = "starport";
+      purchaseSave.dust = 1000000;
+      purchaseSave.lifetimeDust = 1000000;
+      Object.keys(purchaseSave.buildings).forEach((id) => {
+        purchaseSave.buildings[id] = 0;
+      });
+      purchaseSave.buff = null;
+      Object.keys(purchaseSave.starport.modules).forEach((id) => {
+        purchaseSave.starport.modules[id] = 0;
+      });
+      Object.keys(purchaseSave.starport.materials).forEach((id) => {
+        purchaseSave.starport.materials[id] = 100;
+      });
+      bridge.applySnapshot(purchaseSave);
+      return bridge.getStarportDiagnostics();
+    });
+    const refineryButton = page.locator('[data-starport-module="refinery"]');
+    assert.equal(await refineryButton.count(), 1);
+    assert.equal(await refineryButton.isEnabled(), true);
+    assert.match(await refineryButton.textContent(), /星尘 30K/);
+    assert.match(await refineryButton.textContent(), /合金 4/);
+    await refineryButton.click();
+    const purchaseAfter = await page.evaluate(() =>
+      window.StellarOutpostCloudBridge.getStarportDiagnostics(),
+    );
+    assert.equal(purchaseAfter.ranks.refinery, 1);
+    assert.equal(purchaseAfter.dust, purchaseBefore.dust - 30000);
+    assert.equal(purchaseAfter.materials.alloy, purchaseBefore.materials.alloy - 4);
+    assert.equal(purchaseAfter.materials.crystal, purchaseBefore.materials.crystal);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

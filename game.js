@@ -31,7 +31,7 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.13.3";
+  const GAME_VERSION = "0.13.4";
   const SAVE_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -92,6 +92,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.13.4",
+      theme: "星港专属供应链",
+      changes: [
+        "六座星港建筑现在各自消耗一种专属材料，并同时需要大量星尘完成建设或强化。",
+        "六类近域清剿目标各自固定产出一种对应材料，目标与建筑形成一对一供应链。",
+        "新增护盾棱镜与相位传感器；旧存档中的合金、晶体、芯片与构件会完整保留。",
+        "修复星港生产与战斗增幅被后期软上限提前压缩的问题，标注的每级增幅会在压缩后生效。",
+        "星港按钮会同时显示星尘和材料需求，强化完成提示会显示实际生效的当前增幅。",
+      ],
+    },
     {
       version: "0.13.3",
       theme: "移动端省电与低温运行",
@@ -760,8 +771,8 @@
       icon: "⌬",
       title: "清剿近域目标，建造附属建筑",
       message:
-        "战斗页的近域清剿会掉落合金、晶体、芯片与异星构件。前往“星港”页，将材料投入六个固定栏位，建造生产或战斗附属建筑。",
-      tip: "先建星尘精炼厂与舰炮阵列；高等级建筑需要稀有异星构件。星港随普通跃迁保留，但会在奇点超越时重置。",
+        "战斗页的六类近域清剿各会掉落一种专属材料。前往“星港”页，使用对应材料和大量星尘建造六座生产或战斗附属建筑。",
+      tip: "每个清剿目标对应一座建筑；先收集合金和晶体建造星尘精炼厂与舰炮阵列。星港随普通跃迁保留，但会在奇点超越时重置。",
     },
     {
       eyebrow: "终局 · 奇点超越",
@@ -779,6 +790,8 @@
     { id: "crystal", name: "能量晶体", shortName: "晶体", icon: "◇" },
     { id: "circuit", name: "量子芯片", shortName: "芯片", icon: "▦" },
     { id: "relic", name: "异星构件", shortName: "构件", icon: "⌬" },
+    { id: "prism", name: "护盾棱镜", shortName: "棱镜", icon: "◈" },
+    { id: "sensor", name: "相位传感器", shortName: "传感器", icon: "⌖" },
   ];
   const STARPORT_MODULES = [
     {
@@ -791,8 +804,10 @@
       effectPerRank: 8,
       unlock: 0,
       position: "upper-left",
-      baseCost: { alloy: 3, crystal: 1 },
-      growth: 1.7,
+      baseCost: { alloy: 4 },
+      growth: 1.38,
+      baseDustCost: 30000,
+      dustGrowth: 1.45,
       maxRank: 12,
     },
     {
@@ -805,8 +820,10 @@
       effectPerRank: 8,
       unlock: 500,
       position: "middle-left",
-      baseCost: { alloy: 5, circuit: 1 },
-      growth: 1.72,
+      baseCost: { circuit: 6 },
+      growth: 1.4,
+      baseDustCost: 160000,
+      dustGrowth: 1.45,
       maxRank: 12,
     },
     {
@@ -819,8 +836,10 @@
       effectPerRank: 3,
       unlock: 7500,
       position: "lower-left",
-      baseCost: { alloy: 8, crystal: 3, circuit: 2 },
-      growth: 1.74,
+      baseCost: { relic: 8 },
+      growth: 1.42,
+      baseDustCost: 600000,
+      dustGrowth: 1.45,
       maxRank: 12,
     },
     {
@@ -833,8 +852,10 @@
       effectPerRank: 8,
       unlock: 100,
       position: "upper-right",
-      baseCost: { alloy: 4, crystal: 2 },
-      growth: 1.71,
+      baseCost: { crystal: 5 },
+      growth: 1.39,
+      baseDustCost: 90000,
+      dustGrowth: 1.45,
       maxRank: 12,
     },
     {
@@ -847,8 +868,10 @@
       effectPerRank: 8,
       unlock: 2000,
       position: "middle-right",
-      baseCost: { alloy: 6, crystal: 4 },
-      growth: 1.73,
+      baseCost: { prism: 7 },
+      growth: 1.41,
+      baseDustCost: 320000,
+      dustGrowth: 1.45,
       maxRank: 12,
     },
     {
@@ -861,8 +884,10 @@
       effectPerRank: 8,
       unlock: 20000,
       position: "lower-right",
-      baseCost: { alloy: 7, crystal: 5, circuit: 3 },
-      growth: 1.76,
+      baseCost: { sensor: 9 },
+      growth: 1.43,
+      baseDustCost: 900000,
+      dustGrowth: 1.45,
       maxRank: 12,
     },
   ];
@@ -885,7 +910,7 @@
       basePower: 50,
       baseReward: 70,
       unlock: 100,
-      drops: { alloy: [3, 6], crystal: [2, 4] },
+      drops: { crystal: [3, 6] },
     },
     {
       id: "beltRaider",
@@ -895,7 +920,7 @@
       basePower: 90,
       baseReward: 120,
       unlock: 400,
-      drops: { alloy: [4, 8], circuit: [1, 2] },
+      drops: { circuit: [3, 6] },
     },
     {
       id: "sporeCloud",
@@ -905,7 +930,7 @@
       basePower: 145,
       baseReward: 190,
       unlock: 1200,
-      drops: { crystal: [4, 8], circuit: [1, 3] },
+      drops: { prism: [3, 6] },
     },
     {
       id: "smugglerFrigate",
@@ -915,7 +940,7 @@
       basePower: 235,
       baseReward: 320,
       unlock: 4000,
-      drops: { alloy: [5, 9], crystal: [3, 6], circuit: [2, 4] },
+      drops: { relic: [2, 5] },
     },
     {
       id: "dormantSentinel",
@@ -925,7 +950,7 @@
       basePower: 380,
       baseReward: 520,
       unlock: 12000,
-      drops: { crystal: [5, 9], circuit: [3, 5], relic: [1, 2] },
+      drops: { sensor: [2, 4] },
     },
   ];
   const PLANET_TARGETS = [
@@ -1858,7 +1883,20 @@
 
   function getStarportModuleCost(module, targetState = state) {
     const rank = getStarportRank(module.id, targetState);
-    const cost = {};
+    const cost = {
+      dust: Math.min(
+        MAX_BUILDING_UNIT_COST,
+        Math.max(
+          1,
+          Math.ceil(
+            safeMultiply(
+              module.baseDustCost,
+              safePow(module.dustGrowth, rank),
+            ),
+          ),
+        ),
+      ),
+    };
     STARPORT_MATERIALS.forEach((material) => {
       const baseAmount = module.baseCost[material.id] || 0;
       if (baseAmount > 0) {
@@ -1870,21 +1908,19 @@
         );
       }
     });
-    if (rank >= 3) {
-      cost.relic = Math.max(
-        cost.relic || 0,
-        1 + Math.floor((rank - 3) / 3),
-      );
-    }
     return cost;
   }
 
   function canAffordStarportModule(module, targetState = state) {
     if (getStarportRank(module.id, targetState) >= module.maxRank) return false;
     const cost = getStarportModuleCost(module, targetState);
-    return Object.entries(cost).every(
-      ([materialId, amount]) =>
-        (targetState.starport?.materials?.[materialId] || 0) >= amount,
+    return (
+      (targetState.dust || 0) >= cost.dust &&
+      STARPORT_MATERIALS.every(
+        (material) =>
+          (targetState.starport?.materials?.[material.id] || 0) >=
+          (cost[material.id] || 0),
+      )
     );
   }
 
@@ -1912,7 +1948,6 @@
       getCoreMultiplier(targetState),
       getAchievementMultiplier(targetState),
       getEndgameProductionMultiplier(targetState),
-      getStarportClickMultiplier(targetState),
     );
     multiplier = safeMultiply(
       multiplier,
@@ -1931,7 +1966,10 @@
     }
     return Math.min(
       MAX_CLICK_VALUE,
-      softCapGameNumber(multiplier, CLICK_SOFT_CAP, CLICK_LATE_POWER),
+      safeMultiply(
+        softCapGameNumber(multiplier, CLICK_SOFT_CAP, CLICK_LATE_POWER),
+        getStarportClickMultiplier(targetState),
+      ),
     );
   }
 
@@ -1969,7 +2007,6 @@
       getCoreMultiplier(targetState),
       getAchievementMultiplier(targetState),
       getEndgameProductionMultiplier(targetState),
-      getStarportProductionMultiplier(targetState),
       safeAdd(
         1,
         safeMultiply(getCoreShopRank("automation", targetState), 0.1),
@@ -1984,7 +2021,14 @@
     }
     return Math.min(
       MAX_AUTO_RATE,
-      softCapGameNumber(rate, PRODUCTION_SOFT_CAP, PRODUCTION_LATE_POWER),
+      safeMultiply(
+        softCapGameNumber(
+          rate,
+          PRODUCTION_SOFT_CAP,
+          PRODUCTION_LATE_POWER,
+        ),
+        getStarportProductionMultiplier(targetState),
+      ),
     );
   }
 
@@ -3077,15 +3121,17 @@
         safePow(1.42, effectiveLevel),
         coreBoost,
         getCombatCoreMultiplier(targetState),
-        getStarportAttackMultiplier(targetState),
       );
     return Math.round(
       Math.min(
         MAX_COMBAT_POWER,
-        softCapGameNumber(
-          rawPower,
-          COMBAT_POWER_SOFT_CAP,
-          COMBAT_POWER_LATE_POWER,
+        safeMultiply(
+          softCapGameNumber(
+            rawPower,
+            COMBAT_POWER_SOFT_CAP,
+            COMBAT_POWER_LATE_POWER,
+          ),
+          getStarportAttackMultiplier(targetState),
         ),
       ),
     );
@@ -3106,15 +3152,17 @@
         safePow(1.44, effectiveLevel),
         coreBoost,
         getCombatCoreMultiplier(targetState),
-        getStarportDefenseMultiplier(targetState),
       );
     return Math.round(
       Math.min(
         MAX_COMBAT_POWER,
-        softCapGameNumber(
-          rawPower,
-          COMBAT_POWER_SOFT_CAP,
-          COMBAT_POWER_LATE_POWER,
+        safeMultiply(
+          softCapGameNumber(
+            rawPower,
+            COMBAT_POWER_SOFT_CAP,
+            COMBAT_POWER_LATE_POWER,
+          ),
+          getStarportDefenseMultiplier(targetState),
         ),
       ),
     );
@@ -3300,6 +3348,15 @@
     return parts.length ? parts.join(" · ") : emptyText;
   }
 
+  function describeStarportCost(cost) {
+    return [
+      `✦星尘 ${formatNumber(cost.dust || 0, 0)}`,
+      describeMaterials(cost, ""),
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+
   function describeStarportModuleEffect(module, rank) {
     if (rank <= 0) return "尚未建造";
     if (module.id === "droneDock") {
@@ -3333,13 +3390,16 @@
     if (rank >= module.maxRank) return;
     const cost = getStarportModuleCost(module);
     if (!canAffordStarportModule(module)) {
-      showToast("建筑材料不足", `需要 ${describeMaterials(cost)}。`, "⌬");
+      showToast("建设资源不足", `需要 ${describeStarportCost(cost)}。`, "⌬");
       playTone(150, 0.06, "square", 0.018);
       return;
     }
-    Object.entries(cost).forEach(([materialId, amount]) => {
-      state.starport.materials[materialId] = clampGameCount(
-        state.starport.materials[materialId] - amount,
+    state.dust = clampGameNumber(state.dust - cost.dust);
+    STARPORT_MATERIALS.forEach((material) => {
+      const amount = cost[material.id] || 0;
+      if (amount <= 0) return;
+      state.starport.materials[material.id] = clampGameCount(
+        state.starport.materials[material.id] - amount,
       );
     });
     state.starport.modules[module.id] = clamp(
@@ -3351,7 +3411,11 @@
     const action = rank === 0 ? "建造" : "强化";
     const message = `${module.name}${action}完成，当前等级 ${rank + 1} / ${module.maxRank}。`;
     addLog(message);
-    showToast(`${module.name}${action}完成`, `${module.effect}增幅已生效。`, module.icon);
+    showToast(
+      `${module.name}${action}完成`,
+      `${describeStarportModuleEffect(module, rank + 1)}，增幅已生效。`,
+      module.icon,
+    );
     playAchievementTone();
     checkAchievements();
     renderStarport();
@@ -4728,7 +4792,10 @@
       const footer = document.createElement("div");
       footer.className = "starport-slot-footer";
       const effect = document.createElement("span");
-      effect.textContent = describeStarportModuleEffect(module, rank);
+      const currentEffect = describeStarportModuleEffect(module, rank);
+      effect.textContent = maxed
+        ? currentEffect
+        : `${currentEffect} → ${describeStarportModuleEffect(module, rank + 1)}`;
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.starportModule = module.id;
@@ -4738,7 +4805,7 @@
       } else if (maxed) {
         button.textContent = "已满级";
       } else {
-        button.textContent = `${rank === 0 ? "建造" : "强化"} · ${describeMaterials(cost)}`;
+        button.textContent = `${rank === 0 ? "建造" : "强化"} · ${describeStarportCost(cost)}`;
       }
       footer.append(effect, button);
       card.append(line, heading, description, footer);
@@ -5965,6 +6032,20 @@
       gameTickCount,
       hidden: document.hidden,
       starfield: starfieldController?.getDiagnostics() || null,
+    }),
+    getStarportDiagnostics: () => ({
+      ranks: { ...state.starport.modules },
+      materials: { ...state.starport.materials },
+      dust: state.dust,
+      automaticRate: calculateRate(state, false),
+      clickValue: getClickValue(),
+      attackPower: getCombatPower(),
+      defensePower: getDefensePower(),
+      productionMultiplier: getStarportProductionMultiplier(),
+      clickMultiplier: getStarportClickMultiplier(),
+      attackMultiplier: getStarportAttackMultiplier(),
+      defenseMultiplier: getStarportDefenseMultiplier(),
+      lootMultiplier: getStarportLootMultiplier(),
     }),
     applySnapshot: applyCloudSaveSnapshot,
     notify: (title, message, icon = "☁") =>

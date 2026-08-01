@@ -31,7 +31,7 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.13.6";
+  const GAME_VERSION = "0.13.7";
   const SAVE_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -58,6 +58,7 @@
   const PRODUCTION_SOFT_CAP = 10000;
   const PRODUCTION_LATE_POWER = 0.1;
   const MAX_AUTO_RATE = 999000;
+  const AUTO_RATE_OVERFLOW_SCALE = 75000;
   const CLICK_SOFT_CAP = 1000;
   const CLICK_LATE_POWER = 0.12;
   const MAX_CLICK_VALUE = 99900;
@@ -92,6 +93,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.13.7",
+      theme: "舰队产量成长修复",
+      changes: [
+        "修复自动产量达到 999K/秒后被硬上限锁死、继续扩建舰队不再增长的问题。",
+        "999K/秒以上改用缓慢的对数递减曲线，后期升级仍会产生实际收益，同时将极端产量控制在 M 级。",
+        "顶部与舰队卡片提高产量显示精度，小幅增量不再被缩写四舍五入隐藏。",
+        "购买舰队设施后会明确显示升级前后产量与本次每秒增量。",
+      ],
+    },
     {
       version: "0.13.6",
       theme: "后期容量与战斗信息修复",
@@ -1545,6 +1556,21 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function formatProductionRate(value) {
+    const numericValue = clampGameNumber(value);
+    const absolute = Math.abs(numericValue);
+    if (absolute < 1000) return formatNumber(numericValue, 4);
+    const unit = absolute >= 1000000
+      ? { value: 1000000, suffix: "M" }
+      : { value: 1000, suffix: "K" };
+    const scaled = absolute / unit.value;
+    const digits = scaled >= 100 ? 3 : scaled >= 10 ? 4 : 5;
+    const trimmed = scaled
+      .toFixed(digits)
+      .replace(/\.?0+$/, "");
+    return `${numericValue < 0 ? "-" : ""}${trimmed}${unit.suffix}`;
+  }
+
   function randomBetween(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
@@ -2079,6 +2105,19 @@
     return multiplier;
   }
 
+  function compressAutomaticRate(value) {
+    const safeValue = clampGameNumber(value);
+    if (safeValue <= MAX_AUTO_RATE) return safeValue;
+    const overflowRatio = (safeValue - MAX_AUTO_RATE) / MAX_AUTO_RATE;
+    return Math.min(
+      DUST_RESERVE_CAP,
+      safeAdd(
+        MAX_AUTO_RATE,
+        safeMultiply(Math.log1p(overflowRatio), AUTO_RATE_OVERFLOW_SCALE),
+      ),
+    );
+  }
+
   function calculateRate(targetState = state, includeTemporary = true) {
     let rate = 0;
     BUILDINGS.forEach((building) => {
@@ -2109,8 +2148,7 @@
     ) {
       rate = safeMultiply(rate, 2);
     }
-    return Math.min(
-      MAX_AUTO_RATE,
+    return compressAutomaticRate(
       safeMultiply(
         softCapGameNumber(
           rate,
@@ -2905,6 +2943,7 @@
       playTone(160, 0.05, "square", 0.018);
       return;
     }
+    const previousRate = calculateRate();
     const wasEmpty = state.buildings[id] === 0;
     state.dust = clampGameNumber(state.dust - purchase.cost);
     state.buildings[id] = clampGameCount(
@@ -2921,9 +2960,20 @@
     if (wasEmpty) {
       addLog(`首座${building.name}已投入运行。`);
     }
+    const nextRate = calculateRate();
+    const rateIncrease = Math.max(0, nextRate - previousRate);
     playTone(380 + BUILDINGS.indexOf(building) * 38, 0.07, "sine");
     renderBuildings();
-    updateUi();
+    updateUi(nextRate);
+    showToast(
+      "舰队产量已提升",
+      `${building.name} +${purchase.amount} · ${formatProductionRate(
+        previousRate,
+      )} → ${formatProductionRate(nextRate)} / 秒（+${formatProductionRate(
+        rateIncrease,
+      )}）`,
+      building.icon,
+    );
   }
 
   function buyUpgrade(id) {
@@ -4574,9 +4624,9 @@
       const rate = document.createElement("div");
       rate.className = "building-rate";
       const actualRate = getBuildingRateBreakdown(building.id);
-      rate.innerHTML = `<span>↟</span> 实际贡献 ${formatNumber(
+      rate.innerHTML = `<span>↟</span> 实际贡献 ${formatProductionRate(
         actualRate.total,
-      )} / 秒 · ${owned > 0 ? "实际" : "新增"}单体 ${formatNumber(
+      )} / 秒 · ${owned > 0 ? "实际" : "新增"}单体 ${formatProductionRate(
         actualRate.perUnit,
       )}`;
       info.append(titleRow, description, rate);
@@ -5434,7 +5484,7 @@
 
     updatePlayerNameDisplay();
     elements.dust.textContent = formatNumber(state.dust);
-    elements.rate.textContent = `${formatNumber(rate)} / 秒`;
+    elements.rate.textContent = `${formatProductionRate(rate)} / 秒`;
     elements.cores.textContent = formatNumber(state.cores, 0);
     updateEvent();
 

@@ -60,7 +60,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.6");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.7");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -118,12 +118,12 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.13.6");
+    assert.equal(snapshot.gameVersion, "0.13.7");
     assert.equal(snapshot.saveVersion, 6);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
-    assert.match(snapshot.footer, /v0\.13\.6/);
+    assert.match(snapshot.footer, /v0\.13\.7/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -170,6 +170,59 @@ async function main() {
         `${radarState.pageId} must refresh the global radar immediately`,
       );
     }
+
+    const cappedGrowthBefore = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const growthSave = bridge.createSnapshot();
+      growthSave.version = 6;
+      growthSave.activePage = "fleet";
+      growthSave.dust = 999000000;
+      growthSave.runDust = 999000000;
+      growthSave.lifetimeDust = 999000000;
+      growthSave.cores = 999000000;
+      growthSave.totalCores = 999000000;
+      growthSave.buyMode = "10";
+      growthSave.buff = null;
+      Object.keys(growthSave.buildings).forEach((id) => {
+        growthSave.buildings[id] = 10000;
+      });
+      growthSave.coreShop.automation = 10;
+      growthSave.coreShop.resonance = 10;
+      growthSave.starport.modules.refinery = 12;
+      growthSave.starport.modules.droneDock = 12;
+      growthSave.endgame.sectorLevel = 1000000000000000;
+      growthSave.endgame.protocols.production = 20;
+      bridge.applySnapshot(growthSave);
+      return {
+        rate: bridge.getStarportDiagnostics().automaticRate,
+        label: document.querySelector("#rate-value").textContent,
+      };
+    });
+    assert.ok(
+      cappedGrowthBefore.rate > 999000,
+      "late-game production must grow past the former 999K hard cap",
+    );
+    const overflowPurchaseButton = page.locator(
+      '[data-building-id="cosmicLoom"]',
+    );
+    assert.equal(await overflowPurchaseButton.isEnabled(), true);
+    await overflowPurchaseButton.click();
+    const cappedGrowthAfter = await page.evaluate(() => ({
+      rate: window.StellarOutpostCloudBridge.getStarportDiagnostics()
+        .automaticRate,
+      label: document.querySelector("#rate-value").textContent,
+      toast: document.querySelector("#toast-region").textContent,
+    }));
+    assert.ok(
+      cappedGrowthAfter.rate > cappedGrowthBefore.rate,
+      "buying fleet units above 999K/s must still increase production",
+    );
+    assert.notEqual(
+      cappedGrowthAfter.label,
+      cappedGrowthBefore.label,
+      "the higher-precision production label must expose the increase",
+    );
+    assert.match(cappedGrowthAfter.toast, /舰队产量已提升/);
 
     const fleetAndCombatCheck = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;

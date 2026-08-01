@@ -39,6 +39,7 @@ const careerDustCap = readConstant("CAREER_DUST_CAP");
 const productionSoftCap = readConstant("PRODUCTION_SOFT_CAP");
 const productionPower = readConstant("PRODUCTION_LATE_POWER");
 const maxAutoRate = readConstant("MAX_AUTO_RATE");
+const autoRateOverflowScale = readConstant("AUTO_RATE_OVERFLOW_SCALE");
 const maxBuildingUnitCost = readConstant("MAX_BUILDING_UNIT_COST");
 const maxCombatUpgradeCost = readConstant("MAX_COMBAT_UPGRADE_COST");
 const legacyDustSoftCap = readConstant("LEGACY_DUST_SOFT_CAP");
@@ -152,16 +153,27 @@ assert.deepEqual(
 );
 
 const screenshotRawRate = 90.4e15;
-const compressedRate = Math.min(
-  maxAutoRate,
-  math.softCapGameNumber(
-    screenshotRawRate,
-    productionSoftCap,
-    productionPower,
-  ),
+const compressedRate = math.softCapGameNumber(
+  screenshotRawRate,
+  productionSoftCap,
+  productionPower,
 );
 assert.ok(compressedRate < 1e6, "90.4P/s must compress below 1M/s");
 assert.doesNotMatch(math.formatNumber(compressedRate), /[BTP]/);
+
+const overflowInput = maxAutoRate * 10;
+const overflowRate =
+  maxAutoRate +
+  Math.log1p((overflowInput - maxAutoRate) / maxAutoRate) *
+    autoRateOverflowScale;
+assert.ok(overflowRate > maxAutoRate, "automatic production must grow past 999K/s");
+assert.ok(overflowRate < 2e6, "overflow production must remain in the low M range");
+assert.doesNotMatch(math.formatNumber(overflowRate), /[BTP]/);
+assert.doesNotMatch(
+  source,
+  /return\s+Math\.min\(\s*MAX_AUTO_RATE/,
+  "automatic production must not use the former hard cap",
+);
 
 const legacyDust = Math.min(
   dustCap,

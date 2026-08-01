@@ -31,7 +31,7 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.13.5";
+  const GAME_VERSION = "0.13.6";
   const SAVE_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -68,7 +68,7 @@
   const COMBAT_COST_LATE_POWER = 0.25;
   const MAX_BUILDING_UNIT_COST = 60000000;
   const MAX_COMBAT_UPGRADE_COST = 60000000;
-  const DUST_RESERVE_CAP = 99999999;
+  const DUST_RESERVE_CAP = 999000000;
   const CAREER_DUST_CAP = 999000000;
   const CORE_RESERVE_CAP = 999000000;
   const ENDGAME_RESOURCE_CAP = 999000000;
@@ -92,6 +92,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.13.6",
+      theme: "后期容量与战斗信息修复",
+      changes: [
+        "星尘储量上限由 100M 提高至 999M，后期挂机与舰队 ×10／最大购买不再过早受限，同时继续避免进入 B 级数字。",
+        "舰队设施改为显示经过全部增幅和后期软上限后的实际产量贡献，卡片合计会与顶部自动产量一致。",
+        "修复战斗页近域战利品库存首次为空、获得材料后数字不及时更新的问题。",
+        "奇点坍缩除碎片外新增永久收藏伴星，每次坍缩会唤醒一只纯观赏伴星。",
+      ],
+    },
     {
       version: "0.13.5",
       theme: "全局深空雷达刷新修复",
@@ -1110,6 +1120,56 @@
     },
   ];
   const ENDGAME_UNLOCK_CORES = 5000;
+  const SINGULARITY_COMPANIONS = [
+    {
+      id: "dustMoth",
+      name: "尘光蛾",
+      icon: "✧",
+      description: "会绕着坍缩余辉安静盘旋。",
+    },
+    {
+      id: "prismJelly",
+      name: "棱镜水母",
+      icon: "◈",
+      description: "透明触须会折射遥远星光。",
+    },
+    {
+      id: "riftRay",
+      name: "裂隙鳐",
+      icon: "⌁",
+      description: "把微小的空间裂隙当作海浪。",
+    },
+    {
+      id: "orbitFox",
+      name: "环轨狐",
+      icon: "◇",
+      description: "尾迹会画出一圈短暂星环。",
+    },
+    {
+      id: "echoWhale",
+      name: "回声幼鲸",
+      icon: "◒",
+      description: "只能听见来自上一周期的歌声。",
+    },
+    {
+      id: "voidCat",
+      name: "虚空猫",
+      icon: "◉",
+      description: "喜欢趴在没有引力的地方打盹。",
+    },
+    {
+      id: "novaFinch",
+      name: "新星雀",
+      icon: "✦",
+      description: "羽毛里藏着不会灼伤人的火花。",
+    },
+    {
+      id: "moonHare",
+      name: "月隙兔",
+      icon: "☾",
+      description: "总在雷达刚刚移开时探出耳朵。",
+    },
+  ];
   const ENDGAME_PROTOCOLS = [
     {
       id: "production",
@@ -1314,6 +1374,9 @@
     sectorClaimButton: $("#sector-claim-button"),
     collapseCurrentCores: $("#collapse-current-cores"),
     collapseGain: $("#collapse-gain"),
+    singularityCompanionIcon: $("#singularity-companion-icon"),
+    singularityCompanionName: $("#singularity-companion-name"),
+    singularityCompanionDescription: $("#singularity-companion-description"),
     collapseButton: $("#collapse-button"),
     transcendProtocolList: $("#transcend-protocol-list"),
     crescentSignal: $("#crescent-signal"),
@@ -1359,6 +1422,7 @@
       sectorDust: 0,
       sectorUnits: 0,
       sectorWins: 0,
+      companions: [],
       protocols: freshEndgameProtocolState(),
     };
   }
@@ -1677,6 +1741,22 @@
       Math.ceil(
         safeMultiply(protocol.baseCost, safePow(protocol.growth, rank)),
       ),
+    );
+  }
+
+  function getSingularityCompanions(targetState = state) {
+    const unlockedIds = new Set(targetState.endgame?.companions || []);
+    return SINGULARITY_COMPANIONS.filter((companion) =>
+      unlockedIds.has(companion.id),
+    );
+  }
+
+  function getNextSingularityCompanion(targetState = state) {
+    const unlockedIds = new Set(targetState.endgame?.companions || []);
+    return (
+      SINGULARITY_COMPANIONS.find(
+        (companion) => !unlockedIds.has(companion.id),
+      ) || null
     );
   }
 
@@ -2042,6 +2122,52 @@
     );
   }
 
+  function getBuildingRateBreakdown(
+    buildingId,
+    targetState = state,
+    includeTemporary = true,
+  ) {
+    let rawTotal = 0;
+    let rawContribution = 0;
+    let owned = 0;
+    BUILDINGS.forEach((building) => {
+      const buildingOwned = targetState.buildings[building.id] || 0;
+      const buildingRate = safeMultiply(
+        buildingOwned,
+        building.baseRate,
+        getBuildingMultiplier(building.id, targetState),
+      );
+      rawTotal = safeAdd(rawTotal, buildingRate);
+      if (building.id === buildingId) {
+        owned = buildingOwned;
+        rawContribution = buildingRate;
+      }
+    });
+    const totalRate = calculateRate(targetState, includeTemporary);
+    const actualContribution =
+      rawTotal > 0
+        ? safeMultiply(totalRate, rawContribution / rawTotal)
+        : 0;
+    let perUnit = owned > 0 ? actualContribution / owned : 0;
+    if (owned <= 0) {
+      const previewState = {
+        ...targetState,
+        buildings: {
+          ...targetState.buildings,
+          [buildingId]: 1,
+        },
+      };
+      perUnit = Math.max(
+        0,
+        calculateRate(previewState, includeTemporary) - totalRate,
+      );
+    }
+    return {
+      total: actualContribution,
+      perUnit,
+    };
+  }
+
   function buildingCost(building, owned, amount, targetState = state) {
     return cappedGeometricSeriesCost(
       building.baseCost,
@@ -2303,6 +2429,24 @@
     );
     merged.endgame.transcensions = clampGameCount(
       rawEndgame.transcensions,
+    );
+    const savedCompanionIds = Array.isArray(rawEndgame.companions)
+      ? rawEndgame.companions
+      : [];
+    const validCompanionIds = new Set(
+      savedCompanionIds.filter((id) =>
+        SINGULARITY_COMPANIONS.some((companion) => companion.id === id),
+      ),
+    );
+    SINGULARITY_COMPANIONS.slice(
+      0,
+      Math.min(
+        merged.endgame.transcensions,
+        SINGULARITY_COMPANIONS.length,
+      ),
+    ).forEach((companion) => validCompanionIds.add(companion.id));
+    merged.endgame.companions = SINGULARITY_COMPANIONS.flatMap((companion) =>
+      validCompanionIds.has(companion.id) ? [companion.id] : [],
     );
     merged.endgame.sectorLevel = clampGameCount(rawEndgame.sectorLevel);
     merged.endgame.sectorDust = needsNumericMigration
@@ -3023,13 +3167,20 @@
     if (gain < 1) return;
     const legacyRank = getEndgameProtocolRank("legacy");
     const startingDust = getEndgameStartingDust();
+    const companionReward = getNextSingularityCompanion();
     showModal({
       eyebrow: "奇点超越",
       icon: "∞",
-      title: `坍缩并提炼 ${formatNumber(gain, 0)} 枚奇点碎片？`,
+      title: companionReward
+        ? `坍缩并唤醒${companionReward.name}？`
+        : `坍缩并提炼 ${formatNumber(gain, 0)} 枚奇点碎片？`,
       message: `本次操作将重置星尘、舰队、研究、星核、星核商店、跃迁次数、战斗成长以及星港建筑和材料。成就、边境星区、奇点碎片及全部超越协议永久保留。当前遗产协议会保留每类星核强化 ${legacyRank} 级，并以 ${formatNumber(
         startingDust,
-      )} 初始星尘开启新周期。`,
+      )} 初始星尘开启新周期。${
+        companionReward
+          ? `本次还会永久收藏纯观赏伴星“${companionReward.name}”，它不提供数值加成。`
+          : "奇点伴星图鉴已经完整，本次仍会获得奇点碎片。"
+      }`,
       confirmText: "确认坍缩",
       cancelText: "继续当前周期",
       onConfirm: () => {
@@ -3041,6 +3192,9 @@
           ENDGAME_RESOURCE_CAP,
           safeAdd(state.endgame.totalShards, gain),
         );
+        if (companionReward) {
+          state.endgame.companions.push(companionReward.id);
+        }
         state.endgame.transcensions = clampGameCount(
           state.endgame.transcensions + 1,
         );
@@ -3072,7 +3226,9 @@
         state.nextEventAt =
           Date.now() + randomBetween(30000, 50000);
         addLog(
-          `奇点坍缩完成，获得 ${formatNumber(gain, 0)} 枚碎片；第 ${state.endgame.transcensions} 个超越周期启动。`,
+          `奇点坍缩完成，获得 ${formatNumber(gain, 0)} 枚碎片${
+            companionReward ? `与伴星“${companionReward.name}”` : ""
+          }；第 ${state.endgame.transcensions} 个超越周期启动。`,
         );
         if (firstCrescentSignal) {
           addLog("坍缩余波中出现一枚不在星图上的月牙信号。");
@@ -3086,9 +3242,11 @@
         saveGame(false, { forceBackup: true });
         showToast(
           "新超越周期已启动",
-          `永久星尘增幅 ×${formatNumber(
-            getEndgameProductionMultiplier(),
-          )}。`,
+          companionReward
+            ? `新伴星：${companionReward.name} · 纯收藏，无数值加成。`
+            : `永久星尘增幅 ×${formatNumber(
+                getEndgameProductionMultiplier(),
+              )}。`,
           "∞",
         );
         playAchievementTone();
@@ -4415,18 +4573,11 @@
       description.textContent = building.description;
       const rate = document.createElement("div");
       rate.className = "building-rate";
-      const rateValue = safeMultiply(
-        owned,
-        building.baseRate,
-        getBuildingMultiplier(building.id),
-        getCoreMultiplier(),
-        getAchievementMultiplier(),
-        getEndgameProductionMultiplier(),
-        getStarportProductionMultiplier(),
-        safeAdd(1, safeMultiply(getCoreShopRank("automation"), 0.1)),
-      );
-      rate.innerHTML = `<span>↟</span> ${formatNumber(rateValue)} / 秒 · 单体 ${formatNumber(
-        building.baseRate * getBuildingMultiplier(building.id),
+      const actualRate = getBuildingRateBreakdown(building.id);
+      rate.innerHTML = `<span>↟</span> 实际贡献 ${formatNumber(
+        actualRate.total,
+      )} / 秒 · ${owned > 0 ? "实际" : "新增"}单体 ${formatNumber(
+        actualRate.perUnit,
       )}`;
       info.append(titleRow, description, rate);
 
@@ -4684,10 +4835,24 @@
       collapseGain,
       0,
     )} ∞`;
+    const companions = getSingularityCompanions();
+    const latestCompanion = companions[companions.length - 1] || null;
+    const nextCompanion = getNextSingularityCompanion();
+    elements.singularityCompanionIcon.textContent = latestCompanion
+      ? latestCompanion.icon
+      : "·";
+    elements.singularityCompanionName.textContent = latestCompanion
+      ? latestCompanion.name
+      : "尚未唤醒伴星";
+    elements.singularityCompanionDescription.textContent = latestCompanion
+      ? `${latestCompanion.description} · 图鉴 ${companions.length}/${SINGULARITY_COMPANIONS.length}`
+      : "首次坍缩会带回一只纯观赏伴星。";
     elements.collapseButton.disabled = collapseGain < 1;
     elements.collapseButton.querySelector("small").textContent =
       collapseGain > 0
-        ? `当前可获得 ${formatNumber(collapseGain, 0)} 枚碎片`
+        ? nextCompanion
+          ? `${formatNumber(collapseGain, 0)} 枚碎片 · 唤醒${nextCompanion.name}`
+          : `${formatNumber(collapseGain, 0)} 枚碎片 · 伴星图鉴完整`
         : `${formatNumber(ENDGAME_UNLOCK_CORES, 0)} 历史星核起步`;
 
     elements.transcendProtocolList.textContent = "";
@@ -4755,7 +4920,6 @@
 
   function renderStarport() {
     renderMaterialWallet(elements.starportMaterialList);
-    renderMaterialWallet(elements.combatMaterialList, true);
     if (!elements.starportSlotMap) return;
     elements.starportSlotMap.textContent = "";
     STARPORT_MODULES.forEach((module) => {
@@ -4909,6 +5073,7 @@
   }
 
   function renderCombatTargets() {
+    renderMaterialWallet(elements.combatMaterialList, true);
     renderSkirmishTargets();
     elements.planetTargetList.textContent = "";
     const cooldownActive = state.combat.attackCooldownUntil > Date.now();

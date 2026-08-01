@@ -60,7 +60,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.5");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.6");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -118,12 +118,12 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.13.5");
+    assert.equal(snapshot.gameVersion, "0.13.6");
     assert.equal(snapshot.saveVersion, 6);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
-    assert.match(snapshot.footer, /v0\.13\.5/);
+    assert.match(snapshot.footer, /v0\.13\.6/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -171,8 +171,107 @@ async function main() {
       );
     }
 
+    const fleetAndCombatCheck = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const fleetSave = bridge.createSnapshot();
+      fleetSave.version = 6;
+      fleetSave.activePage = "fleet";
+      fleetSave.dust = 900000000;
+      fleetSave.runDust = 900000000;
+      fleetSave.lifetimeDust = 900000000;
+      fleetSave.buyMode = "10";
+      fleetSave.cores = 0;
+      fleetSave.totalCores = 0;
+      fleetSave.upgrades = [];
+      fleetSave.achievements = [];
+      fleetSave.buff = null;
+      Object.keys(fleetSave.buildings).forEach((id) => {
+        fleetSave.buildings[id] = id === "cosmicLoom" ? 5 : 0;
+      });
+      Object.keys(fleetSave.coreShop).forEach((id) => {
+        fleetSave.coreShop[id] = 0;
+      });
+      Object.keys(fleetSave.starport.modules).forEach((id) => {
+        fleetSave.starport.modules[id] = 0;
+      });
+      bridge.applySnapshot(fleetSave);
+      const cosmicButton = document.querySelector('[data-building-id="cosmicLoom"]');
+      const topRate = document.querySelector("#rate-value").textContent.split(" / 秒")[0];
+      const fleetRate = cosmicButton
+        .closest(".building-card")
+        .querySelector(".building-rate").textContent;
+
+      const combatSave = bridge.createSnapshot();
+      combatSave.activePage = "combat";
+      combatSave.starport.materials.alloy = 66;
+      combatSave.starport.materials.crystal = 12;
+      bridge.applySnapshot(combatSave);
+      const readCombatMaterials = () =>
+        Object.fromEntries(
+          [...document.querySelectorAll("#combat-material-list .material-chip")].map(
+            (chip) => [
+              chip.querySelector("small").textContent,
+              chip.querySelector("strong").textContent,
+            ],
+          ),
+        );
+      const beforeLoot = readCombatMaterials();
+      const updatedCombatSave = bridge.createSnapshot();
+      updatedCombatSave.starport.materials.alloy += 5;
+      bridge.applySnapshot(updatedCombatSave);
+      const afterLoot = readCombatMaterials();
+
+      const companionSave = bridge.createSnapshot();
+      companionSave.activePage = "transcend";
+      companionSave.cores = 5000;
+      companionSave.totalCores = 5000;
+      companionSave.endgame.transcensions = 2;
+      delete companionSave.endgame.companions;
+      bridge.applySnapshot(companionSave);
+
+      return {
+        dust: document.querySelector("#dust-value").textContent,
+        topRate,
+        fleetRate,
+        buyLabel: cosmicButton.textContent,
+        buyEnabled: !cosmicButton.disabled,
+        combatMaterialCount: Object.keys(afterLoot).length,
+        beforeLoot,
+        afterLoot,
+        companionName: document.querySelector("#singularity-companion-name").textContent,
+        companionDescription: document.querySelector(
+          "#singularity-companion-description",
+        ).textContent,
+        collapsePreview: document.querySelector("#collapse-button small").textContent,
+      };
+    });
+    assert.equal(fleetAndCombatCheck.dust, "900M");
+    assert.ok(fleetAndCombatCheck.buyEnabled, "late-game ×10 purchase must be usable");
+    assert.match(fleetAndCombatCheck.buyLabel, /\+10/);
+    assert.ok(
+      fleetAndCombatCheck.fleetRate.includes(
+        `实际贡献 ${fleetAndCombatCheck.topRate} / 秒`,
+      ),
+      "fleet contribution must match the actual compressed total",
+    );
+    assert.equal(fleetAndCombatCheck.combatMaterialCount, 6);
+    assert.equal(fleetAndCombatCheck.beforeLoot.星港合金, "66");
+    assert.equal(fleetAndCombatCheck.afterLoot.星港合金, "71");
+    assert.equal(fleetAndCombatCheck.companionName, "棱镜水母");
+    assert.match(fleetAndCombatCheck.companionDescription, /图鉴 2\/8/);
+    assert.match(fleetAndCombatCheck.collapsePreview, /唤醒裂隙鳐/);
+
     const starportCheck = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
+      const starportSave = bridge.createSnapshot();
+      starportSave.activePage = "starport";
+      starportSave.starport.materials.alloy = 11;
+      starportSave.starport.materials.crystal = 12;
+      starportSave.starport.materials.circuit = 13;
+      starportSave.starport.materials.relic = 14;
+      starportSave.starport.materials.prism = 0;
+      starportSave.starport.materials.sensor = 0;
+      bridge.applySnapshot(starportSave);
       const baseline = bridge.getStarportDiagnostics();
       const boostedSave = bridge.createSnapshot();
       boostedSave.activePage = "starport";

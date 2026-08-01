@@ -32,6 +32,7 @@ const upgrades = readArray("UPGRADES", "ACHIEVEMENTS");
 const starportMaterials = readArray("STARPORT_MATERIALS", "STARPORT_MODULES");
 const starportModules = readArray("STARPORT_MODULES", "SKIRMISH_TARGETS");
 const skirmishes = readArray("SKIRMISH_TARGETS", "PLANET_TARGETS");
+const companions = readArray("SINGULARITY_COMPANIONS", "ENDGAME_PROTOCOLS");
 
 const dustCap = readConstant("DUST_RESERVE_CAP");
 const careerDustCap = readConstant("CAREER_DUST_CAP");
@@ -50,6 +51,7 @@ const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
 const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
 assert.equal(readConstant("SAVE_VERSION"), 6, "save migration must stay enabled");
+assert.equal(dustCap, 999000000, "late-game reserve must allow long idle sessions");
 assert.ok(dustCap < 1e9, "active dust reserve must remain below B notation");
 assert.ok(careerDustCap < 1e9, "career dust must remain below B notation");
 assert.ok(maxBuildingUnitCost < dustCap, "one facility must always be affordable");
@@ -84,10 +86,17 @@ for (const building of buildings) {
       3,
       maxBuildingUnitCost,
     ),
-    1,
-    `${building.id} should remain purchasable one at a time`,
+    Math.floor(dustCap / maxBuildingUnitCost),
+    `${building.id} capped batch affordability is incorrect`,
   );
 }
+
+assert.equal(companions.length, 8, "singularity collapse needs eight collectible companions");
+assert.equal(
+  new Set(companions.map((companion) => companion.id)).size,
+  companions.length,
+  "singularity companion ids must be unique",
+);
 
 for (const upgrade of upgrades) {
   assert.ok(upgrade.cost < dustCap, `${upgrade.id} cannot fit in the reserve cap`);

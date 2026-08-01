@@ -2205,6 +2205,54 @@ h2 {
   font-size: calc(10px * var(--type-scale));
 }
 
+.singularity-companion {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid rgba(184, 140, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(184, 140, 255, 0.06);
+}
+
+.singularity-companion > span:first-child {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(184, 140, 255, 0.24);
+  border-radius: 50%;
+  color: #e1caff;
+  background: rgba(8, 17, 30, 0.72);
+  box-shadow: inset 0 0 16px rgba(184, 140, 255, 0.12);
+  font-size: calc(17px * var(--type-scale));
+}
+
+.singularity-companion small,
+.singularity-companion strong,
+.singularity-companion span span {
+  display: block;
+}
+
+.singularity-companion small {
+  color: var(--muted);
+  font-size: calc(6.5px * var(--type-scale));
+}
+
+.singularity-companion strong {
+  margin: 2px 0;
+  color: #e1caff;
+  font-size: calc(9px * var(--type-scale));
+}
+
+.singularity-companion span span {
+  color: #778da1;
+  line-height: 1.35;
+  font-size: calc(6.5px * var(--type-scale));
+}
+
 .protocol-heading {
   display: flex;
   align-items: flex-end;

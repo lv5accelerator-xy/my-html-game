@@ -17,6 +17,8 @@
     formatNumber,
     geometricSeriesCost,
     maxAffordableGeometric,
+    cappedGeometricSeriesCost,
+    maxAffordableCappedGeometric,
     countFixedIntervalEvents,
   } = numeric;
 
@@ -28,7 +30,7 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.13.0";
+  const GAME_VERSION = "0.13.1";
   const SAVE_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -60,6 +62,8 @@
   const MAX_COMBAT_POWER = 999000000;
   const COMBAT_COST_SOFT_CAP = 12000000;
   const COMBAT_COST_LATE_POWER = 0.25;
+  const MAX_BUILDING_UNIT_COST = 60000000;
+  const MAX_COMBAT_UPGRADE_COST = 60000000;
   const DUST_RESERVE_CAP = 99999999;
   const CAREER_DUST_CAP = 999000000;
   const CORE_RESERVE_CAP = 999000000;
@@ -84,6 +88,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.13.1",
+      theme: "舰队购买上限修复",
+      changes: [
+        "舰队设施单座价格最高为 60M，100M 星尘储量下不再出现永久无法购买的设施。",
+        "×10 与最大购买会逐座计算价格上限，无法通过批量购买绕过后期成本。",
+        "舰炮与基地防御的单级强化价格同步封顶为 60M，避免每级耗尽全部储量。",
+        "保留 v0.13.0 的数值压缩、近域掉落、存档迁移和原创背景音乐。",
+      ],
+    },
     {
       version: "0.13.0",
       theme: "近域补给与后期数值压缩",
@@ -1882,7 +1896,7 @@
   }
 
   function buildingCost(building, owned, amount, targetState = state) {
-    return geometricSeriesCost(
+    return cappedGeometricSeriesCost(
       building.baseCost,
       BUILDING_GROWTH,
       owned,
@@ -1891,11 +1905,12 @@
         getReconstructionCostMultiplier(targetState),
         getStarportBuildingCostMultiplier(targetState),
       ),
+      MAX_BUILDING_UNIT_COST,
     );
   }
 
   function maxAffordable(building, availableDust, owned, targetState = state) {
-    return maxAffordableGeometric(
+    return maxAffordableCappedGeometric(
       building.baseCost,
       BUILDING_GROWTH,
       availableDust,
@@ -1904,6 +1919,7 @@
         getReconstructionCostMultiplier(targetState),
         getStarportBuildingCostMultiplier(targetState),
       ),
+      MAX_BUILDING_UNIT_COST,
     );
   }
 
@@ -3027,7 +3043,7 @@
         );
     return Math.round(
       Math.min(
-        DUST_RESERVE_CAP,
+        MAX_COMBAT_UPGRADE_COST,
         softCapGameNumber(
           rawCost,
           COMBAT_COST_SOFT_CAP,

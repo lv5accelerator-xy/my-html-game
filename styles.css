@@ -65,6 +65,21 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+html[data-performance-mode="eco"] body {
+  background-attachment: scroll;
+  background-size: cover;
+  animation: none;
+}
+
+html[data-performance-mode="eco"] .ambient {
+  display: none;
+}
+
+html[data-performance-mode="eco"] * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 body::before {
   position: fixed;
   z-index: 0;
@@ -457,6 +472,16 @@ a:focus-visible {
 .settings-toggle.off strong {
   color: var(--muted);
   background: rgba(127, 157, 180, 0.08);
+}
+
+#performance-button.off strong {
+  color: var(--success);
+  background: rgba(115, 239, 178, 0.08);
+}
+
+#performance-button:not(.off) strong {
+  color: var(--gold);
+  background: rgba(255, 201, 104, 0.08);
 }
 
 .music-volume {

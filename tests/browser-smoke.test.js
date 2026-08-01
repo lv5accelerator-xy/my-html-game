@@ -60,7 +60,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.4");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.5");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -118,12 +118,12 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.13.4");
+    assert.equal(snapshot.gameVersion, "0.13.5");
     assert.equal(snapshot.saveVersion, 6);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
-    assert.match(snapshot.footer, /v0\.13\.4/);
+    assert.match(snapshot.footer, /v0\.13\.5/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -134,6 +134,42 @@ async function main() {
     assert.ok(snapshot.metadata.lifetimeDust < 1e9);
     assert.ok(snapshot.metadata.totalCores >= 5000);
     assert.doesNotMatch(`${snapshot.dust} ${snapshot.rate} ${snapshot.cores}`, /[BTP]/);
+
+    const globalRadarPages = [
+      "fleet",
+      "starport",
+      "research",
+      "core-shop",
+      "combat",
+      "transcend",
+      "leaderboard",
+    ];
+    const globalRadarCheck = await page.evaluate((pageIds) => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const baseSave = bridge.createSnapshot();
+      return pageIds.map((pageId) => {
+        const radarSave = JSON.parse(JSON.stringify(baseSave));
+        radarSave.activePage = pageId;
+        radarSave.event = null;
+        radarSave.buff = null;
+        radarSave.nextEventAt = Date.now() + 125000;
+        radarSave.lastSeen = Date.now();
+        bridge.applySnapshot(radarSave);
+        return {
+          pageId,
+          title: document.querySelector("#event-title").textContent,
+          countdown: document.querySelector("#event-countdown").textContent,
+        };
+      });
+    }, globalRadarPages);
+    for (const radarState of globalRadarCheck) {
+      assert.equal(radarState.title, "正在扫描航道");
+      assert.match(
+        radarState.countdown,
+        /^02:0[4-5]$/,
+        `${radarState.pageId} must refresh the global radar immediately`,
+      );
+    }
 
     const starportCheck = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;

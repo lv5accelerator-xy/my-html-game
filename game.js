@@ -31,7 +31,7 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.13.4";
+  const GAME_VERSION = "0.13.5";
   const SAVE_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -92,6 +92,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.13.5",
+      theme: "全局深空雷达刷新修复",
+      changes: [
+        "修复离开指挥台后，深空雷达标题、事件状态与倒计时停止刷新的问题。",
+        "深空雷达恢复为全局航站组件，在舰队、星港、研究、星核、战斗、超越与排行榜页面都会正常同步。",
+        "页面切换会立即刷新当前雷达状态，随机事件出现、消失和临时增幅提示不再滞留旧内容。",
+        "保留 v0.13.3 的当前功能页独占重绘与移动端省电策略，未恢复隐藏页面的高成本列表刷新。",
+      ],
+    },
     {
       version: "0.13.4",
       theme: "星港专属供应链",
@@ -5261,6 +5271,7 @@
     elements.dust.textContent = formatNumber(state.dust);
     elements.rate.textContent = `${formatNumber(rate)} / 秒`;
     elements.cores.textContent = formatNumber(state.cores, 0);
+    updateEvent();
 
     if (state.activePage === "command") {
       const clickValue = getClickValue();
@@ -5325,7 +5336,6 @@
         )} 星尘即可获得第 1 枚星核。`;
       }
       updateGoal();
-      updateEvent();
     } else if (state.activePage === "fleet") {
       const units = getTotalUnits();
       elements.unitCount.textContent = formatNumber(units, 0);

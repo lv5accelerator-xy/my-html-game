@@ -60,7 +60,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.1");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.2");
   }, {
     version: 5,
     dust: 57e18,
@@ -70,6 +70,7 @@ async function main() {
     cores: 10.6e6,
     totalCores: 10.6e6,
     rebirths: 12,
+    activePage: "transcend",
     buildings: {
       drone: 1200,
       sail: 900,
@@ -98,17 +99,27 @@ async function main() {
       dust: document.querySelector("#dust-value").textContent,
       rate: document.querySelector("#rate-value").textContent,
       cores: document.querySelector("#core-value").textContent,
-      locked: document.querySelector("#transcend-locked").hidden,
+      lockedHidden: document.querySelector("#transcend-locked").hidden,
+      lockedDisplay: getComputedStyle(document.querySelector("#transcend-locked")).display,
+      lockedRects: document.querySelector("#transcend-locked").getClientRects().length,
+      contentHidden: document.querySelector("#transcend-content").hidden,
+      contentDisplay: getComputedStyle(document.querySelector("#transcend-content")).display,
+      contentRects: document.querySelector("#transcend-content").getClientRects().length,
       saveVersion: window.StellarOutpostCloudBridge.saveVersion,
       gameVersion: window.StellarOutpostCloudBridge.gameVersion,
       metadata: window.StellarOutpostCloudBridge.getMetadata(),
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.13.1");
+    assert.equal(snapshot.gameVersion, "0.13.2");
     assert.equal(snapshot.saveVersion, 6);
-    assert.match(snapshot.footer, /v0\.13\.1/);
-    assert.equal(snapshot.locked, true, "migrated cores should retain endgame access");
+    assert.match(snapshot.footer, /v0\.13\.2/);
+    assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
+    assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
+    assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
+    assert.equal(snapshot.contentHidden, false, "unlock should expose endgame content");
+    assert.notEqual(snapshot.contentDisplay, "none", "endgame content must be visible");
+    assert.ok(snapshot.contentRects > 0, "endgame content must occupy rendered area");
     assert.match(snapshot.bgmPath, /stellar-outpost-bgm\.mp3$/);
     assert.ok(snapshot.metadata.lifetimeDust < 1e9);
     assert.ok(snapshot.metadata.totalCores >= 5000);

@@ -30,7 +30,7 @@
   ];
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
-  const GAME_VERSION = "0.13.1";
+  const GAME_VERSION = "0.13.2";
   const SAVE_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -88,6 +88,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.13.2",
+      theme: "奇点解锁显示修复",
+      changes: [
+        "修复历史星核达到 5K 后，奇点超越页仍显示未解锁遮罩的问题。",
+        "统一隐藏元素的样式优先级，避免组件布局样式覆盖 hidden 状态。",
+        "浏览器回归测试现在会验证锁定卡与超越内容的实际可见性。",
+        "存档结构继续使用第 6 版，玩家现有的历史星核与全部进度无需迁移。",
+      ],
+    },
     {
       version: "0.13.1",
       theme: "舰队购买上限修复",

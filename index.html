@@ -11,15 +11,15 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="0.14.0" />
-    <meta name="stellar-release-title" content="航站委托" />
+    <meta name="stellar-game-version" content="0.15.0" />
+    <meta name="stellar-release-title" content="星区远征" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.14.0" />
+    <link rel="stylesheet" href="styles.css?v=0.15.0" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/stellar-outpost-bgm.mp3?v=0.14.0"
+      src="assets/stellar-outpost-bgm.mp3?v=0.15.0"
       preload="auto"
       loop
       playsinline
@@ -177,6 +177,17 @@
           >
             <span class="navigation-icon" aria-hidden="true">⬡</span>
             <span>战斗</span>
+          </button>
+          <button
+            id="expedition-page-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="expedition-page"
+            data-page="expedition"
+          >
+            <span class="navigation-icon" aria-hidden="true">▱</span>
+            <span>远征</span>
           </button>
           <button
             id="missions-page-tab"
@@ -689,6 +700,139 @@
         </section>
 
         <section
+          id="expedition-page"
+          class="panel game-page expedition-panel"
+          role="tabpanel"
+          aria-labelledby="expedition-page-tab expedition-title"
+          hidden
+        >
+          <div class="panel-heading expedition-heading">
+            <div>
+              <p class="eyebrow">五航段短局 · 风险抉择</p>
+              <h2 id="expedition-title">星区远征</h2>
+            </div>
+            <div class="expedition-wallets">
+              <span>
+                <small>远征补给</small>
+                <strong id="expedition-supply-balance">0</strong>
+              </span>
+              <span>
+                <small>星图残片</small>
+                <strong id="expedition-fragment-balance">0</strong>
+              </span>
+            </div>
+          </div>
+
+          <div class="expedition-intro">
+            <span class="expedition-intro-core" aria-hidden="true">▱</span>
+            <div>
+              <strong>路线、敌方词条与临时协议共同决定本局结果</strong>
+              <p>远征奖励不会增加永久倍率；收藏遗物、信标外观和可消耗补给是这里的主要目标。</p>
+            </div>
+          </div>
+
+          <section id="expedition-locked" class="expedition-locked">
+            <span aria-hidden="true">⌖</span>
+            <div>
+              <small>远征坐标尚未建立</small>
+              <h3>累计回收 50K 星尘后解锁</h3>
+              <p>先建立基础舰队与星港材料库存，再派出五航段远征舰。</p>
+              <div class="expedition-unlock-track" aria-hidden="true">
+                <span id="expedition-unlock-progress"></span>
+              </div>
+              <strong id="expedition-unlock-label">0 / 50K</strong>
+            </div>
+          </section>
+
+          <section id="expedition-idle" class="expedition-idle" hidden>
+            <div class="expedition-launch-copy">
+              <small>新航线准备完毕</small>
+              <h3>启动五航段星区远征</h3>
+              <p>启航会消耗星尘、1 份远征补给和任意 6 份星港材料；战力会在启航时锁定，本局临时协议不会带回主航站。</p>
+              <div class="expedition-launch-costs">
+                <span id="expedition-start-dust-cost">星尘 --</span>
+                <span>补给 1</span>
+                <span id="expedition-start-material-cost">材料 0 / 6</span>
+              </div>
+            </div>
+            <button id="start-expedition-button" type="button">
+              <span>选择临时协议并启航</span>
+              <small>每局约 5 个航段</small>
+            </button>
+            <div class="expedition-career">
+              <span><small>完整远征</small><strong id="expedition-completed-runs">0</strong></span>
+              <span><small>撤离记录</small><strong id="expedition-failed-runs">0</strong></span>
+            </div>
+          </section>
+
+          <section id="expedition-active" class="expedition-active" hidden>
+            <header class="expedition-run-header">
+              <div>
+                <small>当前远征</small>
+                <h3 id="expedition-sector-label">航段 1 / 5</h3>
+              </div>
+              <div class="expedition-hull-readout">
+                <span>船体 <strong id="expedition-hull-value">100 / 100</strong></span>
+                <div aria-hidden="true"><span id="expedition-hull-bar"></span></div>
+              </div>
+              <div class="expedition-cargo" id="expedition-cargo">本局补给 0 · 残片 0</div>
+            </header>
+
+            <div class="expedition-boon-strip">
+              <small>本局临时协议</small>
+              <div id="expedition-boon-list"></div>
+            </div>
+
+            <div class="expedition-choice-heading">
+              <div>
+                <small id="expedition-choice-eyebrow">临时协议</small>
+                <h3 id="expedition-choice-title">选择一项本局强化</h3>
+                <p id="expedition-choice-description">针对将要遇到的敌方词条建立临时配装。</p>
+              </div>
+            </div>
+            <div id="expedition-boon-choices" class="expedition-boon-choices"></div>
+            <div id="expedition-route-choices" class="expedition-route-choices" hidden></div>
+
+            <div class="expedition-run-actions">
+              <button id="expedition-reroll-button" type="button">重扫描路线 · 1 补给</button>
+              <button id="expedition-repair-button" type="button">紧急维修 +25 · 2 补给</button>
+              <button id="expedition-abandon-button" type="button">提前撤离</button>
+            </div>
+
+            <div class="expedition-report" aria-live="polite">
+              <span aria-hidden="true">◈</span>
+              <div>
+                <small>远征记录</small>
+                <p id="expedition-report-text">远征舰正在等待指令。</p>
+              </div>
+            </div>
+            <ol id="expedition-path" class="expedition-path"></ol>
+          </section>
+
+          <section class="expedition-collection" aria-labelledby="expedition-collection-title">
+            <header>
+              <div>
+                <small>纯收藏 · 无数值加成</small>
+                <h3 id="expedition-collection-title">远征陈列舱</h3>
+              </div>
+              <strong id="expedition-collection-count">0 / 8</strong>
+            </header>
+            <div id="expedition-artifact-grid" class="expedition-artifact-grid"></div>
+          </section>
+
+          <section class="expedition-skins" aria-labelledby="expedition-skins-title">
+            <header>
+              <div>
+                <small>星图残片消耗项</small>
+                <h3 id="expedition-skins-title">信标外观方案</h3>
+              </div>
+              <span>只改变颜色与光晕</span>
+            </header>
+            <div id="expedition-skin-grid" class="expedition-skin-grid"></div>
+          </section>
+        </section>
+
+        <section
           id="transcend-page"
           class="panel game-page transcend-panel"
           role="tabpanel"
@@ -952,6 +1096,14 @@
                 </div>
                 <button type="button" data-mission-store="combatRefit">20 凭证</button>
               </article>
+              <article>
+                <span aria-hidden="true">▱</span>
+                <div>
+                  <strong>远征补给箱</strong>
+                  <p>获得 3 份远征补给，用于启航、扫描与维修。</p>
+                </div>
+                <button type="button" data-mission-store="expeditionSupply">14 凭证</button>
+              </article>
             </div>
           </section>
         </section>
@@ -1071,7 +1223,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.14.0</span>
+        <span>航站协议 v0.15.0</span>
       </footer>
     </div>
 
@@ -1115,7 +1267,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.14.0</strong>
+          <strong id="patch-notes-current-version">v0.15.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1352,9 +1504,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.14.0"></script>
-    <script src="game.js?v=0.14.0"></script>
-    <script src="firebase-config.js?v=0.14.0"></script>
-    <script type="module" src="cloud-save.js?v=0.14.0"></script>
+    <script src="game-math.js?v=0.15.0"></script>
+    <script src="game.js?v=0.15.0"></script>
+    <script src="firebase-config.js?v=0.15.0"></script>
+    <script type="module" src="cloud-save.js?v=0.15.0"></script>
   </body>
 </html>

@@ -20,6 +20,7 @@
   --radius: 22px;
   --radius-small: 14px;
   --type-scale: 1.25;
+  --expedition-skin: #62e6ff;
 }
 
 * {
@@ -561,7 +562,7 @@ a:focus-visible {
 
 .primary-tabs {
   display: grid;
-  grid-template-columns: repeat(9, minmax(0, 1fr));
+  grid-template-columns: repeat(10, minmax(0, 1fr));
   gap: 5px;
 }
 
@@ -6105,7 +6106,7 @@ footer {
 
 .mission-store-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 9px;
 }
 
@@ -6849,7 +6850,847 @@ footer {
   }
 }
 
+body:not([data-expedition-skin="standard"]) .collect-button {
+  border-color: var(--expedition-skin);
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--expedition-skin) 22%, transparent), transparent 55%),
+    linear-gradient(145deg, #102b42, #081522);
+  box-shadow:
+    0 0 0 10px color-mix(in srgb, var(--expedition-skin) 4%, transparent),
+    0 0 58px color-mix(in srgb, var(--expedition-skin) 24%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--expedition-skin) 11%, transparent);
+}
+
+body:not([data-expedition-skin="standard"]) .collect-button small,
+body:not([data-expedition-skin="standard"]) .core-glyph {
+  color: var(--expedition-skin);
+  text-shadow: 0 0 14px var(--expedition-skin);
+}
+
+body:not([data-expedition-skin="standard"]) .collect-core {
+  border-color: var(--expedition-skin);
+  background: color-mix(in srgb, var(--expedition-skin) 9%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--expedition-skin) 18%, transparent);
+}
+
+.expedition-panel {
+  overflow: hidden;
+  padding: 22px;
+  background:
+    linear-gradient(135deg, rgba(12, 34, 53, 0.92), rgba(9, 18, 37, 0.94)),
+    radial-gradient(circle at 80% 0%, color-mix(in srgb, var(--expedition-skin) 10%, transparent), transparent 34%);
+}
+
+.expedition-heading,
+.expedition-collection > header,
+.expedition-skins > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.expedition-wallets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(100px, 1fr));
+  gap: 8px;
+}
+
+.expedition-wallets > span {
+  min-width: 105px;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--expedition-skin) 22%, transparent);
+  border-radius: 12px;
+  text-align: right;
+  background: rgba(6, 20, 33, 0.66);
+}
+
+.expedition-wallets small,
+.expedition-wallets strong {
+  display: block;
+}
+
+.expedition-wallets small {
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-wallets strong {
+  margin-top: 2px;
+  color: var(--expedition-skin);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.expedition-intro {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 13px 15px;
+  border: 1px solid rgba(184, 140, 255, 0.18);
+  border-radius: 15px;
+  background: linear-gradient(90deg, rgba(184, 140, 255, 0.08), rgba(98, 230, 255, 0.035));
+}
+
+.expedition-intro-core {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--expedition-skin) 28%, transparent);
+  border-radius: 50%;
+  color: var(--expedition-skin);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--expedition-skin) 18%, transparent);
+}
+
+.expedition-intro strong,
+.expedition-intro p {
+  display: block;
+}
+
+.expedition-intro strong {
+  color: #e3f2fb;
+  font-size: calc(10px * var(--type-scale));
+}
+
+.expedition-intro p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: calc(8px * var(--type-scale));
+}
+
+.expedition-locked,
+.expedition-idle,
+.expedition-active,
+.expedition-collection,
+.expedition-skins {
+  margin-top: 14px;
+  border: 1px solid rgba(111, 155, 187, 0.16);
+  border-radius: 17px;
+  background: rgba(5, 16, 28, 0.58);
+}
+
+.expedition-locked {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 22px;
+}
+
+.expedition-locked > span {
+  display: grid;
+  width: 68px;
+  height: 68px;
+  place-items: center;
+  border: 1px solid rgba(127, 157, 180, 0.2);
+  border-radius: 18px;
+  color: #7690a4;
+  font-size: calc(20px * var(--type-scale));
+}
+
+.expedition-locked small,
+.expedition-locked h3,
+.expedition-locked p {
+  display: block;
+}
+
+.expedition-locked small,
+.expedition-locked p,
+#expedition-unlock-label {
+  color: var(--muted);
+  font-size: calc(8px * var(--type-scale));
+}
+
+.expedition-locked h3 {
+  margin: 3px 0 5px;
+  color: #d9e8f2;
+  font-size: calc(13px * var(--type-scale));
+}
+
+.expedition-locked p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.expedition-unlock-track {
+  height: 6px;
+  margin: 11px 0 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(111, 155, 187, 0.12);
+}
+
+.expedition-unlock-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+}
+
+.expedition-idle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.36fr);
+  gap: 15px;
+  align-items: center;
+  padding: 19px;
+}
+
+.expedition-launch-copy > small,
+.expedition-launch-copy h3,
+.expedition-launch-copy p {
+  display: block;
+}
+
+.expedition-launch-copy > small {
+  color: var(--expedition-skin);
+  font-size: calc(7px * var(--type-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.expedition-launch-copy h3 {
+  margin: 3px 0 6px;
+  color: #e3f2fb;
+  font-size: calc(15px * var(--type-scale));
+}
+
+.expedition-launch-copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: calc(8px * var(--type-scale));
+}
+
+.expedition-launch-costs {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 11px;
+}
+
+.expedition-launch-costs span,
+.expedition-cargo,
+#expedition-boon-list > span {
+  padding: 5px 8px;
+  border: 1px solid rgba(98, 230, 255, 0.14);
+  border-radius: 999px;
+  color: #9eb8ca;
+  background: rgba(98, 230, 255, 0.045);
+  font-size: calc(7px * var(--type-scale));
+}
+
+#start-expedition-button {
+  min-height: 66px;
+  border: 1px solid color-mix(in srgb, var(--expedition-skin) 34%, transparent);
+  border-radius: 13px;
+  cursor: pointer;
+  color: var(--expedition-skin);
+  background: color-mix(in srgb, var(--expedition-skin) 8%, rgba(7, 24, 38, 0.9));
+}
+
+#start-expedition-button span,
+#start-expedition-button small {
+  display: block;
+}
+
+#start-expedition-button span {
+  font-weight: 800;
+}
+
+#start-expedition-button small {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+#start-expedition-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.expedition-career {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 9px;
+}
+
+.expedition-career > span {
+  display: flex;
+  min-width: 120px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-top: 1px solid rgba(111, 155, 187, 0.12);
+}
+
+.expedition-career small {
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-career strong {
+  color: #dbeaf3;
+}
+
+.expedition-active {
+  padding: 16px;
+}
+
+.expedition-run-header {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.5fr) minmax(210px, 0.8fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(111, 155, 187, 0.12);
+}
+
+.expedition-run-header small,
+.expedition-run-header h3 {
+  display: block;
+}
+
+.expedition-run-header small {
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-run-header h3 {
+  margin-top: 2px;
+  color: #e0eef8;
+  font-size: calc(13px * var(--type-scale));
+}
+
+.expedition-hull-readout > span {
+  display: flex;
+  justify-content: space-between;
+  color: #9eb8ca;
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-hull-readout > div {
+  height: 7px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(111, 155, 187, 0.12);
+}
+
+.expedition-hull-readout > div span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--success);
+  box-shadow: 0 0 10px rgba(115, 239, 178, 0.3);
+  transition: width 180ms ease;
+}
+
+#expedition-hull-bar[data-state="warning"] {
+  background: var(--gold);
+}
+
+#expedition-hull-bar[data-state="critical"] {
+  background: var(--danger);
+}
+
+.expedition-boon-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 13px 0;
+}
+
+.expedition-boon-strip > small {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+#expedition-boon-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.expedition-choice-heading small {
+  color: var(--expedition-skin);
+  font-size: calc(7px * var(--type-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.expedition-choice-heading h3 {
+  margin: 2px 0 3px;
+  color: #e1eff8;
+  font-size: calc(13px * var(--type-scale));
+}
+
+.expedition-choice-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: calc(8px * var(--type-scale));
+}
+
+.expedition-boon-choices,
+.expedition-route-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.expedition-boon-card,
+.expedition-route-card {
+  min-width: 0;
+  border: 1px solid rgba(111, 155, 187, 0.17);
+  border-radius: 14px;
+  cursor: pointer;
+  color: var(--text);
+  background: rgba(9, 25, 39, 0.74);
+  transition: transform 120ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.expedition-boon-card:hover,
+.expedition-route-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--expedition-skin) 42%, transparent);
+  background: color-mix(in srgb, var(--expedition-skin) 7%, rgba(9, 25, 39, 0.88));
+}
+
+.expedition-boon-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 14px;
+  text-align: left;
+}
+
+.expedition-boon-card > span:first-child {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(184, 140, 255, 0.24);
+  border-radius: 12px;
+  color: #ceb5ff;
+  background: rgba(184, 140, 255, 0.08);
+  font-size: calc(15px * var(--type-scale));
+}
+
+.expedition-boon-card strong,
+.expedition-boon-card small {
+  display: block;
+}
+
+.expedition-boon-card strong {
+  color: #e1eef7;
+  font-size: calc(9px * var(--type-scale));
+}
+
+.expedition-boon-card small {
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.45;
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-route-card {
+  display: flex;
+  flex-direction: column;
+  padding: 13px;
+  text-align: left;
+}
+
+.expedition-route-heading {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+}
+
+.expedition-route-heading > span:first-child {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--expedition-skin) 25%, transparent);
+  border-radius: 10px;
+  color: var(--expedition-skin);
+}
+
+.expedition-route-heading strong,
+.expedition-route-heading small {
+  display: block;
+}
+
+.expedition-route-heading strong {
+  color: #dcebf4;
+  font-size: calc(9px * var(--type-scale));
+}
+
+.expedition-route-heading small {
+  overflow: hidden;
+  margin-top: 3px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-affixes {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  min-height: 27px;
+  margin: 10px 0;
+}
+
+.expedition-affixes i {
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 114, 133, 0.2);
+  border-radius: 999px;
+  color: #ff9ba8;
+  background: rgba(255, 114, 133, 0.06);
+  font-size: calc(6px * var(--type-scale));
+  font-style: normal;
+}
+
+.expedition-affixes i.countered {
+  border-color: rgba(115, 239, 178, 0.22);
+  color: var(--success);
+  background: rgba(115, 239, 178, 0.06);
+}
+
+.expedition-affixes i:first-child:last-child:not(.countered) {
+  border-color: rgba(111, 155, 187, 0.14);
+  color: var(--muted);
+  background: rgba(111, 155, 187, 0.04);
+}
+
+.expedition-route-stats {
+  display: block;
+  margin-top: auto;
+  padding-top: 9px;
+  border-top: 1px solid rgba(111, 155, 187, 0.11);
+}
+
+.expedition-route-stats strong,
+.expedition-route-stats small {
+  display: block;
+}
+
+.expedition-route-stats strong {
+  color: var(--gold);
+  font-size: calc(10px * var(--type-scale));
+}
+
+.expedition-route-stats.countered strong {
+  color: var(--success);
+}
+
+.expedition-route-stats small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-run-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.expedition-run-actions button {
+  padding: 8px 10px;
+  border: 1px solid rgba(98, 230, 255, 0.18);
+  border-radius: 9px;
+  cursor: pointer;
+  color: #a7c0d1;
+  background: rgba(98, 230, 255, 0.05);
+}
+
+.expedition-run-actions button:last-child {
+  margin-left: auto;
+  border-color: rgba(255, 114, 133, 0.16);
+  color: #cf8f99;
+  background: rgba(255, 114, 133, 0.04);
+}
+
+.expedition-run-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.expedition-report {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(111, 155, 187, 0.12);
+  border-radius: 11px;
+  background: rgba(4, 15, 26, 0.54);
+}
+
+.expedition-report > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--expedition-skin);
+}
+
+.expedition-report small {
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-report p {
+  margin: 3px 0 0;
+  color: #b9cfdd;
+  font-size: calc(8px * var(--type-scale));
+}
+
+.expedition-path {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 9px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.expedition-path li {
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: #7895a9;
+  background: rgba(111, 155, 187, 0.055);
+  font-size: calc(6px * var(--type-scale));
+}
+
+.expedition-collection,
+.expedition-skins {
+  padding: 15px;
+}
+
+.expedition-collection header small,
+.expedition-collection header h3,
+.expedition-skins header small,
+.expedition-skins header h3 {
+  display: block;
+}
+
+.expedition-collection header small,
+.expedition-skins header small,
+.expedition-skins header > span {
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-collection header h3,
+.expedition-skins header h3 {
+  margin-top: 2px;
+  color: #dfeef7;
+  font-size: calc(12px * var(--type-scale));
+}
+
+#expedition-collection-count {
+  color: var(--purple);
+  font-size: calc(11px * var(--type-scale));
+}
+
+.expedition-artifact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.expedition-artifact {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(111, 155, 187, 0.12);
+  border-radius: 11px;
+  background: rgba(8, 21, 34, 0.58);
+}
+
+.expedition-artifact > span,
+.expedition-artifact strong,
+.expedition-artifact small {
+  display: block;
+}
+
+.expedition-artifact > span {
+  color: var(--purple);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.expedition-artifact strong {
+  margin-top: 5px;
+  color: #cadce8;
+  font-size: calc(8px * var(--type-scale));
+}
+
+.expedition-artifact small {
+  margin-top: 3px;
+  color: var(--muted);
+  line-height: 1.4;
+  font-size: calc(6px * var(--type-scale));
+}
+
+.expedition-artifact.locked {
+  opacity: 0.42;
+  filter: saturate(0.35);
+}
+
+.expedition-skin-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.expedition-skin {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 9px;
+  border: 1px solid rgba(111, 155, 187, 0.12);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  color: #c9dce8;
+  background: rgba(8, 21, 34, 0.56);
+}
+
+.expedition-skin.active {
+  border-color: color-mix(in srgb, var(--skin-color) 50%, transparent);
+  background: color-mix(in srgb, var(--skin-color) 8%, rgba(8, 21, 34, 0.72));
+}
+
+.expedition-skin > span:first-child {
+  width: 28px;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--skin-color) 58%, white 8%);
+  border-radius: 50%;
+  background: var(--skin-color);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--skin-color) 48%, transparent);
+}
+
+.expedition-skin strong,
+.expedition-skin small {
+  display: block;
+}
+
+.expedition-skin strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(7px * var(--type-scale));
+}
+
+.expedition-skin small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: calc(6px * var(--type-scale));
+}
+
 @media (max-width: 700px) {
+  .expedition-panel {
+    padding: 16px;
+  }
+
+  .expedition-heading,
+  .expedition-collection > header,
+  .expedition-skins > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .expedition-wallets {
+    width: 100%;
+  }
+
+  .expedition-wallets > span {
+    text-align: left;
+  }
+
+  .expedition-intro {
+    grid-template-columns: 38px minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .expedition-intro-core {
+    width: 38px;
+    height: 38px;
+  }
+
+  .expedition-locked,
+  .expedition-idle,
+  .expedition-run-header {
+    grid-template-columns: 1fr;
+  }
+
+  .expedition-locked > span {
+    width: 54px;
+    height: 54px;
+  }
+
+  .expedition-idle,
+  .expedition-active {
+    padding: 14px;
+  }
+
+  .expedition-career {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .expedition-career > span {
+    min-width: 0;
+  }
+
+  .expedition-boon-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .expedition-boon-choices,
+  .expedition-route-choices {
+    grid-template-columns: 1fr;
+  }
+
+  .expedition-route-heading small {
+    white-space: normal;
+  }
+
+  .expedition-run-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .expedition-run-actions button,
+  .expedition-run-actions button:last-child {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .expedition-artifact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .expedition-skin-grid {
+    grid-template-columns: 1fr;
+  }
+
   .missions-panel {
     padding: 16px;
   }

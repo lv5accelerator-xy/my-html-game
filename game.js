@@ -31,14 +31,18 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.14.0";
-  const SAVE_VERSION = 7;
+  const GAME_VERSION = "0.15.0";
+  const SAVE_VERSION = 8;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const AUTOSAVE_INTERVAL = 10000;
   const VERSION_CHECK_INTERVAL = 3 * 60 * 1000;
   const MISSION_TOKEN_CAP = 999999;
+  const EXPEDITION_SUPPLY_CAP = 9999;
+  const EXPEDITION_FRAGMENT_CAP = 99999;
+  const EXPEDITION_ROUTE_COUNT = 5;
+  const EXPEDITION_UNLOCK_DUST = 50000;
   const QUALITY_GAME_TICK_INTERVAL = 100;
   const ECO_GAME_TICK_INTERVAL = 250;
   const QUALITY_STARFIELD_FPS = 60;
@@ -92,11 +96,23 @@
     "research",
     "core-shop",
     "combat",
+    "expedition",
     "missions",
     "transcend",
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.15.0",
+      theme: "星区远征",
+      changes: [
+        "新增五航段短局制星区远征，每一航段从三条路线中选择，并根据成功率、船体损伤与战利品决定风险。",
+        "敌方会携带相位护盾、蜂群编队、过载核心等词条；临时远征协议可以针对性克制，离开本局后全部清除。",
+        "远征奖励以星图残片、远征补给、纯收藏遗物和信标外观为主，不提供永久产量或战斗倍率。",
+        "新增材料与补给消耗：启航、路线重扫描、船体维修及外观解锁会持续回收后期库存。",
+        "存档结构升级至第 8 版，并新增远征桌面、手机布局和旧存档迁移回归测试。",
+      ],
+    },
     {
       version: "0.14.0",
       theme: "航站委托与热更新提示",
@@ -1279,6 +1295,168 @@
     },
   ];
 
+  const EXPEDITION_ROUTE_TYPES = [
+    {
+      id: "salvage",
+      name: "残骸回收带",
+      icon: "✦",
+      description: "威胁较低，适合稳定积累补给。",
+      powerFactor: 0.78,
+      baseDamage: 8,
+      supplies: 2,
+      fragments: 1,
+    },
+    {
+      id: "patrol",
+      name: "巡逻封锁线",
+      icon: "⬡",
+      description: "标准战斗航线，风险与回报均衡。",
+      powerFactor: 0.96,
+      baseDamage: 12,
+      supplies: 1,
+      fragments: 3,
+    },
+    {
+      id: "anomaly",
+      name: "异常信号区",
+      icon: "◈",
+      description: "读数不稳定，但携带更多星图资料。",
+      powerFactor: 1.08,
+      baseDamage: 15,
+      supplies: 1,
+      fragments: 4,
+    },
+    {
+      id: "elite",
+      name: "精锐猎场",
+      icon: "◆",
+      description: "高威胁精锐目标，回收价值最高。",
+      powerFactor: 1.24,
+      baseDamage: 20,
+      supplies: 2,
+      fragments: 6,
+    },
+    {
+      id: "relay",
+      name: "废弃中继港",
+      icon: "⌁",
+      description: "没有直接交战，可修复船体但战利品很少。",
+      powerFactor: 0,
+      baseDamage: 0,
+      supplies: 0,
+      fragments: 1,
+      repair: 18,
+    },
+  ];
+
+  const EXPEDITION_AFFIXES = [
+    {
+      id: "phaseShield",
+      name: "相位护盾",
+      icon: "◇",
+      description: "未携带裂相弹头时，成功率 -18%。",
+      counter: "phaseLance",
+    },
+    {
+      id: "swarm",
+      name: "蜂群编队",
+      icon: "⌬",
+      description: "未携带拦截阵列时，成功率 -14%。",
+      counter: "interceptorGrid",
+    },
+    {
+      id: "volatile",
+      name: "过载核心",
+      icon: "☄",
+      description: "胜负造成的船体损伤 +9，热沉协议可抵消。",
+      counter: "thermalSink",
+    },
+    {
+      id: "jammer",
+      name: "深空干扰",
+      icon: "⌖",
+      description: "成功率 -10%，导航演算可反制。",
+      counter: "predictiveNav",
+    },
+    {
+      id: "raider",
+      name: "掠夺协议",
+      icon: "⚠",
+      description: "失败时额外遗失 1 份本局补给。",
+      counter: "sealedCargo",
+    },
+  ];
+
+  const EXPEDITION_BOONS = [
+    {
+      id: "phaseLance",
+      name: "裂相弹头",
+      icon: "◇",
+      description: "本局反制“相位护盾”。",
+    },
+    {
+      id: "interceptorGrid",
+      name: "拦截阵列",
+      icon: "⌬",
+      description: "本局反制“蜂群编队”。",
+    },
+    {
+      id: "thermalSink",
+      name: "热沉协议",
+      icon: "☄",
+      description: "本局反制“过载核心”。",
+    },
+    {
+      id: "predictiveNav",
+      name: "导航演算",
+      icon: "⌖",
+      description: "反制“深空干扰”，其他航线成功率 +4%。",
+    },
+    {
+      id: "sealedCargo",
+      name: "密封货舱",
+      icon: "▣",
+      description: "反制“掠夺协议”，失败不再遗失补给。",
+    },
+    {
+      id: "repairDrone",
+      name: "维修无人机",
+      icon: "◎",
+      description: "每次战斗胜利后额外修复 8 点船体。",
+    },
+    {
+      id: "scavengerRig",
+      name: "精密拆解臂",
+      icon: "✦",
+      description: "残骸回收带额外获得 1 份本局补给。",
+    },
+    {
+      id: "reactiveArmor",
+      name: "反应装甲",
+      icon: "⬡",
+      description: "本局受到的船体损伤减少 20%。",
+    },
+  ];
+
+  const EXPEDITION_ARTIFACTS = [
+    { id: "glassCompass", name: "玻璃星图仪", icon: "◈", lore: "指针始终指向一条不存在的航线。" },
+    { id: "silentBeacon", name: "无声信标", icon: "⌁", lore: "没有频率，却能让附近的尘埃产生回声。" },
+    { id: "foldedWing", name: "折叠舰翼", icon: "◇", lore: "来自一艘从未登记过的侦察舰。" },
+    { id: "blueEmber", name: "蓝色余烬", icon: "☄", lore: "在真空中维持着极低温的光。" },
+    { id: "orbitSeed", name: "轨道种子", icon: "◎", lore: "靠近恒星时会自行排列成微型星环。" },
+    { id: "echoMask", name: "回声面具", icon: "⌖", lore: "记录着上一位远征者最后看到的星空。" },
+    { id: "tidalCoin", name: "潮汐古币", icon: "◒", lore: "正反两面分别刻着诞生与坍缩。" },
+    { id: "moonLetter", name: "月背邮简", icon: "☾", lore: "收件地址只有一句：下一次相遇。" },
+  ];
+
+  const EXPEDITION_SKINS = [
+    { id: "standard", name: "航站原色", color: "#62e6ff", cost: 0 },
+    { id: "aurora", name: "极光涂层", color: "#73efb2", cost: 12 },
+    { id: "violet", name: "裂隙紫", color: "#b88cff", cost: 18 },
+    { id: "ember", name: "余烬红", color: "#ff7c6e", cost: 24 },
+    { id: "moon", name: "新月银", color: "#e4efff", cost: 32 },
+  ];
+
   const MISSION_TEMPLATES = [
     {
       id: "dustEarned",
@@ -1412,6 +1590,26 @@
       eligible: (targetState) => targetState.lifetimeDust >= COMBAT_UNLOCK_DUST,
     },
     {
+      id: "expeditionRoutes",
+      metric: "expeditionRoutes",
+      title: "星区勘探",
+      icon: "▱",
+      format: "count",
+      dailyTarget: () => 2,
+      weeklyTarget: () => 12,
+      eligible: (targetState) => targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST,
+    },
+    {
+      id: "expeditionsCompleted",
+      metric: "expeditionsCompleted",
+      title: "完整远征",
+      icon: "✧",
+      format: "count",
+      weeklyOnly: true,
+      weeklyTarget: () => 1,
+      eligible: (targetState) => targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST,
+    },
+    {
       id: "prestiges",
       metric: "prestiges",
       title: "深空跃迁",
@@ -1454,6 +1652,7 @@
     dustCrate: { cost: 18 },
     materialCrate: { cost: 32 },
     combatRefit: { cost: 20 },
+    expeditionSupply: { cost: 14 },
   });
 
   const $ = (selector) => document.querySelector(selector);
@@ -1640,6 +1839,36 @@
     weeklyMissionList: $("#weekly-mission-list"),
     weeklyMilestoneList: $("#weekly-milestone-list"),
     missionStore: $(".mission-store"),
+    expeditionSupplyBalance: $("#expedition-supply-balance"),
+    expeditionFragmentBalance: $("#expedition-fragment-balance"),
+    expeditionLocked: $("#expedition-locked"),
+    expeditionUnlockProgress: $("#expedition-unlock-progress"),
+    expeditionUnlockLabel: $("#expedition-unlock-label"),
+    expeditionIdle: $("#expedition-idle"),
+    expeditionStartDustCost: $("#expedition-start-dust-cost"),
+    expeditionStartMaterialCost: $("#expedition-start-material-cost"),
+    startExpeditionButton: $("#start-expedition-button"),
+    expeditionCompletedRuns: $("#expedition-completed-runs"),
+    expeditionFailedRuns: $("#expedition-failed-runs"),
+    expeditionActive: $("#expedition-active"),
+    expeditionSectorLabel: $("#expedition-sector-label"),
+    expeditionHullValue: $("#expedition-hull-value"),
+    expeditionHullBar: $("#expedition-hull-bar"),
+    expeditionCargo: $("#expedition-cargo"),
+    expeditionBoonList: $("#expedition-boon-list"),
+    expeditionChoiceEyebrow: $("#expedition-choice-eyebrow"),
+    expeditionChoiceTitle: $("#expedition-choice-title"),
+    expeditionChoiceDescription: $("#expedition-choice-description"),
+    expeditionBoonChoices: $("#expedition-boon-choices"),
+    expeditionRouteChoices: $("#expedition-route-choices"),
+    expeditionRerollButton: $("#expedition-reroll-button"),
+    expeditionRepairButton: $("#expedition-repair-button"),
+    expeditionAbandonButton: $("#expedition-abandon-button"),
+    expeditionReportText: $("#expedition-report-text"),
+    expeditionPath: $("#expedition-path"),
+    expeditionCollectionCount: $("#expedition-collection-count"),
+    expeditionArtifactGrid: $("#expedition-artifact-grid"),
+    expeditionSkinGrid: $("#expedition-skin-grid"),
     leaderboardCareerDust: $("#leaderboard-career-dust"),
     leaderboardHighestPower: $("#leaderboard-highest-power"),
     leaderboardBattleCount: $("#leaderboard-battle-count"),
@@ -1703,6 +1932,20 @@
       tokens: 0,
       daily: freshMissionPeriod("daily"),
       weekly: freshMissionPeriod("weekly"),
+    };
+  }
+
+  function freshExpeditionState() {
+    return {
+      supplies: 3,
+      fragments: 0,
+      completedRuns: 0,
+      failedRuns: 0,
+      artifacts: [],
+      unlockedSkins: ["standard"],
+      activeSkin: "standard",
+      activeRun: null,
+      lastReport: "远征终端正在等待第一份星区航线。",
     };
   }
 
@@ -1783,6 +2026,7 @@
       endgame: freshEndgameState(),
       crescentSecret: freshCrescentSecretState(),
       missions: freshMissionState(),
+      expedition: freshExpeditionState(),
       log: [
         {
           text: "拾荒单元 07 已上线。等待首条回收指令。",
@@ -2924,6 +3168,13 @@
       showToast("材料仓尚未接入", "解锁战斗系统后即可兑换星港材料箱。", "⌬");
       return;
     }
+    if (
+      itemId === "expeditionSupply" &&
+      state.lifetimeDust < EXPEDITION_UNLOCK_DUST
+    ) {
+      showToast("远征补给尚未接入", "累计获得 5 万星尘后即可兑换远征补给。", "▱");
+      return;
+    }
     const now = Date.now();
     if (
       itemId === "combatRefit" &&
@@ -2945,11 +3196,610 @@
       state.combat.attackCooldownUntil = now;
       state.combat.skirmishCooldownUntil = now;
       showToast("舰队紧急整备完成", "主动远征与近域清剿均已就绪。", "⬡");
+    } else if (itemId === "expeditionSupply") {
+      state.expedition.supplies = Math.min(
+        EXPEDITION_SUPPLY_CAP,
+        clampGameCount(safeAdd(state.expedition.supplies, 3)),
+      );
+      showToast("远征补给已装载", "远征补给 +3", "▱");
     }
     renderMissions();
     updateMissionSummary();
     updateUi();
     saveGame();
+  }
+
+  function getExpeditionRouteType(routeTypeId) {
+    return EXPEDITION_ROUTE_TYPES.find((route) => route.id === routeTypeId);
+  }
+
+  function getExpeditionAffix(affixId) {
+    return EXPEDITION_AFFIXES.find((affix) => affix.id === affixId);
+  }
+
+  function getExpeditionBoon(boonId) {
+    return EXPEDITION_BOONS.find((boon) => boon.id === boonId);
+  }
+
+  function getExpeditionSkin(skinId) {
+    return EXPEDITION_SKINS.find((skin) => skin.id === skinId);
+  }
+
+  function getExpeditionEntryDustCost(targetState = state) {
+    return Math.min(
+      1500000,
+      roundMissionTarget(
+        Math.max(
+          2500,
+          safeMultiply(calculateRate(targetState, false), 120),
+          safeMultiply(getClickValue(targetState), 30),
+        ),
+      ),
+    );
+  }
+
+  function getTotalStarportMaterials(targetState = state) {
+    return STARPORT_MATERIALS.reduce(
+      (total, material) =>
+        safeAdd(total, targetState.starport?.materials?.[material.id] || 0),
+      0,
+    );
+  }
+
+  function consumeStarportMaterialPool(amount) {
+    let remaining = Math.max(0, Math.floor(amount));
+    const materialIds = STARPORT_MATERIALS
+      .map((material) => material.id)
+      .sort(
+        (left, right) =>
+          state.starport.materials[right] - state.starport.materials[left],
+      );
+    materialIds.forEach((materialId) => {
+      if (remaining <= 0) return;
+      const spent = Math.min(remaining, state.starport.materials[materialId]);
+      state.starport.materials[materialId] = clampGameCount(
+        state.starport.materials[materialId] - spent,
+      );
+      remaining -= spent;
+    });
+    return remaining === 0;
+  }
+
+  function expeditionSeedValue(seedText) {
+    return hashMissionSeed(seedText) / 4294967296;
+  }
+
+  function createExpeditionBoonChoices(run) {
+    return seededMissionShuffle(
+      EXPEDITION_BOONS.filter((boon) => !run.boons.includes(boon.id)),
+      `${run.seed}:boon:${run.depth}:${run.boons.length}`,
+    )
+      .slice(0, 3)
+      .map((boon) => boon.id);
+  }
+
+  function createExpeditionRouteChoices(run) {
+    const finalSector = run.depth >= EXPEDITION_ROUTE_COUNT - 1;
+    const availableTypes = EXPEDITION_ROUTE_TYPES.filter((route) =>
+      finalSector ? !["relay", "salvage"].includes(route.id) : true,
+    );
+    const selectedTypes = seededMissionShuffle(
+      availableTypes,
+      `${run.seed}:route:${run.depth}:${run.choiceNonce}`,
+    ).slice(0, 3);
+    return selectedTypes.map((route, index) => {
+      const affixCount = route.powerFactor <= 0
+        ? 0
+        : route.id === "elite" && run.depth >= 2
+          ? 2
+          : 1;
+      const affixIds = seededMissionShuffle(
+        EXPEDITION_AFFIXES,
+        `${run.seed}:affix:${run.depth}:${run.choiceNonce}:${route.id}:${index}`,
+      )
+        .slice(0, affixCount)
+        .map((affix) => affix.id);
+      const depthFactor = 1 + run.depth * 0.11;
+      const veteranFactor = 1 + Math.min(0.18, state.expedition.completedRuns * 0.015);
+      return {
+        id: `${route.id}-${run.depth}-${run.choiceNonce}-${index}`,
+        typeId: route.id,
+        affixIds,
+        enemyPower: route.powerFactor > 0
+          ? Math.max(
+              25,
+              Math.round(
+                safeMultiply(
+                  run.commandPower,
+                  route.powerFactor,
+                  depthFactor,
+                  veteranFactor,
+                ),
+              ),
+            )
+          : 0,
+      };
+    });
+  }
+
+  function sanitizeExpeditionRoute(rawRoute) {
+    const route = getExpeditionRouteType(rawRoute?.typeId);
+    if (!route) return null;
+    const affixIds = Array.isArray(rawRoute.affixIds)
+      ? [...new Set(rawRoute.affixIds)]
+          .filter((id) => Boolean(getExpeditionAffix(id)))
+          .slice(0, 2)
+      : [];
+    return {
+      id: typeof rawRoute.id === "string" ? rawRoute.id.slice(0, 80) : route.id,
+      typeId: route.id,
+      affixIds,
+      enemyPower: Math.min(
+        MAX_COMBAT_POWER,
+        clampGameNumber(rawRoute.enemyPower),
+      ),
+    };
+  }
+
+  function sanitizeExpeditionState(rawExpedition) {
+    const clean = freshExpeditionState();
+    if (!rawExpedition || typeof rawExpedition !== "object") return clean;
+    clean.supplies = Math.min(
+      EXPEDITION_SUPPLY_CAP,
+      clampGameCount(rawExpedition.supplies),
+    );
+    clean.fragments = Math.min(
+      EXPEDITION_FRAGMENT_CAP,
+      clampGameCount(rawExpedition.fragments),
+    );
+    clean.completedRuns = clampGameCount(rawExpedition.completedRuns);
+    clean.failedRuns = clampGameCount(rawExpedition.failedRuns);
+    clean.artifacts = Array.isArray(rawExpedition.artifacts)
+      ? EXPEDITION_ARTIFACTS.flatMap((artifact) =>
+          rawExpedition.artifacts.includes(artifact.id) ? [artifact.id] : [],
+        )
+      : [];
+    const unlockedSkinIds = new Set(
+      Array.isArray(rawExpedition.unlockedSkins)
+        ? rawExpedition.unlockedSkins.filter((id) => Boolean(getExpeditionSkin(id)))
+        : [],
+    );
+    unlockedSkinIds.add("standard");
+    clean.unlockedSkins = EXPEDITION_SKINS.flatMap((skin) =>
+      unlockedSkinIds.has(skin.id) ? [skin.id] : [],
+    );
+    clean.activeSkin = clean.unlockedSkins.includes(rawExpedition.activeSkin)
+      ? rawExpedition.activeSkin
+      : "standard";
+    clean.lastReport = typeof rawExpedition.lastReport === "string"
+      ? rawExpedition.lastReport.slice(0, 240)
+      : clean.lastReport;
+    const rawRun = rawExpedition.activeRun;
+    if (rawRun && typeof rawRun === "object") {
+      const boons = Array.isArray(rawRun.boons)
+        ? [...new Set(rawRun.boons)]
+            .filter((id) => Boolean(getExpeditionBoon(id)))
+            .slice(0, EXPEDITION_BOONS.length)
+        : [];
+      const boonChoices = Array.isArray(rawRun.boonChoices)
+        ? [...new Set(rawRun.boonChoices)]
+            .filter((id) => Boolean(getExpeditionBoon(id)) && !boons.includes(id))
+            .slice(0, 3)
+        : [];
+      clean.activeRun = {
+        seed: typeof rawRun.seed === "string"
+          ? rawRun.seed.slice(0, 80)
+          : `${Date.now().toString(36)}-recovered`,
+        depth: clamp(
+          Math.floor(Number(rawRun.depth) || 0),
+          0,
+          EXPEDITION_ROUTE_COUNT - 1,
+        ),
+        hull: clamp(Math.floor(Number(rawRun.hull) || 0), 1, 100),
+        maxHull: 100,
+        commandPower: Math.max(
+          1,
+          Math.min(MAX_COMBAT_POWER, clampGameNumber(rawRun.commandPower)),
+        ),
+        boons,
+        boonChoices,
+        routeChoices: Array.isArray(rawRun.routeChoices)
+          ? rawRun.routeChoices
+              .map(sanitizeExpeditionRoute)
+              .filter(Boolean)
+              .slice(0, 3)
+          : [],
+        status: rawRun.status === "boon" ? "boon" : "route",
+        choiceNonce: clampGameCount(rawRun.choiceNonce),
+        runSupplies: Math.min(999, clampGameCount(rawRun.runSupplies)),
+        runFragments: Math.min(9999, clampGameCount(rawRun.runFragments)),
+        path: Array.isArray(rawRun.path)
+          ? rawRun.path
+              .filter((entry) => typeof entry === "string")
+              .slice(-EXPEDITION_ROUTE_COUNT)
+              .map((entry) => entry.slice(0, 120))
+          : [],
+      };
+    }
+    return clean;
+  }
+
+  function ensureExpeditionRunChoices() {
+    const run = state.expedition.activeRun;
+    if (!run) return;
+    if (run.status === "boon" && run.boonChoices.length < 1) {
+      run.boonChoices = createExpeditionBoonChoices(run);
+    }
+    if (run.status === "route" && run.routeChoices.length < 1) {
+      run.routeChoices = createExpeditionRouteChoices(run);
+    }
+  }
+
+  function hasExpeditionBoon(boonId) {
+    return state.expedition.activeRun?.boons.includes(boonId) === true;
+  }
+
+  function getExpeditionSuccessChance(route) {
+    const run = state.expedition.activeRun;
+    const routeType = getExpeditionRouteType(route?.typeId);
+    if (!run || !routeType) return 0;
+    if (routeType.powerFactor <= 0) return 1;
+    const ratio = run.commandPower / Math.max(1, route.enemyPower);
+    let chance = 0.58 + Math.log2(Math.max(0.1, ratio)) * 0.28;
+    route.affixIds.forEach((affixId) => {
+      const affix = getExpeditionAffix(affixId);
+      if (!affix || hasExpeditionBoon(affix.counter)) return;
+      if (affix.id === "phaseShield") chance -= 0.18;
+      if (affix.id === "swarm") chance -= 0.14;
+      if (affix.id === "jammer") chance -= 0.1;
+    });
+    if (hasExpeditionBoon("predictiveNav")) chance += 0.04;
+    return clamp(chance, 0.18, 0.94);
+  }
+
+  function getExpeditionRouteDamage(route, success) {
+    const routeType = getExpeditionRouteType(route?.typeId);
+    if (!routeType || routeType.powerFactor <= 0) return 0;
+    let damage = routeType.baseDamage * (success ? 0.72 : 1.75);
+    if (
+      route.affixIds.includes("volatile") &&
+      !hasExpeditionBoon("thermalSink")
+    ) {
+      damage += 9;
+    }
+    if (hasExpeditionBoon("reactiveArmor")) damage *= 0.8;
+    return Math.max(1, Math.round(damage));
+  }
+
+  function getAvailableExpeditionSupplies() {
+    return safeAdd(
+      state.expedition.supplies,
+      state.expedition.activeRun?.runSupplies || 0,
+    );
+  }
+
+  function spendExpeditionSupplies(amount) {
+    const run = state.expedition.activeRun;
+    let remaining = Math.max(0, Math.floor(amount));
+    if (run) {
+      const runSpent = Math.min(remaining, run.runSupplies);
+      run.runSupplies -= runSpent;
+      remaining -= runSpent;
+    }
+    if (remaining > 0) {
+      const storedSpent = Math.min(remaining, state.expedition.supplies);
+      state.expedition.supplies -= storedSpent;
+      remaining -= storedSpent;
+    }
+    return remaining === 0;
+  }
+
+  function startExpedition() {
+    if (
+      state.lifetimeDust < EXPEDITION_UNLOCK_DUST ||
+      state.expedition.activeRun
+    ) {
+      return;
+    }
+    const dustCost = getExpeditionEntryDustCost();
+    const materialCost = 6;
+    if (
+      state.dust < dustCost ||
+      state.expedition.supplies < 1 ||
+      getTotalStarportMaterials() < materialCost
+    ) {
+      showToast(
+        "远征物资不足",
+        `启航需要 ${formatNumber(dustCost)} 星尘、1 份远征补给与任意 ${materialCost} 份星港材料。`,
+        "▱",
+      );
+      return;
+    }
+    state.dust = clampGameNumber(state.dust - dustCost);
+    recordMissionProgress("dustSpent", dustCost);
+    state.expedition.supplies -= 1;
+    consumeStarportMaterialPool(materialCost);
+    const seed = `${Date.now().toString(36)}-${hashMissionSeed(
+      `${state.playerName}:${state.expedition.completedRuns}:${state.careerBattles}`,
+    ).toString(36)}`;
+    state.expedition.activeRun = {
+      seed,
+      depth: 0,
+      hull: 100,
+      maxHull: 100,
+      commandPower: Math.max(1, getCombinedPower()),
+      boons: [],
+      boonChoices: [],
+      routeChoices: [],
+      status: "boon",
+      choiceNonce: 0,
+      runSupplies: 0,
+      runFragments: 0,
+      path: [],
+    };
+    ensureExpeditionRunChoices();
+    state.expedition.lastReport = "远征舰已离港，请选择第一项临时协议。";
+    addLog("星区远征启动：五航段航线已锁定。");
+    showToast("星区远征已启动", "先选择一项只在本局生效的远征协议。", "▱");
+    renderExpedition();
+    updateUi();
+    saveGame(false, { forceBackup: true });
+  }
+
+  function chooseExpeditionBoon(boonId) {
+    const run = state.expedition.activeRun;
+    if (
+      !run ||
+      run.status !== "boon" ||
+      !run.boonChoices.includes(boonId) ||
+      run.boons.includes(boonId)
+    ) {
+      return;
+    }
+    const boon = getExpeditionBoon(boonId);
+    run.boons.push(boonId);
+    run.boonChoices = [];
+    run.status = "route";
+    run.routeChoices = createExpeditionRouteChoices(run);
+    state.expedition.lastReport = `${boon.name}已装载，本局效果立即生效。`;
+    showToast("临时协议已装载", boon.description, boon.icon);
+    renderExpedition();
+    saveGame();
+  }
+
+  function bankExpeditionCargo(ratio = 1) {
+    const run = state.expedition.activeRun;
+    if (!run) return { supplies: 0, fragments: 0 };
+    const supplies = Math.floor(run.runSupplies * ratio);
+    const fragments = Math.floor(run.runFragments * ratio);
+    state.expedition.supplies = Math.min(
+      EXPEDITION_SUPPLY_CAP,
+      clampGameCount(safeAdd(state.expedition.supplies, supplies)),
+    );
+    state.expedition.fragments = Math.min(
+      EXPEDITION_FRAGMENT_CAP,
+      clampGameCount(safeAdd(state.expedition.fragments, fragments)),
+    );
+    return { supplies, fragments };
+  }
+
+  function completeExpedition() {
+    const run = state.expedition.activeRun;
+    if (!run) return;
+    const cargo = bankExpeditionCargo(1);
+    state.expedition.completedRuns = clampGameCount(
+      state.expedition.completedRuns + 1,
+    );
+    const missingArtifacts = EXPEDITION_ARTIFACTS.filter(
+      (artifact) => !state.expedition.artifacts.includes(artifact.id),
+    );
+    const artifact = missingArtifacts.length > 0
+      ? seededMissionShuffle(missingArtifacts, `${run.seed}:artifact`)[0]
+      : null;
+    if (artifact) {
+      state.expedition.artifacts.push(artifact.id);
+    } else {
+      state.expedition.fragments = Math.min(
+        EXPEDITION_FRAGMENT_CAP,
+        state.expedition.fragments + 8,
+      );
+    }
+    state.expedition.activeRun = null;
+    state.expedition.lastReport = artifact
+      ? `完整远征完成，收藏品“${artifact.name}”已送入陈列舱。`
+      : "完整远征完成，重复收藏记录已转化为 8 枚星图残片。";
+    recordMissionProgress("expeditionsCompleted", 1);
+    addLog(state.expedition.lastReport);
+    showToast(
+      "五航段远征完成",
+      `${artifact ? `新收藏：${artifact.name} · ` : ""}补给 +${cargo.supplies} · 残片 +${cargo.fragments}`,
+      artifact?.icon || "✧",
+    );
+    playAchievementTone();
+    renderExpedition();
+    updateUi();
+    saveGame(false, { forceBackup: true });
+  }
+
+  function failExpedition(reason) {
+    const cargo = bankExpeditionCargo(0.5);
+    state.expedition.failedRuns = clampGameCount(state.expedition.failedRuns + 1);
+    state.expedition.activeRun = null;
+    state.expedition.lastReport = `${reason}；抢救回补给 ${cargo.supplies}、残片 ${cargo.fragments}。`;
+    addLog(`星区远征中止：${state.expedition.lastReport}`);
+    showToast("远征舰撤离", state.expedition.lastReport, "!");
+    renderExpedition();
+    updateUi();
+    saveGame(false, { forceBackup: true });
+  }
+
+  function advanceExpeditionAfterSuccess() {
+    const run = state.expedition.activeRun;
+    if (!run) return;
+    run.depth += 1;
+    run.routeChoices = [];
+    if (run.depth >= EXPEDITION_ROUTE_COUNT) {
+      completeExpedition();
+      return;
+    }
+    if ([2, 4].includes(run.depth)) {
+      run.status = "boon";
+      run.boonChoices = createExpeditionBoonChoices(run);
+    } else {
+      run.status = "route";
+      run.routeChoices = createExpeditionRouteChoices(run);
+    }
+  }
+
+  function selectExpeditionRoute(routeId) {
+    const run = state.expedition.activeRun;
+    if (!run || run.status !== "route") return;
+    const route = run.routeChoices.find((choice) => choice.id === routeId);
+    const routeType = getExpeditionRouteType(route?.typeId);
+    if (!route || !routeType) return;
+    if (routeType.repair) {
+      const repaired = Math.min(routeType.repair, run.maxHull - run.hull);
+      run.hull += repaired;
+      run.runFragments += routeType.fragments;
+      run.path.push(`${routeType.name} · 修复 ${repaired}`);
+      state.expedition.lastReport = `中继港维护完成，船体修复 ${repaired} 点。`;
+      recordMissionProgress("expeditionRoutes", 1);
+      advanceExpeditionAfterSuccess();
+      renderExpedition();
+      saveGame();
+      return;
+    }
+    const chance = getExpeditionSuccessChance(route);
+    const roll = Math.random();
+    const success = roll <= chance;
+    const damage = getExpeditionRouteDamage(route, success);
+    run.hull = Math.max(0, run.hull - damage);
+    if (success) {
+      let supplyReward = routeType.supplies;
+      if (routeType.id === "salvage" && hasExpeditionBoon("scavengerRig")) {
+        supplyReward += 1;
+      }
+      run.runSupplies = Math.min(999, run.runSupplies + supplyReward);
+      run.runFragments = Math.min(9999, run.runFragments + routeType.fragments);
+      if (hasExpeditionBoon("repairDrone")) {
+        run.hull = Math.min(run.maxHull, run.hull + 8);
+      }
+      run.path.push(`${routeType.name} · 成功 · 船体 -${damage}`);
+      state.expedition.lastReport = `${routeType.name}突破成功，回收补给 ${supplyReward}、残片 ${routeType.fragments}。`;
+      recordMissionProgress("expeditionRoutes", 1);
+      showToast(
+        "远征航段突破",
+        `${Math.round(chance * 100)}% 成功率 · 船体 -${damage}`,
+        routeType.icon,
+      );
+      if (run.hull <= 0) {
+        failExpedition("舰体在完成回收后失去跃迁能力");
+        return;
+      }
+      advanceExpeditionAfterSuccess();
+    } else {
+      if (
+        route.affixIds.includes("raider") &&
+        !hasExpeditionBoon("sealedCargo") &&
+        run.runSupplies > 0
+      ) {
+        run.runSupplies -= 1;
+      }
+      run.path.push(`${routeType.name} · 失利 · 船体 -${damage}`);
+      state.expedition.lastReport = `${routeType.name}突破失败，船体损伤 ${damage} 点；本航段需要重新选择路线。`;
+      showToast("航段突破失败", `船体 -${damage}，航线已重新扫描。`, "!");
+      if (run.hull <= 0) {
+        failExpedition("船体归零，自动逃生协议启动");
+        return;
+      }
+      run.choiceNonce += 1;
+      run.routeChoices = createExpeditionRouteChoices(run);
+    }
+    renderExpedition();
+    updateUi();
+    saveGame();
+  }
+
+  function rerollExpeditionRoutes() {
+    const run = state.expedition.activeRun;
+    if (!run || run.status !== "route") return;
+    if (getAvailableExpeditionSupplies() < 1) {
+      showToast("远征补给不足", "重新扫描三条路线需要 1 份补给。", "▱");
+      return;
+    }
+    spendExpeditionSupplies(1);
+    run.choiceNonce += 1;
+    run.routeChoices = createExpeditionRouteChoices(run);
+    state.expedition.lastReport = "消耗 1 份补给，已重新扫描本航段路线。";
+    renderExpedition();
+    saveGame();
+  }
+
+  function repairExpeditionHull() {
+    const run = state.expedition.activeRun;
+    if (!run || run.hull >= run.maxHull) return;
+    if (getAvailableExpeditionSupplies() < 2) {
+      showToast("远征补给不足", "紧急维修需要 2 份补给。", "▱");
+      return;
+    }
+    spendExpeditionSupplies(2);
+    const repaired = Math.min(25, run.maxHull - run.hull);
+    run.hull += repaired;
+    state.expedition.lastReport = `消耗 2 份补给，紧急修复 ${repaired} 点船体。`;
+    renderExpedition();
+    saveGame();
+  }
+
+  function abandonExpedition() {
+    if (!state.expedition.activeRun) return;
+    showModal({
+      eyebrow: "远征撤离",
+      icon: "▱",
+      title: "提前结束本次星区远征？",
+      message: "撤离后仅能带回本局补给与星图残片的一半；临时协议会全部清除。",
+      confirmText: "确认撤离",
+      cancelText: "继续远征",
+      onConfirm: () => failExpedition("指挥官主动结束本次航线"),
+    });
+  }
+
+  function selectExpeditionSkin(skinId) {
+    const skin = getExpeditionSkin(skinId);
+    if (!skin) return;
+    if (!state.expedition.unlockedSkins.includes(skin.id)) {
+      if (state.expedition.fragments < skin.cost) {
+        showToast("星图残片不足", `解锁${skin.name}需要 ${skin.cost} 枚残片。`, "✧");
+        return;
+      }
+      state.expedition.fragments -= skin.cost;
+      state.expedition.unlockedSkins.push(skin.id);
+      showToast("信标外观已解锁", skin.name, "✧");
+    }
+    state.expedition.activeSkin = skin.id;
+    applyExpeditionSkin();
+    renderExpedition();
+    saveGame();
+  }
+
+  function applyExpeditionSkin() {
+    const skin = getExpeditionSkin(state.expedition.activeSkin) || EXPEDITION_SKINS[0];
+    document.documentElement.style.setProperty("--expedition-skin", skin.color);
+    document.body.dataset.expeditionSkin = skin.id;
+  }
+
+  function grantExpeditionBattleSupply() {
+    if (
+      state.lifetimeDust < EXPEDITION_UNLOCK_DUST ||
+      state.combat.activeWins < 1 ||
+      state.combat.activeWins % 4 !== 0
+    ) {
+      return;
+    }
+    state.expedition.supplies = Math.min(
+      EXPEDITION_SUPPLY_CAP,
+      state.expedition.supplies + 1,
+    );
+    showToast("发现远征补给", "连续作战回收远征补给 +1。", "▱");
   }
 
   function addDust(amount, { trackMissions = true } = {}) {
@@ -3263,6 +4113,7 @@
       ? String(raw.buyMode)
       : "1";
     merged.missions = sanitizeMissionState(raw.missions);
+    merged.expedition = sanitizeExpeditionState(raw.expedition);
     merged.lastSeen = finiteTimestamp(raw.lastSeen);
     merged.nextEventAt = finiteTimestamp(
       raw.nextEventAt,
@@ -3642,6 +4493,7 @@
       grantInactiveEarnings(state.lastSeen, "load");
     }
     ensureMissionPeriods();
+    ensureExpeditionRunChoices();
   }
 
   function buyBuilding(id) {
@@ -3986,6 +4838,15 @@
         BUILDINGS.forEach((building) => {
           state.buildings[building.id] = 0;
         });
+        if (state.expedition.activeRun) {
+          const rescuedCargo = bankExpeditionCargo(0.5);
+          state.expedition.failedRuns = clampGameCount(
+            state.expedition.failedRuns + 1,
+          );
+          state.expedition.activeRun = null;
+          state.expedition.lastReport =
+            `奇点坍缩中止了进行中的远征；抢救回补给 ${rescuedCargo.supplies}、残片 ${rescuedCargo.fragments}。`;
+        }
         state.starport = freshStarportState();
         state.combat = freshCombatState();
         state.event = null;
@@ -4387,6 +5248,7 @@
       );
       state.combat.wins = clampGameCount(state.combat.wins + 1);
       state.combat.activeWins = clampGameCount(state.combat.activeWins + 1);
+      grantExpeditionBattleSupply();
       state.combat.skirmishWins = clampGameCount(
         state.combat.skirmishWins + 1,
       );
@@ -4495,6 +5357,7 @@
       state.combat.activeWins = clampGameCount(
         state.combat.activeWins + 1,
       );
+      grantExpeditionBattleSupply();
       recordSectorWin();
       recordMissionProgress("battlesWon", 1);
       state.combat.attackCooldownUntil = now + 12000;
@@ -6007,6 +6870,8 @@
       starportUpgrades: `完成 ${targetText} 次星港建设或强化`,
       combatUpgrades: `完成 ${targetText} 次攻防强化`,
       raidsDefended: `成功防卫 ${targetText} 次袭击`,
+      expeditionRoutes: `突破 ${targetText} 个远征航段`,
+      expeditionsCompleted: `完成 ${targetText} 次五航段远征`,
       prestiges: `完成 ${targetText} 次深空跃迁`,
       transcensions: `完成 ${targetText} 次奇点超越`,
       dailyClaims: `领取 ${targetText} 项每日委托`,
@@ -6076,6 +6941,234 @@
       );
       card.append(icon, copy, button);
       container.appendChild(card);
+    });
+  }
+
+  function renderExpedition() {
+    applyExpeditionSkin();
+    ensureExpeditionRunChoices();
+    const unlocked = state.lifetimeDust >= EXPEDITION_UNLOCK_DUST;
+    const run = state.expedition.activeRun;
+    const materialTotal = getTotalStarportMaterials();
+    const entryDustCost = getExpeditionEntryDustCost();
+
+    elements.expeditionSupplyBalance.textContent = formatNumber(
+      state.expedition.supplies,
+      0,
+    );
+    elements.expeditionFragmentBalance.textContent = formatNumber(
+      state.expedition.fragments,
+      0,
+    );
+    elements.expeditionLocked.hidden = unlocked;
+    elements.expeditionIdle.hidden = !unlocked || Boolean(run);
+    elements.expeditionActive.hidden = !unlocked || !run;
+    elements.expeditionUnlockProgress.style.width = `${clamp(
+      state.lifetimeDust / EXPEDITION_UNLOCK_DUST,
+      0,
+      1,
+    ) * 100}%`;
+    elements.expeditionUnlockLabel.textContent = `${formatNumber(
+      Math.min(state.lifetimeDust, EXPEDITION_UNLOCK_DUST),
+    )} / ${formatNumber(EXPEDITION_UNLOCK_DUST)}`;
+
+    elements.expeditionStartDustCost.textContent =
+      `星尘 ${formatNumber(entryDustCost)}`;
+    elements.expeditionStartMaterialCost.textContent =
+      `材料 ${formatNumber(Math.min(materialTotal, 6), 0)} / 6`;
+    elements.startExpeditionButton.disabled =
+      !unlocked ||
+      Boolean(run) ||
+      state.dust < entryDustCost ||
+      state.expedition.supplies < 1 ||
+      materialTotal < 6;
+    elements.expeditionCompletedRuns.textContent = formatNumber(
+      state.expedition.completedRuns,
+      0,
+    );
+    elements.expeditionFailedRuns.textContent = formatNumber(
+      state.expedition.failedRuns,
+      0,
+    );
+
+    if (run) {
+      elements.expeditionSectorLabel.textContent =
+        `航段 ${run.depth + 1} / ${EXPEDITION_ROUTE_COUNT}`;
+      elements.expeditionHullValue.textContent = `${run.hull} / ${run.maxHull}`;
+      elements.expeditionHullBar.style.width = `${clamp(
+        run.hull / run.maxHull,
+        0,
+        1,
+      ) * 100}%`;
+      elements.expeditionHullBar.dataset.state =
+        run.hull <= 30 ? "critical" : run.hull <= 60 ? "warning" : "stable";
+      elements.expeditionCargo.textContent =
+        `本局补给 ${run.runSupplies} · 残片 ${run.runFragments} · 锁定战力 ${formatNumber(
+          run.commandPower,
+          0,
+        )}`;
+      elements.expeditionReportText.textContent = state.expedition.lastReport;
+
+      elements.expeditionBoonList.textContent = "";
+      if (!run.boons.length) {
+        const empty = document.createElement("span");
+        empty.textContent = "尚未装载";
+        elements.expeditionBoonList.appendChild(empty);
+      } else {
+        run.boons.forEach((boonId) => {
+          const boon = getExpeditionBoon(boonId);
+          if (!boon) return;
+          const chip = document.createElement("span");
+          chip.title = boon.description;
+          chip.textContent = `${boon.icon} ${boon.name}`;
+          elements.expeditionBoonList.appendChild(chip);
+        });
+      }
+
+      const choosingBoon = run.status === "boon";
+      elements.expeditionChoiceEyebrow.textContent = choosingBoon
+        ? "临时协议"
+        : "星图分岔";
+      elements.expeditionChoiceTitle.textContent = choosingBoon
+        ? "选择一项本局强化"
+        : "选择下一条航线";
+      elements.expeditionChoiceDescription.textContent = choosingBoon
+        ? "协议只在本次远征中生效，优先选择能够反制敌方词条的方案。"
+        : "成功率、船体损伤和战利品均已预估；也可消耗补给重新扫描。";
+      elements.expeditionBoonChoices.hidden = !choosingBoon;
+      elements.expeditionRouteChoices.hidden = choosingBoon;
+      elements.expeditionBoonChoices.textContent = "";
+      elements.expeditionRouteChoices.textContent = "";
+
+      if (choosingBoon) {
+        run.boonChoices.forEach((boonId) => {
+          const boon = getExpeditionBoon(boonId);
+          if (!boon) return;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "expedition-boon-card";
+          button.dataset.expeditionBoon = boon.id;
+          const icon = document.createElement("span");
+          icon.textContent = boon.icon;
+          const copy = document.createElement("span");
+          const name = document.createElement("strong");
+          name.textContent = boon.name;
+          const detail = document.createElement("small");
+          detail.textContent = boon.description;
+          copy.append(name, detail);
+          button.append(icon, copy);
+          elements.expeditionBoonChoices.appendChild(button);
+        });
+      } else {
+        run.routeChoices.forEach((route) => {
+          const routeType = getExpeditionRouteType(route.typeId);
+          const chance = getExpeditionSuccessChance(route);
+          const counteredCount = route.affixIds.filter((affixId) => {
+            const affix = getExpeditionAffix(affixId);
+            return affix && hasExpeditionBoon(affix.counter);
+          }).length;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `expedition-route-card route-${routeType.id}`;
+          button.dataset.expeditionRoute = route.id;
+
+          const heading = document.createElement("span");
+          heading.className = "expedition-route-heading";
+          const icon = document.createElement("span");
+          icon.textContent = routeType.icon;
+          const title = document.createElement("span");
+          const name = document.createElement("strong");
+          name.textContent = routeType.name;
+          const description = document.createElement("small");
+          description.textContent = routeType.description;
+          title.append(name, description);
+          heading.append(icon, title);
+
+          const affixes = document.createElement("span");
+          affixes.className = "expedition-affixes";
+          if (!route.affixIds.length) {
+            const safe = document.createElement("i");
+            safe.textContent = "无敌方词条";
+            affixes.appendChild(safe);
+          } else {
+            route.affixIds.forEach((affixId) => {
+              const affix = getExpeditionAffix(affixId);
+              const countered = hasExpeditionBoon(affix.counter);
+              const tag = document.createElement("i");
+              tag.classList.toggle("countered", countered);
+              tag.title = affix.description;
+              tag.textContent = `${affix.icon} ${affix.name}${countered ? " · 已反制" : ""}`;
+              affixes.appendChild(tag);
+            });
+          }
+
+          const stats = document.createElement("span");
+          stats.className = "expedition-route-stats";
+          stats.innerHTML = routeType.powerFactor <= 0
+            ? `<strong>安全航线</strong><small>修复 ${routeType.repair} 船体 · 残片 +${routeType.fragments}</small>`
+            : `<strong>${Math.round(chance * 100)}% 成功率</strong><small>敌方 ${formatNumber(
+                route.enemyPower,
+                0,
+              )} · 补给 +${routeType.supplies} · 残片 +${routeType.fragments}</small>`;
+          if (counteredCount > 0) stats.classList.add("countered");
+          button.append(heading, affixes, stats);
+          elements.expeditionRouteChoices.appendChild(button);
+        });
+      }
+
+      elements.expeditionRerollButton.hidden = choosingBoon;
+      elements.expeditionRepairButton.hidden = choosingBoon;
+      elements.expeditionRerollButton.disabled = getAvailableExpeditionSupplies() < 1;
+      elements.expeditionRepairButton.disabled =
+        run.hull >= run.maxHull || getAvailableExpeditionSupplies() < 2;
+      elements.expeditionPath.textContent = "";
+      run.path.forEach((entry) => {
+        const item = document.createElement("li");
+        item.textContent = entry;
+        elements.expeditionPath.appendChild(item);
+      });
+    }
+
+    elements.expeditionCollectionCount.textContent =
+      `${state.expedition.artifacts.length} / ${EXPEDITION_ARTIFACTS.length}`;
+    elements.expeditionArtifactGrid.textContent = "";
+    EXPEDITION_ARTIFACTS.forEach((artifact) => {
+      const collected = state.expedition.artifacts.includes(artifact.id);
+      const card = document.createElement("article");
+      card.className = `expedition-artifact${collected ? " collected" : " locked"}`;
+      const icon = document.createElement("span");
+      icon.textContent = collected ? artifact.icon : "?";
+      const name = document.createElement("strong");
+      name.textContent = collected ? artifact.name : "未发现遗物";
+      const lore = document.createElement("small");
+      lore.textContent = collected ? artifact.lore : "完成一次完整远征后随机发现。";
+      card.append(icon, name, lore);
+      elements.expeditionArtifactGrid.appendChild(card);
+    });
+
+    elements.expeditionSkinGrid.textContent = "";
+    EXPEDITION_SKINS.forEach((skin) => {
+      const unlockedSkin = state.expedition.unlockedSkins.includes(skin.id);
+      const active = state.expedition.activeSkin === skin.id;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `expedition-skin${active ? " active" : ""}`;
+      button.dataset.expeditionSkin = skin.id;
+      button.style.setProperty("--skin-color", skin.color);
+      const swatch = document.createElement("span");
+      swatch.setAttribute("aria-hidden", "true");
+      const copy = document.createElement("span");
+      const name = document.createElement("strong");
+      name.textContent = skin.name;
+      const status = document.createElement("small");
+      status.textContent = active
+        ? "使用中"
+        : unlockedSkin
+          ? "点击装备"
+          : `${skin.cost} 星图残片`;
+      copy.append(name, status);
+      button.append(swatch, copy);
+      elements.expeditionSkinGrid.appendChild(button);
     });
   }
 
@@ -6158,8 +7251,15 @@
         button.dataset.missionStore === "combatRefit" &&
         state.combat.attackCooldownUntil <= now &&
         state.combat.skirmishCooldownUntil <= now;
+      const lockedExpeditionSupply =
+        button.dataset.missionStore === "expeditionSupply" &&
+        state.lifetimeDust < EXPEDITION_UNLOCK_DUST;
       button.disabled =
-        !item || state.missions.tokens < item.cost || lockedMaterial || noCombatCooldown;
+        !item ||
+        state.missions.tokens < item.cost ||
+        lockedMaterial ||
+        noCombatCooldown ||
+        lockedExpeditionSupply;
     });
     updateMissionSummary();
   }
@@ -6231,6 +7331,9 @@
       case "combat":
         renderCombatTargets();
         break;
+      case "expedition":
+        renderExpedition();
+        break;
       case "missions":
         renderMissions();
         break;
@@ -6246,6 +7349,7 @@
   }
 
   function renderAll() {
+    applyExpeditionSkin();
     renderActivePageDetails();
     updateBuyModeButtons();
     updatePerformanceControls();
@@ -6287,6 +7391,7 @@
     const cloudSavedAt = nextState.lastSeen;
     state = nextState;
     ensureMissionPeriods();
+    ensureExpeditionRunChoices();
     grantInactiveEarnings(cloudSavedAt, "none");
     syncBgmState();
     saveGame(false, { forceBackup: true });
@@ -7063,6 +8168,28 @@
       const button = event.target.closest("[data-planet-id]");
       if (button) attackPlanet(button.dataset.planetId);
     });
+    elements.startExpeditionButton.addEventListener("click", startExpedition);
+    elements.expeditionBoonChoices.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-expedition-boon]");
+      if (button) chooseExpeditionBoon(button.dataset.expeditionBoon);
+    });
+    elements.expeditionRouteChoices.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-expedition-route]");
+      if (button) selectExpeditionRoute(button.dataset.expeditionRoute);
+    });
+    elements.expeditionRerollButton.addEventListener(
+      "click",
+      rerollExpeditionRoutes,
+    );
+    elements.expeditionRepairButton.addEventListener(
+      "click",
+      repairExpeditionHull,
+    );
+    elements.expeditionAbandonButton.addEventListener("click", abandonExpedition);
+    elements.expeditionSkinGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-expedition-skin]");
+      if (button) selectExpeditionSkin(button.dataset.expeditionSkin);
+    });
     elements.coreShopList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-core-shop-id]");
       if (button) purchaseCoreUpgrade(button.dataset.coreShopId);
@@ -7290,6 +8417,16 @@
         claimable: getMissionClaimableCount(),
       }));
     },
+    getExpeditionDiagnostics: () => JSON.parse(JSON.stringify({
+      supplies: state.expedition.supplies,
+      fragments: state.expedition.fragments,
+      completedRuns: state.expedition.completedRuns,
+      failedRuns: state.expedition.failedRuns,
+      artifacts: state.expedition.artifacts,
+      unlockedSkins: state.expedition.unlockedSkins,
+      activeSkin: state.expedition.activeSkin,
+      activeRun: state.expedition.activeRun,
+    })),
     checkForGameUpdate,
     getPerformanceDiagnostics: () => ({
       mode: performanceMode,

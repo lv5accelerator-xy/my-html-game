@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.14.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.15.0");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
@@ -105,6 +105,8 @@ async function main() {
         "#skirmish-target-list",
         "#planet-target-list",
         "#transcend-protocol-list",
+        "#expedition-route-choices",
+        "#expedition-artifact-grid",
       ].map((selector) => document.querySelector(selector));
       window.__performanceMutations = { active: 0, inactive: 0 };
       new MutationObserver((records) => {
@@ -292,6 +294,64 @@ async function main() {
     assert.ok(
       mobileMissionLayout.pageWidth <= mobileMissionLayout.viewportWidth,
       `mission page must not create horizontal page scrolling; got ${mobileMissionLayout.pageWidth}px`,
+    );
+    const mobileExpeditionLayout = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const expeditionSave = bridge.createSnapshot();
+      expeditionSave.version = 8;
+      expeditionSave.activePage = "expedition";
+      expeditionSave.dust = 100000;
+      expeditionSave.lifetimeDust = 100000;
+      expeditionSave.expedition.activeRun = {
+        seed: "mobile-layout",
+        depth: 1,
+        hull: 70,
+        maxHull: 100,
+        commandPower: 100,
+        boons: ["phaseLance"],
+        boonChoices: [],
+        routeChoices: [
+          {
+            id: "mobile-a",
+            typeId: "patrol",
+            affixIds: ["phaseShield"],
+            enemyPower: 95,
+          },
+          {
+            id: "mobile-b",
+            typeId: "anomaly",
+            affixIds: ["jammer"],
+            enemyPower: 110,
+          },
+          {
+            id: "mobile-c",
+            typeId: "elite",
+            affixIds: ["swarm", "volatile"],
+            enemyPower: 125,
+          },
+        ],
+        status: "route",
+        choiceNonce: 0,
+        runSupplies: 2,
+        runFragments: 3,
+        path: [],
+      };
+      bridge.applySnapshot(expeditionSave);
+      const routeList = document.querySelector("#expedition-route-choices");
+      return {
+        viewportWidth: document.documentElement.clientWidth,
+        pageWidth: document.documentElement.scrollWidth,
+        columns: getComputedStyle(routeList).gridTemplateColumns.split(" ").length,
+        cardCount: routeList.querySelectorAll(".expedition-route-card").length,
+        pageVisible: !document.querySelector("#expedition-page").hidden,
+      };
+    });
+    assert.equal(mobileExpeditionLayout.pageVisible, true);
+    assert.equal(mobileExpeditionLayout.columns, 1);
+    assert.equal(mobileExpeditionLayout.cardCount, 3);
+    assert.ok(
+      mobileExpeditionLayout.pageWidth <= mobileExpeditionLayout.viewportWidth,
+      `expedition page must not create horizontal page scrolling; got ${mobileExpeditionLayout.pageWidth}px`,
     );
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
 

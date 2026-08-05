@@ -82,14 +82,34 @@ async function main() {
     assert.equal(response.status(), 200);
     await page.waitForFunction(() => Boolean(window.StellarOutpostCloudBridge));
 
+    const defaultQuality = await page.evaluate(() => ({
+      diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
+      mode: document.documentElement.dataset.performanceMode,
+      savedMode: localStorage.getItem("stellarOutpostIdlePerformanceMode"),
+      status: document.querySelector("#performance-status").textContent,
+      bodyAnimation: getComputedStyle(document.body).animationName,
+    }));
+    assert.equal(defaultQuality.mode, "quality", "mobile should default to high quality");
+    assert.equal(defaultQuality.savedMode, null, "a default must not impersonate a manual choice");
+    assert.equal(defaultQuality.status, "高画质");
+    assert.equal(defaultQuality.diagnostics.gameTickInterval, 100);
+    assert.equal(defaultQuality.diagnostics.starfield.targetFps, 60);
+    assert.equal(defaultQuality.diagnostics.starfield.pixelRatio, 2);
+    assert.notEqual(defaultQuality.bodyAnimation, "none");
+
+    await page.click("#menu-button");
+    await page.click("#performance-button");
+    await page.waitForTimeout(120);
     const eco = await page.evaluate(() => ({
       diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
       mode: document.documentElement.dataset.performanceMode,
+      savedMode: localStorage.getItem("stellarOutpostIdlePerformanceMode"),
       status: document.querySelector("#performance-status").textContent,
       bodyAnimation: getComputedStyle(document.body).animationName,
       dust: window.StellarOutpostCloudBridge.createSnapshot().dust,
     }));
-    assert.equal(eco.mode, "eco", "mobile should default to eco mode");
+    assert.equal(eco.mode, "eco", "players must be able to select eco mode manually");
+    assert.equal(eco.savedMode, "eco");
     assert.equal(eco.status, "省电");
     assert.equal(eco.bodyAnimation, "none", "eco mode must disable background animation");
     assert.equal(eco.diagnostics.gameTickInterval, 250);
@@ -181,7 +201,6 @@ async function main() {
       "eco mode must freeze companion orbits while keeping companions visible",
     );
 
-    await page.click("#menu-button");
     await page.click("#performance-button");
     await page.waitForTimeout(120);
     const quality = await page.evaluate(() => ({

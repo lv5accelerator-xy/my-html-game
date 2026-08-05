@@ -31,7 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.15.0";
+  const GAME_VERSION = "0.15.1";
+  const PATCH_NOTES_VERSION = "0.15.0";
   const SAVE_VERSION = 8;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -2091,21 +2092,14 @@
     return valid ? numericValue : fallback;
   }
 
-  function isLikelyMobileDevice() {
-    return (
-      window.matchMedia("(pointer: coarse)").matches ||
-      window.matchMedia("(max-width: 820px)").matches
-    );
-  }
-
   function loadPerformanceMode() {
     try {
       const savedMode = localStorage.getItem(PERFORMANCE_MODE_KEY);
       if (savedMode === "eco" || savedMode === "quality") return savedMode;
     } catch (error) {
-      // Storage can be unavailable in strict privacy modes; device defaults remain safe.
+      // Storage can be unavailable in strict privacy modes; quality remains the default.
     }
-    return isLikelyMobileDevice() ? "eco" : "quality";
+    return "quality";
   }
 
   function getGameTickInterval() {
@@ -5945,7 +5939,7 @@
   function hasSeenCurrentPatchNotes() {
     if (patchNotesSeenThisSession) return true;
     try {
-      return localStorage.getItem(PATCH_NOTES_SEEN_KEY) === GAME_VERSION;
+      return localStorage.getItem(PATCH_NOTES_SEEN_KEY) === PATCH_NOTES_VERSION;
     } catch (error) {
       return false;
     }
@@ -5954,14 +5948,14 @@
   function markCurrentPatchNotesSeen() {
     patchNotesSeenThisSession = true;
     try {
-      localStorage.setItem(PATCH_NOTES_SEEN_KEY, GAME_VERSION);
+      localStorage.setItem(PATCH_NOTES_SEEN_KEY, PATCH_NOTES_VERSION);
     } catch (error) {
       // The in-memory marker still prevents repeated prompts in private mode.
     }
   }
 
   function renderPatchNotes() {
-    elements.patchNotesCurrentVersion.textContent = `v${GAME_VERSION}`;
+    elements.patchNotesCurrentVersion.textContent = `v${PATCH_NOTES_VERSION}`;
     elements.patchNotesList.textContent = "";
 
     PATCH_NOTES.forEach((note, index) => {

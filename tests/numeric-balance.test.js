@@ -51,7 +51,17 @@ const ecoTickInterval = readConstant("ECO_GAME_TICK_INTERVAL");
 const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
 const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
-assert.equal(readConstant("SAVE_VERSION"), 6, "save migration must stay enabled");
+assert.equal(readConstant("SAVE_VERSION"), 7, "mission saves need schema version 7");
+assert.equal(
+  readConstant("NUMERIC_MIGRATION_VERSION"),
+  6,
+  "v6 saves must not be compressed again when the schema changes",
+);
+assert.match(
+  source,
+  /sourceVersion\s*<\s*NUMERIC_MIGRATION_VERSION/,
+  "numeric migration must be decoupled from ordinary save migrations",
+);
 assert.equal(dustCap, 999000000, "late-game reserve must allow long idle sessions");
 assert.ok(dustCap < 1e9, "active dust reserve must remain below B notation");
 assert.ok(careerDustCap < 1e9, "career dust must remain below B notation");

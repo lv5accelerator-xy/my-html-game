@@ -31,11 +31,14 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.13.8";
-  const SAVE_VERSION = 6;
+  const GAME_VERSION = "0.14.0";
+  const SAVE_VERSION = 7;
+  const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
   const AUTOSAVE_INTERVAL = 10000;
+  const VERSION_CHECK_INTERVAL = 3 * 60 * 1000;
+  const MISSION_TOKEN_CAP = 999999;
   const QUALITY_GAME_TICK_INTERVAL = 100;
   const ECO_GAME_TICK_INTERVAL = 250;
   const QUALITY_STARFIELD_FPS = 60;
@@ -89,10 +92,22 @@
     "research",
     "core-shop",
     "combat",
+    "missions",
     "transcend",
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.14.0",
+      theme: "航站委托与热更新提示",
+      changes: [
+        "新增每日与每周航站委托，任务只记录生成后的行为增量，并优先从已经解锁的玩法中选择。",
+        "每日完成任意 3 项即可领取总奖励；每周设置 2、4、5 项三档里程碑，减少强制清空任务的压力。",
+        "新增航站凭证及资源兑换项，可换取星尘整备包、星港材料箱与舰队紧急整备。",
+        "新增首页版本标记后台检查：启动、定时与返回前台时发现新版本，会先保存进度再重新载入。",
+        "存档结构升级至第 7 版，旧存档会补建当前周期委托，不会重复执行 v0.13.0 的数值折算。",
+      ],
+    },
     {
       version: "0.13.8",
       theme: "指挥台实体伴星",
@@ -1264,6 +1279,183 @@
     },
   ];
 
+  const MISSION_TEMPLATES = [
+    {
+      id: "dustEarned",
+      metric: "dustEarned",
+      title: "回收航线",
+      icon: "✦",
+      format: "number",
+      dailyTarget: (targetState) => getMissionDustTarget("daily", targetState),
+      weeklyTarget: (targetState) => getMissionDustTarget("weekly", targetState),
+      eligible: () => true,
+    },
+    {
+      id: "manualClicks",
+      metric: "manualClicks",
+      title: "手动校准",
+      icon: "⌁",
+      format: "count",
+      dailyTarget: () => 40,
+      weeklyTarget: () => 260,
+      eligible: () => true,
+    },
+    {
+      id: "playSeconds",
+      metric: "playSeconds",
+      title: "值守航站",
+      icon: "◷",
+      format: "duration",
+      dailyTarget: () => 15 * 60,
+      weeklyTarget: () => 2 * 60 * 60,
+      eligible: () => true,
+    },
+    {
+      id: "eventsClaimed",
+      metric: "eventsClaimed",
+      title: "雷达回收",
+      icon: "◈",
+      format: "count",
+      dailyTarget: () => 2,
+      weeklyTarget: () => 12,
+      eligible: () => true,
+    },
+    {
+      id: "dustSpent",
+      metric: "dustSpent",
+      title: "航站投入",
+      icon: "◇",
+      format: "number",
+      dailyTarget: (targetState) => getMissionDustTarget("daily", targetState, 0.55),
+      weeklyTarget: (targetState) => getMissionDustTarget("weekly", targetState, 0.7),
+      eligible: () => true,
+    },
+    {
+      id: "unitsBought",
+      metric: "unitsBought",
+      title: "扩建舰队",
+      icon: "◎",
+      format: "count",
+      dailyTarget: () => 12,
+      weeklyTarget: () => 100,
+      eligible: (targetState) =>
+        BUILDINGS.some((building) => targetState.lifetimeDust >= building.unlock),
+    },
+    {
+      id: "researchCompleted",
+      metric: "researchCompleted",
+      title: "研究排程",
+      icon: "◒",
+      format: "count",
+      dailyTarget: () => 1,
+      weeklyTarget: () => 4,
+      eligible: (targetState) =>
+        UPGRADES.some(
+          (upgrade) =>
+            targetState.lifetimeDust >= upgrade.unlock &&
+            !targetState.upgrades.includes(upgrade.id),
+        ),
+    },
+    {
+      id: "battlesWon",
+      metric: "battlesWon",
+      title: "清理航道",
+      icon: "⬡",
+      format: "count",
+      dailyTarget: () => 3,
+      weeklyTarget: () => 30,
+      eligible: (targetState) => targetState.lifetimeDust >= COMBAT_UNLOCK_DUST,
+    },
+    {
+      id: "materialsCollected",
+      metric: "materialsCollected",
+      title: "回收材料",
+      icon: "⌬",
+      format: "count",
+      dailyTarget: () => 10,
+      weeklyTarget: () => 90,
+      eligible: (targetState) => targetState.lifetimeDust >= COMBAT_UNLOCK_DUST,
+    },
+    {
+      id: "starportUpgrades",
+      metric: "starportUpgrades",
+      title: "星港建设",
+      icon: "▣",
+      format: "count",
+      dailyTarget: () => 1,
+      weeklyTarget: () => 4,
+      eligible: (targetState) =>
+        STARPORT_MODULES.some(
+          (module) =>
+            targetState.lifetimeDust >= module.unlock &&
+            (targetState.starport?.modules?.[module.id] || 0) < module.maxRank,
+        ),
+    },
+    {
+      id: "combatUpgrades",
+      metric: "combatUpgrades",
+      title: "军械强化",
+      icon: "↟",
+      format: "count",
+      dailyTarget: () => 1,
+      weeklyTarget: () => 5,
+      eligible: (targetState) => targetState.lifetimeDust >= COMBAT_UNLOCK_DUST,
+    },
+    {
+      id: "raidsDefended",
+      metric: "raidsDefended",
+      title: "防卫值班",
+      icon: "◆",
+      format: "count",
+      dailyTarget: () => 1,
+      weeklyTarget: () => 5,
+      eligible: (targetState) => targetState.lifetimeDust >= COMBAT_UNLOCK_DUST,
+    },
+    {
+      id: "prestiges",
+      metric: "prestiges",
+      title: "深空跃迁",
+      icon: "✣",
+      format: "count",
+      dailyTarget: () => 1,
+      weeklyTarget: () => 3,
+      eligible: (targetState) =>
+        targetState.totalCores > 0 || targetState.lifetimeDust >= PRESTIGE_BASE_DUST,
+    },
+    {
+      id: "transcensions",
+      metric: "transcensions",
+      title: "奇点远征",
+      icon: "∞",
+      format: "count",
+      weeklyOnly: true,
+      weeklyTarget: () => 1,
+      eligible: (targetState) => isEndgameUnlocked(targetState),
+    },
+    {
+      id: "dailyClaims",
+      metric: "dailyClaims",
+      title: "持续执行",
+      icon: "☷",
+      format: "count",
+      weeklyOnly: true,
+      weeklyTarget: () => 15,
+      eligible: () => true,
+    },
+  ];
+
+  const WEEKLY_MISSION_MILESTONES = [
+    { required: 2, tokens: 20, dustMinutes: 15, materials: 0 },
+    { required: 4, tokens: 35, dustMinutes: 30, materials: 2 },
+    { required: 5, tokens: 50, dustMinutes: 60, materials: 4 },
+  ];
+
+  const MISSION_STORE_ITEMS = Object.freeze({
+    dustCrate: { cost: 18 },
+    materialCrate: { cost: 32 },
+    combatRefit: { cost: 20 },
+  });
+
   const $ = (selector) => document.querySelector(selector);
   const elements = {
     dust: $("#dust-value"),
@@ -1287,6 +1479,8 @@
     commandCombatPower: $("#command-combat-power"),
     commandDefensePower: $("#command-defense-power"),
     commandRaidStatus: $("#command-raid-status"),
+    commandMissionButton: $("#command-mission-button"),
+    commandMissionStatus: $("#command-mission-status"),
     commandCompanionSystem: $("#command-companion-system"),
     commandCompanionStage: $("#command-companion-stage"),
     commandCompanionCount: $("#command-companion-count"),
@@ -1336,6 +1530,11 @@
     patchNotesList: $("#patch-notes-list"),
     patchNotesClose: $("#patch-notes-close"),
     patchNotesConfirm: $("#patch-notes-confirm"),
+    updateBanner: $("#update-banner"),
+    updateBannerTitle: $("#update-banner-title"),
+    updateBannerMessage: $("#update-banner-message"),
+    updateLaterButton: $("#update-later-button"),
+    updateNowButton: $("#update-now-button"),
     accountButton: $("#account-button"),
     accountBackdrop: $("#account-backdrop"),
     accountClose: $("#account-close"),
@@ -1430,6 +1629,17 @@
     crescentLetterSalutation: $("#crescent-letter-salutation"),
     crescentLetterClose: $("#crescent-letter-close"),
     crescentLetterConfirm: $("#crescent-letter-confirm"),
+    missionTokenBalance: $("#mission-token-balance"),
+    missionsNavigationBadge: $("#missions-navigation-badge"),
+    dailyResetCountdown: $("#daily-reset-countdown"),
+    dailyRerollButton: $("#daily-reroll-button"),
+    dailyMissionList: $("#daily-mission-list"),
+    dailyBonusProgress: $("#daily-bonus-progress"),
+    dailyBonusButton: $("#daily-bonus-button"),
+    weeklyResetCountdown: $("#weekly-reset-countdown"),
+    weeklyMissionList: $("#weekly-mission-list"),
+    weeklyMilestoneList: $("#weekly-milestone-list"),
+    missionStore: $(".mission-store"),
     leaderboardCareerDust: $("#leaderboard-career-dust"),
     leaderboardHighestPower: $("#leaderboard-highest-power"),
     leaderboardBattleCount: $("#leaderboard-battle-count"),
@@ -1475,6 +1685,24 @@
       manualClicks: 0,
       skirmishWins: 0,
       starportUpgrades: 0,
+    };
+  }
+
+  function freshMissionPeriod(kind) {
+    return {
+      key: "",
+      items: [],
+      rerollsUsed: kind === "daily" ? 0 : undefined,
+      completionClaimed: kind === "daily" ? false : undefined,
+      milestonesClaimed: kind === "weekly" ? [] : undefined,
+    };
+  }
+
+  function freshMissionState() {
+    return {
+      tokens: 0,
+      daily: freshMissionPeriod("daily"),
+      weekly: freshMissionPeriod("weekly"),
     };
   }
 
@@ -1554,6 +1782,7 @@
       combat: freshCombatState(),
       endgame: freshEndgameState(),
       crescentSecret: freshCrescentSecretState(),
+      missions: freshMissionState(),
       log: [
         {
           text: "拾荒单元 07 已上线。等待首条回收指令。",
@@ -1581,6 +1810,10 @@
   let gameLoopTimer = null;
   let gameTickCount = 0;
   let starfieldController = null;
+  let versionCheckTimer = null;
+  let versionCheckInFlight = false;
+  let latestAvailableVersion = null;
+  let updateDismissedVersion = null;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -2332,7 +2565,394 @@
     return { amount, cost: buildingCost(building, owned, amount) };
   }
 
-  function addDust(amount) {
+  function getUtcDailyKey(now = Date.now()) {
+    return new Date(now).toISOString().slice(0, 10);
+  }
+
+  function getUtcWeeklyKey(now = Date.now()) {
+    const date = new Date(now);
+    date.setUTCHours(0, 0, 0, 0);
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const week = Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+    return `${date.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+  }
+
+  function getNextDailyReset(now = Date.now()) {
+    const reset = new Date(now);
+    reset.setUTCHours(24, 0, 0, 0);
+    return reset.getTime();
+  }
+
+  function getNextWeeklyReset(now = Date.now()) {
+    const reset = new Date(now);
+    reset.setUTCHours(0, 0, 0, 0);
+    const weekday = reset.getUTCDay() || 7;
+    reset.setUTCDate(reset.getUTCDate() + (8 - weekday));
+    return reset.getTime();
+  }
+
+  function hashMissionSeed(text) {
+    let hash = 2166136261;
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function seededMissionShuffle(values, seedText) {
+    const shuffled = [...values];
+    let seed = hashMissionSeed(seedText) || 1;
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const target = seed % (index + 1);
+      [shuffled[index], shuffled[target]] = [shuffled[target], shuffled[index]];
+    }
+    return shuffled;
+  }
+
+  function roundMissionTarget(value) {
+    const safeValue = Math.max(1, clampGameNumber(value));
+    if (safeValue < 100) return Math.ceil(safeValue / 5) * 5;
+    const magnitude = 10 ** Math.floor(Math.log10(safeValue));
+    const step = Math.max(10, magnitude / 10);
+    return Math.ceil(safeValue / step) * step;
+  }
+
+  function getMissionDustTarget(kind, targetState = state, multiplier = 1) {
+    const automaticRate = calculateRate(targetState, false);
+    const clickValue = getClickValue(targetState);
+    const base = kind === "weekly"
+      ? Math.max(1200, safeMultiply(automaticRate, 7200), safeMultiply(clickValue, 450))
+      : Math.max(120, safeMultiply(automaticRate, 600), safeMultiply(clickValue, 60));
+    return Math.min(
+      DUST_RESERVE_CAP,
+      roundMissionTarget(safeMultiply(base, multiplier)),
+    );
+  }
+
+  function getMissionTemplate(templateId) {
+    return MISSION_TEMPLATES.find((template) => template.id === templateId);
+  }
+
+  function createMissionAssignment(template, kind, targetState = state) {
+    const targetFactory = kind === "weekly"
+      ? template.weeklyTarget
+      : template.dailyTarget;
+    return {
+      templateId: template.id,
+      target: Math.max(1, clampGameNumber(targetFactory(targetState))),
+      progress: 0,
+      claimed: false,
+    };
+  }
+
+  function buildMissionPeriod(kind, key, targetState = state) {
+    const eligibleTemplates = MISSION_TEMPLATES.filter((template) => {
+      if (kind === "daily" && template.weeklyOnly) return false;
+      if (kind === "weekly" && typeof template.weeklyTarget !== "function") return false;
+      return template.eligible(targetState);
+    });
+    const preferredId = kind === "daily" ? "dustEarned" : "dailyClaims";
+    const preferred = eligibleTemplates.find((template) => template.id === preferredId);
+    const remainder = seededMissionShuffle(
+      eligibleTemplates.filter((template) => template !== preferred),
+      `${kind}:${key}:${normalizePlayerName(targetState.playerName) || "station"}`,
+    );
+    const selected = preferred ? [preferred, ...remainder] : remainder;
+    const period = freshMissionPeriod(kind);
+    period.key = key;
+    period.items = selected
+      .slice(0, 5)
+      .map((template) => createMissionAssignment(template, kind, targetState));
+    return period;
+  }
+
+  function sanitizeMissionPeriod(rawPeriod, kind) {
+    const clean = freshMissionPeriod(kind);
+    if (!rawPeriod || typeof rawPeriod !== "object") return clean;
+    clean.key = typeof rawPeriod.key === "string" ? rawPeriod.key.slice(0, 16) : "";
+    const seen = new Set();
+    clean.items = Array.isArray(rawPeriod.items)
+      ? rawPeriod.items
+          .filter((item) => {
+            const template = getMissionTemplate(item?.templateId);
+            if (!template || seen.has(template.id)) return false;
+            if (kind === "daily" && template.weeklyOnly) return false;
+            seen.add(template.id);
+            return true;
+          })
+          .slice(0, 5)
+          .map((item) => {
+            const target = Math.max(1, clampGameNumber(item.target));
+            return {
+              templateId: item.templateId,
+              target,
+              progress: Math.min(target, clampGameNumber(item.progress)),
+              claimed: item.claimed === true,
+            };
+          })
+      : [];
+    if (kind === "daily") {
+      clean.rerollsUsed = clamp(Math.floor(Number(rawPeriod.rerollsUsed) || 0), 0, 1);
+      clean.completionClaimed = rawPeriod.completionClaimed === true;
+    } else {
+      clean.milestonesClaimed = Array.isArray(rawPeriod.milestonesClaimed)
+        ? [...new Set(rawPeriod.milestonesClaimed.map((value) => Math.floor(Number(value))))]
+            .filter((value) => value >= 0 && value < WEEKLY_MISSION_MILESTONES.length)
+        : [];
+    }
+    return clean;
+  }
+
+  function sanitizeMissionState(rawMissions) {
+    const clean = freshMissionState();
+    if (!rawMissions || typeof rawMissions !== "object") return clean;
+    clean.tokens = Math.min(
+      MISSION_TOKEN_CAP,
+      clampGameCount(rawMissions.tokens),
+    );
+    clean.daily = sanitizeMissionPeriod(rawMissions.daily, "daily");
+    clean.weekly = sanitizeMissionPeriod(rawMissions.weekly, "weekly");
+    return clean;
+  }
+
+  function ensureMissionPeriods(now = Date.now()) {
+    if (!state.missions || typeof state.missions !== "object") {
+      state.missions = freshMissionState();
+    }
+    let changed = false;
+    const dailyKey = getUtcDailyKey(now);
+    if (
+      state.missions.daily?.key !== dailyKey ||
+      !Array.isArray(state.missions.daily?.items) ||
+      state.missions.daily.items.length < 1
+    ) {
+      state.missions.daily = buildMissionPeriod("daily", dailyKey);
+      changed = true;
+    }
+    const weeklyKey = getUtcWeeklyKey(now);
+    if (
+      state.missions.weekly?.key !== weeklyKey ||
+      !Array.isArray(state.missions.weekly?.items) ||
+      state.missions.weekly.items.length < 1
+    ) {
+      state.missions.weekly = buildMissionPeriod("weekly", weeklyKey);
+      changed = true;
+    }
+    return changed;
+  }
+
+  function recordMissionProgress(metric, amount = 1) {
+    const safeAmount = clampGameNumber(amount);
+    if (safeAmount <= 0) return;
+    ensureMissionPeriods();
+    [state.missions.daily, state.missions.weekly].forEach((period) => {
+      period.items.forEach((item) => {
+        const template = getMissionTemplate(item.templateId);
+        if (!template || template.metric !== metric || item.progress >= item.target) return;
+        item.progress = Math.min(item.target, safeAdd(item.progress, safeAmount));
+      });
+    });
+  }
+
+  function getCompletedMissionCount(period) {
+    return period.items.filter((item) => item.progress >= item.target).length;
+  }
+
+  function getMissionClaimableCount() {
+    ensureMissionPeriods();
+    const itemClaims = [state.missions.daily, state.missions.weekly]
+      .flatMap((period) => period.items)
+      .filter((item) => !item.claimed && item.progress >= item.target).length;
+    const dailyBonus =
+      !state.missions.daily.completionClaimed &&
+      getCompletedMissionCount(state.missions.daily) >= 3
+        ? 1
+        : 0;
+    const weeklyClaims = WEEKLY_MISSION_MILESTONES.filter(
+      (milestone, index) =>
+        !state.missions.weekly.milestonesClaimed.includes(index) &&
+        getCompletedMissionCount(state.missions.weekly) >= milestone.required,
+    ).length;
+    return itemClaims + dailyBonus + weeklyClaims;
+  }
+
+  function grantMissionTokens(amount) {
+    state.missions.tokens = Math.min(
+      MISSION_TOKEN_CAP,
+      clampGameCount(safeAdd(state.missions.tokens, amount)),
+    );
+  }
+
+  function getMissionRewardDust(minutes, targetState = state) {
+    return Math.min(
+      safeMultiply(DUST_RESERVE_CAP, 0.04),
+      Math.max(
+        100,
+        safeMultiply(calculateRate(targetState, false), minutes * 60),
+        safeMultiply(getClickValue(targetState), minutes * 12),
+      ),
+    );
+  }
+
+  function grantMissionMaterials(amount) {
+    if (amount <= 0) return;
+    STARPORT_MATERIALS.forEach((material) => {
+      state.starport.materials[material.id] = clampGameCount(
+        safeAdd(state.starport.materials[material.id], amount),
+      );
+    });
+  }
+
+  function claimMission(kind, index) {
+    ensureMissionPeriods();
+    const period = kind === "weekly" ? state.missions.weekly : state.missions.daily;
+    const item = period.items[index];
+    if (!item || item.claimed || item.progress < item.target) return;
+    item.claimed = true;
+    const tokens = kind === "weekly" ? 12 : 5;
+    const rewardDust = getMissionRewardDust(kind === "weekly" ? 5 : 1);
+    grantMissionTokens(tokens);
+    addDust(rewardDust, { trackMissions: false });
+    if (kind === "daily") recordMissionProgress("dailyClaims", 1);
+    const template = getMissionTemplate(item.templateId);
+    addLog(`${kind === "weekly" ? "每周" : "每日"}委托完成：${template.title}。`);
+    showToast(
+      "航站委托已交付",
+      `${template.title} · +${tokens} 凭证 · +${formatNumber(rewardDust)} 星尘`,
+      template.icon,
+    );
+    renderMissions();
+    updateMissionSummary();
+    saveGame();
+  }
+
+  function claimDailyMissionBonus() {
+    ensureMissionPeriods();
+    if (
+      state.missions.daily.completionClaimed ||
+      getCompletedMissionCount(state.missions.daily) < 3
+    ) {
+      return;
+    }
+    state.missions.daily.completionClaimed = true;
+    const rewardDust = getMissionRewardDust(10);
+    grantMissionTokens(15);
+    addDust(rewardDust, { trackMissions: false });
+    addLog("今日航站委托总奖励已领取。");
+    showToast(
+      "今日航线已稳定",
+      `+15 凭证 · +${formatNumber(rewardDust)} 星尘`,
+      "☷",
+    );
+    renderMissions();
+    updateMissionSummary();
+    saveGame();
+  }
+
+  function claimWeeklyMissionMilestone(index) {
+    ensureMissionPeriods();
+    const milestone = WEEKLY_MISSION_MILESTONES[index];
+    if (
+      !milestone ||
+      state.missions.weekly.milestonesClaimed.includes(index) ||
+      getCompletedMissionCount(state.missions.weekly) < milestone.required
+    ) {
+      return;
+    }
+    state.missions.weekly.milestonesClaimed.push(index);
+    const rewardDust = getMissionRewardDust(milestone.dustMinutes);
+    grantMissionTokens(milestone.tokens);
+    grantMissionMaterials(milestone.materials);
+    addDust(rewardDust, { trackMissions: false });
+    const materialText = milestone.materials > 0
+      ? ` · 每种材料 +${milestone.materials}`
+      : "";
+    showToast(
+      "本周委托里程碑",
+      `+${milestone.tokens} 凭证 · +${formatNumber(rewardDust)} 星尘${materialText}`,
+      "◆",
+    );
+    renderMissions();
+    updateMissionSummary();
+    saveGame();
+  }
+
+  function rerollDailyMission() {
+    ensureMissionPeriods();
+    const period = state.missions.daily;
+    if (period.rerollsUsed >= 1) return;
+    const replaceIndex = period.items.findIndex(
+      (item) => !item.claimed && item.progress < item.target,
+    );
+    if (replaceIndex < 0) {
+      showToast("没有可重签的委托", "当前每日委托都已完成。", "☷");
+      return;
+    }
+    const usedIds = new Set(period.items.map((item) => item.templateId));
+    const candidates = seededMissionShuffle(
+      MISSION_TEMPLATES.filter(
+        (template) =>
+          !template.weeklyOnly &&
+          !usedIds.has(template.id) &&
+          template.eligible(state),
+      ),
+      `${period.key}:reroll:${period.items[replaceIndex].templateId}`,
+    );
+    if (!candidates.length) {
+      showToast("暂时没有替代委托", "解锁更多航站系统后会出现更多任务。", "☷");
+      return;
+    }
+    period.items[replaceIndex] = createMissionAssignment(candidates[0], "daily");
+    period.rerollsUsed = 1;
+    showToast("每日委托已重签", `新任务：${candidates[0].title}`, candidates[0].icon);
+    renderMissions();
+    updateMissionSummary();
+    saveGame();
+  }
+
+  function purchaseMissionStoreItem(itemId) {
+    ensureMissionPeriods();
+    const item = MISSION_STORE_ITEMS[itemId];
+    if (!item || state.missions.tokens < item.cost) {
+      showToast("航站凭证不足", "完成更多每日与每周委托即可兑换。", "☷");
+      return;
+    }
+    if (itemId === "materialCrate" && state.lifetimeDust < COMBAT_UNLOCK_DUST) {
+      showToast("材料仓尚未接入", "解锁战斗系统后即可兑换星港材料箱。", "⌬");
+      return;
+    }
+    const now = Date.now();
+    if (
+      itemId === "combatRefit" &&
+      state.combat.attackCooldownUntil <= now &&
+      state.combat.skirmishCooldownUntil <= now
+    ) {
+      showToast("舰队已经就绪", "当前没有需要清除的主动战斗冷却。", "⬡");
+      return;
+    }
+    state.missions.tokens = clampGameCount(state.missions.tokens - item.cost);
+    if (itemId === "dustCrate") {
+      const rewardDust = getMissionRewardDust(5);
+      addDust(rewardDust, { trackMissions: false });
+      showToast("星尘整备包已接收", `星尘 +${formatNumber(rewardDust)}`, "✦");
+    } else if (itemId === "materialCrate") {
+      grantMissionMaterials(3);
+      showToast("星港材料箱已接收", "六种专属材料各 +3", "⌬");
+    } else if (itemId === "combatRefit") {
+      state.combat.attackCooldownUntil = now;
+      state.combat.skirmishCooldownUntil = now;
+      showToast("舰队紧急整备完成", "主动远征与近域清剿均已就绪。", "⬡");
+    }
+    renderMissions();
+    updateMissionSummary();
+    updateUi();
+    saveGame();
+  }
+
+  function addDust(amount, { trackMissions = true } = {}) {
     const safeAmount = clampGameNumber(amount);
     if (safeAmount <= 0) return 0;
     const previousDust = state.dust;
@@ -2363,6 +2983,7 @@
         safeAdd(state.endgame.sectorDust, appliedAmount),
       );
     }
+    if (trackMissions) recordMissionProgress("dustEarned", appliedAmount);
     return appliedAmount;
   }
 
@@ -2452,7 +3073,7 @@
     const base = freshState();
     if (!raw || typeof raw !== "object") return base;
     const sourceVersion = Math.max(0, Math.floor(Number(raw.version) || 0));
-    const needsNumericMigration = sourceVersion < SAVE_VERSION;
+    const needsNumericMigration = sourceVersion < NUMERIC_MIGRATION_VERSION;
     const sanitizeBalancedNumber = (
       value,
       cap,
@@ -2641,6 +3262,7 @@
     merged.buyMode = ["1", "10", "max"].includes(String(raw.buyMode))
       ? String(raw.buyMode)
       : "1";
+    merged.missions = sanitizeMissionState(raw.missions);
     merged.lastSeen = finiteTimestamp(raw.lastSeen);
     merged.nextEventAt = finiteTimestamp(
       raw.nextEventAt,
@@ -3015,11 +3637,11 @@
 
     if (!saved) {
       state = freshState();
-      return;
+    } else {
+      state = sanitizeState(saved);
+      grantInactiveEarnings(state.lastSeen, "load");
     }
-
-    state = sanitizeState(saved);
-    grantInactiveEarnings(state.lastSeen, "load");
+    ensureMissionPeriods();
   }
 
   function buyBuilding(id) {
@@ -3034,9 +3656,11 @@
     const previousRate = calculateRate();
     const wasEmpty = state.buildings[id] === 0;
     state.dust = clampGameNumber(state.dust - purchase.cost);
+    recordMissionProgress("dustSpent", purchase.cost);
     state.buildings[id] = clampGameCount(
       state.buildings[id] + purchase.amount,
     );
+    recordMissionProgress("unitsBought", purchase.amount);
     if (
       isEndgameUnlocked() &&
       state.endgame.sectorLevel % 3 === 1
@@ -3075,7 +3699,9 @@
       return;
     }
     state.dust = clampGameNumber(state.dust - upgrade.cost);
+    recordMissionProgress("dustSpent", upgrade.cost);
     state.upgrades.push(id);
+    recordMissionProgress("researchCompleted", 1);
     addLog(`研究完成：${upgrade.name}。`);
     showToast("研究完成", `${upgrade.name} 已接入航站系统。`, upgrade.icon);
     playTone(680, 0.12, "sine");
@@ -3086,6 +3712,7 @@
   function collect(event) {
     const amount = addDust(getClickValue());
     state.lifetimeClicks = clampGameCount(state.lifetimeClicks + 1);
+    recordMissionProgress("manualClicks", 1);
     recordCrescentProgress("manualClicks");
     elements.collect.classList.add("pressed");
     window.setTimeout(() => elements.collect.classList.remove("pressed"), 80);
@@ -3213,6 +3840,7 @@
           safeAdd(state.totalCores, gain),
         );
         state.rebirths = clampGameCount(state.rebirths + 1);
+        recordMissionProgress("prestiges", 1);
         state.dust = 0;
         state.runDust = 0;
         state.upgrades = [];
@@ -3336,6 +3964,7 @@
         state.endgame.transcensions = clampGameCount(
           state.endgame.transcensions + 1,
         );
+        recordMissionProgress("transcensions", 1);
         const firstCrescentSignal =
           state.endgame.transcensions === 1 &&
           !state.crescentSecret.unlocked;
@@ -3701,6 +4330,7 @@
       return;
     }
     state.dust = clampGameNumber(state.dust - cost.dust);
+    recordMissionProgress("dustSpent", cost.dust);
     STARPORT_MATERIALS.forEach((material) => {
       const amount = cost[material.id] || 0;
       if (amount <= 0) return;
@@ -3714,6 +4344,7 @@
       module.maxRank,
     );
     recordCrescentProgress("starportUpgrades");
+    recordMissionProgress("starportUpgrades", 1);
     const action = rank === 0 ? "建造" : "强化";
     const message = `${module.name}${action}完成，当前等级 ${rank + 1} / ${module.maxRank}。`;
     addLog(message);
@@ -3747,6 +4378,10 @@
       const drops = getSkirmishDrops(target);
       addDust(reward);
       addStarportMaterials(drops);
+      recordMissionProgress(
+        "materialsCollected",
+        Object.values(drops).reduce((sum, amount) => safeAdd(sum, amount), 0),
+      );
       state.combat.enemyVictories[target.id] = clampGameCount(
         state.combat.enemyVictories[target.id] + 1,
       );
@@ -3757,6 +4392,7 @@
       );
       recordSectorWin();
       recordCrescentProgress("skirmishWins");
+      recordMissionProgress("battlesWon", 1);
       state.combat.skirmishCooldownUntil =
         now + Math.round(4500 * cooldownMultiplier);
       const materialText = describeMaterials(drops);
@@ -3808,6 +4444,8 @@
       return;
     }
     state.dust = clampGameNumber(state.dust - cost);
+    recordMissionProgress("dustSpent", cost);
+    recordMissionProgress("combatUpgrades", 1);
     if (type === "attack") {
       state.combat.attackLevel = clampGameCount(
         state.combat.attackLevel + 1,
@@ -3858,6 +4496,7 @@
         state.combat.activeWins + 1,
       );
       recordSectorWin();
+      recordMissionProgress("battlesWon", 1);
       state.combat.attackCooldownUntil = now + 12000;
       const message = `远征胜利：击退${target.name}，夺取 ${formatNumber(
         reward,
@@ -4069,6 +4708,8 @@
       state.combat.raidsSurvived = clampGameCount(
         state.combat.raidsSurvived + 1,
       );
+      recordMissionProgress("battlesWon", 1);
+      recordMissionProgress("raidsDefended", 1);
       recordSectorWin();
       if (major) {
         state.combat.majorRaidsSurvived = clampGameCount(
@@ -4195,6 +4836,7 @@
       logText = `未知坐标中藏有 ${formatNumber(reward)} 星尘。`;
     }
     addLog(logText);
+    recordMissionProgress("eventsClaimed", 1);
     state.event = null;
     state.nextEventAt = Date.now() + randomBetween(45000, 75000);
     playAchievementTone();
@@ -4347,6 +4989,94 @@
     if (!elements.crescentLetterButton.hidden) {
       elements.crescentLetterButton.focus();
     }
+  }
+
+  function compareGameVersions(left, right) {
+    const parse = (value) => String(value || "")
+      .split(".")
+      .map((part) => Math.max(0, Math.floor(Number(part) || 0)));
+    const leftParts = parse(left);
+    const rightParts = parse(right);
+    const length = Math.max(leftParts.length, rightParts.length);
+    for (let index = 0; index < length; index += 1) {
+      const difference = (leftParts[index] || 0) - (rightParts[index] || 0);
+      if (difference !== 0) return Math.sign(difference);
+    }
+    return 0;
+  }
+
+  function showUpdateBanner(manifest) {
+    latestAvailableVersion = manifest;
+    if (updateDismissedVersion === manifest.version) return;
+    elements.updateBannerTitle.textContent =
+      `v${manifest.version} · ${manifest.title || "新版本"}`;
+    elements.updateBannerMessage.textContent =
+      "当前进度会先保存到本地；登录账号后也会触发一次云端同步。";
+    elements.updateNowButton.disabled = false;
+    elements.updateNowButton.textContent = "保存并更新";
+    elements.updateBanner.hidden = false;
+  }
+
+  async function checkForGameUpdate() {
+    if (versionCheckInFlight || location.protocol === "file:") return;
+    versionCheckInFlight = true;
+    try {
+      const response = await fetch(`index.html?check=${Date.now()}`, {
+        cache: "no-store",
+        headers: { Accept: "text/html" },
+      });
+      if (!response.ok) return;
+      const markup = await response.text();
+      const releaseDocument = new DOMParser().parseFromString(markup, "text/html");
+      const manifest = {
+        version: releaseDocument.querySelector(
+          'meta[name="stellar-game-version"]',
+        )?.content,
+        title: releaseDocument.querySelector(
+          'meta[name="stellar-release-title"]',
+        )?.content,
+      };
+      if (
+        typeof manifest?.version === "string" &&
+        compareGameVersions(manifest.version, GAME_VERSION) > 0
+      ) {
+        showUpdateBanner(manifest);
+      } else if (
+        latestAvailableVersion &&
+        compareGameVersions(manifest?.version, GAME_VERSION) <= 0
+      ) {
+        latestAvailableVersion = null;
+        elements.updateBanner.hidden = true;
+      }
+    } catch (error) {
+      // Offline play remains available; the next interval retries automatically.
+    } finally {
+      versionCheckInFlight = false;
+    }
+  }
+
+  function installVersionChecks() {
+    checkForGameUpdate();
+    if (versionCheckTimer !== null) window.clearInterval(versionCheckTimer);
+    versionCheckTimer = window.setInterval(
+      checkForGameUpdate,
+      VERSION_CHECK_INTERVAL,
+    );
+    window.addEventListener("online", checkForGameUpdate);
+  }
+
+  function applyAvailableGameUpdate() {
+    if (!latestAvailableVersion) return;
+    elements.updateNowButton.disabled = true;
+    elements.updateNowButton.textContent = "正在保存…";
+    saveGame(false, { forceBackup: true });
+    const targetVersion = latestAvailableVersion.version;
+    window.setTimeout(() => {
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set("version", targetVersion);
+      nextUrl.searchParams.set("reload", String(Date.now()));
+      window.location.replace(nextUrl.toString());
+    }, 2200);
   }
 
   function hasSeenCurrentPatchNotes() {
@@ -5257,6 +5987,183 @@
     });
   }
 
+  function formatMissionProgress(template, value) {
+    if (template.format === "duration") return formatDuration(value);
+    return formatNumber(value, template.format === "count" ? 0 : undefined);
+  }
+
+  function describeMission(template, kind, target) {
+    const targetText = formatMissionProgress(template, target);
+    const descriptions = {
+      dustEarned: `累计回收 ${targetText} 星尘`,
+      manualClicks: `执行 ${targetText} 次手动回收`,
+      playSeconds: `保持航站在线 ${targetText}`,
+      eventsClaimed: `处理 ${targetText} 次雷达事件`,
+      dustSpent: `向航站系统投入 ${targetText} 星尘`,
+      unitsBought: `建造 ${targetText} 个自动化单元`,
+      researchCompleted: `完成 ${targetText} 项研究`,
+      battlesWon: `赢得 ${targetText} 场战斗`,
+      materialsCollected: `回收 ${targetText} 份星港材料`,
+      starportUpgrades: `完成 ${targetText} 次星港建设或强化`,
+      combatUpgrades: `完成 ${targetText} 次攻防强化`,
+      raidsDefended: `成功防卫 ${targetText} 次袭击`,
+      prestiges: `完成 ${targetText} 次深空跃迁`,
+      transcensions: `完成 ${targetText} 次奇点超越`,
+      dailyClaims: `领取 ${targetText} 项每日委托`,
+    };
+    return descriptions[template.metric] ||
+      `推进 ${targetText} 点${kind === "weekly" ? "每周" : "每日"}目标`;
+  }
+
+  function formatMissionCountdown(milliseconds, includeDays = false) {
+    const seconds = Math.max(0, Math.ceil(milliseconds / 1000));
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainder = seconds % 60;
+    const time = [hours, minutes, remainder]
+      .map((value) => String(value).padStart(2, "0"))
+      .join(":");
+    return includeDays ? `${days}天 ${time}` : time;
+  }
+
+  function renderMissionList(kind, container) {
+    const period = kind === "weekly" ? state.missions.weekly : state.missions.daily;
+    container.textContent = "";
+    period.items.forEach((item, index) => {
+      const template = getMissionTemplate(item.templateId);
+      if (!template) return;
+      const completed = item.progress >= item.target;
+      const card = document.createElement("article");
+      card.className = `mission-card${completed ? " completed" : ""}${
+        item.claimed ? " claimed" : ""
+      }`;
+
+      const icon = document.createElement("span");
+      icon.className = "mission-card-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = template.icon;
+
+      const copy = document.createElement("div");
+      copy.className = "mission-card-copy";
+      const title = document.createElement("strong");
+      title.textContent = template.title;
+      const detail = document.createElement("small");
+      detail.textContent = `${describeMission(template, kind, item.target)} · ${formatMissionProgress(
+        template,
+        item.progress,
+      )} / ${formatMissionProgress(template, item.target)}`;
+      const track = document.createElement("div");
+      track.className = "mission-progress-track";
+      const fill = document.createElement("span");
+      fill.style.width = `${clamp(item.progress / item.target, 0, 1) * 100}%`;
+      track.appendChild(fill);
+      copy.append(title, detail, track);
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.missionClaim = String(index);
+      button.dataset.missionKind = kind;
+      button.disabled = !completed || item.claimed;
+      button.textContent = item.claimed
+        ? "已领取"
+        : completed
+          ? kind === "weekly" ? "领取 12" : "领取 5"
+          : "进行中";
+      button.setAttribute(
+        "aria-label",
+        `${item.claimed ? "已领取" : "领取"}${template.title}奖励`,
+      );
+      card.append(icon, copy, button);
+      container.appendChild(card);
+    });
+  }
+
+  function updateMissionSummary() {
+    ensureMissionPeriods();
+    const completed = getCompletedMissionCount(state.missions.daily);
+    const claimable = getMissionClaimableCount();
+    elements.commandMissionStatus.textContent = claimable > 0
+      ? `可领取 ${claimable} 项`
+      : `今日 ${Math.min(completed, 3)} / 3`;
+    elements.missionsNavigationBadge.textContent = String(claimable);
+    elements.missionsNavigationBadge.hidden = claimable < 1;
+  }
+
+  function renderMissions() {
+    ensureMissionPeriods();
+    const now = Date.now();
+    const dailyCompleted = getCompletedMissionCount(state.missions.daily);
+    const weeklyCompleted = getCompletedMissionCount(state.missions.weekly);
+    elements.missionTokenBalance.textContent = formatNumber(
+      state.missions.tokens,
+      0,
+    );
+    elements.dailyResetCountdown.textContent =
+      `距离刷新 ${formatMissionCountdown(getNextDailyReset(now) - now)}`;
+    elements.weeklyResetCountdown.textContent =
+      `距离刷新 ${formatMissionCountdown(getNextWeeklyReset(now) - now, true)}`;
+    elements.dailyRerollButton.disabled = state.missions.daily.rerollsUsed >= 1;
+    elements.dailyRerollButton.textContent = state.missions.daily.rerollsUsed >= 1
+      ? "今日已重签"
+      : "免费重签一项";
+    renderMissionList("daily", elements.dailyMissionList);
+    renderMissionList("weekly", elements.weeklyMissionList);
+
+    elements.dailyBonusProgress.textContent = `完成 ${Math.min(
+      dailyCompleted,
+      3,
+    )} / 3`;
+    elements.dailyBonusButton.disabled =
+      dailyCompleted < 3 || state.missions.daily.completionClaimed;
+    elements.dailyBonusButton.textContent = state.missions.daily.completionClaimed
+      ? "今日已领取"
+      : dailyCompleted >= 3
+        ? "领取总奖励"
+        : "尚未达成";
+
+    elements.weeklyMilestoneList.textContent = "";
+    WEEKLY_MISSION_MILESTONES.forEach((milestone, index) => {
+      const claimed = state.missions.weekly.milestonesClaimed.includes(index);
+      const reached = weeklyCompleted >= milestone.required;
+      const card = document.createElement("article");
+      card.className = `weekly-milestone${reached ? " completed" : ""}${
+        claimed ? " claimed" : ""
+      }`;
+      const title = document.createElement("strong");
+      title.textContent = `${milestone.required} 项里程碑`;
+      const reward = document.createElement("span");
+      reward.textContent = `+${milestone.tokens} 凭证 · ${milestone.dustMinutes} 分钟产量${
+        milestone.materials > 0 ? ` · 每种材料 +${milestone.materials}` : ""
+      }`;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.weeklyMilestone = String(index);
+      button.disabled = !reached || claimed;
+      button.textContent = claimed
+        ? "已领取"
+        : reached
+          ? "领取奖励"
+          : `${weeklyCompleted} / ${milestone.required}`;
+      card.append(title, reward, button);
+      elements.weeklyMilestoneList.appendChild(card);
+    });
+
+    elements.missionStore.querySelectorAll("[data-mission-store]").forEach((button) => {
+      const item = MISSION_STORE_ITEMS[button.dataset.missionStore];
+      const lockedMaterial =
+        button.dataset.missionStore === "materialCrate" &&
+        state.lifetimeDust < COMBAT_UNLOCK_DUST;
+      const noCombatCooldown =
+        button.dataset.missionStore === "combatRefit" &&
+        state.combat.attackCooldownUntil <= now &&
+        state.combat.skirmishCooldownUntil <= now;
+      button.disabled =
+        !item || state.missions.tokens < item.cost || lockedMaterial || noCombatCooldown;
+    });
+    updateMissionSummary();
+  }
+
   function renderLog() {
     elements.activityLog.textContent = "";
     if (!state.log.length) {
@@ -5324,6 +6231,9 @@
       case "combat":
         renderCombatTargets();
         break;
+      case "missions":
+        renderMissions();
+        break;
       case "transcend":
         renderEndgame();
         break;
@@ -5376,6 +6286,7 @@
     const nextState = sanitizeState(rawSnapshot);
     const cloudSavedAt = nextState.lastSeen;
     state = nextState;
+    ensureMissionPeriods();
     grantInactiveEarnings(cloudSavedAt, "none");
     syncBgmState();
     saveGame(false, { forceBackup: true });
@@ -5575,6 +6486,7 @@
     elements.rate.textContent = `${formatProductionRate(rate)} / 秒`;
     elements.cores.textContent = formatNumber(state.cores, 0);
     updateEvent();
+    updateMissionSummary();
 
     if (state.activePage === "command") {
       renderCommandCompanions();
@@ -6112,6 +7024,26 @@
       });
     });
     elements.eventButton.addEventListener("click", claimEvent);
+    elements.commandMissionButton.addEventListener("click", () =>
+      activatePrimaryPage("missions", { scroll: true }),
+    );
+    elements.dailyRerollButton.addEventListener("click", rerollDailyMission);
+    [elements.dailyMissionList, elements.weeklyMissionList].forEach((list) => {
+      list.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-mission-claim]");
+        if (!button) return;
+        claimMission(button.dataset.missionKind, Number(button.dataset.missionClaim));
+      });
+    });
+    elements.dailyBonusButton.addEventListener("click", claimDailyMissionBonus);
+    elements.weeklyMilestoneList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-weekly-milestone]");
+      if (button) claimWeeklyMissionMilestone(Number(button.dataset.weeklyMilestone));
+    });
+    elements.missionStore.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-mission-store]");
+      if (button) purchaseMissionStoreItem(button.dataset.missionStore);
+    });
     elements.prestigeButton.addEventListener("click", prestige);
     elements.attackUpgradeButton.addEventListener("click", () =>
       upgradeCombat("attack"),
@@ -6201,6 +7133,11 @@
     elements.patchNotesBackdrop.addEventListener("click", (event) => {
       if (event.target === elements.patchNotesBackdrop) closePatchNotes();
     });
+    elements.updateLaterButton.addEventListener("click", () => {
+      updateDismissedVersion = latestAvailableVersion?.version || null;
+      elements.updateBanner.hidden = true;
+    });
+    elements.updateNowButton.addEventListener("click", applyAvailableGameUpdate);
     elements.crescentLetterClose.addEventListener("click", closeCrescentLetter);
     elements.crescentLetterConfirm.addEventListener("click", closeCrescentLetter);
     elements.crescentLetterBackdrop.addEventListener("click", (event) => {
@@ -6267,7 +7204,10 @@
         starfieldController?.resume();
       }
       lastWallClock = Date.now();
-      if (!document.hidden) restartGameLoop();
+      if (!document.hidden) {
+        restartGameLoop();
+        checkForGameUpdate();
+      }
     });
     const unlockBgm = () => {
       if (state.bgmEnabled) startBgm();
@@ -6311,6 +7251,7 @@
     const rate = calculateRate();
     if (rate > 0) addDust(safeMultiply(rate, delta));
     state.playTime = safeAdd(state.playTime, delta);
+    recordMissionProgress("playSeconds", delta);
 
     if (now - lastUi >= getGameTickInterval()) {
       expireTimedEffects();
@@ -6332,6 +7273,7 @@
   setupTabs();
   setupStarfield();
   bindEvents();
+  installVersionChecks();
   renderAll();
   globalThis.StellarOutpostCloudBridge = Object.freeze({
     gameVersion: GAME_VERSION,
@@ -6339,6 +7281,16 @@
     createSnapshot: createCloudSaveSnapshot,
     getMetadata: getCloudSaveMetadata,
     getLeaderboardEntry,
+    getMissionDiagnostics: () => {
+      ensureMissionPeriods();
+      return JSON.parse(JSON.stringify({
+        tokens: state.missions.tokens,
+        daily: state.missions.daily,
+        weekly: state.missions.weekly,
+        claimable: getMissionClaimableCount(),
+      }));
+    },
+    checkForGameUpdate,
     getPerformanceDiagnostics: () => ({
       mode: performanceMode,
       gameTickInterval: getGameTickInterval(),

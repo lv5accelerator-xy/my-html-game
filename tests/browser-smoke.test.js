@@ -14,6 +14,7 @@ const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
   ".mp3": "audio/mpeg",
   ".png": "image/png",
   ".txt": "text/plain; charset=utf-8",
@@ -60,7 +61,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.8");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.14.0");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -118,12 +119,12 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.13.8");
-    assert.equal(snapshot.saveVersion, 6);
+    assert.equal(snapshot.gameVersion, "0.14.0");
+    assert.equal(snapshot.saveVersion, 7);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
-    assert.match(snapshot.footer, /v0\.13\.8/);
+    assert.match(snapshot.footer, /v0\.14\.0/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -141,6 +142,7 @@ async function main() {
       "research",
       "core-shop",
       "combat",
+      "missions",
       "transcend",
       "leaderboard",
     ];
@@ -466,6 +468,72 @@ async function main() {
     assert.equal(purchaseAfter.dust, purchaseBefore.dust - 30000);
     assert.equal(purchaseAfter.materials.alloy, purchaseBefore.materials.alloy - 4);
     assert.equal(purchaseAfter.materials.crystal, purchaseBefore.materials.crystal);
+
+    const missionBefore = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const missionSave = bridge.createSnapshot();
+      missionSave.version = 7;
+      missionSave.activePage = "missions";
+      missionSave.missions.tokens = 0;
+      missionSave.missions.daily.items = [
+        {
+          templateId: "manualClicks",
+          target: 2,
+          progress: 1,
+          claimed: false,
+        },
+      ];
+      missionSave.missions.daily.completionClaimed = false;
+      missionSave.missions.weekly.items = [
+        {
+          templateId: "dailyClaims",
+          target: 15,
+          progress: 0,
+          claimed: false,
+        },
+      ];
+      missionSave.missions.weekly.milestonesClaimed = [];
+      bridge.applySnapshot(missionSave);
+      return bridge.getMissionDiagnostics();
+    });
+    assert.equal(missionBefore.daily.items[0].progress, 1);
+    await page.evaluate(() => document.querySelector("#collect-button").click());
+    const missionClaimButton = page.locator(
+      '[data-mission-kind="daily"][data-mission-claim="0"]',
+    );
+    await page.waitForFunction(() => {
+      const button = document.querySelector(
+        '[data-mission-kind="daily"][data-mission-claim="0"]',
+      );
+      return button && !button.disabled;
+    });
+    assert.equal(await missionClaimButton.isEnabled(), true);
+    await missionClaimButton.click();
+    const missionAfter = await page.evaluate(() => ({
+      diagnostics: window.StellarOutpostCloudBridge.getMissionDiagnostics(),
+      tokenLabel: document.querySelector("#mission-token-balance").textContent,
+      tabLabel: document.querySelector("#command-mission-status").textContent,
+    }));
+    assert.equal(missionAfter.diagnostics.tokens, 5);
+    assert.equal(missionAfter.diagnostics.daily.items[0].claimed, true);
+    assert.equal(missionAfter.diagnostics.weekly.items[0].progress, 1);
+    assert.equal(missionAfter.tokenLabel, "5");
+    assert.match(missionAfter.tabLabel, /今日 1 \/ 3/);
+
+    await page.route("**/index.html?check=*", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html; charset=utf-8",
+        body: '<!doctype html><meta name="stellar-game-version" content="0.14.1"><meta name="stellar-release-title" content="更新检测测试">',
+      }),
+    );
+    await page.evaluate(() =>
+      window.StellarOutpostCloudBridge.checkForGameUpdate(),
+    );
+    await page.waitForFunction(
+      () => !document.querySelector("#update-banner").hidden,
+    );
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.14\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

@@ -14,6 +14,7 @@ const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
   ".mp3": "audio/mpeg",
   ".png": "image/png",
   ".txt": "text/plain; charset=utf-8",
@@ -58,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.13.8");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.14.0");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
@@ -271,6 +272,27 @@ async function main() {
     );
     assert.equal(resumed.diagnostics.gameLoopScheduled, true);
     assert.equal(resumed.diagnostics.starfield.scheduled, true);
+    const mobileMissionLayout = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const missionSave = bridge.createSnapshot();
+      missionSave.activePage = "missions";
+      bridge.applySnapshot(missionSave);
+      const missionList = document.querySelector("#daily-mission-list");
+      return {
+        viewportWidth: document.documentElement.clientWidth,
+        pageWidth: document.documentElement.scrollWidth,
+        columns: getComputedStyle(missionList).gridTemplateColumns.split(" ").length,
+        cardCount: missionList.querySelectorAll(".mission-card").length,
+        pageVisible: !document.querySelector("#missions-page").hidden,
+      };
+    });
+    assert.equal(mobileMissionLayout.pageVisible, true);
+    assert.equal(mobileMissionLayout.columns, 1);
+    assert.equal(mobileMissionLayout.cardCount, 5);
+    assert.ok(
+      mobileMissionLayout.pageWidth <= mobileMissionLayout.viewportWidth,
+      `mission page must not create horizontal page scrolling; got ${mobileMissionLayout.pageWidth}px`,
+    );
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
 
     console.log(

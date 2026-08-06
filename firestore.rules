@@ -86,6 +86,9 @@ service cloud.firestore {
           "highestPower",
           "battleCount",
           "transcensions",
+          "expeditionRuns",
+          "expeditionBossWins",
+          "expeditionArtifacts",
           "updatedAt"
         ])
         && request.resource.data.gameVersion is string
@@ -103,6 +106,18 @@ service cloud.firestore {
         && request.resource.data.transcensions is int
         && request.resource.data.transcensions >= 0
         && request.resource.data.transcensions <= 9007199254740991
+        && (!request.resource.data.keys().hasAll(["expeditionRuns"])
+          || (request.resource.data.expeditionRuns is int
+            && request.resource.data.expeditionRuns >= 0
+            && request.resource.data.expeditionRuns <= 9007199254740991))
+        && (!request.resource.data.keys().hasAll(["expeditionBossWins"])
+          || (request.resource.data.expeditionBossWins is int
+            && request.resource.data.expeditionBossWins >= 0
+            && request.resource.data.expeditionBossWins <= 9007199254740991))
+        && (!request.resource.data.keys().hasAll(["expeditionArtifacts"])
+          || (request.resource.data.expeditionArtifacts is int
+            && request.resource.data.expeditionArtifacts >= 0
+            && request.resource.data.expeditionArtifacts <= 8))
         && request.resource.data.updatedAt is timestamp
         && request.resource.data.updatedAt == request.time;
       }
@@ -111,7 +126,20 @@ service cloud.firestore {
         return request.resource.data.careerDust >= resource.data.careerDust
           && request.resource.data.highestPower >= resource.data.highestPower
           && request.resource.data.battleCount >= resource.data.battleCount
-          && request.resource.data.transcensions >= resource.data.transcensions;
+          && request.resource.data.transcensions >= resource.data.transcensions
+          && (!resource.data.keys().hasAll([
+              "expeditionRuns",
+              "expeditionBossWins",
+              "expeditionArtifacts"
+            ])
+            || (request.resource.data.keys().hasAll([
+                "expeditionRuns",
+                "expeditionBossWins",
+                "expeditionArtifacts"
+              ])
+              && request.resource.data.expeditionRuns >= resource.data.expeditionRuns
+              && request.resource.data.expeditionBossWins >= resource.data.expeditionBossWins
+              && request.resource.data.expeditionArtifacts >= resource.data.expeditionArtifacts));
       }
 
       allow read: if request.auth != null;

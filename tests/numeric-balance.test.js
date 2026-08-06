@@ -8,6 +8,8 @@ const math = require("../game-math.js");
 
 const root = path.resolve(__dirname, "..");
 const source = fs.readFileSync(path.join(root, "game.js"), "utf8");
+const cloudSource = fs.readFileSync(path.join(root, "cloud-save.js"), "utf8");
+const firestoreRules = fs.readFileSync(path.join(root, "firestore.rules"), "utf8");
 
 function readConstant(name) {
   const match = source.match(
@@ -129,6 +131,30 @@ assert.ok(
   ),
   "expedition collectibles must remain cosmetic-only",
 );
+
+for (const field of [
+  "expeditionRuns",
+  "expeditionBossWins",
+  "expeditionArtifacts",
+]) {
+  assert.match(
+    cloudSource,
+    new RegExp(`${field}\\s*:`),
+    `cloud leaderboard must publish ${field}`,
+  );
+  assert.match(
+    firestoreRules,
+    new RegExp(`request\\.resource\\.data\\.${field}`),
+    `Firestore rules must validate ${field}`,
+  );
+  assert.match(
+    firestoreRules,
+    new RegExp(
+      `request\\.resource\\.data\\.${field}\\s*>=\\s*resource\\.data\\.${field}`,
+    ),
+    `Firestore rules must keep ${field} monotonic`,
+  );
+}
 
 for (const building of buildings) {
   assert.ok(building.baseCost <= 16e6, `${building.id} base cost is too large`);

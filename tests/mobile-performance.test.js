@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.1");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
@@ -391,6 +391,40 @@ async function main() {
     assert.ok(
       mobileExpeditionLayout.pageWidth <= mobileExpeditionLayout.viewportWidth,
       `expedition page must not create horizontal page scrolling; got ${mobileExpeditionLayout.pageWidth}px`,
+    );
+    const mobileLeaderboardLayout = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const leaderboardSave = bridge.createSnapshot();
+      leaderboardSave.activePage = "leaderboard";
+      leaderboardSave.expedition.completedRuns = 9;
+      leaderboardSave.expedition.bossWins = {
+        aegisArk: 1,
+        swarmMatriarch: 2,
+        voidChoir: 3,
+      };
+      bridge.applySnapshot(leaderboardSave);
+      const categories = document.querySelector(".leaderboard-categories");
+      const personalGrid = document.querySelector(".leaderboard-personal-grid");
+      return {
+        viewportWidth: document.documentElement.clientWidth,
+        pageWidth: document.documentElement.scrollWidth,
+        pageVisible: !document.querySelector("#leaderboard-page").hidden,
+        categoryCount: categories.querySelectorAll("button").length,
+        categoryColumns: getComputedStyle(categories).gridTemplateColumns
+          .split(" ").length,
+        personalCards: personalGrid.querySelectorAll("article").length,
+        personalColumns: getComputedStyle(personalGrid).gridTemplateColumns
+          .split(" ").length,
+      };
+    });
+    assert.equal(mobileLeaderboardLayout.pageVisible, true);
+    assert.equal(mobileLeaderboardLayout.categoryCount, 6);
+    assert.equal(mobileLeaderboardLayout.categoryColumns, 3);
+    assert.equal(mobileLeaderboardLayout.personalCards, 6);
+    assert.equal(mobileLeaderboardLayout.personalColumns, 1);
+    assert.ok(
+      mobileLeaderboardLayout.pageWidth <= mobileLeaderboardLayout.viewportWidth,
+      `leaderboard page must not create horizontal page scrolling; got ${mobileLeaderboardLayout.pageWidth}px`,
     );
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
 

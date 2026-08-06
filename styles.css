@@ -3997,6 +3997,7 @@ h2 {
 
 .leaderboard-categories {
   display: flex;
+  flex-wrap: wrap;
   padding: 4px;
   gap: 4px;
   border: 1px solid var(--line);

@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.17.0";
-  const PATCH_NOTES_VERSION = "0.17.0";
+  const GAME_VERSION = "0.17.1";
+  const PATCH_NOTES_VERSION = "0.17.1";
   const SAVE_VERSION = 10;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -108,6 +108,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.17.1",
+      theme: "远征排行榜",
+      changes: [
+        "星海排行榜新增完整远征、机制首领击破与远征遗物三项分类，可与其他指挥官比较远征长期记录。",
+        "排行榜个人数据区扩展为六项永久记录，并显示远征完成次数、首领总击破数与遗物图鉴进度。",
+        "云端榜单文档新增三项只增不减字段；旧榜单记录会按 0 兼容，并在新版客户端首次同步时自动补齐。",
+        "Firestore 安全规则同步扩展，继续限制玩家只能写入自己的记录，并阻止已发布远征成绩被调低。",
+        "手机版排行榜保持三列分类按钮与单列个人卡片，不产生横向页面滚动。",
+      ],
+    },
     {
       version: "0.17.0",
       theme: "伴星观测日志",
@@ -2335,6 +2346,9 @@
     leaderboardCareerDust: $("#leaderboard-career-dust"),
     leaderboardHighestPower: $("#leaderboard-highest-power"),
     leaderboardBattleCount: $("#leaderboard-battle-count"),
+    leaderboardExpeditionRuns: $("#leaderboard-expedition-runs"),
+    leaderboardBossVictories: $("#leaderboard-boss-victories"),
+    leaderboardExpeditionArtifacts: $("#leaderboard-expedition-artifacts"),
     leaderboardCurrentPower: $("#leaderboard-current-power"),
     starfield: $("#starfield"),
   };
@@ -8539,6 +8553,16 @@
       state.careerBattles,
       0,
     );
+    elements.leaderboardExpeditionRuns.textContent = formatNumber(
+      state.expedition.completedRuns,
+      0,
+    );
+    elements.leaderboardBossVictories.textContent = formatNumber(
+      getTotalBossWins(),
+      0,
+    );
+    elements.leaderboardExpeditionArtifacts.textContent =
+      `${state.expedition.artifacts.length} / ${EXPEDITION_ARTIFACTS.length}`;
     elements.leaderboardCurrentPower.textContent =
       `当前综合战力 ${formatNumber(currentPower, 0)}`;
   }
@@ -8612,6 +8636,12 @@
       highestPower: clampGameNumber(state.highestCombinedPower),
       battleCount: clampGameCount(state.careerBattles),
       transcensions: clampGameCount(state.endgame?.transcensions),
+      expeditionRuns: clampGameCount(state.expedition?.completedRuns),
+      expeditionBossWins: clampGameCount(getTotalBossWins()),
+      expeditionArtifacts: Math.min(
+        EXPEDITION_ARTIFACTS.length,
+        clampGameCount(state.expedition?.artifacts?.length),
+      ),
     };
   }
 

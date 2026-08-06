@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.15.2";
-  const PATCH_NOTES_VERSION = "0.15.2";
-  const SAVE_VERSION = 8;
+  const GAME_VERSION = "0.17.0";
+  const PATCH_NOTES_VERSION = "0.17.0";
+  const SAVE_VERSION = 10;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -45,6 +45,8 @@
   const EXPEDITION_ROUTE_COUNT = 5;
   const EXPEDITION_UNLOCK_DUST = 50000;
   const MAX_EXPEDITION_ENTRY_DUST_COST = 300000000;
+  const EXPEDITION_GEAR_SLOT_LIMIT = 3;
+  const EXPEDITION_PRESET_COUNT = 3;
   const QUALITY_GAME_TICK_INTERVAL = 100;
   const ECO_GAME_TICK_INTERVAL = 250;
   const QUALITY_STARFIELD_FPS = 60;
@@ -106,6 +108,30 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.17.0",
+      theme: "伴星观测日志",
+      changes: [
+        "新增 8 组伴星观测事件：点击指挥台上已经唤醒的伴星，可选择不同的接触与记录方式。",
+        "每项选择会留下不同的永久观测日志；日志属于收藏内容，不提供永久产量或战斗倍率。",
+        "新增观测信号资源，奇点坍缩、完整远征和每日总委托会补充信号，防止重复点击无限领取奖励。",
+        "首次完成观测可获得星图残片、远征补给、航站凭证、星港材料或限额星尘补给，整体奖励适度提高。",
+        "指挥台新增伴星观测站与 8 格日志图鉴，首页可直接查看信号余额、事件选择、收集进度和历史结果。",
+        "每日与每周委托池加入伴星观测目标；存档结构升级至第 10 版，旧存档会按已唤醒伴星补发观测信号。",
+      ],
+    },
+    {
+      version: "0.16.0",
+      theme: "星港配装与机制首领",
+      changes: [
+        "新增 12 件远征舰装与 3 套配装预设；启航前从已解锁舰装中选择 3 件，配装会在本局锁定。",
+        "舰装可稳定反制敌方词条、修复船体或改变战利品结构，形成武器、防御、导航与后勤之间的取舍。",
+        "第五航段改为两阶段机制首领战，玩家每阶段可选择强攻、压制或整备，三名首领拥有不同弱点与战场机制。",
+        "首次击败首领会解锁两件专属舰装蓝图；重复击败会奖励星图残片、远征补给和六类星港材料。",
+        "完整远征基础奖励提高，失败仍可带回一半随船货物；新增配装和首领相关每日、每周委托。",
+        "存档结构升级至第 9 版，旧存档会自动获得基础舰装与三套默认预设。",
+      ],
+    },
     {
       version: "0.15.2",
       theme: "生产曲线校正",
@@ -867,7 +893,7 @@
       icon: "∞",
       title: "建立跨周期的终局航线",
       message:
-        "历史获得 5K 星核后，“超越”页会解锁。奇点坍缩将重置前两层成长，换取永久碎片，并开启持续扩展的边境星区目标。",
+        "历史获得 150 星核后，“超越”页会解锁。奇点坍缩将重置前两层成长，换取永久碎片，并开启持续扩展的边境星区目标。",
       tip: "先完成一次高收益跃迁再坍缩通常能获得更多碎片；协议矩阵可自由选择下一周期的生产、星核、战斗或重建速度。",
     },
   ];
@@ -1254,6 +1280,185 @@
       description: "总在雷达刚刚移开时探出耳朵。",
     },
   ];
+  const COMPANION_OBSERVATION_SIGNAL_CAP = 12;
+  const COMPANION_EVENTS = [
+    {
+      id: "dustMothAfterglow",
+      companionId: "dustMoth",
+      title: "余辉的第一圈",
+      description: "尘光蛾落在坍缩余辉边缘，细小翅粉正把一段废弃航线重新描亮。",
+      choices: [
+        {
+          id: "follow",
+          label: "熄灯跟随",
+          description: "保持安静，记录它绕过的每一处安全坐标。",
+          outcome: "你得到一张只在暗处显形的短途星图。尘光蛾在最后一个坐标上停了一会儿。",
+          rewards: { fragments: 12, supplies: 2 },
+        },
+        {
+          id: "beacon",
+          label: "点亮旧航标",
+          description: "用微光回应，让废弃航标重新加入网络。",
+          outcome: "航标没有发出声音，只向仓库传回一批被遗忘的建材编号。",
+          rewards: { fragments: 7, materialsEach: 2 },
+        },
+      ],
+    },
+    {
+      id: "prismJellySpectrum",
+      companionId: "prismJelly",
+      title: "折射出来的旧星图",
+      description: "棱镜水母的触须投出数百道色谱，其中一组光纹与远征星图完全重合。",
+      choices: [
+        {
+          id: "calibrate",
+          label: "校准光谱",
+          description: "让导航核追踪最稳定的折射路径。",
+          outcome: "色谱收束成一条可用航线，剩余光点被压成了星图残片。",
+          rewards: { fragments: 16, supplies: 1 },
+        },
+        {
+          id: "archive",
+          label: "保存完整色谱",
+          description: "不追求效率，把所有异常颜色送入航站档案。",
+          outcome: "档案员把它命名为“会游泳的黎明”，并为完整记录签发了凭证。",
+          rewards: { tokens: 6, materialsEach: 1, fragments: 6 },
+        },
+      ],
+    },
+    {
+      id: "riftRayTide",
+      companionId: "riftRay",
+      title: "裂隙里的潮汐",
+      description: "裂隙鳐沿着一条不稳定空间缝隙滑行，缝隙另一侧传来废弃补给库的识别码。",
+      choices: [
+        {
+          id: "tow",
+          label: "牵引补给库",
+          description: "抓住短暂窗口，把仍可用的货箱拖回航站。",
+          outcome: "裂隙在最后一只货箱通过后闭合，裂隙鳐留下了一道像海浪的尾迹。",
+          rewards: { supplies: 4, fragments: 8 },
+        },
+        {
+          id: "map",
+          label: "测绘裂隙",
+          description: "放弃大部分货箱，优先记录空间潮汐。",
+          outcome: "测绘结果补全了星港周边最危险的一处导航盲区。",
+          rewards: { materialsEach: 2, tokens: 4 },
+        },
+      ],
+    },
+    {
+      id: "orbitFoxRing",
+      companionId: "orbitFox",
+      title: "尾迹画出的星环",
+      description: "环轨狐连续绕行三圈，尾迹拼成了一座早已拆解的环形船坞。",
+      choices: [
+        {
+          id: "salvage",
+          label: "按图回收",
+          description: "派出工程艇，沿着尾迹寻找仍可利用的构件。",
+          outcome: "工程艇带回一批成套构件，环轨狐则把新的尾迹画成了一个勾。",
+          rewards: { materialsEach: 3, fragments: 5 },
+        },
+        {
+          id: "play",
+          label: "跟它再跑一圈",
+          description: "让护航艇加入轨道，不急着拆走任何东西。",
+          outcome: "护航艇完成了航站有记录以来最轻松的一次训练巡航。",
+          rewards: { dustMinutes: 8, tokens: 5 },
+        },
+      ],
+    },
+    {
+      id: "echoWhaleSong",
+      companionId: "echoWhale",
+      title: "上一周期的歌",
+      description: "回声幼鲸唱出的并非声音，而是上一超越周期尚未发出的求援信号。",
+      choices: [
+        {
+          id: "answer",
+          label: "回应旧信号",
+          description: "向已经不存在的航站发送一段确认回波。",
+          outcome: "求援信号安静下来，一份跨周期封存的补给清单出现在当前仓库。",
+          rewards: { supplies: 3, materialsEach: 2, fragments: 6 },
+        },
+        {
+          id: "record",
+          label: "录下整首歌",
+          description: "保留所有噪声与停顿，不对它做任何修正。",
+          outcome: "航站把这段记录列为永久收藏，并为异常完整性签发了凭证。",
+          rewards: { tokens: 8, fragments: 10 },
+        },
+      ],
+    },
+    {
+      id: "voidCatNap",
+      companionId: "voidCat",
+      title: "没有引力的午睡",
+      description: "虚空猫占住了星港唯一一处零重力维护节点，所有工具都悬停在它周围。",
+      choices: [
+        {
+          id: "wait",
+          label: "等它睡醒",
+          description: "暂停维护排程，让无人机顺便整理漂浮工具。",
+          outcome: "虚空猫醒来后把一枚失踪很久的导航芯片推回了工具箱。",
+          rewards: { materialsEach: 2, tokens: 6 },
+        },
+        {
+          id: "workaround",
+          label: "绕开维护节点",
+          description: "把工作拆成微型任务，在不惊醒它的情况下继续。",
+          outcome: "意外形成的新流程提高了本次整备效率，但没有被写成永久倍率。",
+          rewards: { dustMinutes: 10, supplies: 2 },
+        },
+      ],
+    },
+    {
+      id: "novaFinchSpark",
+      companionId: "novaFinch",
+      title: "不会灼伤人的火花",
+      description: "新星雀抖落一串低温火花，每一粒都带着不同材料的共振频率。",
+      choices: [
+        {
+          id: "forge",
+          label: "送入熔铸站",
+          description: "用火花校准一轮精密材料处理。",
+          outcome: "火花在熔炉里绕成一只小鸟，随后化作一批纯净构件。",
+          rewards: { materialsEach: 3, tokens: 4 },
+        },
+        {
+          id: "scatter",
+          label: "洒向远征舰",
+          description: "让火花为下一批补给标出最稳定的装载位。",
+          outcome: "所有补给箱都在黑暗里亮了一瞬，像一支准备出航的小舰队。",
+          rewards: { supplies: 4, fragments: 12 },
+        },
+      ],
+    },
+    {
+      id: "moonHareBlindSpot",
+      companionId: "moonHare",
+      title: "雷达移开的瞬间",
+      description: "月隙兔只在雷达扫描线移开的瞬间出现，怀里抱着一枚没有登记的月白色数据盒。",
+      choices: [
+        {
+          id: "listen",
+          label: "关闭雷达倾听",
+          description: "相信它的方向感，暂时让航站进入安静模式。",
+          outcome: "数据盒打开后只有一句话：有人走到了这里，所以这条航线值得被保存。",
+          rewards: { fragments: 18, tokens: 6 },
+        },
+        {
+          id: "share",
+          label: "共享月白数据",
+          description: "把坐标拆成补给、材料与星图三份公开记录。",
+          outcome: "月隙兔在记录上传完毕前消失，原地留下了一枚浅浅的爪印。",
+          rewards: { supplies: 3, materialsEach: 2, fragments: 9 },
+        },
+      ],
+    },
+  ];
   const ENDGAME_PROTOCOLS = [
     {
       id: "production",
@@ -1454,6 +1659,187 @@
     },
   ];
 
+  const EXPEDITION_GEAR = [
+    {
+      id: "phaseCoil",
+      name: "裂相线圈",
+      icon: "◇",
+      category: "武器",
+      description: "稳定反制相位护盾，并提高对守盾首领的压制效率。",
+      effects: ["phaseLance"],
+      defaultUnlocked: true,
+    },
+    {
+      id: "interceptorGrid",
+      name: "近防拦截网",
+      icon: "⌬",
+      category: "防御",
+      description: "稳定反制蜂群编队，并减轻蜂群首领的额外损伤。",
+      effects: ["interceptorGrid"],
+      defaultUnlocked: true,
+    },
+    {
+      id: "thermalSink",
+      name: "深冷热沉",
+      icon: "☄",
+      category: "防御",
+      description: "稳定反制过载核心，避免额外爆炸损伤。",
+      effects: ["thermalSink"],
+      defaultUnlocked: true,
+    },
+    {
+      id: "predictiveNav",
+      name: "预测导航核",
+      icon: "⌖",
+      category: "导航",
+      description: "反制深空干扰，并使普通航线成功率提高 4%。",
+      effects: ["predictiveNav"],
+      defaultUnlocked: true,
+    },
+    {
+      id: "repairDrone",
+      name: "随舰维修群",
+      icon: "◎",
+      category: "后勤",
+      description: "每次普通战斗胜利后修复 8 点船体。",
+      effects: ["repairDrone"],
+      defaultUnlocked: true,
+    },
+    {
+      id: "reactiveArmor",
+      name: "反应装甲板",
+      icon: "⬡",
+      category: "防御",
+      description: "本局受到的普通航段船体损伤减少 20%。",
+      effects: ["reactiveArmor"],
+      defaultUnlocked: true,
+    },
+    {
+      id: "aegisBreaker",
+      name: "守盾破城矛",
+      icon: "◈",
+      category: "武器",
+      description: "强攻战术成功率 +8%，对永昼壁垒号额外有效。",
+      effects: ["bossAssault"],
+      bossId: "aegisArk",
+    },
+    {
+      id: "shieldCapacitor",
+      name: "脉冲盾容器",
+      icon: "◒",
+      category: "防御",
+      description: "启航时最大船体与初始船体提高 15。",
+      effects: ["shieldCapacitor"],
+      bossId: "aegisArk",
+    },
+    {
+      id: "swarmNet",
+      name: "蜂群牵引网",
+      icon: "⌁",
+      category: "控制",
+      description: "压制战术成功率 +10%，对群巢母舰额外有效。",
+      effects: ["bossControl"],
+      bossId: "swarmMatriarch",
+    },
+    {
+      id: "salvageVault",
+      name: "密封拆解舱",
+      icon: "▣",
+      category: "后勤",
+      description: "反制掠夺协议，残骸航线额外获得 1 补给。",
+      effects: ["sealedCargo", "scavengerRig"],
+      bossId: "swarmMatriarch",
+    },
+    {
+      id: "voidAnchor",
+      name: "虚空锚定器",
+      icon: "◉",
+      category: "导航",
+      description: "压制虚空首领的干扰，使首领战基础成功率 +6%。",
+      effects: ["voidAnchor"],
+      bossId: "voidChoir",
+    },
+    {
+      id: "fragmentLens",
+      name: "星图聚焦镜",
+      icon: "✧",
+      category: "回收",
+      description: "本局获得的星图残片提高 25%，只影响消耗材料。",
+      effects: ["fragmentLens"],
+      bossId: "voidChoir",
+    },
+  ];
+
+  const EXPEDITION_BOSSES = [
+    {
+      id: "aegisArk",
+      name: "永昼壁垒号",
+      icon: "◈",
+      description: "两层相位装甲会轮流封闭核心，未携带裂相装备时很难稳定命中。",
+      weaknessEffects: ["phaseLance", "bossAssault"],
+      baseChance: 0.58,
+      baseDamage: 21,
+      fragmentReward: 14,
+      supplyReward: 2,
+      blueprints: ["aegisBreaker", "shieldCapacitor"],
+    },
+    {
+      id: "swarmMatriarch",
+      name: "群巢母舰",
+      icon: "⌬",
+      description: "无人机群会不断遮蔽火控；若没有拦截或控制设备，失败损伤会明显增加。",
+      weaknessEffects: ["interceptorGrid", "bossControl"],
+      baseChance: 0.6,
+      baseDamage: 18,
+      fragmentReward: 12,
+      supplyReward: 3,
+      blueprints: ["swarmNet", "salvageVault"],
+    },
+    {
+      id: "voidChoir",
+      name: "虚空合唱体",
+      icon: "◉",
+      description: "多重干扰信号会伪造目标位置，需要导航或锚定设备锁定真实回声。",
+      weaknessEffects: ["predictiveNav", "voidAnchor"],
+      baseChance: 0.55,
+      baseDamage: 24,
+      fragmentReward: 17,
+      supplyReward: 2,
+      blueprints: ["voidAnchor", "fragmentLens"],
+    },
+  ];
+
+  const EXPEDITION_BOSS_TACTICS = [
+    {
+      id: "assault",
+      name: "强攻核心",
+      icon: "◆",
+      description: "成功率 +8%，但承受伤害 +25%；成功时额外获得 50% 首领残片。",
+      chance: 0.08,
+      damageMultiplier: 1.25,
+      fragmentMultiplier: 1.5,
+    },
+    {
+      id: "control",
+      name: "压制机制",
+      icon: "⌬",
+      description: "携带首领弱点舰装时成功率额外提高，伤害减少 15%。",
+      chance: 0.02,
+      damageMultiplier: 0.85,
+      fragmentMultiplier: 1,
+    },
+    {
+      id: "refit",
+      name: "战场整备",
+      icon: "◎",
+      description: "先修复 12 点船体，成功率 -8%，本阶段伤害减少 35%。",
+      chance: -0.08,
+      damageMultiplier: 0.65,
+      fragmentMultiplier: 0.9,
+      repair: 12,
+    },
+  ];
+
   const EXPEDITION_ARTIFACTS = [
     { id: "glassCompass", name: "玻璃星图仪", icon: "◈", lore: "指针始终指向一条不存在的航线。" },
     { id: "silentBeacon", name: "无声信标", icon: "⌁", lore: "没有频率，却能让附近的尘埃产生回声。" },
@@ -1626,6 +2012,40 @@
       eligible: (targetState) => targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST,
     },
     {
+      id: "loadoutChanges",
+      metric: "loadoutChanges",
+      title: "舰装轮换",
+      icon: "▦",
+      format: "count",
+      dailyTarget: () => 2,
+      weeklyTarget: () => 8,
+      eligible: (targetState) => targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST,
+    },
+    {
+      id: "bossVictories",
+      metric: "bossVictories",
+      title: "首领猎手",
+      icon: "◆",
+      format: "count",
+      weeklyOnly: true,
+      weeklyTarget: () => 1,
+      eligible: (targetState) => targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST,
+    },
+    {
+      id: "companionObservations",
+      metric: "companionObservations",
+      title: "伴星观测",
+      icon: "☾",
+      format: "count",
+      dailyTarget: () => 1,
+      weeklyTarget: () => 3,
+      eligible: (targetState) => {
+        const companions = targetState.endgame?.companions || [];
+        const observations = targetState.endgame?.companionObservations || [];
+        return companions.length > observations.length;
+      },
+    },
+    {
       id: "prestiges",
       metric: "prestiges",
       title: "深空跃迁",
@@ -1699,6 +2119,18 @@
     commandCompanionSystem: $("#command-companion-system"),
     commandCompanionStage: $("#command-companion-stage"),
     commandCompanionCount: $("#command-companion-count"),
+    companionObservatory: $("#companion-observatory"),
+    companionSignalCount: $("#companion-signal-count"),
+    companionEventIdle: $("#companion-event-idle"),
+    companionEventScene: $("#companion-event-scene"),
+    companionEventIcon: $("#companion-event-icon"),
+    companionEventName: $("#companion-event-name"),
+    companionEventTitle: $("#companion-event-title"),
+    companionEventDescription: $("#companion-event-description"),
+    companionEventChoices: $("#companion-event-choices"),
+    companionEventClose: $("#companion-event-close"),
+    companionLogCount: $("#companion-log-count"),
+    companionLogGrid: $("#companion-log-grid"),
     buildingList: $("#building-list"),
     upgradeList: $("#upgrade-list"),
     achievementList: $("#achievement-list"),
@@ -1866,22 +2298,37 @@
     startExpeditionButton: $("#start-expedition-button"),
     expeditionCompletedRuns: $("#expedition-completed-runs"),
     expeditionFailedRuns: $("#expedition-failed-runs"),
+    expeditionLoadout: $("#expedition-loadout"),
+    expeditionPresetButtons: $("#expedition-preset-buttons"),
+    expeditionLoadoutCount: $("#expedition-loadout-count"),
+    expeditionLoadoutStatus: $("#expedition-loadout-status"),
+    expeditionGearGrid: $("#expedition-gear-grid"),
     expeditionActive: $("#expedition-active"),
     expeditionSectorLabel: $("#expedition-sector-label"),
     expeditionHullValue: $("#expedition-hull-value"),
     expeditionHullBar: $("#expedition-hull-bar"),
     expeditionCargo: $("#expedition-cargo"),
     expeditionBoonList: $("#expedition-boon-list"),
+    expeditionActiveGear: $("#expedition-active-gear"),
     expeditionChoiceEyebrow: $("#expedition-choice-eyebrow"),
     expeditionChoiceTitle: $("#expedition-choice-title"),
     expeditionChoiceDescription: $("#expedition-choice-description"),
     expeditionBoonChoices: $("#expedition-boon-choices"),
     expeditionRouteChoices: $("#expedition-route-choices"),
+    expeditionBossEncounter: $("#expedition-boss-encounter"),
+    expeditionBossIcon: $("#expedition-boss-icon"),
+    expeditionBossName: $("#expedition-boss-name"),
+    expeditionBossDescription: $("#expedition-boss-description"),
+    expeditionBossPhase: $("#expedition-boss-phase"),
+    expeditionBossCounter: $("#expedition-boss-counter"),
+    expeditionBossTactics: $("#expedition-boss-tactics"),
     expeditionRerollButton: $("#expedition-reroll-button"),
     expeditionRepairButton: $("#expedition-repair-button"),
     expeditionAbandonButton: $("#expedition-abandon-button"),
     expeditionReportText: $("#expedition-report-text"),
     expeditionPath: $("#expedition-path"),
+    expeditionBossTotalWins: $("#expedition-boss-total-wins"),
+    expeditionBossGrid: $("#expedition-boss-grid"),
     expeditionCollectionCount: $("#expedition-collection-count"),
     expeditionArtifactGrid: $("#expedition-artifact-grid"),
     expeditionSkinGrid: $("#expedition-skin-grid"),
@@ -1918,6 +2365,9 @@
       sectorUnits: 0,
       sectorWins: 0,
       companions: [],
+      companionSignals: 0,
+      companionObservations: [],
+      activeCompanionEvent: null,
       protocols: freshEndgameProtocolState(),
     };
   }
@@ -1952,11 +2402,25 @@
   }
 
   function freshExpeditionState() {
+    const bossWins = {};
+    EXPEDITION_BOSSES.forEach((boss) => {
+      bossWins[boss.id] = 0;
+    });
     return {
       supplies: 3,
       fragments: 0,
       completedRuns: 0,
       failedRuns: 0,
+      bossWins,
+      unlockedGear: EXPEDITION_GEAR
+        .filter((gear) => gear.defaultUnlocked)
+        .map((gear) => gear.id),
+      activePreset: 0,
+      loadoutPresets: [
+        ["phaseCoil", "interceptorGrid", "thermalSink"],
+        ["predictiveNav", "repairDrone", "reactiveArmor"],
+        ["phaseCoil", "predictiveNav", "repairDrone"],
+      ],
       artifacts: [],
       unlockedSkins: ["standard"],
       activeSkin: "standard",
@@ -2302,8 +2766,237 @@
     );
   }
 
+  function getCompanionEvent(eventId) {
+    return COMPANION_EVENTS.find((companionEvent) => companionEvent.id === eventId);
+  }
+
+  function getCompanionEventByCompanion(companionId) {
+    return COMPANION_EVENTS.find(
+      (companionEvent) => companionEvent.companionId === companionId,
+    );
+  }
+
+  function getCompanionObservation(eventId, targetState = state) {
+    return targetState.endgame?.companionObservations?.find(
+      (observation) => observation.eventId === eventId,
+    ) || null;
+  }
+
+  function formatCompanionRewards(rewards = {}) {
+    const parts = [];
+    if (rewards.fragments) parts.push(`星图残片 +${rewards.fragments}`);
+    if (rewards.supplies) parts.push(`远征补给 +${rewards.supplies}`);
+    if (rewards.tokens) parts.push(`航站凭证 +${rewards.tokens}`);
+    if (rewards.materialsEach) {
+      parts.push(`每种星港材料 +${rewards.materialsEach}`);
+    }
+    if (rewards.dustMinutes) parts.push(`${rewards.dustMinutes} 分钟星尘补给`);
+    return parts.join(" · ");
+  }
+
+  function grantCompanionSignals(amount) {
+    const before = state.endgame.companionSignals;
+    state.endgame.companionSignals = Math.min(
+      COMPANION_OBSERVATION_SIGNAL_CAP,
+      clampGameCount(safeAdd(before, amount)),
+    );
+    return state.endgame.companionSignals - before;
+  }
+
+  function grantCompanionRewards(rewards = {}) {
+    if (rewards.fragments) {
+      state.expedition.fragments = Math.min(
+        EXPEDITION_FRAGMENT_CAP,
+        clampGameCount(safeAdd(state.expedition.fragments, rewards.fragments)),
+      );
+    }
+    if (rewards.supplies) {
+      state.expedition.supplies = Math.min(
+        EXPEDITION_SUPPLY_CAP,
+        clampGameCount(safeAdd(state.expedition.supplies, rewards.supplies)),
+      );
+    }
+    if (rewards.tokens) grantMissionTokens(rewards.tokens);
+    if (rewards.materialsEach) grantMissionMaterials(rewards.materialsEach);
+    if (rewards.dustMinutes) {
+      addDust(getMissionRewardDust(rewards.dustMinutes), {
+        trackMissions: false,
+      });
+    }
+  }
+
+  function openCompanionEvent(companionId) {
+    const companion = SINGULARITY_COMPANIONS.find(
+      (entry) => entry.id === companionId,
+    );
+    const companionEvent = getCompanionEventByCompanion(companionId);
+    if (
+      !companion ||
+      !companionEvent ||
+      !state.endgame.companions.includes(companionId)
+    ) {
+      return;
+    }
+    const observation = getCompanionObservation(companionEvent.id);
+    if (observation) {
+      const choice = companionEvent.choices.find(
+        (entry) => entry.id === observation.choiceId,
+      );
+      showToast(
+        companionEvent.title,
+        choice?.outcome || "这段伴星记录已经写入观测日志。",
+        companion.icon,
+      );
+      return;
+    }
+    if (state.endgame.companionSignals < 1) {
+      showToast(
+        "观测信号不足",
+        "完整远征、奇点坍缩或每日委托总奖励可以补充观测信号。",
+        "⌁",
+      );
+      return;
+    }
+    state.endgame.activeCompanionEvent = companionEvent.id;
+    renderCompanionObservatory();
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    elements.companionObservatory.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "nearest",
+    });
+  }
+
+  function closeCompanionEvent() {
+    state.endgame.activeCompanionEvent = null;
+    renderCompanionObservatory();
+  }
+
+  function resolveCompanionEvent(choiceId) {
+    const companionEvent = getCompanionEvent(
+      state.endgame.activeCompanionEvent,
+    );
+    const choice = companionEvent?.choices.find((entry) => entry.id === choiceId);
+    const companion = SINGULARITY_COMPANIONS.find(
+      (entry) => entry.id === companionEvent?.companionId,
+    );
+    if (
+      !companionEvent ||
+      !choice ||
+      !companion ||
+      state.endgame.companionSignals < 1 ||
+      getCompanionObservation(companionEvent.id) ||
+      !state.endgame.companions.includes(companion.id)
+    ) {
+      return;
+    }
+    state.endgame.companionSignals -= 1;
+    state.endgame.companionObservations.push({
+      eventId: companionEvent.id,
+      choiceId: choice.id,
+      completedAt: Date.now(),
+    });
+    state.endgame.activeCompanionEvent = null;
+    grantCompanionRewards(choice.rewards);
+    recordMissionProgress("companionObservations", 1);
+    addLog(`伴星观测完成：${companion.name} · ${companionEvent.title} · ${choice.label}。`);
+    showToast(
+      "伴星观测已归档",
+      `${choice.outcome} · ${formatCompanionRewards(choice.rewards)}`,
+      companion.icon,
+    );
+    playAchievementTone();
+    renderCompanionObservatory();
+    updateUi();
+    saveGame(false, { forceBackup: true });
+  }
+
+  function renderCompanionObservatory(
+    companions = getSingularityCompanions(),
+  ) {
+    elements.companionObservatory.hidden = companions.length === 0;
+    if (!companions.length) return;
+    const observations = state.endgame.companionObservations;
+    elements.companionSignalCount.textContent =
+      `${state.endgame.companionSignals} / ${COMPANION_OBSERVATION_SIGNAL_CAP}`;
+    elements.companionLogCount.textContent =
+      `${observations.length} / ${COMPANION_EVENTS.length}`;
+
+    const activeEvent = getCompanionEvent(state.endgame.activeCompanionEvent);
+    const activeCompanion = SINGULARITY_COMPANIONS.find(
+      (entry) => entry.id === activeEvent?.companionId,
+    );
+    const validActiveEvent =
+      activeEvent &&
+      activeCompanion &&
+      state.endgame.companions.includes(activeCompanion.id) &&
+      !getCompanionObservation(activeEvent.id);
+    if (!validActiveEvent) state.endgame.activeCompanionEvent = null;
+    elements.companionEventIdle.hidden = Boolean(validActiveEvent);
+    elements.companionEventScene.hidden = !validActiveEvent;
+    elements.companionEventChoices.textContent = "";
+    if (validActiveEvent) {
+      elements.companionEventIcon.textContent = activeCompanion.icon;
+      elements.companionEventIcon.style.color = activeCompanion.color;
+      elements.companionEventName.textContent = activeCompanion.name;
+      elements.companionEventTitle.textContent = activeEvent.title;
+      elements.companionEventDescription.textContent = activeEvent.description;
+      activeEvent.choices.forEach((choice) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.companionEventChoice = choice.id;
+        const copy = document.createElement("span");
+        const name = document.createElement("strong");
+        name.textContent = choice.label;
+        const description = document.createElement("small");
+        description.textContent = choice.description;
+        copy.append(name, description);
+        const reward = document.createElement("i");
+        reward.textContent = formatCompanionRewards(choice.rewards);
+        button.append(copy, reward);
+        elements.companionEventChoices.appendChild(button);
+      });
+    }
+
+    elements.companionLogGrid.textContent = "";
+    COMPANION_EVENTS.forEach((companionEvent) => {
+      const companion = SINGULARITY_COMPANIONS.find(
+        (entry) => entry.id === companionEvent.companionId,
+      );
+      const unlocked = state.endgame.companions.includes(companion.id);
+      const observation = getCompanionObservation(companionEvent.id);
+      const choice = companionEvent.choices.find(
+        (entry) => entry.id === observation?.choiceId,
+      );
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = `companion-log-card${observation ? " completed" : ""}${unlocked ? "" : " locked"}`;
+      card.dataset.companionLog = companion.id;
+      card.disabled = !unlocked;
+      const icon = document.createElement("span");
+      icon.textContent = unlocked ? companion.icon : "?";
+      if (unlocked) icon.style.color = companion.color;
+      const copy = document.createElement("span");
+      const name = document.createElement("strong");
+      name.textContent = unlocked ? companionEvent.title : "未唤醒伴星记录";
+      const detail = document.createElement("small");
+      detail.textContent = observation
+        ? `${companion.name} · ${choice.label}`
+        : unlocked
+          ? `${companion.name} · 等待观测`
+          : "完成更多奇点坍缩后解锁";
+      copy.append(name, detail);
+      const status = document.createElement("i");
+      status.textContent = observation ? "已归档" : unlocked ? "可观测" : "锁定";
+      card.append(icon, copy, status);
+      elements.companionLogGrid.appendChild(card);
+    });
+  }
+
   function renderCommandCompanions(targetState = state) {
     const companions = getSingularityCompanions(targetState);
+    renderCompanionObservatory(companions);
     const signature = companions.map((companion) => companion.id).join("|");
     if (signature === renderedCommandCompanionSignature) return;
     renderedCommandCompanionSignature = signature;
@@ -2349,11 +3042,7 @@
       shell.append(glyph, name);
       body.append(shell);
       body.addEventListener("click", () => {
-        showToast(
-          companion.name,
-          `${companion.description} · 永久收藏，纯观赏，无数值加成。`,
-          companion.icon,
-        );
+        openCompanionEvent(companion.id);
       });
       fragment.append(body);
     });
@@ -3105,10 +3794,13 @@
     const rewardDust = getMissionRewardDust(10);
     grantMissionTokens(15);
     addDust(rewardDust, { trackMissions: false });
+    const signalReward = getSingularityCompanions().length > 0
+      ? grantCompanionSignals(1)
+      : 0;
     addLog("今日航站委托总奖励已领取。");
     showToast(
       "今日航线已稳定",
-      `+15 凭证 · +${formatNumber(rewardDust)} 星尘`,
+      `+15 凭证 · +${formatNumber(rewardDust)} 星尘${signalReward ? ` · 观测信号 +${signalReward}` : ""}`,
       "☷",
     );
     renderMissions();
@@ -3245,6 +3937,96 @@
     return EXPEDITION_SKINS.find((skin) => skin.id === skinId);
   }
 
+  function getExpeditionGear(gearId) {
+    return EXPEDITION_GEAR.find((gear) => gear.id === gearId);
+  }
+
+  function getExpeditionBoss(bossId) {
+    return EXPEDITION_BOSSES.find((boss) => boss.id === bossId);
+  }
+
+  function getExpeditionBossTactic(tacticId) {
+    return EXPEDITION_BOSS_TACTICS.find((tactic) => tactic.id === tacticId);
+  }
+
+  function getExpeditionPresetGearIds(targetState = state) {
+    const expedition = targetState.expedition || freshExpeditionState();
+    const presetIndex = clamp(
+      Math.floor(Number(expedition.activePreset) || 0),
+      0,
+      EXPEDITION_PRESET_COUNT - 1,
+    );
+    return Array.isArray(expedition.loadoutPresets?.[presetIndex])
+      ? expedition.loadoutPresets[presetIndex]
+      : [];
+  }
+
+  function getExpeditionRunGearIds(run = state.expedition.activeRun) {
+    return run && Array.isArray(run.gear)
+      ? run.gear
+      : getExpeditionPresetGearIds();
+  }
+
+  function getExpeditionGearEffects(run = state.expedition.activeRun) {
+    const effects = new Set();
+    getExpeditionRunGearIds(run).forEach((gearId) => {
+      const gear = getExpeditionGear(gearId);
+      gear?.effects?.forEach((effectId) => effects.add(effectId));
+    });
+    return effects;
+  }
+
+  function hasExpeditionEffect(effectId, run = state.expedition.activeRun) {
+    return Boolean(
+      run &&
+        (run.boons?.includes(effectId) ||
+          getExpeditionGearEffects(run).has(effectId)),
+    );
+  }
+
+  function getTotalBossWins(targetState = state) {
+    return EXPEDITION_BOSSES.reduce(
+      (total, boss) =>
+        safeAdd(total, targetState.expedition?.bossWins?.[boss.id] || 0),
+      0,
+    );
+  }
+
+  function selectExpeditionPreset(index) {
+    if (state.expedition.activeRun) return;
+    const nextIndex = clamp(
+      Math.floor(Number(index) || 0),
+      0,
+      EXPEDITION_PRESET_COUNT - 1,
+    );
+    if (nextIndex === state.expedition.activePreset) return;
+    state.expedition.activePreset = nextIndex;
+    recordMissionProgress("loadoutChanges", 1);
+    renderExpedition();
+    saveGame();
+  }
+
+  function toggleExpeditionGear(gearId) {
+    if (state.expedition.activeRun) {
+      showToast("舰装已经锁定", "结束本次远征后才能调整配装。", "▦");
+      return;
+    }
+    if (!state.expedition.unlockedGear.includes(gearId)) return;
+    const preset = getExpeditionPresetGearIds();
+    const existingIndex = preset.indexOf(gearId);
+    if (existingIndex >= 0) {
+      preset.splice(existingIndex, 1);
+    } else if (preset.length >= EXPEDITION_GEAR_SLOT_LIMIT) {
+      showToast("舰装栏位已满", "每套方案最多安装 3 件舰装，请先卸下一件。", "▦");
+      return;
+    } else {
+      preset.push(gearId);
+    }
+    recordMissionProgress("loadoutChanges", 1);
+    renderExpedition();
+    saveGame();
+  }
+
   function getExpeditionEntryDustCost(targetState = state) {
     return Math.min(
       MAX_EXPEDITION_ENTRY_DUST_COST,
@@ -3290,8 +4072,12 @@
   }
 
   function createExpeditionBoonChoices(run) {
+    const gearEffects = getExpeditionGearEffects(run);
     return seededMissionShuffle(
-      EXPEDITION_BOONS.filter((boon) => !run.boons.includes(boon.id)),
+      EXPEDITION_BOONS.filter(
+        (boon) =>
+          !run.boons.includes(boon.id) && !gearEffects.has(boon.id),
+      ),
       `${run.seed}:boon:${run.depth}:${run.boons.length}`,
     )
       .slice(0, 3)
@@ -3374,6 +4160,44 @@
     );
     clean.completedRuns = clampGameCount(rawExpedition.completedRuns);
     clean.failedRuns = clampGameCount(rawExpedition.failedRuns);
+    EXPEDITION_BOSSES.forEach((boss) => {
+      clean.bossWins[boss.id] = clampGameCount(
+        rawExpedition.bossWins?.[boss.id],
+      );
+    });
+    const unlockedGearIds = new Set(
+      EXPEDITION_GEAR.filter((gear) => gear.defaultUnlocked).map(
+        (gear) => gear.id,
+      ),
+    );
+    if (Array.isArray(rawExpedition.unlockedGear)) {
+      rawExpedition.unlockedGear.forEach((gearId) => {
+        if (getExpeditionGear(gearId)) unlockedGearIds.add(gearId);
+      });
+    }
+    EXPEDITION_BOSSES.forEach((boss) => {
+      if (clean.bossWins[boss.id] < 1) return;
+      boss.blueprints.forEach((gearId) => unlockedGearIds.add(gearId));
+    });
+    clean.unlockedGear = EXPEDITION_GEAR.flatMap((gear) =>
+      unlockedGearIds.has(gear.id) ? [gear.id] : [],
+    );
+    clean.loadoutPresets = clean.loadoutPresets.map((defaultPreset, index) => {
+      const rawPreset = rawExpedition.loadoutPresets?.[index];
+      if (!Array.isArray(rawPreset)) return defaultPreset;
+      const sanitized = [...new Set(rawPreset)]
+        .filter(
+          (gearId) =>
+            unlockedGearIds.has(gearId) && Boolean(getExpeditionGear(gearId)),
+        )
+        .slice(0, EXPEDITION_GEAR_SLOT_LIMIT);
+      return sanitized.length ? sanitized : defaultPreset;
+    });
+    clean.activePreset = clamp(
+      Math.floor(Number(rawExpedition.activePreset) || 0),
+      0,
+      EXPEDITION_PRESET_COUNT - 1,
+    );
     clean.artifacts = Array.isArray(rawExpedition.artifacts)
       ? EXPEDITION_ARTIFACTS.flatMap((artifact) =>
           rawExpedition.artifacts.includes(artifact.id) ? [artifact.id] : [],
@@ -3415,7 +4239,15 @@
           0,
           EXPEDITION_ROUTE_COUNT - 1,
         ),
-        hull: clamp(Math.floor(Number(rawRun.hull) || 0), 1, 100),
+        gear: Array.isArray(rawRun.gear)
+          ? [...new Set(rawRun.gear)]
+              .filter(
+                (gearId) =>
+                  unlockedGearIds.has(gearId) && Boolean(getExpeditionGear(gearId)),
+              )
+              .slice(0, EXPEDITION_GEAR_SLOT_LIMIT)
+          : [...clean.loadoutPresets[clean.activePreset]],
+        hull: 1,
         maxHull: 100,
         commandPower: Math.max(
           1,
@@ -3429,7 +4261,9 @@
               .filter(Boolean)
               .slice(0, 3)
           : [],
-        status: rawRun.status === "boon" ? "boon" : "route",
+        status: ["boon", "route", "boss"].includes(rawRun.status)
+          ? rawRun.status
+          : "route",
         choiceNonce: clampGameCount(rawRun.choiceNonce),
         runSupplies: Math.min(999, clampGameCount(rawRun.runSupplies)),
         runFragments: Math.min(9999, clampGameCount(rawRun.runFragments)),
@@ -3439,7 +4273,31 @@
               .slice(-EXPEDITION_ROUTE_COUNT)
               .map((entry) => entry.slice(0, 120))
           : [],
+        boss:
+          rawRun.boss && getExpeditionBoss(rawRun.boss.id)
+            ? {
+                id: rawRun.boss.id,
+                phase: clamp(Math.floor(Number(rawRun.boss.phase) || 0), 0, 1),
+                fragments: Math.min(
+                  9999,
+                  clampGameCount(rawRun.boss.fragments),
+                ),
+              }
+            : null,
       };
+      clean.activeRun.maxHull = getExpeditionGearEffects(clean.activeRun).has(
+        "shieldCapacitor",
+      )
+        ? 115
+        : 100;
+      clean.activeRun.hull = clamp(
+        Math.floor(Number(rawRun.hull) || clean.activeRun.maxHull),
+        1,
+        clean.activeRun.maxHull,
+      );
+      if (clean.activeRun.status === "boss" && !clean.activeRun.boss) {
+        clean.activeRun.status = "route";
+      }
     }
     return clean;
   }
@@ -3447,6 +4305,12 @@
   function ensureExpeditionRunChoices() {
     const run = state.expedition.activeRun;
     if (!run) return;
+    if (
+      run.depth >= EXPEDITION_ROUTE_COUNT - 1 &&
+      run.status === "route"
+    ) {
+      prepareExpeditionBoss(run);
+    }
     if (run.status === "boon" && run.boonChoices.length < 1) {
       run.boonChoices = createExpeditionBoonChoices(run);
     }
@@ -3459,6 +4323,138 @@
     return state.expedition.activeRun?.boons.includes(boonId) === true;
   }
 
+  function prepareExpeditionBoss(run = state.expedition.activeRun) {
+    if (!run) return null;
+    const boss = seededMissionShuffle(
+      EXPEDITION_BOSSES,
+      `${run.seed}:boss:${state.expedition.completedRuns}`,
+    )[0];
+    run.status = "boss";
+    run.boonChoices = [];
+    run.routeChoices = [];
+    run.boss = {
+      id: boss.id,
+      phase: 0,
+      fragments: 0,
+    };
+    state.expedition.lastReport = `${boss.name}封锁第五航段，请选择首领战术。`;
+    return boss;
+  }
+
+  function hasExpeditionBossWeakness(boss, run = state.expedition.activeRun) {
+    if (!boss || !run) return false;
+    return boss.weaknessEffects.some((effectId) =>
+      hasExpeditionEffect(effectId, run),
+    );
+  }
+
+  function getExpeditionBossTacticPreview(tacticId) {
+    const run = state.expedition.activeRun;
+    const boss = getExpeditionBoss(run?.boss?.id);
+    const tactic = getExpeditionBossTactic(tacticId);
+    if (!run || !boss || !tactic) return null;
+    const weakness = hasExpeditionBossWeakness(boss, run);
+    let chance = boss.baseChance + tactic.chance - run.boss.phase * 0.04;
+    if (!weakness) chance -= 0.12;
+    if (tactic.id === "control" && weakness) chance += 0.18;
+    if (tactic.id === "assault" && hasExpeditionEffect("bossAssault", run)) {
+      chance += 0.08;
+    }
+    if (boss.id === "voidChoir" && hasExpeditionEffect("voidAnchor", run)) {
+      chance += 0.06;
+    }
+    let damage = boss.baseDamage * tactic.damageMultiplier;
+    if (boss.id === "swarmMatriarch" && !weakness) damage += 6;
+    return {
+      boss,
+      tactic,
+      weakness,
+      chance: clamp(chance, 0.22, 0.95),
+      successDamage: Math.max(1, Math.round(damage * 0.72)),
+      failureDamage: Math.max(1, Math.round(damage * 1.55)),
+    };
+  }
+
+  function grantExpeditionBossReward(run, boss) {
+    const previousWins = state.expedition.bossWins[boss.id] || 0;
+    state.expedition.bossWins[boss.id] = clampGameCount(previousWins + 1);
+    const newlyUnlocked = boss.blueprints.filter(
+      (gearId) => !state.expedition.unlockedGear.includes(gearId),
+    );
+    newlyUnlocked.forEach((gearId) => state.expedition.unlockedGear.push(gearId));
+    const materialReward = previousWins < 1 ? 2 : 1;
+    grantMissionMaterials(materialReward);
+    run.runSupplies = Math.min(
+      999,
+      run.runSupplies + boss.supplyReward + (previousWins < 1 ? 1 : 0),
+    );
+    run.runFragments = Math.min(
+      9999,
+      run.runFragments + run.boss.fragments + (previousWins < 1 ? 6 : 10),
+    );
+    recordMissionProgress("bossVictories", 1);
+    return { newlyUnlocked, materialReward, firstVictory: previousWins < 1 };
+  }
+
+  function chooseExpeditionBossTactic(tacticId) {
+    const run = state.expedition.activeRun;
+    if (!run || run.status !== "boss" || !run.boss) return;
+    const preview = getExpeditionBossTacticPreview(tacticId);
+    if (!preview) return;
+    const { boss, tactic, chance, weakness } = preview;
+    if (tactic.repair) {
+      run.hull = Math.min(run.maxHull, run.hull + tactic.repair);
+    }
+    const success = Math.random() <= chance;
+    const damage = success
+      ? preview.successDamage
+      : preview.failureDamage;
+    run.hull = Math.max(0, run.hull - damage);
+    if (success) {
+      const phaseReward = Math.max(
+        1,
+        Math.round(
+          (boss.fragmentReward / 2) * tactic.fragmentMultiplier,
+        ),
+      );
+      run.boss.fragments = Math.min(9999, run.boss.fragments + phaseReward);
+      run.boss.phase += 1;
+      run.path.push(
+        `${boss.name} · ${tactic.name}成功 · 阶段 ${run.boss.phase}/2 · 船体 -${damage}`,
+      );
+      if (run.hull <= 0) {
+        failExpedition("首领阶段完成，但舰体失去返航能力");
+        return;
+      }
+      if (run.boss.phase >= 2) {
+        const reward = grantExpeditionBossReward(run, boss);
+        completeExpedition({ boss, bossReward: reward });
+        return;
+      }
+      state.expedition.lastReport = `${boss.name}第一阶段已突破，核心结构发生变化。`;
+      showToast(
+        "首领阶段突破",
+        `${Math.round(chance * 100)}% 成功率 · 残片 +${phaseReward} · 船体 -${damage}`,
+        boss.icon,
+      );
+    } else {
+      run.path.push(`${boss.name} · ${tactic.name}失利 · 船体 -${damage}`);
+      state.expedition.lastReport = `${boss.name}仍在封锁航路；可更换战术继续尝试。`;
+      showToast(
+        "首领战术失利",
+        `${Math.round(chance * 100)}% 成功率 · 船体 -${damage}${weakness ? "" : " · 未反制机制"}`,
+        "!",
+      );
+      if (run.hull <= 0) {
+        failExpedition("首领火力击穿船体，自动逃生协议启动");
+        return;
+      }
+    }
+    renderExpedition();
+    updateUi();
+    saveGame();
+  }
+
   function getExpeditionSuccessChance(route) {
     const run = state.expedition.activeRun;
     const routeType = getExpeditionRouteType(route?.typeId);
@@ -3468,12 +4464,12 @@
     let chance = 0.58 + Math.log2(Math.max(0.1, ratio)) * 0.28;
     route.affixIds.forEach((affixId) => {
       const affix = getExpeditionAffix(affixId);
-      if (!affix || hasExpeditionBoon(affix.counter)) return;
+      if (!affix || hasExpeditionEffect(affix.counter)) return;
       if (affix.id === "phaseShield") chance -= 0.18;
       if (affix.id === "swarm") chance -= 0.14;
       if (affix.id === "jammer") chance -= 0.1;
     });
-    if (hasExpeditionBoon("predictiveNav")) chance += 0.04;
+    if (hasExpeditionEffect("predictiveNav")) chance += 0.04;
     return clamp(chance, 0.18, 0.94);
   }
 
@@ -3483,11 +4479,11 @@
     let damage = routeType.baseDamage * (success ? 0.72 : 1.75);
     if (
       route.affixIds.includes("volatile") &&
-      !hasExpeditionBoon("thermalSink")
+      !hasExpeditionEffect("thermalSink")
     ) {
       damage += 9;
     }
-    if (hasExpeditionBoon("reactiveArmor")) damage *= 0.8;
+    if (hasExpeditionEffect("reactiveArmor")) damage *= 0.8;
     return Math.max(1, Math.round(damage));
   }
 
@@ -3523,6 +4519,15 @@
     }
     const dustCost = getExpeditionEntryDustCost();
     const materialCost = 6;
+    const lockedGear = [...getExpeditionPresetGearIds()];
+    if (lockedGear.length !== EXPEDITION_GEAR_SLOT_LIMIT) {
+      showToast(
+        "舰装方案未完成",
+        `启航前需要安装 ${EXPEDITION_GEAR_SLOT_LIMIT} 件舰装。`,
+        "▦",
+      );
+      return;
+    }
     if (
       state.dust < dustCost ||
       state.expedition.supplies < 1 ||
@@ -3542,12 +4547,18 @@
     const seed = `${Date.now().toString(36)}-${hashMissionSeed(
       `${state.playerName}:${state.expedition.completedRuns}:${state.careerBattles}`,
     ).toString(36)}`;
+    const maxHull = lockedGear.some(
+      (gearId) => getExpeditionGear(gearId)?.effects.includes("shieldCapacitor"),
+    )
+      ? 115
+      : 100;
     state.expedition.activeRun = {
       seed,
       depth: 0,
-      hull: 100,
-      maxHull: 100,
+      hull: maxHull,
+      maxHull,
       commandPower: Math.max(1, getCombinedPower()),
+      gear: lockedGear,
       boons: [],
       boonChoices: [],
       routeChoices: [],
@@ -3556,6 +4567,7 @@
       runSupplies: 0,
       runFragments: 0,
       path: [],
+      boss: null,
     };
     ensureExpeditionRunChoices();
     state.expedition.lastReport = "远征舰已离港，请选择第一项临时协议。";
@@ -3579,9 +4591,14 @@
     const boon = getExpeditionBoon(boonId);
     run.boons.push(boonId);
     run.boonChoices = [];
-    run.status = "route";
-    run.routeChoices = createExpeditionRouteChoices(run);
-    state.expedition.lastReport = `${boon.name}已装载，本局效果立即生效。`;
+    const enteringBoss = run.depth >= EXPEDITION_ROUTE_COUNT - 1;
+    if (enteringBoss) {
+      prepareExpeditionBoss(run);
+    } else {
+      run.status = "route";
+      run.routeChoices = createExpeditionRouteChoices(run);
+      state.expedition.lastReport = `${boon.name}已装载，本局效果立即生效。`;
+    }
     showToast("临时协议已装载", boon.description, boon.icon);
     renderExpedition();
     saveGame();
@@ -3591,7 +4608,12 @@
     const run = state.expedition.activeRun;
     if (!run) return { supplies: 0, fragments: 0 };
     const supplies = Math.floor(run.runSupplies * ratio);
-    const fragments = Math.floor(run.runFragments * ratio);
+    const fragmentMultiplier = hasExpeditionEffect("fragmentLens", run)
+      ? 1.25
+      : 1;
+    const fragments = Math.floor(
+      run.runFragments * ratio * fragmentMultiplier,
+    );
     state.expedition.supplies = Math.min(
       EXPEDITION_SUPPLY_CAP,
       clampGameCount(safeAdd(state.expedition.supplies, supplies)),
@@ -3603,9 +4625,11 @@
     return { supplies, fragments };
   }
 
-  function completeExpedition() {
+  function completeExpedition({ boss = null, bossReward = null } = {}) {
     const run = state.expedition.activeRun;
     if (!run) return;
+    run.runSupplies = Math.min(999, run.runSupplies + 1);
+    run.runFragments = Math.min(9999, run.runFragments + 6);
     const cargo = bankExpeditionCargo(1);
     state.expedition.completedRuns = clampGameCount(
       state.expedition.completedRuns + 1,
@@ -3621,18 +4645,24 @@
     } else {
       state.expedition.fragments = Math.min(
         EXPEDITION_FRAGMENT_CAP,
-        state.expedition.fragments + 8,
+        state.expedition.fragments + 12,
       );
     }
+    const signalReward =
+      state.endgame.companions.length >
+        state.endgame.companionObservations.length
+        ? grantCompanionSignals(1)
+        : 0;
     state.expedition.activeRun = null;
+    const bossCopy = boss ? `，已击破${boss.name}` : "";
     state.expedition.lastReport = artifact
-      ? `完整远征完成，收藏品“${artifact.name}”已送入陈列舱。`
-      : "完整远征完成，重复收藏记录已转化为 8 枚星图残片。";
+      ? `完整远征完成${bossCopy}，收藏品“${artifact.name}”已送入陈列舱。`
+      : `完整远征完成${bossCopy}，重复收藏记录已转化为 12 枚星图残片。`;
     recordMissionProgress("expeditionsCompleted", 1);
     addLog(state.expedition.lastReport);
     showToast(
       "五航段远征完成",
-      `${artifact ? `新收藏：${artifact.name} · ` : ""}补给 +${cargo.supplies} · 残片 +${cargo.fragments}`,
+      `${artifact ? `新收藏：${artifact.name} · ` : ""}${bossReward?.newlyUnlocked?.length ? `蓝图 +${bossReward.newlyUnlocked.length} · ` : ""}补给 +${cargo.supplies} · 残片 +${cargo.fragments}${signalReward ? ` · 观测信号 +${signalReward}` : ""}`,
       artifact?.icon || "✧",
     );
     playAchievementTone();
@@ -3696,12 +4726,12 @@
     run.hull = Math.max(0, run.hull - damage);
     if (success) {
       let supplyReward = routeType.supplies;
-      if (routeType.id === "salvage" && hasExpeditionBoon("scavengerRig")) {
+      if (routeType.id === "salvage" && hasExpeditionEffect("scavengerRig")) {
         supplyReward += 1;
       }
       run.runSupplies = Math.min(999, run.runSupplies + supplyReward);
       run.runFragments = Math.min(9999, run.runFragments + routeType.fragments);
-      if (hasExpeditionBoon("repairDrone")) {
+      if (hasExpeditionEffect("repairDrone")) {
         run.hull = Math.min(run.maxHull, run.hull + 8);
       }
       run.path.push(`${routeType.name} · 成功 · 船体 -${damage}`);
@@ -3720,7 +4750,7 @@
     } else {
       if (
         route.affixIds.includes("raider") &&
-        !hasExpeditionBoon("sealedCargo") &&
+        !hasExpeditionEffect("sealedCargo") &&
         run.runSupplies > 0
       ) {
         run.runSupplies -= 1;
@@ -4065,6 +5095,53 @@
     merged.endgame.companions = SINGULARITY_COMPANIONS.flatMap((companion) =>
       validCompanionIds.has(companion.id) ? [companion.id] : [],
     );
+    const seenCompanionEvents = new Set();
+    merged.endgame.companionObservations = Array.isArray(
+      rawEndgame.companionObservations,
+    )
+      ? rawEndgame.companionObservations.flatMap((observation) => {
+          const companionEvent = COMPANION_EVENTS.find(
+            (entry) => entry.id === observation?.eventId,
+          );
+          const choice = companionEvent?.choices.find(
+            (entry) => entry.id === observation?.choiceId,
+          );
+          if (
+            !companionEvent ||
+            !choice ||
+            seenCompanionEvents.has(companionEvent.id) ||
+            !validCompanionIds.has(companionEvent.companionId)
+          ) {
+            return [];
+          }
+          seenCompanionEvents.add(companionEvent.id);
+          return [{
+            eventId: companionEvent.id,
+            choiceId: choice.id,
+            completedAt: Math.max(0, Number(observation.completedAt) || 0),
+          }];
+        })
+      : [];
+    const migratedSignals = sourceVersion < 10
+      ? Math.min(3, merged.endgame.companions.length)
+      : 0;
+    merged.endgame.companionSignals = Math.min(
+      COMPANION_OBSERVATION_SIGNAL_CAP,
+      clampGameCount(
+        rawEndgame.companionSignals === undefined
+          ? migratedSignals
+          : rawEndgame.companionSignals,
+      ),
+    );
+    const activeCompanionEvent = COMPANION_EVENTS.find(
+      (entry) => entry.id === rawEndgame.activeCompanionEvent,
+    );
+    merged.endgame.activeCompanionEvent =
+      activeCompanionEvent &&
+      validCompanionIds.has(activeCompanionEvent.companionId) &&
+      !seenCompanionEvents.has(activeCompanionEvent.id)
+        ? activeCompanionEvent.id
+        : null;
     merged.endgame.sectorLevel = clampGameCount(rawEndgame.sectorLevel);
     merged.endgame.sectorDust = needsNumericMigration
       ? 0
@@ -4830,8 +5907,10 @@
           ENDGAME_RESOURCE_CAP,
           safeAdd(state.endgame.totalShards, gain),
         );
+        let observationSignalReward = 0;
         if (companionReward) {
           state.endgame.companions.push(companionReward.id);
+          observationSignalReward = grantCompanionSignals(2);
         }
         state.endgame.transcensions = clampGameCount(
           state.endgame.transcensions + 1,
@@ -4891,7 +5970,7 @@
         showToast(
           "新超越周期已启动",
           companionReward
-            ? `新伴星：${companionReward.name} · 纯收藏，无数值加成。`
+            ? `新伴星：${companionReward.name} · 观测信号 +${observationSignalReward} · 点击伴星可触发专属事件。`
             : `永久星尘增幅 ×${formatNumber(
                 getEndgameProductionMultiplier(),
               )}。`,
@@ -6989,6 +8068,8 @@
     );
     elements.expeditionLocked.hidden = unlocked;
     elements.expeditionIdle.hidden = !unlocked || Boolean(run);
+    elements.expeditionLoadout.hidden = !unlocked;
+    elements.expeditionLoadout.classList.toggle("locked", Boolean(run));
     elements.expeditionActive.hidden = !unlocked || !run;
     elements.expeditionUnlockProgress.style.width = `${clamp(
       state.lifetimeDust / EXPEDITION_UNLOCK_DUST,
@@ -7008,7 +8089,8 @@
       Boolean(run) ||
       state.dust < entryDustCost ||
       state.expedition.supplies < 1 ||
-      materialTotal < 6;
+      materialTotal < 6 ||
+      getExpeditionPresetGearIds().length !== EXPEDITION_GEAR_SLOT_LIMIT;
     elements.expeditionCompletedRuns.textContent = formatNumber(
       state.expedition.completedRuns,
       0,
@@ -7017,6 +8099,50 @@
       state.expedition.failedRuns,
       0,
     );
+
+    const presetGear = getExpeditionPresetGearIds();
+    elements.expeditionLoadoutCount.textContent =
+      `${presetGear.length} / ${EXPEDITION_GEAR_SLOT_LIMIT}`;
+    elements.expeditionLoadoutStatus.textContent = run
+      ? "本次远征已锁定舰装，返航后可调整"
+      : presetGear.length === EXPEDITION_GEAR_SLOT_LIMIT
+        ? "方案完整，可随时启航"
+        : `还需要安装 ${EXPEDITION_GEAR_SLOT_LIMIT - presetGear.length} 件舰装`;
+    elements.expeditionPresetButtons
+      .querySelectorAll("[data-expedition-preset]")
+      .forEach((button) => {
+        const active = Number(button.dataset.expeditionPreset) ===
+          state.expedition.activePreset;
+        button.classList.toggle("active", active);
+        button.disabled = Boolean(run);
+      });
+    elements.expeditionGearGrid.textContent = "";
+    EXPEDITION_GEAR.forEach((gear) => {
+      const unlockedGear = state.expedition.unlockedGear.includes(gear.id);
+      const selected = presetGear.includes(gear.id);
+      const boss = getExpeditionBoss(gear.bossId);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `expedition-gear-card${selected ? " selected" : ""}${unlockedGear ? "" : " locked"}`;
+      button.dataset.expeditionGear = gear.id;
+      button.disabled = Boolean(run) || !unlockedGear;
+      const icon = document.createElement("span");
+      icon.textContent = unlockedGear ? gear.icon : "?";
+      const copy = document.createElement("span");
+      const category = document.createElement("small");
+      category.textContent = unlockedGear
+        ? gear.category
+        : `击破${boss?.name || "机制首领"}解锁`;
+      const name = document.createElement("strong");
+      name.textContent = unlockedGear ? gear.name : "未解析蓝图";
+      const detail = document.createElement("small");
+      detail.textContent = unlockedGear ? gear.description : "首领专属舰装";
+      copy.append(category, name, detail);
+      const status = document.createElement("i");
+      status.textContent = selected ? "已安装" : unlockedGear ? "可安装" : "锁定";
+      button.append(icon, copy, status);
+      elements.expeditionGearGrid.appendChild(button);
+    });
 
     if (run) {
       elements.expeditionSectorLabel.textContent =
@@ -7052,18 +8178,36 @@
         });
       }
 
+      elements.expeditionActiveGear.textContent = "";
+      getExpeditionRunGearIds(run).forEach((gearId) => {
+        const gear = getExpeditionGear(gearId);
+        if (!gear) return;
+        const chip = document.createElement("span");
+        chip.title = gear.description;
+        chip.textContent = `${gear.icon} ${gear.name}`;
+        elements.expeditionActiveGear.appendChild(chip);
+      });
+
       const choosingBoon = run.status === "boon";
+      const choosingBoss = run.status === "boss";
       elements.expeditionChoiceEyebrow.textContent = choosingBoon
         ? "临时协议"
-        : "星图分岔";
+        : choosingBoss
+          ? "机制首领"
+          : "星图分岔";
       elements.expeditionChoiceTitle.textContent = choosingBoon
         ? "选择一项本局强化"
-        : "选择下一条航线";
+        : choosingBoss
+          ? "选择本阶段战术"
+          : "选择下一条航线";
       elements.expeditionChoiceDescription.textContent = choosingBoon
         ? "协议只在本次远征中生效，优先选择能够反制敌方词条的方案。"
-        : "成功率、船体损伤和战利品均已预估；也可消耗补给重新扫描。";
+        : choosingBoss
+          ? "首领共有两个阶段；舰装反制、战术风险与船体状态共同决定结果。"
+          : "成功率、船体损伤和战利品均已预估；也可消耗补给重新扫描。";
       elements.expeditionBoonChoices.hidden = !choosingBoon;
-      elements.expeditionRouteChoices.hidden = choosingBoon;
+      elements.expeditionRouteChoices.hidden = choosingBoon || choosingBoss;
+      elements.expeditionBossEncounter.hidden = !choosingBoss;
       elements.expeditionBoonChoices.textContent = "";
       elements.expeditionRouteChoices.textContent = "";
 
@@ -7086,13 +8230,13 @@
           button.append(icon, copy);
           elements.expeditionBoonChoices.appendChild(button);
         });
-      } else {
+      } else if (!choosingBoss) {
         run.routeChoices.forEach((route) => {
           const routeType = getExpeditionRouteType(route.typeId);
           const chance = getExpeditionSuccessChance(route);
           const counteredCount = route.affixIds.filter((affixId) => {
             const affix = getExpeditionAffix(affixId);
-            return affix && hasExpeditionBoon(affix.counter);
+            return affix && hasExpeditionEffect(affix.counter);
           }).length;
           const button = document.createElement("button");
           button.type = "button";
@@ -7120,7 +8264,7 @@
           } else {
             route.affixIds.forEach((affixId) => {
               const affix = getExpeditionAffix(affixId);
-              const countered = hasExpeditionBoon(affix.counter);
+              const countered = hasExpeditionEffect(affix.counter);
               const tag = document.createElement("i");
               tag.classList.toggle("countered", countered);
               tag.title = affix.description;
@@ -7143,8 +8287,46 @@
         });
       }
 
-      elements.expeditionRerollButton.hidden = choosingBoon;
-      elements.expeditionRepairButton.hidden = choosingBoon;
+      elements.expeditionBossTactics.textContent = "";
+      if (choosingBoss) {
+        const boss = getExpeditionBoss(run.boss?.id);
+        if (boss) {
+          const weakness = hasExpeditionBossWeakness(boss, run);
+          elements.expeditionBossIcon.textContent = boss.icon;
+          elements.expeditionBossName.textContent = boss.name;
+          elements.expeditionBossDescription.textContent = boss.description;
+          elements.expeditionBossPhase.textContent =
+            `阶段 ${run.boss.phase + 1} / 2`;
+          elements.expeditionBossCounter.textContent = weakness
+            ? "已携带弱点舰装：压制战术将获得额外成功率"
+            : "未携带弱点舰装：首领成功率降低且部分机制会追加伤害";
+          elements.expeditionBossCounter.dataset.state = weakness
+            ? "countered"
+            : "danger";
+          EXPEDITION_BOSS_TACTICS.forEach((tactic) => {
+            const preview = getExpeditionBossTacticPreview(tactic.id);
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `expedition-boss-tactic tactic-${tactic.id}`;
+            button.dataset.expeditionBossTactic = tactic.id;
+            const icon = document.createElement("span");
+            icon.textContent = tactic.icon;
+            const copy = document.createElement("span");
+            const name = document.createElement("strong");
+            name.textContent = tactic.name;
+            const detail = document.createElement("small");
+            detail.textContent = tactic.description;
+            const stats = document.createElement("i");
+            stats.textContent = `${Math.round(preview.chance * 100)}% 成功率 · 成功损伤 ${preview.successDamage} · 失利损伤 ${preview.failureDamage}`;
+            copy.append(name, detail, stats);
+            button.append(icon, copy);
+            elements.expeditionBossTactics.appendChild(button);
+          });
+        }
+      }
+
+      elements.expeditionRerollButton.hidden = choosingBoon || choosingBoss;
+      elements.expeditionRepairButton.hidden = choosingBoon || choosingBoss;
       elements.expeditionRerollButton.disabled = getAvailableExpeditionSupplies() < 1;
       elements.expeditionRepairButton.disabled =
         run.hull >= run.maxHull || getAvailableExpeditionSupplies() < 2;
@@ -7155,6 +8337,32 @@
         elements.expeditionPath.appendChild(item);
       });
     }
+
+    const totalBossWins = getTotalBossWins();
+    elements.expeditionBossTotalWins.textContent = `${formatNumber(totalBossWins, 0)} 次击破`;
+    elements.expeditionBossGrid.textContent = "";
+    EXPEDITION_BOSSES.forEach((boss) => {
+      const wins = state.expedition.bossWins[boss.id] || 0;
+      const unlockedCount = boss.blueprints.filter((gearId) =>
+        state.expedition.unlockedGear.includes(gearId),
+      ).length;
+      const card = document.createElement("article");
+      card.className = `expedition-boss-card${wins > 0 ? " defeated" : ""}`;
+      const icon = document.createElement("span");
+      icon.textContent = wins > 0 ? boss.icon : "?";
+      const copy = document.createElement("div");
+      const name = document.createElement("strong");
+      name.textContent = wins > 0 ? boss.name : "未解析首领信号";
+      const detail = document.createElement("small");
+      detail.textContent = wins > 0
+        ? `${boss.description} · 蓝图 ${unlockedCount}/${boss.blueprints.length}`
+        : "抵达第五航段后可能遭遇。";
+      copy.append(name, detail);
+      const record = document.createElement("i");
+      record.textContent = wins > 0 ? `击破 ${wins}` : "未击破";
+      card.append(icon, copy, record);
+      elements.expeditionBossGrid.appendChild(card);
+    });
 
     elements.expeditionCollectionCount.textContent =
       `${state.expedition.artifacts.length} / ${EXPEDITION_ARTIFACTS.length}`;
@@ -8159,6 +9367,15 @@
     elements.commandMissionButton.addEventListener("click", () =>
       activatePrimaryPage("missions", { scroll: true }),
     );
+    elements.companionEventClose.addEventListener("click", closeCompanionEvent);
+    elements.companionEventChoices.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-companion-event-choice]");
+      if (button) resolveCompanionEvent(button.dataset.companionEventChoice);
+    });
+    elements.companionLogGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-companion-log]");
+      if (button) openCompanionEvent(button.dataset.companionLog);
+    });
     elements.dailyRerollButton.addEventListener("click", rerollDailyMission);
     [elements.dailyMissionList, elements.weeklyMissionList].forEach((list) => {
       list.addEventListener("click", (event) => {
@@ -8195,6 +9412,14 @@
       const button = event.target.closest("[data-planet-id]");
       if (button) attackPlanet(button.dataset.planetId);
     });
+    elements.expeditionPresetButtons.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-expedition-preset]");
+      if (button) selectExpeditionPreset(Number(button.dataset.expeditionPreset));
+    });
+    elements.expeditionGearGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-expedition-gear]");
+      if (button) toggleExpeditionGear(button.dataset.expeditionGear);
+    });
     elements.startExpeditionButton.addEventListener("click", startExpedition);
     elements.expeditionBoonChoices.addEventListener("click", (event) => {
       const button = event.target.closest("[data-expedition-boon]");
@@ -8203,6 +9428,10 @@
     elements.expeditionRouteChoices.addEventListener("click", (event) => {
       const button = event.target.closest("[data-expedition-route]");
       if (button) selectExpeditionRoute(button.dataset.expeditionRoute);
+    });
+    elements.expeditionBossTactics.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-expedition-boss-tactic]");
+      if (button) chooseExpeditionBossTactic(button.dataset.expeditionBossTactic);
     });
     elements.expeditionRerollButton.addEventListener(
       "click",
@@ -8449,6 +9678,10 @@
       fragments: state.expedition.fragments,
       completedRuns: state.expedition.completedRuns,
       failedRuns: state.expedition.failedRuns,
+      bossWins: state.expedition.bossWins,
+      unlockedGear: state.expedition.unlockedGear,
+      activePreset: state.expedition.activePreset,
+      loadoutPresets: state.expedition.loadoutPresets,
       artifacts: state.expedition.artifacts,
       unlockedSkins: state.expedition.unlockedSkins,
       activeSkin: state.expedition.activeSkin,

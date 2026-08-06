@@ -11,15 +11,15 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="0.15.2" />
-    <meta name="stellar-release-title" content="星区远征" />
+    <meta name="stellar-game-version" content="0.17.0" />
+    <meta name="stellar-release-title" content="伴星观测日志" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.15.2" />
+    <link rel="stylesheet" href="styles.css?v=0.17.0" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/stellar-outpost-bgm.mp3?v=0.15.2"
+      src="assets/stellar-outpost-bgm.mp3?v=0.17.0"
       preload="auto"
       loop
       playsinline
@@ -265,6 +265,54 @@
               <small id="click-yield">每次 +1</small>
             </button>
           </div>
+
+          <section
+            id="companion-observatory"
+            class="companion-observatory"
+            aria-labelledby="companion-observatory-title"
+            hidden
+          >
+            <header>
+              <div>
+                <small>永久故事收藏 · 无数值倍率</small>
+                <h2 id="companion-observatory-title">伴星观测站</h2>
+              </div>
+              <div class="companion-signal-balance">
+                <span aria-hidden="true">⌁</span>
+                <span>
+                  <small>观测信号</small>
+                  <strong id="companion-signal-count">0 / 12</strong>
+                </span>
+              </div>
+            </header>
+            <div id="companion-event-idle" class="companion-event-idle">
+              <span aria-hidden="true">☾</span>
+              <div>
+                <strong>点击轨道上的伴星开始观测</strong>
+                <p>每只伴星拥有一段专属事件；选择会写入日志，并发放一次性资源奖励。</p>
+              </div>
+            </div>
+            <article id="companion-event-scene" class="companion-event-scene" hidden>
+              <div class="companion-event-heading">
+                <span id="companion-event-icon" aria-hidden="true">✧</span>
+                <div>
+                  <small id="companion-event-name">伴星信号</small>
+                  <h3 id="companion-event-title">等待观测</h3>
+                </div>
+                <button id="companion-event-close" type="button" aria-label="关闭伴星事件">×</button>
+              </div>
+              <p id="companion-event-description"></p>
+              <div id="companion-event-choices" class="companion-event-choices"></div>
+            </article>
+            <div class="companion-log-heading">
+              <div>
+                <small>选择会永久保留</small>
+                <h3>观测日志</h3>
+              </div>
+              <strong id="companion-log-count">0 / 8</strong>
+            </div>
+            <div id="companion-log-grid" class="companion-log-grid"></div>
+          </section>
 
           <div class="scan-card">
             <div class="scan-copy">
@@ -765,6 +813,26 @@
             </div>
           </section>
 
+          <section id="expedition-loadout" class="expedition-loadout" hidden aria-labelledby="expedition-loadout-title">
+            <header>
+              <div>
+                <small>启航前锁定 · 最多三件</small>
+                <h3 id="expedition-loadout-title">星港舰装方案</h3>
+                <p>选择能够反制航线词条或支撑首领战的舰装；切换方案不会消耗资源。</p>
+              </div>
+              <div id="expedition-preset-buttons" class="expedition-preset-buttons" role="group" aria-label="舰装预设">
+                <button type="button" data-expedition-preset="0">方案 A</button>
+                <button type="button" data-expedition-preset="1">方案 B</button>
+                <button type="button" data-expedition-preset="2">方案 C</button>
+              </div>
+            </header>
+            <div class="expedition-loadout-summary">
+              <span>当前方案 <strong id="expedition-loadout-count">3 / 3</strong></span>
+              <small id="expedition-loadout-status">启航后本局舰装将被锁定</small>
+            </div>
+            <div id="expedition-gear-grid" class="expedition-gear-grid"></div>
+          </section>
+
           <section id="expedition-active" class="expedition-active" hidden>
             <header class="expedition-run-header">
               <div>
@@ -782,6 +850,10 @@
               <small>本局临时协议</small>
               <div id="expedition-boon-list"></div>
             </div>
+            <div class="expedition-boon-strip expedition-gear-strip">
+              <small>锁定舰装</small>
+              <div id="expedition-active-gear"></div>
+            </div>
 
             <div class="expedition-choice-heading">
               <div>
@@ -792,6 +864,19 @@
             </div>
             <div id="expedition-boon-choices" class="expedition-boon-choices"></div>
             <div id="expedition-route-choices" class="expedition-route-choices" hidden></div>
+            <div id="expedition-boss-encounter" class="expedition-boss-encounter" hidden>
+              <header>
+                <span id="expedition-boss-icon" aria-hidden="true">◆</span>
+                <div>
+                  <small>第五航段 · 两阶段首领</small>
+                  <h3 id="expedition-boss-name">未知首领</h3>
+                  <p id="expedition-boss-description">首领信号正在解析。</p>
+                </div>
+                <strong id="expedition-boss-phase">阶段 1 / 2</strong>
+              </header>
+              <div id="expedition-boss-counter" class="expedition-boss-counter">弱点舰装尚未确认</div>
+              <div id="expedition-boss-tactics" class="expedition-boss-tactics"></div>
+            </div>
 
             <div class="expedition-run-actions">
               <button id="expedition-reroll-button" type="button">重扫描路线 · 1 补给</button>
@@ -807,6 +892,17 @@
               </div>
             </div>
             <ol id="expedition-path" class="expedition-path"></ol>
+          </section>
+
+          <section class="expedition-boss-dossier" aria-labelledby="expedition-boss-dossier-title">
+            <header>
+              <div>
+                <small>蓝图与重复讨伐奖励</small>
+                <h3 id="expedition-boss-dossier-title">机制首领档案</h3>
+              </div>
+              <strong id="expedition-boss-total-wins">0 次击破</strong>
+            </header>
+            <div id="expedition-boss-grid" class="expedition-boss-grid"></div>
           </section>
 
           <section class="expedition-collection" aria-labelledby="expedition-collection-title">
@@ -868,12 +964,12 @@
             <span class="singularity-lock-icon" aria-hidden="true">∞</span>
             <div>
               <p class="eyebrow">尚未建立奇点坐标</p>
-              <h3>历史获得 5K 星核后解锁</h3>
+              <h3>历史获得 150 星核后解锁</h3>
               <p>超越会开启第三层永久成长、循环星区目标与新的后期资源消耗。</p>
               <div class="transcend-unlock-progress" aria-hidden="true">
                 <span id="transcend-unlock-bar"></span>
               </div>
-              <small id="transcend-unlock-label">0 / 5K 历史星核</small>
+              <small id="transcend-unlock-label">0 / 150 历史星核</small>
             </div>
           </section>
 
@@ -957,7 +1053,7 @@
                 </div>
                 <button id="collapse-button" type="button" disabled>
                   <span>执行奇点坍缩</span>
-                  <small>5K 历史星核起步</small>
+                  <small>150 历史星核起步</small>
                 </button>
               </section>
             </div>
@@ -1223,7 +1319,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.15.2</span>
+        <span>航站协议 v0.17.0</span>
       </footer>
     </div>
 
@@ -1267,7 +1363,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.15.2</strong>
+          <strong id="patch-notes-current-version">v0.17.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1504,9 +1600,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.15.2"></script>
-    <script src="game.js?v=0.15.2"></script>
-    <script src="firebase-config.js?v=0.15.2"></script>
-    <script type="module" src="cloud-save.js?v=0.15.2"></script>
+    <script src="game-math.js?v=0.17.0"></script>
+    <script src="game.js?v=0.17.0"></script>
+    <script src="firebase-config.js?v=0.17.0"></script>
+    <script type="module" src="cloud-save.js?v=0.17.0"></script>
   </body>
 </html>

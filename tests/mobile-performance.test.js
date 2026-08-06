@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.15.2");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.0");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
@@ -182,6 +182,7 @@ async function main() {
         "novaFinch",
         "moonHare",
       ];
+      companionSave.endgame.companionSignals = 3;
       bridge.applySnapshot(companionSave);
       const bodies = [
         ...document.querySelectorAll("#command-companion-stage .command-companion"),
@@ -192,10 +193,26 @@ async function main() {
         animationStates: bodies.map(
           (body) => getComputedStyle(body).animationPlayState,
         ),
+        observatoryHidden: document.querySelector("#companion-observatory").hidden,
+        signalCount: document.querySelector("#companion-signal-count").textContent,
+        logCards: document.querySelectorAll("[data-companion-log]").length,
+        logColumns: getComputedStyle(
+          document.querySelector("#companion-log-grid"),
+        ).gridTemplateColumns.split(" ").length,
+        viewportWidth: document.documentElement.clientWidth,
+        pageWidth: document.documentElement.scrollWidth,
       };
     });
     assert.equal(ecoCompanions.count, 8);
     assert.equal(ecoCompanions.hidden, false);
+    assert.equal(ecoCompanions.observatoryHidden, false);
+    assert.equal(ecoCompanions.signalCount, "3 / 12");
+    assert.equal(ecoCompanions.logCards, 8);
+    assert.equal(ecoCompanions.logColumns, 1);
+    assert.ok(
+      ecoCompanions.pageWidth <= ecoCompanions.viewportWidth,
+      `companion observatory must not create horizontal scrolling; got ${ecoCompanions.pageWidth}px`,
+    );
     assert.ok(
       ecoCompanions.animationStates.every((state) => state === "paused"),
       "eco mode must freeze companion orbits while keeping companions visible",
@@ -319,7 +336,7 @@ async function main() {
     const mobileExpeditionLayout = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
       const expeditionSave = bridge.createSnapshot();
-      expeditionSave.version = 8;
+      expeditionSave.version = 10;
       expeditionSave.activePage = "expedition";
       expeditionSave.dust = 100000;
       expeditionSave.lifetimeDust = 100000;
@@ -329,6 +346,7 @@ async function main() {
         hull: 70,
         maxHull: 100,
         commandPower: 100,
+        gear: ["phaseCoil", "interceptorGrid", "thermalSink"],
         boons: ["phaseLance"],
         boonChoices: [],
         routeChoices: [

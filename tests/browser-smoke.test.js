@@ -61,7 +61,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.15.2");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.0");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -119,12 +119,12 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.15.2");
-    assert.equal(snapshot.saveVersion, 8);
+    assert.equal(snapshot.gameVersion, "0.17.0");
+    assert.equal(snapshot.saveVersion, 10);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
-    assert.match(snapshot.footer, /v0\.15\.2/);
+    assert.match(snapshot.footer, /v0\.17\.0/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -380,11 +380,14 @@ async function main() {
       const afterLoot = readCombatMaterials();
 
       const companionSave = bridge.createSnapshot();
+      companionSave.version = 9;
       companionSave.activePage = "transcend";
       companionSave.cores = 150;
       companionSave.totalCores = 150;
       companionSave.endgame.transcensions = 2;
       delete companionSave.endgame.companions;
+      delete companionSave.endgame.companionSignals;
+      delete companionSave.endgame.companionObservations;
       bridge.applySnapshot(companionSave);
 
       const companionName = document.querySelector(
@@ -427,6 +430,13 @@ async function main() {
         commandCompanionAnimation: getComputedStyle(
           commandCompanionBodies[0],
         ).animationName,
+        companionObservatoryHidden: document.querySelector(
+          "#companion-observatory",
+        ).hidden,
+        companionSignalCount: document.querySelector(
+          "#companion-signal-count",
+        ).textContent,
+        companionLogCards: document.querySelectorAll("[data-companion-log]").length,
       };
     });
     assert.equal(fleetAndCombatCheck.dust, "900M");
@@ -454,12 +464,48 @@ async function main() {
       fleetAndCombatCheck.commandCompanionAnimation,
       "command-companion-orbit",
     );
+    assert.equal(fleetAndCombatCheck.companionObservatoryHidden, false);
+    assert.equal(fleetAndCombatCheck.companionSignalCount, "2 / 12");
+    assert.equal(fleetAndCombatCheck.companionLogCards, 8);
     await page.hover(".beacon-zone");
     await page.locator('[data-companion-id="prismJelly"]').evaluate((button) => {
       button.click();
     });
-    assert.match(await page.locator("#toast-region").textContent(), /棱镜水母/);
-    assert.match(await page.locator("#toast-region").textContent(), /纯观赏/);
+    assert.equal(await page.locator("#companion-event-scene").isVisible(), true);
+    assert.match(await page.locator("#companion-event-name").textContent(), /棱镜水母/);
+    assert.match(await page.locator("#companion-event-title").textContent(), /旧星图/);
+    assert.equal(await page.locator("[data-companion-event-choice]").count(), 2);
+    const companionRewardBefore = await page.evaluate(() => {
+      const snapshot = window.StellarOutpostCloudBridge.createSnapshot();
+      return {
+        tokens: snapshot.missions.tokens,
+        fragments: snapshot.expedition.fragments,
+        materials: { ...snapshot.starport.materials },
+      };
+    });
+    await page.click('[data-companion-event-choice="archive"]');
+    const companionRewardAfter = await page.evaluate(() => {
+      const snapshot = window.StellarOutpostCloudBridge.createSnapshot();
+      return {
+        signals: snapshot.endgame.companionSignals,
+        observations: snapshot.endgame.companionObservations,
+        tokens: snapshot.missions.tokens,
+        fragments: snapshot.expedition.fragments,
+        materials: snapshot.starport.materials,
+      };
+    });
+    assert.equal(companionRewardAfter.signals, 1);
+    assert.equal(companionRewardAfter.observations.length, 1);
+    assert.equal(companionRewardAfter.observations[0].choiceId, "archive");
+    assert.equal(companionRewardAfter.tokens, companionRewardBefore.tokens + 6);
+    assert.equal(companionRewardAfter.fragments, companionRewardBefore.fragments + 6);
+    Object.keys(companionRewardBefore.materials).forEach((materialId) => {
+      assert.equal(
+        companionRewardAfter.materials[materialId],
+        companionRewardBefore.materials[materialId] + 1,
+      );
+    });
+    assert.match(await page.locator("#toast-region").textContent(), /观测已归档/);
 
     const starportCheck = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
@@ -583,7 +629,7 @@ async function main() {
     const expeditionBefore = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
       const expeditionSave = bridge.createSnapshot();
-      expeditionSave.version = 8;
+      expeditionSave.version = 10;
       expeditionSave.activePage = "expedition";
       expeditionSave.dust = 500000000;
       expeditionSave.runDust = 500000000;
@@ -612,6 +658,11 @@ async function main() {
       };
     });
     assert.equal(expeditionBefore.diagnostics.supplies, 5);
+    assert.equal(expeditionBefore.diagnostics.loadoutPresets.length, 3);
+    assert.equal(expeditionBefore.diagnostics.loadoutPresets[0].length, 3);
+    assert.equal(await page.locator("[data-expedition-preset]").count(), 3);
+    assert.equal(await page.locator("[data-expedition-gear]").count(), 12);
+    assert.equal(await page.locator("[data-expedition-gear].selected").count(), 3);
     assert.equal(await page.locator("#start-expedition-button").isEnabled(), true);
     await page.click("#start-expedition-button");
     const expeditionStarted = await page.evaluate(() => {
@@ -649,20 +700,27 @@ async function main() {
       finalSectorSave.activePage = "expedition";
       finalSectorSave.expedition.activeRun.depth = 4;
       finalSectorSave.expedition.activeRun.hull = 82;
-      finalSectorSave.expedition.activeRun.status = "route";
+      finalSectorSave.expedition.activeRun.status = "boss";
       finalSectorSave.expedition.activeRun.runSupplies = 4;
       finalSectorSave.expedition.activeRun.runFragments = 7;
-      finalSectorSave.expedition.activeRun.routeChoices = [
-        {
-          id: "test-relay",
-          typeId: "relay",
-          affixIds: [],
-          enemyPower: 0,
-        },
+      finalSectorSave.expedition.activeRun.gear = [
+        "phaseCoil",
+        "interceptorGrid",
+        "thermalSink",
       ];
+      finalSectorSave.expedition.activeRun.routeChoices = [];
+      finalSectorSave.expedition.activeRun.boss = {
+        id: "aegisArk",
+        phase: 0,
+        fragments: 0,
+      };
       bridge.applySnapshot(finalSectorSave);
+      Math.random = () => 0;
     });
-    await page.click('[data-expedition-route="test-relay"]');
+    assert.equal(await page.locator("[data-expedition-boss-tactic]").count(), 3);
+    await page.click('[data-expedition-boss-tactic="control"]');
+    assert.match(await page.locator("#expedition-boss-phase").textContent(), /2 \/ 2/);
+    await page.click('[data-expedition-boss-tactic="control"]');
     const expeditionCompleted = await page.evaluate(() => ({
       diagnostics: window.StellarOutpostCloudBridge.getExpeditionDiagnostics(),
       artifactCards: document.querySelectorAll(
@@ -671,6 +729,9 @@ async function main() {
     }));
     assert.equal(expeditionCompleted.diagnostics.activeRun, null);
     assert.equal(expeditionCompleted.diagnostics.completedRuns, 1);
+    assert.equal(expeditionCompleted.diagnostics.bossWins.aegisArk, 1);
+    assert.ok(expeditionCompleted.diagnostics.unlockedGear.includes("aegisBreaker"));
+    assert.ok(expeditionCompleted.diagnostics.unlockedGear.includes("shieldCapacitor"));
     assert.equal(expeditionCompleted.diagnostics.artifacts.length, 1);
     assert.equal(expeditionCompleted.artifactCards, 1);
 
@@ -753,7 +814,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.15.3"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.17.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -762,7 +823,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.15\.3/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.17\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

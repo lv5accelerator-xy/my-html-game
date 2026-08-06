@@ -32,10 +32,20 @@ const upgrades = readArray("UPGRADES", "ACHIEVEMENTS");
 const starportMaterials = readArray("STARPORT_MATERIALS", "STARPORT_MODULES");
 const starportModules = readArray("STARPORT_MODULES", "SKIRMISH_TARGETS");
 const skirmishes = readArray("SKIRMISH_TARGETS", "PLANET_TARGETS");
-const companions = readArray("SINGULARITY_COMPANIONS", "ENDGAME_PROTOCOLS");
+const companions = readArray(
+  "SINGULARITY_COMPANIONS",
+  "COMPANION_OBSERVATION_SIGNAL_CAP",
+);
+const companionEvents = readArray("COMPANION_EVENTS", "ENDGAME_PROTOCOLS");
 const expeditionRoutes = readArray("EXPEDITION_ROUTE_TYPES", "EXPEDITION_AFFIXES");
 const expeditionAffixes = readArray("EXPEDITION_AFFIXES", "EXPEDITION_BOONS");
-const expeditionBoons = readArray("EXPEDITION_BOONS", "EXPEDITION_ARTIFACTS");
+const expeditionBoons = readArray("EXPEDITION_BOONS", "EXPEDITION_GEAR");
+const expeditionGear = readArray("EXPEDITION_GEAR", "EXPEDITION_BOSSES");
+const expeditionBosses = readArray("EXPEDITION_BOSSES", "EXPEDITION_BOSS_TACTICS");
+const expeditionBossTactics = readArray(
+  "EXPEDITION_BOSS_TACTICS",
+  "EXPEDITION_ARTIFACTS",
+);
 const expeditionArtifacts = readArray("EXPEDITION_ARTIFACTS", "EXPEDITION_SKINS");
 const expeditionSkins = readArray("EXPEDITION_SKINS", "MISSION_TEMPLATES");
 
@@ -54,7 +64,7 @@ const ecoTickInterval = readConstant("ECO_GAME_TICK_INTERVAL");
 const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
 const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
-assert.equal(readConstant("SAVE_VERSION"), 8, "expedition saves need schema version 8");
+assert.equal(readConstant("SAVE_VERSION"), 10, "companion event saves need schema version 10");
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),
   6,
@@ -78,9 +88,12 @@ assert.equal(qualityStarfieldFps, 60, "quality starfield must be capped at 60 FP
 assert.equal(ecoStarfieldFps, 24, "eco starfield must be capped at 24 FPS");
 assert.doesNotMatch(source, /requestAnimationFrame\(gameLoop\)/);
 assert.equal(readConstant("EXPEDITION_ROUTE_COUNT"), 5);
+assert.equal(readConstant("EXPEDITION_GEAR_SLOT_LIMIT"), 3);
+assert.equal(readConstant("EXPEDITION_PRESET_COUNT"), 3);
 assert.equal(readConstant("EXPEDITION_UNLOCK_DUST"), 50000);
 assert.equal(readConstant("MAX_EXPEDITION_ENTRY_DUST_COST"), 300000000);
 assert.equal(readConstant("ENDGAME_UNLOCK_CORES"), 150);
+assert.equal(readConstant("COMPANION_OBSERVATION_SIGNAL_CAP"), 12);
 assert.equal(readConstant("BUILDING_COORDINATION_STEP"), 10);
 assert.equal(readConstant("BUILDING_COORDINATION_MULTIPLIER"), 2);
 assert.equal(readConstant("BUILDING_COORDINATION_MAX_TIERS"), 20);
@@ -88,8 +101,28 @@ assert.equal(readConstant("MAX_AUTOMATIC_PRODUCTION_MULTIPLIER"), 1000000000);
 assert.equal(expeditionRoutes.length, 5, "expeditions need five route archetypes");
 assert.equal(expeditionAffixes.length, 5, "expeditions need five enemy affixes");
 assert.equal(expeditionBoons.length, 8, "expeditions need eight temporary protocols");
+assert.equal(expeditionGear.length, 12, "starport loadouts need twelve gear pieces");
+assert.equal(expeditionBosses.length, 3, "expeditions need three mechanism bosses");
+assert.equal(
+  expeditionBossTactics.length,
+  3,
+  "boss encounters need three tactical responses",
+);
 assert.equal(expeditionArtifacts.length, 8, "collection cabin needs eight artifacts");
 assert.equal(expeditionSkins.length, 5, "beacon wardrobe needs five appearances");
+assert.equal(companions.length, 8, "singularity collection needs eight companions");
+assert.equal(companionEvents.length, 8, "each companion needs one observation event");
+assert.ok(
+  companionEvents.every(
+    (companionEvent) =>
+      companionEvent.choices.length === 2 &&
+      companionEvent.choices.every(
+        (choice) =>
+          !("multiplier" in choice.rewards) && !("power" in choice.rewards),
+      ),
+  ),
+  "companion events must offer two non-multiplier reward choices",
+);
 assert.ok(
   expeditionArtifacts.every(
     (artifact) => !("multiplier" in artifact) && !("power" in artifact),

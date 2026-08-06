@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.15.1";
-  const PATCH_NOTES_VERSION = "0.15.0";
+  const GAME_VERSION = "0.15.2";
+  const PATCH_NOTES_VERSION = "0.15.2";
   const SAVE_VERSION = 8;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -44,6 +44,7 @@
   const EXPEDITION_FRAGMENT_CAP = 99999;
   const EXPEDITION_ROUTE_COUNT = 5;
   const EXPEDITION_UNLOCK_DUST = 50000;
+  const MAX_EXPEDITION_ENTRY_DUST_COST = 300000000;
   const QUALITY_GAME_TICK_INTERVAL = 100;
   const ECO_GAME_TICK_INTERVAL = 250;
   const QUALITY_STARFIELD_FPS = 60;
@@ -56,6 +57,10 @@
   const MAX_OFFLINE_MAJOR_RAIDS = 24;
   const MAX_OFFLINE_RAID_LOSS_RATIO = 0.35;
   const BUILDING_GROWTH = 1.12;
+  const BUILDING_COORDINATION_STEP = 10;
+  const BUILDING_COORDINATION_MULTIPLIER = 2;
+  const BUILDING_COORDINATION_MAX_TIERS = 20;
+  const MAX_AUTOMATIC_PRODUCTION_MULTIPLIER = 1000000000;
   const PRESTIGE_BASE_DUST = 25000;
   const PRESTIGE_RATIO_SOFT_CAP = 400;
   const PRESTIGE_LATE_POWER = 0.25;
@@ -63,8 +68,6 @@
   const CORE_MULTIPLIER_LATE_POWER = 0.25;
   const TRANSCEND_CORE_SOFT_CAP = 25000;
   const TRANSCEND_CORE_LATE_POWER = 0.3;
-  const PRODUCTION_SOFT_CAP = 10000;
-  const PRODUCTION_LATE_POWER = 0.1;
   const MAX_AUTO_RATE = 999000;
   const AUTO_RATE_OVERFLOW_SCALE = 75000;
   const CLICK_SOFT_CAP = 1000;
@@ -103,6 +106,18 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.15.2",
+      theme: "生产曲线校正",
+      changes: [
+        "舰队设施改为各自独立结算后期产量，购买新设施不会再让既有设施的显示或实际贡献下降。",
+        "研究、星核里程碑、超越协议和星港生产倍率在常规区间严格使用乘法叠加，不再被全舰队软上限提前削弱。",
+        "新增设施规模协同：同类设施每达到 10 个，该设施整条生产线再 ×2，最多触发 20 档，让高价旧设施继续产生可见回报。",
+        "设施卡片改为显示下一单位的真实边际增量，购买提示继续显示总产量升级前后差值。",
+        "奇点超越解锁与首次坍缩门槛由 5K 历史星核调整为 150 历史星核。",
+        "远征启航按约 3 分钟当前产量回收星尘，后期费用上限提高至 300M，承担恢复产量后的持续资源消耗。",
+      ],
+    },
     {
       version: "0.15.0",
       theme: "星区远征",
@@ -1172,7 +1187,7 @@
       description: "全部产量 ×2，战斗与防御 ×1.25",
     },
   ];
-  const ENDGAME_UNLOCK_CORES = 5000;
+  const ENDGAME_UNLOCK_CORES = 150;
   const SINGULARITY_COMPANIONS = [
     {
       id: "dustMoth",
@@ -2677,24 +2692,15 @@
     );
   }
 
-  function calculateRate(targetState = state, includeTemporary = true) {
-    let rate = 0;
-    BUILDINGS.forEach((building) => {
-      const owned = targetState.buildings[building.id] || 0;
-      rate = safeAdd(
-        rate,
-        safeMultiply(
-          owned,
-          building.baseRate,
-          getBuildingMultiplier(building.id, targetState),
-        ),
-      );
-    });
-    rate = safeMultiply(
-      rate,
+  function getAutomaticProductionMultiplier(
+    targetState = state,
+    includeTemporary = true,
+  ) {
+    let multiplier = safeMultiply(
       getCoreMultiplier(targetState),
       getAchievementMultiplier(targetState),
       getEndgameProductionMultiplier(targetState),
+      getStarportProductionMultiplier(targetState),
       safeAdd(
         1,
         safeMultiply(getCoreShopRank("automation", targetState), 0.1),
@@ -2705,17 +2711,51 @@
       targetState.buff?.id === "surge" &&
       targetState.buff.expires > Date.now()
     ) {
-      rate = safeMultiply(rate, 2);
+      multiplier = safeMultiply(multiplier, 2);
     }
+    return Math.min(MAX_AUTOMATIC_PRODUCTION_MULTIPLIER, multiplier);
+  }
+
+  function getBuildingCoordinationMultiplier(
+    buildingId,
+    targetState = state,
+  ) {
+    const owned = targetState.buildings?.[buildingId] || 0;
+    return safePow(
+      BUILDING_COORDINATION_MULTIPLIER,
+      Math.min(
+        BUILDING_COORDINATION_MAX_TIERS,
+        Math.floor(owned / BUILDING_COORDINATION_STEP),
+      ),
+    );
+  }
+
+  function calculateBuildingRate(
+    building,
+    targetState = state,
+    includeTemporary = true,
+  ) {
+    if (!building) return 0;
+    const owned = targetState.buildings[building.id] || 0;
     return compressAutomaticRate(
       safeMultiply(
-        softCapGameNumber(
-          rate,
-          PRODUCTION_SOFT_CAP,
-          PRODUCTION_LATE_POWER,
-        ),
-        getStarportProductionMultiplier(targetState),
+        owned,
+        building.baseRate,
+        getBuildingMultiplier(building.id, targetState),
+        getBuildingCoordinationMultiplier(building.id, targetState),
+        getAutomaticProductionMultiplier(targetState, includeTemporary),
       ),
+    );
+  }
+
+  function calculateRate(targetState = state, includeTemporary = true) {
+    return BUILDINGS.reduce(
+      (rate, building) =>
+        safeAdd(
+          rate,
+          calculateBuildingRate(building, targetState, includeTemporary),
+        ),
+      0,
     );
   }
 
@@ -2724,41 +2764,27 @@
     targetState = state,
     includeTemporary = true,
   ) {
-    let rawTotal = 0;
-    let rawContribution = 0;
-    let owned = 0;
-    BUILDINGS.forEach((building) => {
-      const buildingOwned = targetState.buildings[building.id] || 0;
-      const buildingRate = safeMultiply(
-        buildingOwned,
-        building.baseRate,
-        getBuildingMultiplier(building.id, targetState),
-      );
-      rawTotal = safeAdd(rawTotal, buildingRate);
-      if (building.id === buildingId) {
-        owned = buildingOwned;
-        rawContribution = buildingRate;
-      }
-    });
-    const totalRate = calculateRate(targetState, includeTemporary);
-    const actualContribution =
-      rawTotal > 0
-        ? safeMultiply(totalRate, rawContribution / rawTotal)
-        : 0;
-    let perUnit = owned > 0 ? actualContribution / owned : 0;
-    if (owned <= 0) {
-      const previewState = {
-        ...targetState,
-        buildings: {
-          ...targetState.buildings,
-          [buildingId]: 1,
-        },
-      };
-      perUnit = Math.max(
-        0,
-        calculateRate(previewState, includeTemporary) - totalRate,
-      );
-    }
+    const building = BUILDINGS.find((entry) => entry.id === buildingId);
+    if (!building) return { total: 0, perUnit: 0 };
+    const owned = targetState.buildings[buildingId] || 0;
+    const actualContribution = calculateBuildingRate(
+      building,
+      targetState,
+      includeTemporary,
+    );
+    const previewState = {
+      ...targetState,
+      buildings: {
+        ...targetState.buildings,
+        [buildingId]: owned + 1,
+      },
+    };
+    const nextContribution = calculateBuildingRate(
+      building,
+      previewState,
+      includeTemporary,
+    );
+    const perUnit = Math.max(0, nextContribution - actualContribution);
     return {
       total: actualContribution,
       perUnit,
@@ -3221,11 +3247,11 @@
 
   function getExpeditionEntryDustCost(targetState = state) {
     return Math.min(
-      1500000,
+      MAX_EXPEDITION_ENTRY_DUST_COST,
       roundMissionTarget(
         Math.max(
           2500,
-          safeMultiply(calculateRate(targetState, false), 120),
+          safeMultiply(calculateRate(targetState, false), 180),
           safeMultiply(getClickValue(targetState), 30),
         ),
       ),
@@ -6299,11 +6325,18 @@
       const rate = document.createElement("div");
       rate.className = "building-rate";
       const actualRate = getBuildingRateBreakdown(building.id);
+      const coordinationMultiplier = getBuildingCoordinationMultiplier(
+        building.id,
+      );
       rate.innerHTML = `<span>↟</span> 实际贡献 ${formatProductionRate(
         actualRate.total,
-      )} / 秒 · ${owned > 0 ? "实际" : "新增"}单体 ${formatProductionRate(
+      )} / 秒 · 下一级实际 +${formatProductionRate(
         actualRate.perUnit,
-      )}`;
+      )} / 秒${
+        coordinationMultiplier > 1
+          ? ` · 编队 ×${formatNumber(coordinationMultiplier)}`
+          : ""
+      }`;
       info.append(titleRow, description, rate);
 
       const button = document.createElement("button");
@@ -8429,6 +8462,16 @@
       gameTickCount,
       hidden: document.hidden,
       starfield: starfieldController?.getDiagnostics() || null,
+    }),
+    getProductionDiagnostics: () => ({
+      total: calculateRate(),
+      sharedMultiplier: getAutomaticProductionMultiplier(),
+      buildings: Object.fromEntries(
+        BUILDINGS.map((building) => [
+          building.id,
+          getBuildingRateBreakdown(building.id),
+        ]),
+      ),
     }),
     getStarportDiagnostics: () => ({
       ranks: { ...state.starport.modules },

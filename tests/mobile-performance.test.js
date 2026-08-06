@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.15.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.15.2");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
@@ -255,6 +255,7 @@ async function main() {
     const beforeBackground = await page.evaluate(() => ({
       dust: window.StellarOutpostCloudBridge.createSnapshot().dust,
       diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
+      rate: window.StellarOutpostCloudBridge.getStarportDiagnostics().automaticRate,
     }));
     await page.evaluate(() => {
       Object.defineProperty(document, "hidden", {
@@ -283,12 +284,13 @@ async function main() {
       dust: window.StellarOutpostCloudBridge.createSnapshot().dust,
       diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
     }));
+    const settledDust = resumed.dust - beforeBackground.dust;
     assert.ok(
-      resumed.dust - beforeBackground.dust > 2,
+      settledDust > beforeBackground.rate * 0.65,
       "background production must include the paused interval after resume",
     );
     assert.ok(
-      resumed.dust - beforeBackground.dust < 5,
+      settledDust < beforeBackground.rate * 1.4,
       "background settlement must not duplicate production",
     );
     assert.equal(resumed.diagnostics.gameLoopScheduled, true);

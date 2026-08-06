@@ -61,7 +61,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.15.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.15.2");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -119,12 +119,12 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.15.1");
+    assert.equal(snapshot.gameVersion, "0.15.2");
     assert.equal(snapshot.saveVersion, 8);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
-    assert.match(snapshot.footer, /v0\.15\.1/);
+    assert.match(snapshot.footer, /v0\.15\.2/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -173,6 +173,108 @@ async function main() {
         `${radarState.pageId} must refresh the global radar immediately`,
       );
     }
+
+    const productionFormulaCheck = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const formulaSave = bridge.createSnapshot();
+      formulaSave.version = 8;
+      formulaSave.activePage = "fleet";
+      formulaSave.dust = 1000000;
+      formulaSave.runDust = 1000000;
+      formulaSave.lifetimeDust = 1000000;
+      formulaSave.cores = 0;
+      formulaSave.totalCores = 0;
+      formulaSave.upgrades = [];
+      formulaSave.achievements = [];
+      formulaSave.buff = null;
+      Object.keys(formulaSave.buildings).forEach((id) => {
+        formulaSave.buildings[id] = 0;
+      });
+      formulaSave.buildings.drone = 5;
+      formulaSave.buildings.relay = 2;
+      Object.keys(formulaSave.coreShop).forEach((id) => {
+        formulaSave.coreShop[id] = 0;
+      });
+      Object.keys(formulaSave.starport.modules).forEach((id) => {
+        formulaSave.starport.modules[id] = 0;
+      });
+      Object.keys(formulaSave.endgame.protocols).forEach((id) => {
+        formulaSave.endgame.protocols[id] = 0;
+      });
+      formulaSave.endgame.sectorLevel = 0;
+      formulaSave.lastSeen = Date.now();
+      bridge.applySnapshot(formulaSave);
+      const base = bridge.getProductionDiagnostics();
+
+      const multipliedSave = bridge.createSnapshot();
+      multipliedSave.upgrades = ["zeroG", "timeFold"];
+      multipliedSave.endgame.protocols.production = 1;
+      multipliedSave.starport.modules.refinery = 1;
+      multipliedSave.lastSeen = Date.now();
+      bridge.applySnapshot(multipliedSave);
+      const multiplied = bridge.getProductionDiagnostics();
+
+      const addedTierSave = bridge.createSnapshot();
+      addedTierSave.buildings.ringYard = 1;
+      addedTierSave.lastSeen = Date.now();
+      bridge.applySnapshot(addedTierSave);
+      const addedTier = bridge.getProductionDiagnostics();
+
+      const coordinationSave = bridge.createSnapshot();
+      coordinationSave.upgrades = [];
+      coordinationSave.endgame.protocols.production = 0;
+      coordinationSave.starport.modules.refinery = 0;
+      Object.keys(coordinationSave.buildings).forEach((id) => {
+        coordinationSave.buildings[id] = 0;
+      });
+      coordinationSave.buildings.drone = 95;
+      coordinationSave.lastSeen = Date.now();
+      bridge.applySnapshot(coordinationSave);
+      const coordination = bridge.getProductionDiagnostics();
+      const droneCard = document
+        .querySelector('[data-building-id="drone"]')
+        .closest(".building-card");
+      return {
+        base,
+        multiplied,
+        addedTier,
+        coordination,
+        coordinationLabel: droneCard.querySelector(".building-rate").textContent,
+      };
+    });
+    const exactSharedMultiplier = 1.22 * 1.08;
+    assert.ok(Math.abs(productionFormulaCheck.base.total - 241.5) < 1e-9);
+    assert.ok(
+      Math.abs(
+        productionFormulaCheck.multiplied.sharedMultiplier - exactSharedMultiplier
+      ) < 1e-9,
+      "endgame and starport multipliers must multiply rather than add",
+    );
+    assert.ok(
+      Math.abs(
+        productionFormulaCheck.multiplied.total -
+          241.5 * 1.5 * 2 * exactSharedMultiplier
+      ) < 1e-6,
+      "advertised production multipliers must apply exactly below overflow compression",
+    );
+    assert.ok(
+      Math.abs(
+        productionFormulaCheck.addedTier.buildings.relay.total -
+          productionFormulaCheck.multiplied.buildings.relay.total
+      ) < 1e-9,
+      "buying another facility type must never reduce an existing facility's output",
+    );
+    assert.ok(
+      productionFormulaCheck.addedTier.total > productionFormulaCheck.multiplied.total,
+      "buying a new facility type must always raise total output",
+    );
+    assert.ok(
+      Math.abs(
+        productionFormulaCheck.coordination.buildings.drone.perUnit - 153.6
+      ) < 1e-6,
+      "a 95-unit drone fleet must receive its nine coordination doublings",
+    );
+    assert.match(productionFormulaCheck.coordinationLabel, /编队 ×512/);
 
     const cappedGrowthBefore = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
@@ -279,8 +381,8 @@ async function main() {
 
       const companionSave = bridge.createSnapshot();
       companionSave.activePage = "transcend";
-      companionSave.cores = 5000;
-      companionSave.totalCores = 5000;
+      companionSave.cores = 150;
+      companionSave.totalCores = 150;
       companionSave.endgame.transcensions = 2;
       delete companionSave.endgame.companions;
       bridge.applySnapshot(companionSave);
@@ -363,6 +465,12 @@ async function main() {
       const bridge = window.StellarOutpostCloudBridge;
       const starportSave = bridge.createSnapshot();
       starportSave.activePage = "starport";
+      starportSave.cores = 0;
+      starportSave.totalCores = 0;
+      starportSave.endgame.sectorLevel = 0;
+      Object.keys(starportSave.endgame.protocols).forEach((id) => {
+        starportSave.endgame.protocols[id] = 0;
+      });
       starportSave.starport.materials.alloy = 11;
       starportSave.starport.materials.crystal = 12;
       starportSave.starport.materials.circuit = 13;
@@ -420,7 +528,7 @@ async function main() {
           starportCheck.baseline.automaticRate -
           1.08 * 1.04,
       ) < 0.001,
-      "production starport bonus must apply after late-game compression",
+      "production starport bonus must multiply exactly below stream overflow compression",
     );
     assert.ok(
       Math.abs(
@@ -477,9 +585,9 @@ async function main() {
       const expeditionSave = bridge.createSnapshot();
       expeditionSave.version = 8;
       expeditionSave.activePage = "expedition";
-      expeditionSave.dust = 2000000;
-      expeditionSave.runDust = 2000000;
-      expeditionSave.lifetimeDust = 2000000;
+      expeditionSave.dust = 500000000;
+      expeditionSave.runDust = 500000000;
+      expeditionSave.lifetimeDust = 500000000;
       expeditionSave.expedition.supplies = 5;
       expeditionSave.expedition.fragments = 0;
       expeditionSave.expedition.completedRuns = 0;
@@ -645,7 +753,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.15.2"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.15.3"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -654,7 +762,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.15\.2/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.15\.3/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

@@ -41,8 +41,6 @@ const expeditionSkins = readArray("EXPEDITION_SKINS", "MISSION_TEMPLATES");
 
 const dustCap = readConstant("DUST_RESERVE_CAP");
 const careerDustCap = readConstant("CAREER_DUST_CAP");
-const productionSoftCap = readConstant("PRODUCTION_SOFT_CAP");
-const productionPower = readConstant("PRODUCTION_LATE_POWER");
 const maxAutoRate = readConstant("MAX_AUTO_RATE");
 const autoRateOverflowScale = readConstant("AUTO_RATE_OVERFLOW_SCALE");
 const maxBuildingUnitCost = readConstant("MAX_BUILDING_UNIT_COST");
@@ -81,6 +79,12 @@ assert.equal(ecoStarfieldFps, 24, "eco starfield must be capped at 24 FPS");
 assert.doesNotMatch(source, /requestAnimationFrame\(gameLoop\)/);
 assert.equal(readConstant("EXPEDITION_ROUTE_COUNT"), 5);
 assert.equal(readConstant("EXPEDITION_UNLOCK_DUST"), 50000);
+assert.equal(readConstant("MAX_EXPEDITION_ENTRY_DUST_COST"), 300000000);
+assert.equal(readConstant("ENDGAME_UNLOCK_CORES"), 150);
+assert.equal(readConstant("BUILDING_COORDINATION_STEP"), 10);
+assert.equal(readConstant("BUILDING_COORDINATION_MULTIPLIER"), 2);
+assert.equal(readConstant("BUILDING_COORDINATION_MAX_TIERS"), 20);
+assert.equal(readConstant("MAX_AUTOMATIC_PRODUCTION_MULTIPLIER"), 1000000000);
 assert.equal(expeditionRoutes.length, 5, "expeditions need five route archetypes");
 assert.equal(expeditionAffixes.length, 5, "expeditions need five enemy affixes");
 assert.equal(expeditionBoons.length, 8, "expeditions need eight temporary protocols");
@@ -190,15 +194,6 @@ assert.deepEqual(
   "near-zone targets must cover every starport material exactly once",
 );
 
-const screenshotRawRate = 90.4e15;
-const compressedRate = math.softCapGameNumber(
-  screenshotRawRate,
-  productionSoftCap,
-  productionPower,
-);
-assert.ok(compressedRate < 1e6, "90.4P/s must compress below 1M/s");
-assert.doesNotMatch(math.formatNumber(compressedRate), /[BTP]/);
-
 const overflowInput = maxAutoRate * 10;
 const overflowRate =
   maxAutoRate +
@@ -211,6 +206,16 @@ assert.doesNotMatch(
   source,
   /return\s+Math\.min\(\s*MAX_AUTO_RATE/,
   "automatic production must not use the former hard cap",
+);
+assert.match(
+  source,
+  /function calculateBuildingRate\([\s\S]*?compressAutomaticRate/,
+  "each facility type needs an independent monotonic production stream",
+);
+assert.match(
+  source,
+  /function calculateRate\([\s\S]*?BUILDINGS\.reduce/,
+  "fleet production must add independent facility contributions",
 );
 
 const legacyDust = Math.min(
@@ -241,7 +246,7 @@ assert.equal(
 );
 
 console.log(
-  `numeric balance ok: rate=${math.formatNumber(compressedRate)}, ` +
+  `numeric balance ok: stream=${math.formatNumber(overflowRate)}, ` +
     `legacyDust=${math.formatNumber(legacyDust)}, ` +
     `legacyCores=${math.formatNumber(legacyCores)}`,
 );

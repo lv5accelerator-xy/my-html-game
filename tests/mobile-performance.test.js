@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.18.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.19.0");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
@@ -118,6 +118,24 @@ async function main() {
       `fleet command page must not create horizontal scrolling; got ${defaultQuality.pageWidth}px`,
     );
     assert.ok(defaultQuality.fleetDeckWidth <= defaultQuality.viewportWidth);
+
+    await page.click("#command-page-tab");
+    await page.click("#operations-hub > summary");
+    await page.waitForTimeout(180);
+    if (await page.isVisible("#modal-confirm")) await page.click("#modal-confirm");
+    const operationsLayout = await page.evaluate(() => ({
+      viewportWidth: document.documentElement.clientWidth,
+      pageWidth: document.documentElement.scrollWidth,
+      hubWidth: document.querySelector("#operations-hub").scrollWidth,
+      jobs: document.querySelectorAll(".operation-job").length,
+      compactNavigation: window.StellarOutpostCloudBridge.getOperationsDiagnostics().compactNavigation,
+    }));
+    assert.equal(operationsLayout.jobs, 5);
+    assert.equal(operationsLayout.compactNavigation, true);
+    assert.ok(operationsLayout.pageWidth <= operationsLayout.viewportWidth);
+    assert.ok(operationsLayout.hubWidth <= operationsLayout.viewportWidth);
+
+    await page.click("#fleet-page-tab");
 
     await page.click("#menu-button");
     await page.click("#performance-button");

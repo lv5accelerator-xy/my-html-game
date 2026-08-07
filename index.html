@@ -11,15 +11,15 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="0.18.0" />
-    <meta name="stellar-release-title" content="云存档数据兼容" />
+    <meta name="stellar-game-version" content="0.19.0" />
+    <meta name="stellar-release-title" content="航站作业与渐进指引" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.18.0" />
+    <link rel="stylesheet" href="styles.css?v=0.19.0" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/stellar-outpost-bgm.mp3?v=0.18.0"
+      src="assets/stellar-outpost-bgm.mp3?v=0.19.0"
       preload="auto"
       loop
       playsinline
@@ -88,6 +88,10 @@
           <button id="guide-button" type="button">新手指引</button>
           <button id="patch-notes-button" type="button">版本更新记录</button>
           <button id="rename-button" type="button">修改玩家名称</button>
+          <button id="navigation-mode-button" class="settings-toggle" type="button">
+            <span>导航显示</span>
+            <strong id="navigation-mode-status">渐进</strong>
+          </button>
           <button id="performance-button" class="settings-toggle" type="button">
             <span>画面与耗电</span>
             <strong id="performance-status">省电</strong>
@@ -328,6 +332,19 @@
             </div>
           </div>
 
+          <section id="command-guide" class="command-guide" aria-labelledby="command-guide-title">
+            <span id="command-guide-icon" class="command-guide-icon" aria-hidden="true">➜</span>
+            <div class="command-guide-copy">
+              <small>当前建议 · 一次只做一件事</small>
+              <strong id="command-guide-title">先回收 15 星尘</strong>
+              <p id="command-guide-description">点击中央信标，准备部署第一架自动回收无人机。</p>
+              <div class="command-guide-progress" aria-hidden="true">
+                <span id="command-guide-progress"></span>
+              </div>
+            </div>
+            <button id="command-guide-action" type="button">去完成</button>
+          </section>
+
           <div class="boost-grid">
             <div>
               <small>永久增幅</small>
@@ -379,6 +396,56 @@
               </button>
             </div>
           </section>
+
+          <details id="operations-hub" class="operations-hub">
+            <summary>
+              <span class="operations-summary-icon" aria-hidden="true">▦</span>
+              <span>
+                <small>v0.19.0 · 长期专精</small>
+                <strong>航站作业台</strong>
+                <em id="operations-summary-status">达到 1K 历史星尘后解锁</em>
+              </span>
+              <b id="operations-queue-summary">队列 0 / 2</b>
+            </summary>
+            <div id="operations-locked" class="operations-locked">
+              <span aria-hidden="true">⌁</span>
+              <div>
+                <strong>继续扩建航站即可解锁</strong>
+                <p>作业台把现有材料加工成可直接使用的组件，不增加永久倍率货币。</p>
+              </div>
+            </div>
+            <div id="operations-content" class="operations-content" hidden>
+              <header class="operations-heading">
+                <div>
+                  <small>在线与离线使用同一套结算</small>
+                  <h3>选择作业，积累固定专精</h3>
+                  <p>每项作业只有 30 级，无分支加点；不研究配装也不会点错。</p>
+                </div>
+                <button id="operations-stop-button" class="secondary-button" type="button">停止全部</button>
+              </header>
+              <section class="operations-pool" aria-labelledby="operations-pool-title">
+                <div>
+                  <small>共享工程池</small>
+                  <strong id="operations-pool-title"><span id="operations-pool-value">0</span> / <span id="operations-pool-cap">500</span></strong>
+                  <p id="operations-pool-effect">达到 25%：全部作业速度 +5%</p>
+                </div>
+                <div class="operations-pool-track" aria-hidden="true">
+                  <span id="operations-pool-progress"></span>
+                  <i style="--checkpoint:25%"></i><i style="--checkpoint:50%"></i><i style="--checkpoint:75%"></i><i style="--checkpoint:95%"></i>
+                </div>
+              </section>
+              <div id="operations-queue" class="operations-queue"></div>
+              <div id="operations-job-list" class="operations-job-list"></div>
+              <section class="operations-components">
+                <div>
+                  <small>产物不会再开一套养成</small>
+                  <h3>工程组件</h3>
+                </div>
+                <div id="operations-component-list" class="operations-component-list"></div>
+              </section>
+              <p id="operations-report" class="operations-report">作业台待命。</p>
+            </div>
+          </details>
 
           <div class="prestige-card">
             <div>
@@ -1360,7 +1427,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.18.0</span>
+        <span>航站协议 v0.19.0</span>
       </footer>
     </div>
 
@@ -1404,7 +1471,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.18.0</strong>
+          <strong id="patch-notes-current-version">v0.19.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1641,9 +1708,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.18.0"></script>
-    <script src="game.js?v=0.18.0"></script>
-    <script src="firebase-config.js?v=0.18.0"></script>
-    <script type="module" src="cloud-save.js?v=0.18.0"></script>
+    <script src="game-math.js?v=0.19.0"></script>
+    <script src="game.js?v=0.19.0"></script>
+    <script src="firebase-config.js?v=0.19.0"></script>
+    <script type="module" src="cloud-save.js?v=0.19.0"></script>
   </body>
 </html>

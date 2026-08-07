@@ -86,7 +86,7 @@ const ecoTickInterval = readConstant("ECO_GAME_TICK_INTERVAL");
 const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
 const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
-assert.equal(readConstant("SAVE_VERSION"), 11, "fleet command saves need schema version 11");
+assert.equal(readConstant("SAVE_VERSION"), 12, "operations and guidance saves need schema version 12");
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),
   6,
@@ -115,6 +115,9 @@ assert.equal(readConstant("EXPEDITION_PRESET_COUNT"), 3);
 assert.equal(readConstant("FLEET_COMMAND_PRESET_COUNT"), 3);
 assert.equal(readConstant("FLEET_CHALLENGE_ATTEMPT_LIMIT"), 8);
 assert.equal(readConstant("EXPEDITION_UNLOCK_DUST"), 50000);
+assert.equal(readConstant("OPERATIONS_UNLOCK_DUST"), 1000);
+assert.equal(readConstant("OPERATIONS_ORDER_SECONDS"), 1800);
+assert.equal(readConstant("OPERATIONS_MAX_MASTERY"), 30);
 assert.equal(readConstant("MAX_EXPEDITION_ENTRY_DUST_COST"), 300000000);
 assert.equal(readConstant("ENDGAME_UNLOCK_CORES"), 150);
 assert.equal(readConstant("COMPANION_OBSERVATION_SIGNAL_CAP"), 12);

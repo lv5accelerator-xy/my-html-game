@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.18.0";
-  const PATCH_NOTES_VERSION = "0.18.0";
-  const SAVE_VERSION = 11;
+  const GAME_VERSION = "0.19.0";
+  const PATCH_NOTES_VERSION = "0.19.0";
+  const SAVE_VERSION = 12;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -114,6 +114,18 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.19.0",
+      theme: "航站作业与渐进指引",
+      changes: [
+        "指挥台新增航站作业台：选择连续作业或安排 30 分钟订单，在线与离线使用同一套进度结算。",
+        "五项作业拥有固定 30 级专精与共享工程池，不设分支加点；工程池里程碑提供小幅速度、队列和专精效率提升。",
+        "新增六类工程组件，可直接转换为舰队整备、指挥数据、远征碎片和既有星港材料，不另开永久倍率货币。",
+        "默认启用渐进导航，未到阶段的复杂系统暂不显示；设置中可随时切换为完整导航。",
+        "指挥台新增单一‘当前建议’，并为航站作业加入首次解锁说明，减少同时处理多套系统的压力。",
+        "存档结构升级至第 12 版；旧存档会自动补齐作业与引导数据，不重置任何既有进度。",
+      ],
+    },
     {
       version: "0.18.0",
       theme: "舰队编成",
@@ -897,7 +909,7 @@
       title: "欢迎来到星港",
       message:
         "你的目标是回收星尘、扩建轨道舰队，并通过一次次深空跃迁建立更强大的自动化航站。",
-      tip: "使用页面顶部的“指挥台、舰队、星港、研究、星核、战斗、超越、排行榜”导航切换功能；游戏会记住你上次所在的页面。",
+      tip: "导航默认只显示已经到阶段的系统，避免一次出现太多入口；需要提前查看时，可在右上角设置里切换为“完整导航”。",
     },
     {
       eyebrow: "第一步 · 主动采集",
@@ -940,6 +952,14 @@
       tip: "每个清剿目标对应一座建筑；先收集合金和晶体建造星尘精炼厂与舰炮阵列。星港随普通跃迁保留，但会在奇点超越时重置。",
     },
     {
+      eyebrow: "长期专精 · 航站作业",
+      icon: "▦",
+      title: "选一项作业，然后放心离线",
+      message:
+        "历史采集达到 1K 星尘后，指挥台会解锁航站作业台。选择“连续”即可挂机，也可安排多个 30 分钟订单；在线与离线会使用相同规则结算。",
+      tip: "每项作业只有固定 30 级专精，没有分支加点。产出的组件直接补充舰队、远征和星港既有资源，不需要学习新的永久倍率系统。",
+    },
+    {
       eyebrow: "终局 · 奇点超越",
       icon: "∞",
       title: "建立跨周期的终局航线",
@@ -950,6 +970,69 @@
   ];
 
   const COMBAT_UNLOCK_DUST = 500;
+  const OPERATIONS_UNLOCK_DUST = 1000;
+  const OPERATIONS_ORDER_SECONDS = 1800;
+  const OPERATIONS_MAX_MASTERY = 30;
+  const OPERATIONS_JOBS = Object.freeze([
+    {
+      id: "orbitalSalvage",
+      name: "轨道拆解",
+      icon: "⌁",
+      unlock: 1000,
+      interval: 18,
+      description: "无需投入，稳定回收星尘与少量星港合金。",
+      input: "无需材料",
+      output: "星尘、合金、舰体板",
+    },
+    {
+      id: "crystalAnalysis",
+      name: "晶体分析",
+      icon: "◇",
+      unlock: 5000,
+      interval: 42,
+      description: "分析能量晶体，制作棱镜电容与相位扫描器。",
+      input: "晶体 ×1 / 次",
+      output: "棱镜电容、相位扫描器",
+    },
+    {
+      id: "foundryAssembly",
+      name: "船坞装配",
+      icon: "▦",
+      unlock: 15000,
+      interval: 55,
+      description: "消耗合金和芯片，装配舰体与量子控制组件。",
+      input: "合金 ×2、芯片 ×1 / 次",
+      output: "舰体板、量子控制器",
+    },
+    {
+      id: "borderPatrol",
+      name: "边境巡逻",
+      icon: "⬡",
+      unlock: 25000,
+      interval: 45,
+      description: "消耗舰队弹药，带回远征碎片与军械补给。",
+      input: "弹药 ×1 / 次",
+      output: "星图碎片、弹药箱、指挥数据",
+    },
+    {
+      id: "deepSurvey",
+      name: "深空勘测",
+      icon: "⌖",
+      unlock: 150000,
+      interval: 80,
+      description: "使用相位传感器执行深空测绘，回收高阶组件。",
+      input: "传感器 ×1 / 次",
+      output: "扫描器、维修套件、星图碎片",
+    },
+  ]);
+  const OPERATION_COMPONENTS = Object.freeze([
+    { id: "hullPlate", name: "舰体板", icon: "⬡", use: "维护件 +4" },
+    { id: "prismCapacitor", name: "棱镜电容", icon: "◇", use: "弹药 +5" },
+    { id: "quantumController", name: "量子控制器", icon: "▦", use: "指挥数据 +2" },
+    { id: "phaseScanner", name: "相位扫描器", icon: "⌖", use: "星图碎片 +10" },
+    { id: "ammoCrate", name: "弹药箱", icon: "↟", use: "弹药 +12" },
+    { id: "repairKit", name: "维修套件", icon: "✚", use: "维护件 +12" },
+  ]);
   const STARPORT_MATERIALS = [
     { id: "alloy", name: "星港合金", shortName: "合金", icon: "⬡" },
     { id: "crystal", name: "能量晶体", shortName: "晶体", icon: "◇" },
@@ -2311,6 +2394,12 @@
     commandRaidStatus: $("#command-raid-status"),
     commandMissionButton: $("#command-mission-button"),
     commandMissionStatus: $("#command-mission-status"),
+    commandGuide: $("#command-guide"),
+    commandGuideIcon: $("#command-guide-icon"),
+    commandGuideTitle: $("#command-guide-title"),
+    commandGuideDescription: $("#command-guide-description"),
+    commandGuideProgress: $("#command-guide-progress"),
+    commandGuideAction: $("#command-guide-action"),
     commandCompanionSystem: $("#command-companion-system"),
     commandCompanionStage: $("#command-companion-stage"),
     commandCompanionCount: $("#command-companion-count"),
@@ -2350,6 +2439,8 @@
     patchNotesButton: $("#patch-notes-button"),
     renameButton: $("#rename-button"),
     playerNameDisplay: $("#player-name-display"),
+    navigationModeButton: $("#navigation-mode-button"),
+    navigationModeStatus: $("#navigation-mode-status"),
     performanceButton: $("#performance-button"),
     performanceStatus: $("#performance-status"),
     bgmButton: $("#bgm-button"),
@@ -2399,6 +2490,20 @@
     tutorialDots: $("#tutorial-dots"),
     tutorialBack: $("#tutorial-back"),
     tutorialNext: $("#tutorial-next"),
+    operationsHub: $("#operations-hub"),
+    operationsSummaryStatus: $("#operations-summary-status"),
+    operationsQueueSummary: $("#operations-queue-summary"),
+    operationsLocked: $("#operations-locked"),
+    operationsContent: $("#operations-content"),
+    operationsStopButton: $("#operations-stop-button"),
+    operationsPoolValue: $("#operations-pool-value"),
+    operationsPoolCap: $("#operations-pool-cap"),
+    operationsPoolEffect: $("#operations-pool-effect"),
+    operationsPoolProgress: $("#operations-pool-progress"),
+    operationsQueue: $("#operations-queue"),
+    operationsJobList: $("#operations-job-list"),
+    operationsComponentList: $("#operations-component-list"),
+    operationsReport: $("#operations-report"),
     starportMaterialList: $("#starport-material-list"),
     combatMaterialList: $("#combat-material-list"),
     starportSlotMap: $("#starport-slot-map"),
@@ -2671,6 +2776,32 @@
     };
   }
 
+  function freshOperationsState() {
+    const jobs = {};
+    const components = {};
+    OPERATIONS_JOBS.forEach((job) => {
+      jobs[job.id] = { xp: 0, actions: 0, progress: 0 };
+    });
+    OPERATION_COMPONENTS.forEach((component) => {
+      components[component.id] = 0;
+    });
+    return {
+      queue: [],
+      jobs,
+      components,
+      engineeringPool: 0,
+      totalActions: 0,
+      lastReport: "作业台待命。",
+    };
+  }
+
+  function freshGuidanceState() {
+    return {
+      compactNavigation: true,
+      seenFeatures: [],
+    };
+  }
+
   function freshStarportState() {
     const materials = {};
     const modules = {};
@@ -2750,6 +2881,8 @@
       missions: freshMissionState(),
       fleetCommand: freshFleetCommandState(),
       expedition: freshExpeditionState(),
+      operations: freshOperationsState(),
+      guidance: freshGuidanceState(),
       log: [
         {
           text: "拾荒单元 07 已上线。等待首条回收指令。",
@@ -5687,6 +5820,238 @@
     return appliedAmount;
   }
 
+  function getOperationMasteryLevel(jobId, targetState = state) {
+    const xp = clampGameNumber(targetState.operations?.jobs?.[jobId]?.xp);
+    return Math.min(OPERATIONS_MAX_MASTERY, Math.floor(Math.sqrt(xp / 15)));
+  }
+
+  function getOperationMasteryTarget(level) {
+    return 15 * Math.min(OPERATIONS_MAX_MASTERY, level + 1) ** 2;
+  }
+
+  function getOperationsPoolCap(targetState = state) {
+    const totalLevels = OPERATIONS_JOBS.reduce(
+      (total, job) => total + getOperationMasteryLevel(job.id, targetState),
+      0,
+    );
+    return 500 + totalLevels * 120;
+  }
+
+  function getOperationsPoolRatio(targetState = state) {
+    return clamp(
+      clampGameNumber(targetState.operations?.engineeringPool) /
+        Math.max(1, getOperationsPoolCap(targetState)),
+      0,
+      1,
+    );
+  }
+
+  function getOperationsQueueSlots(targetState = state) {
+    return getOperationsPoolRatio(targetState) >= 0.5 ? 3 : 2;
+  }
+
+  function getOperationInterval(job, targetState = state) {
+    const masterySpeed = getOperationMasteryLevel(job.id, targetState) * 0.005;
+    const poolSpeed = getOperationsPoolRatio(targetState) >= 0.25 ? 0.05 : 0;
+    return job.interval / (1 + masterySpeed + poolSpeed);
+  }
+
+  function addOperationComponent(id, amount = 1) {
+    if (!Object.prototype.hasOwnProperty.call(state.operations.components, id)) return;
+    state.operations.components[id] = Math.min(
+      999000,
+      clampGameCount(state.operations.components[id] + amount),
+    );
+  }
+
+  function canPayOperationInput(job) {
+    if (job.id === "crystalAnalysis") return state.starport.materials.crystal >= 1;
+    if (job.id === "foundryAssembly") {
+      return state.starport.materials.alloy >= 2 && state.starport.materials.circuit >= 1;
+    }
+    if (job.id === "borderPatrol") return state.fleetCommand.ammo >= 1;
+    if (job.id === "deepSurvey") return state.starport.materials.sensor >= 1;
+    return true;
+  }
+
+  function payOperationInput(job) {
+    if (job.id === "crystalAnalysis") state.starport.materials.crystal -= 1;
+    if (job.id === "foundryAssembly") {
+      state.starport.materials.alloy -= 2;
+      state.starport.materials.circuit -= 1;
+    }
+    if (job.id === "borderPatrol") state.fleetCommand.ammo -= 1;
+    if (job.id === "deepSurvey") state.starport.materials.sensor -= 1;
+  }
+
+  function completeOperationAction(job) {
+    if (!canPayOperationInput(job)) {
+      state.operations.lastReport = `${job.name}暂停：${job.input.replace(" / 次", "")}不足。`;
+      return false;
+    }
+    payOperationInput(job);
+    const jobState = state.operations.jobs[job.id];
+    jobState.actions = clampGameCount(jobState.actions + 1);
+    state.operations.totalActions = clampGameCount(state.operations.totalActions + 1);
+    const poolRatio = getOperationsPoolRatio();
+    const masteryXp = poolRatio >= 0.75 ? 4.4 : 4;
+    jobState.xp = Math.min(999000000, jobState.xp + masteryXp);
+    state.operations.engineeringPool = Math.min(
+      getOperationsPoolCap(),
+      state.operations.engineeringPool + masteryXp * 0.25,
+    );
+    const bonusComponent = poolRatio >= 0.95 && jobState.actions % 5 === 0 ? 1 : 0;
+    let report = "";
+    if (job.id === "orbitalSalvage") {
+      const dust = addDust(12 + getOperationMasteryLevel(job.id) * 0.3, {
+        trackMissions: false,
+      });
+      if (jobState.actions % 4 === 0) state.starport.materials.alloy += 1;
+      if (jobState.actions % 12 === 0) addOperationComponent("hullPlate", 1 + bonusComponent);
+      report = `回收 ${formatNumber(dust)} 星尘${jobState.actions % 4 === 0 ? "、合金 ×1" : ""}。`;
+    } else if (job.id === "crystalAnalysis") {
+      addOperationComponent("prismCapacitor", 1 + bonusComponent);
+      if (jobState.actions % 6 === 0) addOperationComponent("phaseScanner", 1);
+      report = "棱镜电容完成封装。";
+    } else if (job.id === "foundryAssembly") {
+      addOperationComponent("hullPlate", 1 + bonusComponent);
+      if (jobState.actions % 3 === 0) addOperationComponent("quantumController", 1);
+      report = "舰体板完成装配。";
+    } else if (job.id === "borderPatrol") {
+      state.expedition.fragments = Math.min(999000, state.expedition.fragments + 1);
+      if (jobState.actions % 4 === 0) addOperationComponent("ammoCrate", 1 + bonusComponent);
+      if (jobState.actions % 6 === 0) state.fleetCommand.commandData += 1;
+      report = "巡逻队带回星图碎片 ×1。";
+    } else if (job.id === "deepSurvey") {
+      addOperationComponent("phaseScanner", 1 + bonusComponent);
+      state.expedition.fragments = Math.min(999000, state.expedition.fragments + 3);
+      if (jobState.actions % 3 === 0) addOperationComponent("repairKit", 1);
+      report = "深空测绘完成，星图碎片 ×3。";
+    }
+    state.operations.lastReport = `${job.name}：${report}`;
+    return true;
+  }
+
+  function processOperations(elapsedSeconds, { offline = false } = {}) {
+    if (state.lifetimeDust < OPERATIONS_UNLOCK_DUST || !state.operations.queue.length) {
+      return { actions: 0, elapsed: 0 };
+    }
+    let remainingTime = clamp(Number(elapsedSeconds) || 0, 0, getMaxOfflineSeconds(state));
+    const initialTime = remainingTime;
+    let actions = 0;
+    let guard = 0;
+    while (remainingTime > 0.001 && state.operations.queue.length && guard < 12000) {
+      guard += 1;
+      const order = state.operations.queue[0];
+      const job = OPERATIONS_JOBS.find((entry) => entry.id === order.jobId);
+      if (!job || state.lifetimeDust < job.unlock) {
+        state.operations.queue.shift();
+        continue;
+      }
+      if (typeof order.remaining === "number" && order.remaining <= 0.001) {
+        state.operations.queue.shift();
+        continue;
+      }
+      const jobState = state.operations.jobs[job.id];
+      const interval = getOperationInterval(job);
+      const orderTime = order.remaining === null ? remainingTime : Math.min(remainingTime, order.remaining);
+      const needed = Math.max(0.001, interval - jobState.progress);
+      const step = Math.min(orderTime, needed);
+      jobState.progress += step;
+      remainingTime -= step;
+      if (typeof order.remaining === "number") order.remaining -= step;
+      if (jobState.progress + 0.001 >= interval) {
+        if (completeOperationAction(job)) {
+          jobState.progress = Math.max(0, jobState.progress - interval);
+          actions += 1;
+        } else {
+          jobState.progress = 0;
+          if (order.remaining === null) break;
+          const stalled = Math.min(remainingTime, Math.max(0, order.remaining));
+          remainingTime -= stalled;
+          order.remaining -= stalled;
+        }
+      }
+      if (typeof order.remaining === "number" && order.remaining <= 0.001) {
+        state.operations.queue.shift();
+      }
+    }
+    if (offline && actions > 0) {
+      addLog(`离线航站作业完成 ${actions} 次，组件与专精进度已结算。`);
+    }
+    return { actions, elapsed: initialTime - remainingTime };
+  }
+
+  function queueOperation(jobId, continuous = false) {
+    const job = OPERATIONS_JOBS.find((entry) => entry.id === jobId);
+    if (!job || state.lifetimeDust < job.unlock) return;
+    if (continuous) {
+      state.operations.queue = [{ jobId, remaining: null }];
+      state.operations.lastReport = `${job.name}已设为连续作业。`;
+    } else {
+      if (state.operations.queue.some((order) => order.remaining === null)) {
+        showToast("连续作业正在运行", "先停止连续作业，再安排限时订单。", "!");
+        return;
+      }
+      if (state.operations.queue.length >= getOperationsQueueSlots()) {
+        showToast("作业队列已满", "工程池达到 50% 可解锁第 3 个队列栏位。", "!");
+        return;
+      }
+      state.operations.queue.push({ jobId, remaining: OPERATIONS_ORDER_SECONDS });
+      state.operations.lastReport = `${job.name}已加入 30 分钟作业队列。`;
+    }
+    renderOperations();
+    saveGame();
+  }
+
+  function injectOperationMastery(jobId) {
+    const jobState = state.operations.jobs[jobId];
+    const level = getOperationMasteryLevel(jobId);
+    if (!jobState || level >= OPERATIONS_MAX_MASTERY) return;
+    const missing = Math.max(0, getOperationMasteryTarget(level) - jobState.xp);
+    if (state.operations.engineeringPool + 0.001 < missing) {
+      showToast("工程池不足", `还需要 ${formatNumber(missing - state.operations.engineeringPool)} 工程经验。`, "·");
+      return;
+    }
+    const applyInjection = () => {
+      state.operations.engineeringPool -= missing;
+      jobState.xp += missing;
+      state.operations.lastReport = `${OPERATIONS_JOBS.find((job) => job.id === jobId)?.name}专精提升至 ${getOperationMasteryLevel(jobId)} 级。`;
+      renderOperations();
+      saveGame();
+    };
+    const beforeRatio = getOperationsPoolRatio();
+    const afterRatio = (state.operations.engineeringPool - missing) / getOperationsPoolCap();
+    if ([0.25, 0.5, 0.75, 0.95].some((point) => beforeRatio >= point && afterRatio < point)) {
+      showModal({
+        eyebrow: "工程池调度",
+        icon: "▦",
+        title: "将跌破工程池里程碑",
+        message: "注入后可能暂时失去作业速度、队列或专精加成。继续操作不会损失已获得的专精等级。",
+        confirmText: "继续注入",
+        cancelText: "暂不使用",
+        onConfirm: applyInjection,
+      });
+    } else {
+      applyInjection();
+    }
+  }
+
+  function useOperationComponent(componentId) {
+    if ((state.operations.components[componentId] || 0) < 1) return;
+    state.operations.components[componentId] -= 1;
+    if (componentId === "hullPlate") state.fleetCommand.maintenance += 4;
+    if (componentId === "prismCapacitor") state.fleetCommand.ammo += 5;
+    if (componentId === "quantumController") state.fleetCommand.commandData += 2;
+    if (componentId === "phaseScanner") state.expedition.fragments = Math.min(999000, state.expedition.fragments + 10);
+    if (componentId === "ammoCrate") state.fleetCommand.ammo += 12;
+    if (componentId === "repairKit") state.fleetCommand.maintenance += 12;
+    const component = OPERATION_COMPONENTS.find((entry) => entry.id === componentId);
+    state.operations.lastReport = `${component?.name || "组件"}已投入使用：${component?.use || "补给已发放"}。`;
+    renderOperations();
+    saveGame();
+  }
+
   function addLog(text) {
     state.log.unshift({ text, time: Date.now() });
     state.log = state.log.slice(0, 14);
@@ -6012,6 +6377,53 @@
     merged.missions = sanitizeMissionState(raw.missions);
     merged.fleetCommand = sanitizeFleetCommandState(raw.fleetCommand);
     merged.expedition = sanitizeExpeditionState(raw.expedition);
+    const rawOperations =
+      raw.operations && typeof raw.operations === "object"
+        ? raw.operations
+        : {};
+    merged.operations = freshOperationsState();
+    OPERATIONS_JOBS.forEach((job) => {
+      const savedJob = rawOperations.jobs?.[job.id] || {};
+      merged.operations.jobs[job.id] = {
+        xp: Math.min(999000000, clampGameNumber(savedJob.xp)),
+        actions: clampGameCount(savedJob.actions),
+        progress: clamp(
+          Number(savedJob.progress) || 0,
+          0,
+          Math.max(0, job.interval - 0.001),
+        ),
+      };
+    });
+    OPERATION_COMPONENTS.forEach((component) => {
+      merged.operations.components[component.id] = Math.min(
+        999000,
+        clampGameCount(rawOperations.components?.[component.id]),
+      );
+    });
+    merged.operations.engineeringPool = Math.min(
+      999000,
+      clampGameNumber(rawOperations.engineeringPool),
+    );
+    merged.operations.totalActions = clampGameCount(rawOperations.totalActions);
+    merged.operations.lastReport = String(
+      rawOperations.lastReport || merged.operations.lastReport,
+    ).slice(0, 180);
+    merged.operations.queue = Array.isArray(rawOperations.queue)
+      ? rawOperations.queue.slice(0, 3).flatMap((order) => {
+          if (!OPERATIONS_JOBS.some((job) => job.id === order?.jobId)) return [];
+          const remaining = order.remaining === null
+            ? null
+            : clamp(Number(order.remaining) || 0, 0, OPERATIONS_ORDER_SECONDS);
+          return remaining === 0 ? [] : [{ jobId: order.jobId, remaining }];
+        })
+      : [];
+    const seenFeatures = Array.isArray(raw.guidance?.seenFeatures)
+      ? raw.guidance.seenFeatures.filter((entry) => typeof entry === "string")
+      : [];
+    merged.guidance = {
+      compactNavigation: raw.guidance?.compactNavigation !== false,
+      seenFeatures: [...new Set(seenFeatures)].slice(0, 32),
+    };
     merged.lastSeen = finiteTimestamp(raw.lastSeen);
     merged.nextEventAt = finiteTimestamp(
       raw.nextEventAt,
@@ -6319,6 +6731,7 @@
     const potentialOfflineGain = safeMultiply(offlineRate, elapsed);
     const offlineGain =
       potentialOfflineGain > 0 ? addDust(potentialOfflineGain) : 0;
+    const operationReport = processOperations(elapsed, { offline: true });
     const raidReport = resolveOfflineMajorRaids(
       savedAt,
       returnTime,
@@ -6378,7 +6791,7 @@
     state.lastSeen = returnTime;
     if (state.event?.expires < returnTime) state.event = null;
     if (state.buff?.expires < returnTime) state.buff = null;
-    return { elapsed, offlineGain, raidReport };
+    return { elapsed, offlineGain, raidReport, operationReport };
   }
 
   function loadGame() {
@@ -8288,7 +8701,7 @@
     elements.fleetCommandDeck.innerHTML = `
       <div class="fleet-command-header">
         <div>
-          <p class="eyebrow">三舰队协同 · v0.18.0</p>
+          <p class="eyebrow">三舰队协同 · 舰队编成</p>
           <h3 id="fleet-command-title">舰队编成指挥网</h3>
           <p>当前启用 <strong>${activePreset.name}</strong>：工业 ${
             activeDistribution.allocation.production
@@ -9740,6 +10153,219 @@
       `当前综合战力 ${formatNumber(currentPower, 0)}`;
   }
 
+  function isPrimaryPageUnlocked(pageId, targetState = state) {
+    const hasStarportProgress =
+      Object.values(targetState.starport?.materials || {}).some((value) => value > 0) ||
+      Object.values(targetState.starport?.modules || {}).some((value) => value > 0);
+    const rules = {
+      command: true,
+      fleet: true,
+      research: targetState.lifetimeDust >= 60 || targetState.upgrades.length > 0,
+      missions: targetState.lifetimeDust >= 120 || targetState.missions?.tokens > 0,
+      combat: targetState.lifetimeDust >= COMBAT_UNLOCK_DUST || targetState.combat?.wins > 0,
+      starport: targetState.lifetimeDust >= COMBAT_UNLOCK_DUST || hasStarportProgress,
+      "core-shop": targetState.totalCores > 0 || targetState.rebirths > 0,
+      expedition:
+        targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST ||
+        targetState.expedition?.completedRuns > 0,
+      transcend: isEndgameUnlocked(targetState),
+      leaderboard: targetState.lifetimeDust >= 5000,
+    };
+    return rules[pageId] !== false;
+  }
+
+  function updateNavigationVisibility() {
+    const compact = state.guidance.compactNavigation;
+    document.querySelectorAll("#primary-navigation [role='tab']").forEach((tab) => {
+      const unlocked = isPrimaryPageUnlocked(tab.dataset.page);
+      tab.hidden = compact && !unlocked;
+      tab.disabled = !compact && !unlocked;
+      tab.classList.toggle("locked-navigation", !unlocked);
+      tab.title = unlocked ? "" : "继续推进当前建议后解锁";
+    });
+    elements.navigationModeStatus.textContent = compact ? "渐进" : "完整";
+    elements.navigationModeButton.classList.toggle("off", !compact);
+    elements.navigationModeButton.setAttribute(
+      "aria-label",
+      compact ? "当前只显示已解锁功能，点击显示完整导航" : "当前显示全部功能，点击启用渐进导航",
+    );
+  }
+
+  function getCommandRecommendation() {
+    const units = getTotalUnits();
+    if (units === 0 && state.dust < 15) {
+      return {
+        icon: "✦",
+        title: "先回收 15 星尘",
+        description: "点击中央信标，准备部署第一架自动回收无人机。",
+        progress: state.dust / 15,
+        action: "collect",
+        label: "回收星尘",
+      };
+    }
+    if (units === 0) {
+      return {
+        icon: "◎",
+        title: "部署第一架无人机",
+        description: "进入舰队购买拾荒无人机，之后星尘会自动增长。",
+        progress: 1,
+        action: "fleet",
+        label: "前往舰队",
+      };
+    }
+    if (state.lifetimeDust >= OPERATIONS_UNLOCK_DUST && state.operations.totalActions === 0) {
+      return {
+        icon: "▦",
+        title: "安排第一项航站作业",
+        description: "作业会在在线与离线时积累固定专精，并产出可直接使用的组件。",
+        progress: state.operations.queue.length ? 0.5 : 0,
+        action: "operations",
+        label: "打开作业台",
+      };
+    }
+    if (state.lifetimeDust >= 60 && state.upgrades.length === 0) {
+      return {
+        icon: "◒",
+        title: "查看第一项研究",
+        description: "研究会强化现有生产循环；未解锁的复杂系统会继续保持隐藏。",
+        progress: 0,
+        action: "research",
+        label: "前往研究",
+      };
+    }
+    if (state.lifetimeDust >= COMBAT_UNLOCK_DUST && state.combat.attackLevel + state.combat.defenseLevel === 0) {
+      return {
+        icon: "⬡",
+        title: "完成首次边境整备",
+        description: "强化一次攻击或防御，避免即将出现的袭击造成资源损失。",
+        progress: 0,
+        action: "combat",
+        label: "前往战斗",
+      };
+    }
+    if (getPrestigeGain() > 0) {
+      return {
+        icon: "✣",
+        title: `可跃迁获得 ${formatNumber(getPrestigeGain(), 0)} 星核`,
+        description: "跃迁会重建当前舰队，但带来永久星核增幅。",
+        progress: 1,
+        action: "prestige",
+        label: "查看跃迁",
+      };
+    }
+    if (
+      state.lifetimeDust >= EXPEDITION_UNLOCK_DUST &&
+      state.expedition.completedRuns + state.expedition.failedRuns === 0
+    ) {
+      return {
+        icon: "▱",
+        title: "准备首次星区远征",
+        description: "远征奖励以收藏、外观和消耗材料为主，不会制造新的永久倍率膨胀。",
+        progress: 0,
+        action: "expedition",
+        label: "前往远征",
+      };
+    }
+    if (getMissionClaimableCount() > 0) {
+      return {
+        icon: "☷",
+        title: "有航站委托可以领取",
+        description: "领取已完成的日常或每周目标，补充现有系统所需物资。",
+        progress: 1,
+        action: "missions",
+        label: "领取奖励",
+      };
+    }
+    return {
+      icon: "⌁",
+      title: state.operations.queue.length ? "航站运行稳定" : "为作业台安排下一份订单",
+      description: state.operations.queue.length
+        ? "当前没有必须立刻处理的事项，可以离线等待自动生产与作业结算。"
+        : "选择连续作业即可挂机；需要精确规划时再使用 30 分钟队列。",
+      progress: state.operations.queue.length ? 1 : 0,
+      action: state.lifetimeDust >= OPERATIONS_UNLOCK_DUST ? "operations" : "fleet",
+      label: state.lifetimeDust >= OPERATIONS_UNLOCK_DUST ? "查看作业" : "继续扩建",
+    };
+  }
+
+  function updateCommandGuide() {
+    const guide = getCommandRecommendation();
+    elements.commandGuideIcon.textContent = guide.icon;
+    elements.commandGuideTitle.textContent = guide.title;
+    elements.commandGuideDescription.textContent = guide.description;
+    elements.commandGuideProgress.style.width = `${clamp(guide.progress, 0, 1) * 100}%`;
+    elements.commandGuideAction.textContent = guide.label;
+    elements.commandGuideAction.dataset.guideAction = guide.action;
+  }
+
+  function renderOperations() {
+    const unlocked = state.lifetimeDust >= OPERATIONS_UNLOCK_DUST;
+    const poolCap = getOperationsPoolCap();
+    state.operations.engineeringPool = Math.min(poolCap, state.operations.engineeringPool);
+    const poolRatio = getOperationsPoolRatio();
+    const slots = getOperationsQueueSlots();
+    elements.operationsLocked.hidden = unlocked;
+    elements.operationsContent.hidden = !unlocked;
+    elements.operationsSummaryStatus.textContent = unlocked
+      ? `${state.operations.totalActions} 次作业 · 工程池 ${Math.floor(poolRatio * 100)}%`
+      : `达到 ${formatNumber(OPERATIONS_UNLOCK_DUST)} 历史星尘后解锁`;
+    elements.operationsQueueSummary.textContent = `队列 ${state.operations.queue.length} / ${slots}`;
+    if (!unlocked) return;
+    elements.operationsPoolValue.textContent = formatNumber(state.operations.engineeringPool, 1);
+    elements.operationsPoolCap.textContent = formatNumber(poolCap, 0);
+    elements.operationsPoolProgress.style.width = `${poolRatio * 100}%`;
+    elements.operationsPoolEffect.textContent =
+      poolRatio >= 0.95
+        ? "已激活：速度 +5%、队列 +1、专精经验 +10%、组件偶尔加倍"
+        : poolRatio >= 0.75
+          ? "已激活：速度 +5%、队列 +1、专精经验 +10% · 下一档 95%"
+          : poolRatio >= 0.5
+            ? "已激活：速度 +5%、队列 +1 · 下一档 75%"
+            : poolRatio >= 0.25
+              ? "已激活：全部作业速度 +5% · 下一档 50% 解锁队列"
+              : "达到 25%：全部作业速度 +5%";
+    elements.operationsQueue.innerHTML = state.operations.queue.length
+      ? state.operations.queue.map((order, index) => {
+          const job = OPERATIONS_JOBS.find((entry) => entry.id === order.jobId);
+          return `<article><span>${index + 1}</span><strong>${job?.icon || "▦"} ${job?.name || "未知作业"}</strong><small>${order.remaining === null ? "连续运行" : `剩余 ${formatDuration(order.remaining)}`}</small></article>`;
+        }).join("")
+      : '<p class="operations-empty">队列为空。选择连续作业即可安心挂机。</p>';
+    elements.operationsJobList.innerHTML = OPERATIONS_JOBS.map((job) => {
+      const jobUnlocked = state.lifetimeDust >= job.unlock;
+      const jobState = state.operations.jobs[job.id];
+      const level = getOperationMasteryLevel(job.id);
+      const currentFloor = level > 0 ? 15 * level ** 2 : 0;
+      const nextTarget = level >= OPERATIONS_MAX_MASTERY
+        ? currentFloor
+        : getOperationMasteryTarget(level);
+      const masteryProgress = level >= OPERATIONS_MAX_MASTERY
+        ? 1
+        : (jobState.xp - currentFloor) / Math.max(1, nextTarget - currentFloor);
+      const missing = Math.max(0, nextTarget - jobState.xp);
+      return `<article class="operation-job ${jobUnlocked ? "" : "locked"}">
+        <span class="operation-job-icon">${job.icon}</span>
+        <div class="operation-job-copy">
+          <div><strong>${job.name}</strong><small>专精 ${level} / ${OPERATIONS_MAX_MASTERY}</small></div>
+          <p>${job.description}</p>
+          <small>${job.input} · ${job.output}</small>
+          <div class="operation-mastery"><span style="width:${clamp(masteryProgress, 0, 1) * 100}%"></span></div>
+          <em>${jobUnlocked ? `${getOperationInterval(job).toFixed(1)} 秒 / 次 · 已完成 ${jobState.actions}` : `历史星尘 ${formatNumber(job.unlock)} 解锁`}</em>
+        </div>
+        <div class="operation-job-actions">
+          <button type="button" data-operation-continuous="${job.id}" ${jobUnlocked ? "" : "disabled"}>连续</button>
+          <button type="button" data-operation-queue="${job.id}" ${jobUnlocked ? "" : "disabled"}>排队 30 分</button>
+          <button type="button" class="secondary-button" data-operation-inject="${job.id}" ${jobUnlocked && level < OPERATIONS_MAX_MASTERY && state.operations.engineeringPool >= missing ? "" : "disabled"}>工程池升级</button>
+        </div>
+      </article>`;
+    }).join("");
+    elements.operationsComponentList.innerHTML = OPERATION_COMPONENTS.map((component) => {
+      const amount = state.operations.components[component.id] || 0;
+      return `<article><span>${component.icon}</span><div><strong>${component.name}</strong><small>${component.use}</small></div><b>×${formatNumber(amount, 0)}</b><button type="button" data-operation-component="${component.id}" ${amount > 0 ? "" : "disabled"}>投入</button></article>`;
+    }).join("");
+    elements.operationsReport.textContent = state.operations.lastReport;
+    elements.operationsStopButton.disabled = state.operations.queue.length === 0;
+  }
+
   function renderActivePageDetails(pageId = state.activePage) {
     switch (pageId) {
       case "fleet":
@@ -9776,6 +10402,9 @@
       case "leaderboard":
         renderLeaderboardSummary();
         break;
+      case "command":
+        renderOperations();
+        break;
       default:
         break;
     }
@@ -9786,6 +10415,7 @@
     renderActivePageDetails();
     updateBuyModeButtons();
     updatePerformanceControls();
+    updateNavigationVisibility();
     updateUi();
   }
 
@@ -10031,6 +10661,7 @@
     elements.cores.textContent = formatNumber(state.cores, 0);
     updateEvent();
     updateMissionSummary();
+    updateNavigationVisibility();
 
     if (state.activePage === "command") {
       renderCommandCompanions();
@@ -10096,6 +10727,7 @@
         )} 星尘即可获得第 1 枚星核。`;
       }
       updateGoal();
+      updateCommandGuide();
     } else if (state.activePage === "fleet") {
       const units = getTotalUnits();
       elements.unitCount.textContent = formatNumber(units, 0);
@@ -10218,7 +10850,8 @@
     pageId,
     { focus = false, persist = true, scroll = false } = {},
   ) {
-    const safePage = PRIMARY_PAGES.includes(pageId) ? pageId : "command";
+    const requestedPage = PRIMARY_PAGES.includes(pageId) ? pageId : "command";
+    const safePage = isPrimaryPageUnlocked(requestedPage) ? requestedPage : "command";
     const tabs = Array.from(
       document.querySelectorAll("#primary-navigation [role='tab']"),
     );
@@ -10253,21 +10886,23 @@
     const tabs = Array.from(
       document.querySelectorAll("#primary-navigation [role='tab']"),
     );
-    tabs.forEach((tab, index) => {
+    tabs.forEach((tab) => {
       tab.addEventListener("click", () => {
         activatePrimaryPage(tab.dataset.page, { scroll: true });
       });
       tab.addEventListener("keydown", (event) => {
+        const navigableTabs = tabs.filter((entry) => !entry.hidden && !entry.disabled);
+        const currentIndex = navigableTabs.indexOf(tab);
         let nextIndex = null;
-        if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+        if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % navigableTabs.length;
         if (event.key === "ArrowLeft") {
-          nextIndex = (index - 1 + tabs.length) % tabs.length;
+          nextIndex = (currentIndex - 1 + navigableTabs.length) % navigableTabs.length;
         }
         if (event.key === "Home") nextIndex = 0;
-        if (event.key === "End") nextIndex = tabs.length - 1;
-        if (nextIndex === null) return;
+        if (event.key === "End") nextIndex = navigableTabs.length - 1;
+        if (nextIndex === null || !navigableTabs.length) return;
         event.preventDefault();
-        activatePrimaryPage(tabs[nextIndex].dataset.page, {
+        activatePrimaryPage(navigableTabs[nextIndex].dataset.page, {
           focus: true,
           scroll: true,
         });
@@ -10597,6 +11232,57 @@
     elements.commandMissionButton.addEventListener("click", () =>
       activatePrimaryPage("missions", { scroll: true }),
     );
+    elements.commandGuideAction.addEventListener("click", () => {
+      const action = elements.commandGuideAction.dataset.guideAction;
+      if (PRIMARY_PAGES.includes(action)) {
+        activatePrimaryPage(action, { scroll: true });
+      } else if (action === "collect") {
+        elements.collect.scrollIntoView({ behavior: "smooth", block: "center" });
+        elements.collect.focus();
+      } else if (action === "operations") {
+        elements.operationsHub.open = true;
+        elements.operationsHub.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (action === "prestige") {
+        elements.prestigeButton.scrollIntoView({ behavior: "smooth", block: "center" });
+        elements.prestigeButton.focus();
+      }
+    });
+    elements.operationsHub.addEventListener("toggle", () => {
+      if (
+        elements.operationsHub.open &&
+        state.lifetimeDust >= OPERATIONS_UNLOCK_DUST &&
+        !state.guidance.seenFeatures.includes("operations")
+      ) {
+        state.guidance.seenFeatures.push("operations");
+        saveGame();
+        window.setTimeout(() => showModal({
+          eyebrow: "新系统只需三步",
+          icon: "▦",
+          title: "航站作业：选一个，就能挂机",
+          message: "① 选择一项作业；② 用“连续”挂机，或排入 30 分钟队列；③ 作业自动提升固定专精，产出的组件直接投入舰队与远征。没有分支加点，也不会点错。",
+          confirmText: "知道了",
+          cancelText: null,
+        }), 120);
+      }
+    });
+    elements.operationsJobList.addEventListener("click", (event) => {
+      const continuous = event.target.closest("[data-operation-continuous]");
+      const queued = event.target.closest("[data-operation-queue]");
+      const inject = event.target.closest("[data-operation-inject]");
+      if (continuous) queueOperation(continuous.dataset.operationContinuous, true);
+      else if (queued) queueOperation(queued.dataset.operationQueue, false);
+      else if (inject) injectOperationMastery(inject.dataset.operationInject);
+    });
+    elements.operationsComponentList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-operation-component]");
+      if (button) useOperationComponent(button.dataset.operationComponent);
+    });
+    elements.operationsStopButton.addEventListener("click", () => {
+      state.operations.queue = [];
+      state.operations.lastReport = "全部航站作业已停止。";
+      renderOperations();
+      saveGame();
+    });
     elements.companionEventClose.addEventListener("click", closeCompanionEvent);
     elements.companionEventChoices.addEventListener("click", (event) => {
       const button = event.target.closest("[data-companion-event-choice]");
@@ -10696,6 +11382,18 @@
     });
     elements.performanceButton.addEventListener("click", () => {
       setPerformanceMode(performanceMode === "eco" ? "quality" : "eco");
+    });
+    elements.navigationModeButton.addEventListener("click", () => {
+      state.guidance.compactNavigation = !state.guidance.compactNavigation;
+      updateNavigationVisibility();
+      saveGame();
+      showToast(
+        state.guidance.compactNavigation ? "渐进导航已启用" : "完整导航已显示",
+        state.guidance.compactNavigation
+          ? "暂时隐藏尚未到阶段的系统，已获得的功能不会消失。"
+          : "全部系统入口已经显示，未解锁页面会保持不可用。",
+        "➜",
+      );
     });
     elements.bgmButton.addEventListener("click", () => {
       state.bgmEnabled = !state.bgmEnabled;
@@ -10863,6 +11561,7 @@
     lastWallClock = wallNow;
     const rate = calculateRate();
     if (rate > 0) addDust(safeMultiply(rate, delta));
+    if (delta > 0) processOperations(delta);
     state.playTime = safeAdd(state.playTime, delta);
     recordMissionProgress("playSeconds", delta);
 
@@ -10936,6 +11635,18 @@
         challenge: getFleetChallenge(),
       }));
     },
+    getOperationsDiagnostics: () => JSON.parse(JSON.stringify({
+      unlocked: state.lifetimeDust >= OPERATIONS_UNLOCK_DUST,
+      compactNavigation: state.guidance.compactNavigation,
+      visiblePages: PRIMARY_PAGES.filter((page) => isPrimaryPageUnlocked(page)),
+      queue: state.operations.queue,
+      jobs: state.operations.jobs,
+      components: state.operations.components,
+      engineeringPool: state.operations.engineeringPool,
+      engineeringPoolCap: getOperationsPoolCap(),
+      queueSlots: getOperationsQueueSlots(),
+      totalActions: state.operations.totalActions,
+    })),
     checkForGameUpdate,
     getPerformanceDiagnostics: () => ({
       mode: performanceMode,

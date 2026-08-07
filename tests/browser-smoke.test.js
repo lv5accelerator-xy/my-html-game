@@ -61,7 +61,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.18.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.19.0");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -99,7 +99,12 @@ async function main() {
   try {
     const response = await page.goto(origin, { waitUntil: "domcontentloaded" });
     assert.equal(response.status(), 200);
-    await page.waitForFunction(() => Boolean(window.StellarOutpostCloudBridge));
+    await page.waitForTimeout(800);
+    assert.equal(
+      await page.evaluate(() => Boolean(window.StellarOutpostCloudBridge)),
+      true,
+      `game bridge should initialize: ${pageErrors.join(" | ")}`,
+    );
 
     const snapshot = await page.evaluate(() => ({
       footer: document.querySelector("footer").textContent,
@@ -127,22 +132,27 @@ async function main() {
         };
       })(),
       fleetCommand: window.StellarOutpostCloudBridge.getFleetCommandDiagnostics(),
+      operations: window.StellarOutpostCloudBridge.getOperationsDiagnostics(),
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.18.0");
-    assert.equal(snapshot.saveVersion, 11);
+    assert.equal(snapshot.gameVersion, "0.19.0");
+    assert.equal(snapshot.saveVersion, 12);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.18\.0/);
+    assert.match(snapshot.footer, /v0\.19\.0/);
     assert.equal(snapshot.fleetCommand.presets.length, 3);
     assert.equal(snapshot.fleetCommand.challenge.phases.length, 3);
     assert.equal(snapshot.fleetCommand.ammo, 12);
     assert.match(snapshot.fleetCommand.weekly.key, /^\d{4}-W\d{2}$/);
+    assert.equal(snapshot.operations.unlocked, true);
+    assert.equal(Object.keys(snapshot.operations.jobs).length, 5);
+    assert.equal(Object.keys(snapshot.operations.components).length, 6);
+    assert.equal(snapshot.operations.queueSlots, 2);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -153,6 +163,21 @@ async function main() {
     assert.ok(snapshot.metadata.lifetimeDust < 1e9);
     assert.ok(snapshot.metadata.totalCores >= 5000);
     assert.doesNotMatch(`${snapshot.dust} ${snapshot.rate} ${snapshot.cores}`, /[BTP]/);
+
+    await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const save = bridge.createSnapshot();
+      save.operations.queue = [{ jobId: "orbitalSalvage", remaining: null }];
+      save.operations.jobs.orbitalSalvage.progress = 17.95;
+      save.lastSeen = Date.now();
+      bridge.applySnapshot(save);
+    });
+    await page.waitForTimeout(260);
+    const processedOperation = await page.evaluate(() =>
+      window.StellarOutpostCloudBridge.getOperationsDiagnostics(),
+    );
+    assert.ok(processedOperation.totalActions >= 1, "queued work must advance in the game loop");
+    assert.equal(processedOperation.queue[0].remaining, null);
 
     const globalRadarPages = [
       "fleet",
@@ -912,7 +937,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.18.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.19.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -921,7 +946,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.18\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.19\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

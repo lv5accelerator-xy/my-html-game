@@ -91,7 +91,7 @@ python -m http.server 8000
 - 基础离线收益最多累计 8 小时，后续可通过永久强化延长。
 - Google 登录与 Firebase 云存档属于可选功能；未连接云服务时，本地游戏不受影响。
 
-云端配置说明见 [FIREBASE-SETUP.txt](FIREBASE-SETUP.txt)，公告发布与反馈处理流程见 [COMMUNICATIONS-GUIDE.txt](COMMUNICATIONS-GUIDE.txt)。更换电脑后的完整接手流程见 [新电脑维护交接说明-v0.20.0.md](新电脑维护交接说明-v0.20.0.md)。
+云端配置说明见 [FIREBASE-SETUP.txt](FIREBASE-SETUP.txt)，公告发布与反馈处理流程见 [COMMUNICATIONS-GUIDE.txt](COMMUNICATIONS-GUIDE.txt)。
 
 ## 移动端与性能
 

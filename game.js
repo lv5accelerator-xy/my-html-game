@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.17.1";
-  const PATCH_NOTES_VERSION = "0.17.1";
+  const GAME_VERSION = "0.17.2";
+  const PATCH_NOTES_VERSION = "0.17.2";
   const SAVE_VERSION = 10;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -108,6 +108,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.17.2",
+      theme: "云端存档修复",
+      changes: [
+        "修复部分新账号登录成功后，首次云端存档仍被 Firestore 规则拒绝的问题。",
+        "云存档规则继续严格限制每个账号只能读写自己的记录，同时改用跨版本稳定的存档信封校验，避免新增游戏字段误伤合法存档。",
+        "遇到权限拒绝时会自动刷新一次登录令牌并重试，减少长时间挂机后身份状态过期造成的同步失败。",
+        "云端错误提示新增登录过期、连接超时、服务不可用、配额不足与数据格式异常等具体原因。",
+        "本地自动存档不受云端状态影响；修复后重新打开游戏或点击上传即可补建缺失的云端记录。",
+      ],
+    },
     {
       version: "0.17.1",
       theme: "远征排行榜",

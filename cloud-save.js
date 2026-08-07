@@ -196,10 +196,16 @@ function friendlyError(error) {
     "auth/account-exists-with-different-credential": "这个邮箱已使用其他登录方式创建账号。",
     "auth/too-many-requests": "尝试次数过多，请稍后再试。",
     "auth/network-request-failed": "网络连接失败，本地存档仍会继续保存。",
+    unauthenticated: "登录状态已经过期，请退出账号后重新登录。",
     "permission-denied": "云端拒绝了本次操作，请检查 Firestore 安全规则。",
+    unavailable: "暂时无法连接云端存档服务，请检查网络后重试。",
+    "deadline-exceeded": "云端连接超时，本地存档仍然安全，请稍后重试。",
+    "resource-exhausted": "云端存档空间或服务配额暂时不足。",
+    "invalid-argument": "当前存档包含云端无法识别的数据，请更新游戏后重试。",
     "cloud/conflict": "云端记录已被另一台设备更新，请先选择要保留的存档。",
   };
-  return messages[code] || "云端航站暂时无法完成操作，请稍后重试。";
+  return messages[code] ||
+    `云端航站暂时无法完成操作（${code || "unknown"}），请稍后重试。`;
 }
 
 function formatDuration(seconds) {
@@ -717,6 +723,44 @@ function scheduleCloudSync(delay = AUTO_SYNC_DELAY) {
   }, Math.max(500, delay));
 }
 
+async function commitCloudSave({
+  reference,
+  localSnapshot,
+  metadata,
+  expectedRevision,
+  force,
+}) {
+  return firebaseFirestoreApi.runTransaction(
+    db,
+    async (transaction) => {
+      const remoteSnapshot = await transaction.get(reference);
+      const current = normalizeRemoteRecord(remoteSnapshot);
+      const actualRevision = current?.revision || 0;
+      if (!force && actualRevision !== expectedRevision) {
+        const conflictError = new Error("Cloud revision changed");
+        conflictError.code = "cloud/conflict";
+        throw conflictError;
+      }
+      const nextRevision = actualRevision + 1;
+      transaction.set(reference, {
+        gameVersion: bridge.gameVersion,
+        saveVersion: bridge.saveVersion,
+        revision: nextRevision,
+        updatedAt: firebaseFirestoreApi.serverTimestamp(),
+        clientSavedAt: metadata.lastSeen,
+        deviceId,
+        playerName: metadata.playerName,
+        playTime: metadata.playTime,
+        lifetimeDust: metadata.lifetimeDust,
+        totalCores: metadata.totalCores,
+        transcensions: metadata.transcensions,
+        snapshot: localSnapshot,
+      });
+      return { revision: nextRevision };
+    },
+  );
+}
+
 async function uploadLocalSave({ force = false } = {}) {
   if (!currentUser || !db || !bridge) return;
   if (!force && !syncReady) return;
@@ -732,35 +776,26 @@ async function uploadLocalSave({ force = false } = {}) {
   clearSyncTimer();
   setSyncStatus("syncing", "正在上传本地存档", "请保持网络连接", "↥");
   try {
-    const result = await firebaseFirestoreApi.runTransaction(
-      db,
-      async (transaction) => {
-        const remoteSnapshot = await transaction.get(reference);
-        const current = normalizeRemoteRecord(remoteSnapshot);
-        const actualRevision = current?.revision || 0;
-        if (!force && actualRevision !== expectedRevision) {
-          const conflictError = new Error("Cloud revision changed");
-          conflictError.code = "cloud/conflict";
-          throw conflictError;
-        }
-        const nextRevision = actualRevision + 1;
-        transaction.set(reference, {
-          gameVersion: bridge.gameVersion,
-          saveVersion: bridge.saveVersion,
-          revision: nextRevision,
-          updatedAt: firebaseFirestoreApi.serverTimestamp(),
-          clientSavedAt: metadata.lastSeen,
-          deviceId,
-          playerName: metadata.playerName,
-          playTime: metadata.playTime,
-          lifetimeDust: metadata.lifetimeDust,
-          totalCores: metadata.totalCores,
-          transcensions: metadata.transcensions,
-          snapshot: localSnapshot,
-        });
-        return { revision: nextRevision };
-      },
-    );
+    const request = {
+      reference,
+      localSnapshot,
+      metadata,
+      expectedRevision,
+      force,
+    };
+    let result;
+    try {
+      result = await commitCloudSave(request);
+    } catch (error) {
+      if (
+        error?.code !== "permission-denied" ||
+        typeof currentUser?.getIdToken !== "function"
+      ) {
+        throw error;
+      }
+      await currentUser.getIdToken(true);
+      result = await commitCloudSave(request);
+    }
     knownRevision = result.revision;
     remoteRecord = {
       revision: result.revision,

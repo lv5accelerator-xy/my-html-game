@@ -156,6 +156,36 @@ for (const field of [
   );
 }
 
+const saveRules = firestoreRules.match(
+  /match \/saves\/\{userId\} \{([\s\S]*?)\n    match \/leaderboards/,
+);
+assert.ok(saveRules, "Firestore rules must include the cloud-save scope");
+assert.match(
+  saveRules[1],
+  /request\.auth != null && request\.auth\.uid == userId/,
+  "cloud saves must remain isolated to their authenticated owner",
+);
+assert.match(
+  saveRules[1],
+  /keys\(\)\.hasAll\(\[\s*"revision",\s*"snapshot"\s*\]\)/,
+  "cloud saves must validate the cross-version envelope",
+);
+assert.match(
+  saveRules[1],
+  /request\.resource\.data\.snapshot is map/,
+  "cloud saves must require a map snapshot",
+);
+assert.doesNotMatch(
+  saveRules[1],
+  /hasOnly/,
+  "cloud save metadata must remain forward compatible",
+);
+assert.match(
+  cloudSource,
+  /currentUser\.getIdToken\(true\)/,
+  "permission failures must refresh the Firebase identity token once",
+);
+
 for (const building of buildings) {
   assert.ok(building.baseCost <= 16e6, `${building.id} base cost is too large`);
   assert.ok(building.unlock <= 50e6, `${building.id} unlock is too large`);

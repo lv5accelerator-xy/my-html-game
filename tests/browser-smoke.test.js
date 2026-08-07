@@ -61,7 +61,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.1");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.2");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -119,12 +119,12 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.17.1");
+    assert.equal(snapshot.gameVersion, "0.17.2");
     assert.equal(snapshot.saveVersion, 10);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
-    assert.match(snapshot.footer, /v0\.17\.1/);
+    assert.match(snapshot.footer, /v0\.17\.2/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -849,7 +849,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.17.2"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.17.3"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -858,7 +858,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.17\.2/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.17\.3/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

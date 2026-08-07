@@ -173,7 +173,17 @@ assert.match(
 assert.match(
   saveRules[1],
   /request\.resource\.data\.snapshot is map/,
-  "cloud saves must require a map snapshot",
+  "cloud saves must keep accepting legacy map snapshots",
+);
+assert.match(
+  saveRules[1],
+  /request\.resource\.data\.snapshot is string/,
+  "cloud saves must accept JSON string snapshots",
+);
+assert.match(
+  saveRules[1],
+  /request\.resource\.data\.snapshot\.size\(\) <= 700000/,
+  "cloud saves must cap JSON snapshot size",
 );
 assert.doesNotMatch(
   saveRules[1],
@@ -184,6 +194,21 @@ assert.match(
   cloudSource,
   /currentUser\.getIdToken\(true\)/,
   "permission failures must refresh the Firebase identity token once",
+);
+assert.match(
+  cloudSource,
+  /JSON\.stringify\(snapshot\)/,
+  "cloud saves must serialize nested game arrays before Firestore upload",
+);
+assert.match(
+  cloudSource,
+  /JSON\.parse\(snapshot\)/,
+  "cloud saves must decode JSON snapshots after Firestore download",
+);
+assert.match(
+  cloudSource,
+  /new TextEncoder\(\)\.encode\(serialized\)\.byteLength/,
+  "cloud saves must enforce the document-safe byte limit",
 );
 
 for (const building of buildings) {

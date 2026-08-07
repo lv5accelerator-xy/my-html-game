@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.2");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.3");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,

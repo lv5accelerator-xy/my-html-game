@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.17.2";
-  const PATCH_NOTES_VERSION = "0.17.2";
+  const GAME_VERSION = "0.17.3";
+  const PATCH_NOTES_VERSION = "0.17.3";
   const SAVE_VERSION = 10;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -108,6 +108,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.17.3",
+      theme: "云存档数据兼容",
+      changes: [
+        "修复远征配装预设产生嵌套数组后，Firestore 返回“存档包含云端无法识别数据”并拒绝上传的问题。",
+        "云端存档正文改用 JSON 字符串信封传输，避开 Firestore 对嵌套数组的限制，同时保持完整游戏数据不变。",
+        "继续兼容读取旧版对象格式云存档；玩家无需迁移或重置，本地存档与已有云端记录均会保留。",
+        "新增云存档体积保护，超过安全上限时会明确提示，并始终优先保护本地进度。",
+      ],
+    },
     {
       version: "0.17.2",
       theme: "云端存档修复",

@@ -6,6 +6,7 @@ const LEADERBOARD_COLLECTION = "leaderboards";
 const AUTO_SYNC_DELAY = 45_000;
 const LEADERBOARD_SYNC_DELAY = 60_000;
 const LEADERBOARD_LIMIT = 50;
+const MAX_CLOUD_SNAPSHOT_BYTES = 700_000;
 const DEVICE_ID_KEY = "stellarOutpostCloudDeviceId_v1";
 
 const $ = (selector) => document.querySelector(selector);
@@ -202,6 +203,7 @@ function friendlyError(error) {
     "deadline-exceeded": "云端连接超时，本地存档仍然安全，请稍后重试。",
     "resource-exhausted": "云端存档空间或服务配额暂时不足。",
     "invalid-argument": "当前存档包含云端无法识别的数据，请更新游戏后重试。",
+    "cloud/save-too-large": "当前存档体积超过云端上限，本地存档仍然安全。",
     "cloud/conflict": "云端记录已被另一台设备更新，请先选择要保留的存档。",
   };
   return messages[code] ||
@@ -461,17 +463,37 @@ function hideConflict() {
   elements.conflictPanel.hidden = true;
 }
 
+function serializeCloudSnapshot(snapshot) {
+  const serialized = JSON.stringify(snapshot);
+  const byteLength = new TextEncoder().encode(serialized).byteLength;
+  if (byteLength > MAX_CLOUD_SNAPSHOT_BYTES) {
+    const error = new Error("Cloud save is too large");
+    error.code = "cloud/save-too-large";
+    throw error;
+  }
+  return serialized;
+}
+
+function deserializeCloudSnapshot(snapshot) {
+  if (typeof snapshot === "string") {
+    try {
+      const parsed = JSON.parse(snapshot);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch (error) {
+      return null;
+    }
+  }
+  return snapshot && typeof snapshot === "object" ? snapshot : null;
+}
+
 function normalizeRemoteRecord(snapshot) {
   if (!snapshot?.exists()) return null;
   const data = snapshot.data();
-  if (
-    !data ||
-    typeof data !== "object" ||
-    !data.snapshot ||
-    typeof data.snapshot !== "object"
-  ) {
+  if (!data || typeof data !== "object") {
     return null;
   }
+  const decodedSnapshot = deserializeCloudSnapshot(data.snapshot);
+  if (!decodedSnapshot) return null;
   return {
     revision: Math.max(0, Math.floor(Number(data.revision) || 0)),
     deviceId: typeof data.deviceId === "string" ? data.deviceId : "",
@@ -481,7 +503,7 @@ function normalizeRemoteRecord(snapshot) {
         Number(data.snapshot.lastSeen) ||
         0,
     ),
-    snapshot: data.snapshot,
+    snapshot: decodedSnapshot,
   };
 }
 
@@ -730,6 +752,7 @@ async function commitCloudSave({
   expectedRevision,
   force,
 }) {
+  const serializedSnapshot = serializeCloudSnapshot(localSnapshot);
   return firebaseFirestoreApi.runTransaction(
     db,
     async (transaction) => {
@@ -754,7 +777,10 @@ async function commitCloudSave({
         lifetimeDust: metadata.lifetimeDust,
         totalCores: metadata.totalCores,
         transcensions: metadata.transcensions,
-        snapshot: localSnapshot,
+        // Firestore rejects arrays nested directly inside arrays. The game
+        // contains loadout preset matrices, so the snapshot travels as JSON.
+        // normalizeRemoteRecord still accepts legacy map snapshots.
+        snapshot: serializedSnapshot,
       });
       return { revision: nextRevision };
     },

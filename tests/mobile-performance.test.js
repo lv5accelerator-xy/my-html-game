@@ -59,7 +59,8 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.19.1");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.20.0");
+    localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
@@ -146,6 +147,23 @@ async function main() {
     assert.ok(communicationLayout.pageWidth <= communicationLayout.viewportWidth);
     assert.ok(communicationLayout.modalWidth <= communicationLayout.viewportWidth);
     await page.click("#communication-close");
+
+    await page.click("#starfall-page-tab");
+    const starfallLayout = await page.evaluate(() => ({
+      viewportWidth: document.documentElement.clientWidth,
+      pageWidth: document.documentElement.scrollWidth,
+      panelWidth: document.querySelector("#starfall-page").scrollWidth,
+      phase: window.StellarOutpostCloudBridge.getStarfallDiagnostics().phase,
+      letters: document.querySelectorAll(".starfall-letter").length,
+      milestones: document.querySelectorAll("#starfall-milestone-list article").length,
+      storeItems: document.querySelectorAll("#starfall-store-grid article").length,
+    }));
+    assert.ok(["preview", "active"].includes(starfallLayout.phase));
+    assert.equal(starfallLayout.letters, 7);
+    assert.equal(starfallLayout.milestones, 7);
+    assert.equal(starfallLayout.storeItems, 6);
+    assert.ok(starfallLayout.pageWidth <= starfallLayout.viewportWidth);
+    assert.ok(starfallLayout.panelWidth <= starfallLayout.viewportWidth);
 
     await page.click("#fleet-page-tab");
 
@@ -470,9 +488,9 @@ async function main() {
       };
     });
     assert.equal(mobileLeaderboardLayout.pageVisible, true);
-    assert.equal(mobileLeaderboardLayout.categoryCount, 6);
+    assert.equal(mobileLeaderboardLayout.categoryCount, 9);
     assert.equal(mobileLeaderboardLayout.categoryColumns, 3);
-    assert.equal(mobileLeaderboardLayout.personalCards, 6);
+    assert.equal(mobileLeaderboardLayout.personalCards, 9);
     assert.equal(mobileLeaderboardLayout.personalColumns, 1);
     assert.ok(
       mobileLeaderboardLayout.pageWidth <= mobileLeaderboardLayout.viewportWidth,

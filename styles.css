@@ -10136,3 +10136,479 @@ body:not([data-expedition-skin="standard"]) .collect-core {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* v0.20.0 · 星雨寄航 */
+.starfall-command-card {
+  width: 100%;
+  margin: 18px 0 0;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  color: #eef4ff;
+  text-align: left;
+  border: 1px solid rgba(183, 139, 255, 0.38);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 12% 50%, rgba(102, 226, 255, 0.15), transparent 34%),
+    linear-gradient(120deg, rgba(32, 35, 78, 0.92), rgba(38, 21, 66, 0.9));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.06), 0 14px 42px rgba(11, 5, 32, 0.22);
+}
+
+.starfall-command-card:hover {
+  border-color: rgba(120, 225, 255, 0.72);
+  transform: translateY(-1px);
+}
+
+.starfall-command-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: #8fe8ff;
+  font-size: 25px;
+  border: 1px solid rgba(135, 220, 255, 0.34);
+  border-radius: 50%;
+  background: rgba(75, 93, 174, 0.24);
+  box-shadow: 0 0 26px rgba(99, 206, 255, 0.2);
+}
+
+.starfall-command-card > span:nth-child(2) {
+  display: grid;
+  gap: 3px;
+}
+
+.starfall-command-card small,
+.starfall-command-card em {
+  color: #9fb0cf;
+  font-style: normal;
+}
+
+.starfall-command-card strong {
+  font-size: 1.12rem;
+}
+
+.starfall-command-card b {
+  color: #e4d5ff;
+  white-space: nowrap;
+}
+
+.starfall-panel {
+  position: relative;
+  overflow: hidden;
+  color: #edf4ff;
+  border-color: rgba(121, 181, 255, 0.25);
+  background:
+    radial-gradient(circle at 85% 4%, rgba(139, 91, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 12% 22%, rgba(44, 201, 255, 0.1), transparent 28%),
+    linear-gradient(165deg, rgba(8, 19, 39, 0.98), rgba(17, 17, 49, 0.98));
+}
+
+.starfall-hero {
+  position: relative;
+  min-height: 285px;
+  padding: clamp(24px, 4vw, 44px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
+  align-items: center;
+  gap: 28px;
+  border: 1px solid rgba(154, 184, 255, 0.2);
+  border-radius: 26px;
+  background:
+    linear-gradient(105deg, rgba(9, 27, 53, 0.9), rgba(32, 18, 65, 0.62)),
+    radial-gradient(circle at 78% 42%, rgba(85, 223, 255, 0.16), transparent 20%);
+}
+
+.starfall-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  background-image:
+    radial-gradient(circle, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle, #9fcaff 0 1px, transparent 1.5px);
+  background-position: 14px 20px, 52px 74px;
+  background-size: 92px 92px, 137px 137px;
+  mask-image: linear-gradient(to right, transparent, #000 35%);
+}
+
+.starfall-hero-copy,
+.starfall-phase-card,
+.starfall-orbit {
+  position: relative;
+  z-index: 1;
+}
+
+.starfall-hero-copy h2 {
+  margin: 3px 0 8px;
+  font-size: clamp(2.15rem, 6vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  background: linear-gradient(100deg, #fff, #9deaff 45%, #d0aaff 85%);
+  background-clip: text;
+  color: transparent;
+}
+
+.starfall-hero-copy > p:not(.eyebrow) {
+  color: #c7d5ef;
+  font-size: 1.08rem;
+}
+
+.starfall-guide {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.starfall-guide span {
+  padding: 7px 10px;
+  color: #c7d7f5;
+  font-size: 0.83rem;
+  border: 1px solid rgba(151, 193, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(7, 19, 39, 0.48);
+}
+
+.starfall-guide b {
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
+  display: inline-grid;
+  place-items: center;
+  color: #111b38;
+  border-radius: 50%;
+  background: #9fe9ff;
+}
+
+.starfall-orbit {
+  justify-self: center;
+  width: 154px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(132, 219, 255, 0.25);
+  border-radius: 50%;
+  box-shadow: inset 0 0 54px rgba(106, 76, 255, 0.15), 0 0 50px rgba(58, 189, 255, 0.12);
+}
+
+.starfall-orbit span {
+  color: #a8edff;
+  font-size: 46px;
+  filter: drop-shadow(0 0 15px rgba(95, 224, 255, 0.75));
+  animation: starfall-pulse 3.2s ease-in-out infinite;
+}
+
+.starfall-orbit i {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e7d2ff;
+  box-shadow: 0 0 14px #9c76ff;
+}
+
+.starfall-orbit i:nth-of-type(1) { transform: translate(60px, -43px); }
+.starfall-orbit i:nth-of-type(2) { transform: translate(-58px, 34px); }
+.starfall-orbit i:nth-of-type(3) { transform: translate(23px, 70px); }
+
+@keyframes starfall-pulse {
+  50% { transform: translateY(-4px) scale(1.06); filter: drop-shadow(0 0 25px rgba(177, 127, 255, 0.85)); }
+}
+
+.starfall-phase-card {
+  grid-column: 1 / -1;
+  margin-top: -8px;
+  padding: 13px 16px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(158, 205, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(5, 14, 31, 0.58);
+}
+
+.starfall-phase-card > span {
+  color: #d8baff;
+  font-weight: 800;
+}
+
+.starfall-phase-card small {
+  color: #91a4c7;
+  text-align: right;
+}
+
+.starfall-wallet-row {
+  margin: 16px 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.starfall-wallet-row > div {
+  min-width: 0;
+  padding: 15px 17px;
+  display: grid;
+  gap: 2px;
+  border: 1px solid rgba(123, 182, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(7, 20, 40, 0.67);
+}
+
+.starfall-wallet-row small,
+.starfall-wallet-row span {
+  color: #899dbc;
+}
+
+.starfall-wallet-row strong {
+  overflow-wrap: anywhere;
+  color: #bcefff;
+  font-size: 1.55rem;
+}
+
+.starfall-section {
+  margin-top: 14px;
+  padding: clamp(16px, 2.5vw, 24px);
+  border: 1px solid rgba(130, 184, 255, 0.18);
+  border-radius: 20px;
+  background: rgba(7, 19, 39, 0.72);
+}
+
+.starfall-section > header,
+.starfall-fold > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.starfall-section header h3,
+.starfall-fold summary strong {
+  margin: 2px 0;
+  font-size: 1.25rem;
+}
+
+.starfall-section header small,
+.starfall-fold summary small,
+.starfall-section header p,
+.starfall-fold-note {
+  color: #91a5c7;
+}
+
+.starfall-section header > span,
+.starfall-fold summary > b {
+  color: #d8c1ff;
+  white-space: nowrap;
+}
+
+.starfall-fold > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.starfall-fold > summary::-webkit-details-marker { display: none; }
+.starfall-fold > summary > span { display: grid; }
+.starfall-fold > summary::after { content: "＋"; color: #8ee6ff; }
+.starfall-fold[open] > summary::after { content: "－"; }
+.starfall-fold-note { margin: 12px 0 16px; }
+
+.starfall-day-list,
+.starfall-letter-list,
+.starfall-milestone-list,
+.starfall-store-grid {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.starfall-day-card,
+.starfall-letter,
+.starfall-milestone-list article,
+.starfall-store-grid article {
+  min-width: 0;
+  border: 1px solid rgba(138, 188, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(8, 23, 46, 0.72);
+}
+
+.starfall-day-card > header {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(135, 184, 255, 0.13);
+}
+
+.starfall-day-card > header span { display: grid; }
+.starfall-day-card > header b { color: #bca4ff; }
+.starfall-day-card.claimed { border-color: rgba(94, 225, 181, 0.33); }
+
+.starfall-route-options {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.starfall-route-options button {
+  min-width: 0;
+  min-height: 145px;
+  padding: 13px;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  color: #eef5ff;
+  text-align: left;
+  border: 1px solid rgba(151, 183, 255, 0.2);
+  border-radius: 14px;
+  background: rgba(27, 28, 70, 0.6);
+}
+
+.starfall-route-options button:hover { border-color: #75dfff; background: rgba(36, 42, 92, 0.78); }
+.starfall-route-options button > span { color: #9ceaff; font-size: 1.45rem; }
+.starfall-route-options button small { color: #94a8c8; }
+.starfall-route-options button em { margin-top: auto; color: #c9b7ff; font-style: normal; font-weight: 800; }
+
+.starfall-route-progress {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+}
+
+.starfall-route-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: #a2eaff;
+  font-size: 1.3rem;
+  border-radius: 13px;
+  background: rgba(73, 102, 172, 0.25);
+}
+
+.starfall-route-progress > div { min-width: 0; display: grid; gap: 5px; }
+.starfall-route-progress small { color: #94a8c7; }
+.starfall-route-progress > div > div { height: 6px; overflow: hidden; border-radius: 99px; background: rgba(115, 147, 202, 0.15); }
+.starfall-route-progress > div > div span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #66dfff, #ac83ff); }
+
+.starfall-route-progress button,
+.starfall-milestone-list button,
+.starfall-store-grid button,
+.starfall-letter-choices button {
+  padding: 9px 13px;
+  color: #eaf7ff;
+  border: 1px solid rgba(114, 217, 255, 0.4);
+  border-radius: 10px;
+  background: rgba(45, 113, 161, 0.26);
+}
+
+.starfall-empty-state {
+  padding: 24px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  border: 1px dashed rgba(143, 189, 255, 0.26);
+  border-radius: 15px;
+}
+
+.starfall-empty-state > span { color: #9eeaff; font-size: 2rem; }
+.starfall-empty-state p { margin: 4px 0 0; color: #90a4c2; }
+
+.starfall-letter-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.starfall-letter { padding: 15px; }
+.starfall-letter > header { justify-content: flex-start; }
+.starfall-letter > header > span { width: 34px; height: 34px; display: grid; place-items: center; color: #e7d4ff; border-radius: 50%; background: rgba(126, 91, 192, 0.25); }
+.starfall-letter > header > div { display: grid; }
+.starfall-letter > p { color: #b6c3db; line-height: 1.68; }
+.starfall-letter.locked { opacity: 0.58; }
+.starfall-letter.answered { border-color: rgba(176, 132, 255, 0.3); }
+.starfall-letter blockquote { margin: 13px 0 0; padding: 13px; display: grid; gap: 5px; color: #c9d6ec; border-left: 2px solid #aa82ff; border-radius: 0 10px 10px 0; background: rgba(109, 76, 174, 0.11); }
+.starfall-letter blockquote strong { color: #e4d7ff; }
+.starfall-letter-choices { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+
+.starfall-milestone-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.starfall-milestone-list article,
+.starfall-store-grid article {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+}
+
+.starfall-milestone-list article > span,
+.starfall-store-grid article > span { color: #9be8ff; font-size: 1.35rem; }
+.starfall-milestone-list article > div,
+.starfall-store-grid article > div { min-width: 0; display: grid; gap: 2px; }
+.starfall-milestone-list small,
+.starfall-store-grid small,
+.starfall-milestone-list p,
+.starfall-store-grid p { margin: 0; color: #8fa4c4; }
+.starfall-milestone-list article.reached { border-color: rgba(103, 222, 255, 0.32); }
+.starfall-milestone-list article.claimed { border-color: rgba(99, 226, 180, 0.3); }
+.starfall-store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.starfall-store-grid article > b { color: #d8c0ff; font-size: 0.9rem; white-space: nowrap; }
+.starfall-store-grid article > button { grid-column: 3; }
+
+.starfall-collection > header { margin-bottom: 14px; }
+.starfall-collection-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.starfall-collection-grid article { min-width: 0; padding: 13px 8px; display: grid; gap: 3px; justify-items: center; text-align: center; border: 1px solid rgba(134, 181, 248, 0.15); border-radius: 13px; background: rgba(9, 23, 47, 0.72); }
+.starfall-collection-grid article span { color: #9eeaff; font-size: 1.35rem; }
+.starfall-collection-grid article small { color: #8094b5; }
+.starfall-collection-grid article strong { overflow-wrap: anywhere; font-size: 0.86rem; }
+.starfall-collection-grid article.locked { opacity: 0.48; filter: grayscale(0.75); }
+.starfall-collection-grid article.unlocked { border-color: rgba(184, 140, 255, 0.34); box-shadow: inset 0 0 20px rgba(119, 82, 206, 0.09); }
+
+.starfall-beacon-unlocked #collect-button::after {
+  content: "☄";
+  position: absolute;
+  right: 14%;
+  top: 10%;
+  color: #c9b4ff;
+  filter: drop-shadow(-9px 8px 7px rgba(103, 224, 255, 0.7));
+  animation: starfall-pulse 3.2s ease-in-out infinite;
+}
+
+.starfall-starport-unlocked .starport-panel {
+  border-color: rgba(165, 123, 255, 0.34);
+  box-shadow: inset 0 0 90px rgba(92, 58, 173, 0.07);
+}
+
+.starfall-backdrop-unlocked .ambient-one { background: rgba(109, 74, 198, 0.24); }
+.starfall-backdrop-unlocked .ambient-two { background: rgba(58, 177, 216, 0.2); }
+
+@media (max-width: 900px) {
+  .starfall-hero { grid-template-columns: 1fr auto; }
+  .starfall-orbit { width: 118px; }
+  .starfall-wallet-row,
+  .starfall-collection-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .starfall-milestone-list,
+  .starfall-store-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .starfall-command-card { grid-template-columns: auto minmax(0, 1fr); padding: 13px; }
+  .starfall-command-card > b { grid-column: 2; }
+  .starfall-hero { min-height: 0; grid-template-columns: 1fr; padding: 22px 18px; }
+  .starfall-hero-copy h2 { font-size: clamp(2.2rem, 15vw, 3.3rem); }
+  .starfall-orbit { position: absolute; right: 18px; top: 18px; width: 84px; opacity: 0.55; }
+  .starfall-orbit span { font-size: 30px; }
+  .starfall-orbit i { display: none; }
+  .starfall-phase-card { grid-template-columns: 1fr; gap: 4px; }
+  .starfall-phase-card small { text-align: left; }
+  .starfall-wallet-row { grid-template-columns: 1fr; }
+  .starfall-section > header { align-items: flex-start; flex-direction: column; }
+  .starfall-route-options,
+  .starfall-letter-list { grid-template-columns: 1fr; }
+  .starfall-route-options button { min-height: 0; }
+  .starfall-route-progress { grid-template-columns: auto minmax(0, 1fr); }
+  .starfall-route-progress > button { grid-column: 1 / -1; width: 100%; }
+  .starfall-milestone-list article,
+  .starfall-store-grid article { grid-template-columns: auto minmax(0, 1fr); }
+  .starfall-milestone-list article > button,
+  .starfall-store-grid article > b,
+  .starfall-store-grid article > button { grid-column: 2; justify-self: start; }
+  .starfall-collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

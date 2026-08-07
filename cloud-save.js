@@ -14,6 +14,16 @@ const ANNOUNCEMENT_READ_KEY = "stellarOutpostAnnouncementRead_v1";
 const ANNOUNCEMENT_AUTO_SHOWN_KEY = "stellarOutpostAnnouncementAutoShown_v1";
 const FEEDBACK_LAST_SENT_KEY = "stellarOutpostFeedbackLastSent_v1";
 const FEEDBACK_COOLDOWN = 60_000;
+const BUILTIN_ANNOUNCEMENTS = Object.freeze([
+  {
+    id: "v0200-starfall-launch",
+    title: "今晚，让星港替你寄出一颗流星",
+    body: "限时活动「星雨寄航」将于 8 月 8 日 00:00 UTC（多伦多时间 8 月 7 日 20:00）开启。每天从三条星路中选择一条，正常采集、值守、作业、战斗或远征即可收集“星雨余辉”；七封星雨信笺也会在两周内陆续抵达。观测活动持续至 8 月 22 日，余辉兑换站保留至 9 月 22 日。8 月 8 日晚如果天气允许，也别忘了暂时离开屏幕，和想一起看星空的人抬头看看英仙座流星雨。",
+    priority: "important",
+    publishedAt: Date.UTC(2026, 7, 7, 17, 0, 0),
+    expiresAt: Date.UTC(2026, 8, 23, 0, 0, 0),
+  },
+]);
 
 const $ = (selector) => document.querySelector(selector);
 const elements = {
@@ -106,7 +116,7 @@ let serviceReady = false;
 let leaderboardCategory = "careerDust";
 let leaderboardTimer = null;
 let leaderboardBusy = false;
-let announcements = [];
+let announcements = [...BUILTIN_ANNOUNCEMENTS];
 let announcementBusy = false;
 let feedbackBusy = false;
 
@@ -392,9 +402,14 @@ async function loadAnnouncements({ silent = false } = {}) {
       firebaseFirestoreApi.limit(30),
     );
     const snapshot = await firebaseFirestoreApi.getDocs(announcementQuery);
-    announcements = snapshot.docs
+    const remoteAnnouncements = snapshot.docs
       .map(normalizeAnnouncement)
-      .filter(Boolean)
+      .filter(Boolean);
+    announcements = [...BUILTIN_ANNOUNCEMENTS, ...remoteAnnouncements]
+      .filter((announcement, index, values) =>
+        values.findIndex((entry) => entry.id === announcement.id) === index,
+      )
+      .filter((announcement) => !announcement.expiresAt || announcement.expiresAt > Date.now())
       .sort((left, right) => right.publishedAt - left.publishedAt);
     renderAnnouncements();
     setCommunicationStatus(
@@ -606,6 +621,23 @@ const LEADERBOARD_CATEGORIES = Object.freeze({
     expedition: true,
     format: (value) => `${formatGameNumber(value)} / 8`,
   },
+  starfallTotalEarned: {
+    field: "starfallTotalEarned",
+    label: "累计星雨余辉",
+    starfall: true,
+  },
+  starfallRoutes: {
+    field: "starfallRoutes",
+    label: "完成星路",
+    starfall: true,
+    format: (value) => `${formatGameNumber(value)} / 15`,
+  },
+  starfallLetters: {
+    field: "starfallLetters",
+    label: "星雨信笺",
+    starfall: true,
+    format: (value) => `${formatGameNumber(value)} / 7`,
+  },
 });
 
 function setLeaderboardStatus(stateName, label) {
@@ -658,6 +690,18 @@ function normalizeLeaderboardEntry(snapshot) {
       8,
       Math.max(0, Math.floor(Number(data.expeditionArtifacts) || 0)),
     ),
+    starfallTotalEarned: Math.min(
+      99999,
+      Math.max(0, Math.floor(Number(data.starfallTotalEarned) || 0)),
+    ),
+    starfallRoutes: Math.min(
+      15,
+      Math.max(0, Math.floor(Number(data.starfallRoutes) || 0)),
+    ),
+    starfallLetters: Math.min(
+      7,
+      Math.max(0, Math.floor(Number(data.starfallLetters) || 0)),
+    ),
     transcensions: Math.max(
       0,
       Math.floor(Number(data.transcensions) || 0),
@@ -690,7 +734,9 @@ function renderLeaderboardRows(entries) {
     name.textContent = entry.playerName;
     const detail = document.createElement("small");
     detail.textContent = `${
-      category.expedition
+      category.starfall
+        ? `星路 ${entry.starfallRoutes} · 信笺 ${entry.starfallLetters}`
+        : category.expedition
         ? `完整远征 ${entry.expeditionRuns} · 首领击破 ${entry.expeditionBossWins}`
         : `奇点超越 ${entry.transcensions} 次`
     }${entry.id === currentUser?.uid ? " · 当前账号" : ""}`;
@@ -884,6 +930,18 @@ function getLocalLeaderboardEntry() {
       8,
       Math.max(0, Math.floor(Number(entry.expeditionArtifacts) || 0)),
     ),
+    starfallTotalEarned: Math.min(
+      99999,
+      Math.max(0, Math.floor(Number(entry.starfallTotalEarned) || 0)),
+    ),
+    starfallRoutes: Math.min(
+      15,
+      Math.max(0, Math.floor(Number(entry.starfallRoutes) || 0)),
+    ),
+    starfallLetters: Math.min(
+      7,
+      Math.max(0, Math.floor(Number(entry.starfallLetters) || 0)),
+    ),
   };
 }
 
@@ -961,6 +1019,18 @@ async function publishLeaderboardEntry({ silent = false } = {}) {
           expeditionArtifacts: Math.max(
             localEntry.expeditionArtifacts,
             Math.floor(Number(remote.expeditionArtifacts) || 0),
+          ),
+          starfallTotalEarned: Math.max(
+            localEntry.starfallTotalEarned,
+            Math.floor(Number(remote.starfallTotalEarned) || 0),
+          ),
+          starfallRoutes: Math.max(
+            localEntry.starfallRoutes,
+            Math.floor(Number(remote.starfallRoutes) || 0),
+          ),
+          starfallLetters: Math.max(
+            localEntry.starfallLetters,
+            Math.floor(Number(remote.starfallLetters) || 0),
           ),
           updatedAt: firebaseFirestoreApi.serverTimestamp(),
         });
@@ -1544,6 +1614,8 @@ async function initializeCloudService() {
     return;
   }
   bridge = await waitForBridge();
+  renderAnnouncements();
+  maybeAutoOpenImportantAnnouncement();
   const config = globalThis.STELLAR_FIREBASE_CONFIG;
   serviceConfigured = hasValidFirebaseConfig(config);
   if (!serviceConfigured) {

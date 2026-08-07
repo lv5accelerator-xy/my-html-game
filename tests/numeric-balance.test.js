@@ -86,7 +86,7 @@ const ecoTickInterval = readConstant("ECO_GAME_TICK_INTERVAL");
 const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
 const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
-assert.equal(readConstant("SAVE_VERSION"), 12, "operations and guidance saves need schema version 12");
+assert.equal(readConstant("SAVE_VERSION"), 13, "starfall event saves need schema version 13");
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),
   6,

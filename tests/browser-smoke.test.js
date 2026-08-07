@@ -61,7 +61,8 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.19.1");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.20.0");
+    localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -133,19 +134,36 @@ async function main() {
       })(),
       fleetCommand: window.StellarOutpostCloudBridge.getFleetCommandDiagnostics(),
       operations: window.StellarOutpostCloudBridge.getOperationsDiagnostics(),
+      starfall: window.StellarOutpostCloudBridge.getStarfallDiagnostics(
+        Date.UTC(2026, 7, 10, 12, 0, 0),
+      ),
+      leaderboard: window.StellarOutpostCloudBridge.getLeaderboardEntry(),
       communicationsReady: Boolean(window.StellarCommunicationsBridge),
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.19.1");
-    assert.equal(snapshot.saveVersion, 12);
+    assert.equal(snapshot.gameVersion, "0.20.0");
+    assert.equal(snapshot.saveVersion, 13);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.19\.1/);
+    assert.match(snapshot.footer, /v0\.20\.0/);
+    assert.equal(snapshot.starfall.phase, "active");
+    assert.deepEqual(snapshot.starfall.availableDayKeys, [
+      "2026-08-08",
+      "2026-08-09",
+      "2026-08-10",
+    ]);
+    assert.equal(snapshot.starfall.state.dayRecords.length, 3);
+    assert.ok(snapshot.starfall.state.dayRecords.every((record) => record.optionIds.length === 3));
+    assert.equal(snapshot.starfall.letters.length, 7);
+    assert.equal(snapshot.starfall.milestones.length, 7);
+    assert.equal(snapshot.leaderboard.starfallTotalEarned, 0);
+    assert.equal(snapshot.leaderboard.starfallRoutes, 0);
+    assert.equal(snapshot.leaderboard.starfallLetters, 0);
     assert.equal(snapshot.fleetCommand.presets.length, 3);
     assert.equal(snapshot.fleetCommand.challenge.phases.length, 3);
     assert.equal(snapshot.fleetCommand.ammo, 12);
@@ -906,8 +924,8 @@ async function main() {
     assert.equal(expeditionLeaderboard.runs, "17");
     assert.equal(expeditionLeaderboard.bosses, "12");
     assert.equal(expeditionLeaderboard.artifacts, "4 / 8");
-    assert.equal(expeditionLeaderboard.personalCards, 6);
-    assert.equal(expeditionLeaderboard.categories, 6);
+    assert.equal(expeditionLeaderboard.personalCards, 9);
+    assert.equal(expeditionLeaderboard.categories, 9);
 
     const fleetCommandCheck = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
@@ -954,7 +972,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.19.2"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.20.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -963,7 +981,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.19\.2/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.20\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

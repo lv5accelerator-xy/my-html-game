@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.19.1";
-  const PATCH_NOTES_VERSION = "0.19.1";
-  const SAVE_VERSION = 12;
+  const GAME_VERSION = "0.20.0";
+  const PATCH_NOTES_VERSION = "0.20.0";
+  const SAVE_VERSION = 13;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -101,6 +101,14 @@
     skirmishWins: 1,
     starportUpgrades: 1,
   });
+  const STARFALL_DAY_MS = 24 * 60 * 60 * 1000;
+  const STARFALL_EVENT_START = Date.UTC(2026, 7, 8, 0, 0, 0);
+  const STARFALL_EVENT_END = Date.UTC(2026, 7, 23, 0, 0, 0);
+  const STARFALL_EXCHANGE_END = Date.UTC(2026, 8, 23, 0, 0, 0);
+  const STARFALL_CURRENCY_CAP = 99999;
+  const STARFALL_DAILY_REWARD = 240;
+  const STARFALL_LETTER_REWARD = 100;
+  const STARFALL_CATCHUP_DAYS = 3;
   const PRIMARY_PAGES = [
     "command",
     "fleet",
@@ -109,11 +117,23 @@
     "core-shop",
     "combat",
     "expedition",
+    "starfall",
     "missions",
     "transcend",
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.20.0",
+      theme: "星雨寄航",
+      changes: [
+        "英仙座流星雨限时活动于 8 月 8 日开启、持续至 8 月 22 日；奖励兑换保留至 9 月 22 日。",
+        "新增每日三选一星路任务，并保留最近三天的追赶机会；采集、值守、手动回收、作业、战斗与远征均可参与。",
+        "新增七封星雨信笺、活动里程碑与单一货币“星雨余辉”，避免额外堆叠复杂资源。",
+        "新增流星尾迹、英仙夜航、纪念卡与纯收藏纪念物；活动奖励不提供永久数值倍率。",
+        "活动结束后停止获得余辉，但已参与玩家仍可阅读信笺，并在一个月兑换期内使用剩余余辉。",
+      ],
+    },
     {
       version: "0.19.1",
       theme: "航站通讯中心",
@@ -2380,6 +2400,168 @@
     expeditionSupply: { cost: 14 },
   });
 
+  const STARFALL_ROUTE_TASKS = [
+    {
+      id: "stardust",
+      metric: "dustEarned",
+      title: "拾取星辉",
+      icon: "✦",
+      description: "让日常回收轨道掠过这场流星雨。",
+      format: "number",
+      target: (targetState) => getMissionDustTarget("daily", targetState, 0.7),
+      eligible: () => true,
+    },
+    {
+      id: "nightwatch",
+      metric: "playSeconds",
+      title: "守望长夜",
+      icon: "◷",
+      description: "让航站灯火陪你等待下一颗流星。",
+      format: "duration",
+      target: () => 12 * 60,
+      eligible: () => true,
+    },
+    {
+      id: "calibration",
+      metric: "manualClicks",
+      title: "校准观测镜",
+      icon: "⌁",
+      description: "手动回收星尘，调整流星观测阵列。",
+      format: "count",
+      target: () => 45,
+      eligible: () => true,
+    },
+    {
+      id: "operations",
+      metric: "operationsCompleted",
+      title: "装订星笺",
+      icon: "▦",
+      description: "完成航站作业，为远方准备寄出的信。",
+      format: "count",
+      target: () => 6,
+      eligible: (targetState) => targetState.lifetimeDust >= OPERATIONS_UNLOCK_DUST,
+    },
+    {
+      id: "guardian",
+      metric: "battlesWon",
+      title: "守住观测窗",
+      icon: "⬡",
+      description: "清理航道，让流星不被敌舰的火光遮住。",
+      format: "count",
+      target: () => 3,
+      eligible: (targetState) => targetState.lifetimeDust >= COMBAT_UNLOCK_DUST,
+    },
+    {
+      id: "voyager",
+      metric: "expeditionRoutes",
+      title: "追随流星",
+      icon: "▱",
+      description: "穿过两段远征航线，寻找坠落的余辉。",
+      format: "count",
+      target: () => 2,
+      eligible: (targetState) => targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST,
+    },
+  ];
+
+  const STARFALL_LETTERS = [
+    {
+      id: "no-address",
+      offset: 0,
+      title: "第一颗流星没有地址",
+      body: "观测阵列捕获了一束迟到很多年的光。信封上没有坐标，只有一句：如果你也看见了，就替我把它寄往一个值得抵达的地方。",
+      choices: [
+        { id: "station", label: "留在星港", result: "你把光留在舷窗边。今晚回港的人，都能借它找到方向。" },
+        { id: "deep-space", label: "送往深空", result: "信标朝没有名字的星系闪了一次，也许远处恰好有人抬头。" },
+        { id: "wish", label: "写下愿望", result: "愿望没有署名，但流星替你记住了它经过这里的时刻。" },
+      ],
+    },
+    {
+      id: "before-light",
+      offset: 2,
+      title: "有人在光抵达前等你",
+      body: "一段旧广播反复播放同一句话：不必赶路，我知道星光总会晚一点到。",
+      choices: [
+        { id: "reply", label: "回一封信", result: "你的回信需要很多年才能抵达，但等待本来就是这段故事的一部分。" },
+        { id: "beacon", label: "点亮信标", result: "信标亮起时，航站像宇宙里一个很小、却很确定的答案。" },
+        { id: "listen", label: "再听一遍", result: "你没有回应，只让那句话和流星一起从夜空缓慢经过。" },
+      ],
+    },
+    {
+      id: "old-orbit",
+      offset: 4,
+      title: "穿过旧轨道的晚风",
+      body: "废弃轨道站的风铃在真空里没有声音，传感器却记录到规律的振动，像有人轻轻敲门。",
+      choices: [
+        { id: "open", label: "打开舱门", result: "门外没有人，只有一颗流星把整条旧轨道照亮。" },
+        { id: "bell", label: "带走风铃", result: "它被挂在指挥台旁，从此每次启航都会替旧轨道说一声再见。" },
+        { id: "wait", label: "停留片刻", result: "有些航线不必重启，只要有人记得它曾经通往哪里。" },
+      ],
+    },
+    {
+      id: "two-stars",
+      offset: 6,
+      title: "两颗星之间的距离",
+      body: "测距仪给出一个庞大的数字。导航员却说，真正的距离只是从‘想起’到‘出发’之间的那一步。",
+      choices: [
+        { id: "depart", label: "现在出发", result: "航线刚刚亮起，终点就像比昨天近了一点。" },
+        { id: "mark", label: "标记坐标", result: "你把坐标留给未来的自己，也留给某个愿意同行的人。" },
+        { id: "share", label: "分享星图", result: "当另一块屏幕也亮起时，漫长的距离忽然有了两端。" },
+      ],
+    },
+    {
+      id: "unheard-wish",
+      offset: 8,
+      title: "如果愿望没有被听见",
+      body: "流星不会回答问题，也不会保证愿望实现。可观测记录显示，人们仍会在它出现时变得安静。",
+      choices: [
+        { id: "keep", label: "替它保管", result: "你把愿望存进航站档案：未完成，但从未作废。" },
+        { id: "again", label: "再许一次", result: "第二次说出口时，它已经不只是愿望，也像一个决定。" },
+        { id: "give", label: "送给别人", result: "你把这次机会留给远方。夜空因此显得比刚才温柔一点。" },
+      ],
+    },
+    {
+      id: "same-night",
+      offset: 10,
+      title: "与你共享同一片夜空",
+      body: "多个航站同时上传观测图。它们来自不同经纬度，却都留下了同一条明亮的轨迹。",
+      choices: [
+        { id: "combine", label: "拼成星图", result: "所有不完整的视角拼在一起，终于成为一整片夜空。" },
+        { id: "send", label: "发送问候", result: "频道里陆续亮起回复：我也在看。" },
+        { id: "quiet", label: "安静共赏", result: "没有人说话，但这一刻被许多人同时记住。" },
+      ],
+    },
+    {
+      id: "eighth-meteor",
+      offset: 12,
+      title: "没有熄灭的第八颗流星",
+      body: "七封信已经归档。就在观测结束前，阵列发现第八束光没有坠落，而是转向星港，像一艘终于找到回航坐标的小船。",
+      choices: [
+        { id: "guide", label: "为它引航", result: "它停在信标旁，成为一束不会熄灭的尾迹。以后每次抬头，都能知道有人与你共享过这片星空。" },
+        { id: "follow", label: "跟它远行", result: "你没有问终点。两道航迹并在一起，向仍未命名的夜空延伸。" },
+        { id: "someone", label: "把它寄给那个人", result: "收件人没有写在档案里。宇宙却像知道地址，让第八颗流星继续亮了下去。" },
+      ],
+    },
+  ];
+
+  const STARFALL_MILESTONES = [
+    { id: "dust", required: 200, title: "初见星雨", reward: "5 分钟当前产量", type: "dust" },
+    { id: "title", required: 500, title: "等一场星雨", reward: "限定指挥官称号", type: "title" },
+    { id: "supplies", required: 900, title: "追光补给", reward: "远征补给 ×4 · 星图残片 ×12", type: "supplies" },
+    { id: "beacon", required: 1400, title: "流星尾迹", reward: "信标动态尾迹外观", type: "beacon" },
+    { id: "letter", required: 2100, title: "英仙星笺", reward: "限定收藏品", type: "letter" },
+    { id: "starport", required: 3000, title: "英仙夜航", reward: "星港主题外观", type: "starport" },
+    { id: "eighth", required: 3800, title: "第八颗流星", reward: "纪念背景与收藏物", type: "eighth" },
+  ];
+
+  const STARFALL_STORE_ITEMS = [
+    { id: "emblem", title: "双星愿签", description: "纯收藏限定徽记", cost: 480, limit: 1 },
+    { id: "postcard", title: "英仙纪念卡", description: "保存七封信笺的纪念卡", cost: 620, limit: 1 },
+    { id: "dust", title: "余辉补给箱", description: "5 分钟当前产量", cost: 75, limit: 0 },
+    { id: "materials", title: "坠星建材箱", description: "四种星港材料各 ×3", cost: 120, limit: 0 },
+    { id: "components", title: "夜航组件箱", description: "四种工程组件各 ×2", cost: 140, limit: 0 },
+    { id: "expedition", title: "追光远征包", description: "补给 ×2 · 星图残片 ×6", cost: 90, limit: 0 },
+  ];
+
   const $ = (selector) => document.querySelector(selector);
   const elements = {
     dust: $("#dust-value"),
@@ -2405,6 +2587,10 @@
     commandRaidStatus: $("#command-raid-status"),
     commandMissionButton: $("#command-mission-button"),
     commandMissionStatus: $("#command-mission-status"),
+    starfallCommandCard: $("#starfall-command-card"),
+    starfallCommandPhase: $("#starfall-command-phase"),
+    starfallCommandStatus: $("#starfall-command-status"),
+    starfallCommandCurrency: $("#starfall-command-currency"),
     commandGuide: $("#command-guide"),
     commandGuideIcon: $("#command-guide-icon"),
     commandGuideTitle: $("#command-guide-title"),
@@ -2590,6 +2776,20 @@
     crescentLetterSalutation: $("#crescent-letter-salutation"),
     crescentLetterClose: $("#crescent-letter-close"),
     crescentLetterConfirm: $("#crescent-letter-confirm"),
+    starfallNavigationBadge: $("#starfall-navigation-badge"),
+    starfallPhaseLabel: $("#starfall-phase-label"),
+    starfallCountdown: $("#starfall-countdown"),
+    starfallStatusNote: $("#starfall-status-note"),
+    starfallCurrency: $("#starfall-currency"),
+    starfallTotalEarned: $("#starfall-total-earned"),
+    starfallLetterCount: $("#starfall-letter-count"),
+    starfallLetterSummary: $("#starfall-letter-summary"),
+    starfallMilestoneSummary: $("#starfall-milestone-summary"),
+    starfallDayList: $("#starfall-day-list"),
+    starfallLetterList: $("#starfall-letter-list"),
+    starfallMilestoneList: $("#starfall-milestone-list"),
+    starfallStoreGrid: $("#starfall-store-grid"),
+    starfallCollectionGrid: $("#starfall-collection-grid"),
     missionTokenBalance: $("#mission-token-balance"),
     missionsNavigationBadge: $("#missions-navigation-badge"),
     dailyResetCountdown: $("#daily-reset-countdown"),
@@ -2652,6 +2852,9 @@
     leaderboardExpeditionRuns: $("#leaderboard-expedition-runs"),
     leaderboardBossVictories: $("#leaderboard-boss-victories"),
     leaderboardExpeditionArtifacts: $("#leaderboard-expedition-artifacts"),
+    leaderboardStarfallEarned: $("#leaderboard-starfall-earned"),
+    leaderboardStarfallRoutes: $("#leaderboard-starfall-routes"),
+    leaderboardStarfallLetters: $("#leaderboard-starfall-letters"),
     leaderboardCurrentPower: $("#leaderboard-current-power"),
     starfield: $("#starfield"),
   };
@@ -2715,6 +2918,29 @@
       tokens: 0,
       daily: freshMissionPeriod("daily"),
       weekly: freshMissionPeriod("weekly"),
+    };
+  }
+
+  function freshStarfallState() {
+    return {
+      currency: 0,
+      totalEarned: 0,
+      dayRecords: [],
+      completedDays: [],
+      letterChoices: {},
+      claimedMilestones: [],
+      purchases: {},
+      cosmetics: {
+        title: false,
+        beacon: false,
+        starport: false,
+        backdrop: false,
+        letter: false,
+        emblem: false,
+        postcard: false,
+        keepsake: false,
+      },
+      firstOpened: false,
     };
   }
 
@@ -2892,6 +3118,7 @@
       endgame: freshEndgameState(),
       crescentSecret: freshCrescentSecretState(),
       missions: freshMissionState(),
+      starfall: freshStarfallState(),
       fleetCommand: freshFleetCommandState(),
       expedition: freshExpeditionState(),
       operations: freshOperationsState(),
@@ -4510,6 +4737,317 @@
     return clean;
   }
 
+  function getStarfallPhase(now = Date.now()) {
+    if (now < STARFALL_EVENT_START) return "preview";
+    if (now < STARFALL_EVENT_END) return "active";
+    if (now < STARFALL_EXCHANGE_END) return "exchange";
+    return "archived";
+  }
+
+  function hasStarfallParticipation(targetState = state) {
+    const eventState = targetState.starfall;
+    return Boolean(
+      eventState &&
+      (eventState.totalEarned > 0 ||
+        eventState.currency > 0 ||
+        eventState.dayRecords?.length ||
+        Object.keys(eventState.letterChoices || {}).length ||
+        Object.values(eventState.cosmetics || {}).some(Boolean)),
+    );
+  }
+
+  function sanitizeStarfallState(rawStarfall) {
+    const clean = freshStarfallState();
+    if (!rawStarfall || typeof rawStarfall !== "object") return clean;
+    clean.currency = Math.min(
+      STARFALL_CURRENCY_CAP,
+      clampGameCount(rawStarfall.currency),
+    );
+    clean.totalEarned = Math.min(
+      STARFALL_CURRENCY_CAP,
+      Math.max(clean.currency, clampGameCount(rawStarfall.totalEarned)),
+    );
+    const validRoutes = new Set(STARFALL_ROUTE_TASKS.map((route) => route.id));
+    const seenDayKeys = new Set();
+    clean.dayRecords = Array.isArray(rawStarfall.dayRecords)
+      ? rawStarfall.dayRecords.slice(-18).flatMap((record) => {
+          const key = /^2026-(08-(0[8-9]|1\d|2[0-2]))$/.test(String(record?.key || ""))
+            ? String(record.key)
+            : "";
+          if (!key || seenDayKeys.has(key)) return [];
+          const optionIds = Array.isArray(record.optionIds)
+            ? [...new Set(record.optionIds.filter((id) => validRoutes.has(id)))].slice(0, 3)
+            : [];
+          if (optionIds.length < 3) return [];
+          seenDayKeys.add(key);
+          const selectedId = optionIds.includes(record.selectedId)
+            ? record.selectedId
+            : "";
+          return [{
+            key,
+            optionIds,
+            selectedId,
+            target: selectedId
+              ? Math.max(1, Math.min(999000000, clampGameNumber(record.target)))
+              : 0,
+            progress: selectedId
+              ? Math.min(
+                  Math.max(1, Math.min(999000000, clampGameNumber(record.target))),
+                  clampGameNumber(record.progress),
+                )
+              : 0,
+            claimed: record.claimed === true,
+          }];
+        })
+      : [];
+    clean.completedDays = Array.isArray(rawStarfall.completedDays)
+      ? [...new Set(rawStarfall.completedDays.filter((key) => seenDayKeys.has(key)))].slice(-14)
+      : [];
+    STARFALL_LETTERS.forEach((letter) => {
+      const choice = letter.choices.find(
+        (entry) => entry.id === rawStarfall.letterChoices?.[letter.id],
+      );
+      if (choice) clean.letterChoices[letter.id] = choice.id;
+    });
+    const validMilestones = new Set(STARFALL_MILESTONES.map((entry) => entry.id));
+    clean.claimedMilestones = Array.isArray(rawStarfall.claimedMilestones)
+      ? [...new Set(rawStarfall.claimedMilestones.filter((id) => validMilestones.has(id)))]
+      : [];
+    STARFALL_STORE_ITEMS.forEach((item) => {
+      const count = clampGameCount(rawStarfall.purchases?.[item.id]);
+      clean.purchases[item.id] = item.limit ? Math.min(item.limit, count) : count;
+    });
+    Object.keys(clean.cosmetics).forEach((key) => {
+      clean.cosmetics[key] = rawStarfall.cosmetics?.[key] === true;
+    });
+    clean.firstOpened = rawStarfall.firstOpened === true;
+    return clean;
+  }
+
+  function getStarfallDayIndex(now = Date.now()) {
+    const boundedNow = Math.min(now, STARFALL_EVENT_END - 1);
+    return clamp(
+      Math.floor((boundedNow - STARFALL_EVENT_START) / STARFALL_DAY_MS),
+      0,
+      14,
+    );
+  }
+
+  function getStarfallDayKey(index) {
+    return getUtcDailyKey(STARFALL_EVENT_START + index * STARFALL_DAY_MS);
+  }
+
+  function getStarfallRoute(routeId) {
+    return STARFALL_ROUTE_TASKS.find((route) => route.id === routeId);
+  }
+
+  function createStarfallDayRecord(index) {
+    const key = getStarfallDayKey(index);
+    const eligible = STARFALL_ROUTE_TASKS.filter((route) => route.eligible(state));
+    const optionIds = seededMissionShuffle(
+      eligible,
+      `starfall:${key}:${normalizePlayerName(state.playerName) || "航站"}`,
+    ).slice(0, 3).map((route) => route.id);
+    return {
+      key,
+      optionIds,
+      selectedId: "",
+      target: 0,
+      progress: 0,
+      claimed: false,
+    };
+  }
+
+  function getAvailableStarfallDayKeys(now = Date.now()) {
+    if (getStarfallPhase(now) !== "active") return [];
+    const currentIndex = getStarfallDayIndex(now);
+    const firstIndex = Math.max(0, currentIndex - STARFALL_CATCHUP_DAYS + 1);
+    return Array.from(
+      { length: currentIndex - firstIndex + 1 },
+      (_, offset) => getStarfallDayKey(firstIndex + offset),
+    );
+  }
+
+  function ensureStarfallDays(now = Date.now()) {
+    if (!state.starfall || typeof state.starfall !== "object") {
+      state.starfall = freshStarfallState();
+    }
+    if (getStarfallPhase(now) !== "active") return false;
+    let changed = false;
+    const currentIndex = getStarfallDayIndex(now);
+    const firstIndex = Math.max(0, currentIndex - STARFALL_CATCHUP_DAYS + 1);
+    for (let index = firstIndex; index <= currentIndex; index += 1) {
+      const key = getStarfallDayKey(index);
+      if (!state.starfall.dayRecords.some((record) => record.key === key)) {
+        state.starfall.dayRecords.push(createStarfallDayRecord(index));
+        changed = true;
+      }
+    }
+    state.starfall.dayRecords.sort((left, right) => left.key.localeCompare(right.key));
+    if (state.starfall.dayRecords.length > 15) {
+      state.starfall.dayRecords = state.starfall.dayRecords.slice(-15);
+      changed = true;
+    }
+    return changed;
+  }
+
+  function grantStarfallCurrency(amount) {
+    const safeAmount = Math.max(0, clampGameCount(amount));
+    if (!safeAmount) return 0;
+    const before = state.starfall.currency;
+    state.starfall.currency = Math.min(
+      STARFALL_CURRENCY_CAP,
+      state.starfall.currency + safeAmount,
+    );
+    const applied = state.starfall.currency - before;
+    state.starfall.totalEarned = Math.min(
+      STARFALL_CURRENCY_CAP,
+      state.starfall.totalEarned + applied,
+    );
+    return applied;
+  }
+
+  function recordStarfallProgress(metric, amount = 1, now = Date.now()) {
+    if (getStarfallPhase(now) !== "active") return;
+    ensureStarfallDays(now);
+    const availableKeys = new Set(getAvailableStarfallDayKeys(now));
+    state.starfall.dayRecords.forEach((record) => {
+      if (!availableKeys.has(record.key) || record.claimed || !record.selectedId) return;
+      const route = getStarfallRoute(record.selectedId);
+      if (!route || route.metric !== metric || record.progress >= record.target) return;
+      record.progress = Math.min(
+        record.target,
+        safeAdd(record.progress, clampGameNumber(amount)),
+      );
+    });
+  }
+
+  function selectStarfallRoute(dayKey, routeId) {
+    if (getStarfallPhase() !== "active") return;
+    ensureStarfallDays();
+    if (!getAvailableStarfallDayKeys().includes(dayKey)) return;
+    const record = state.starfall.dayRecords.find((entry) => entry.key === dayKey);
+    const route = getStarfallRoute(routeId);
+    if (!record || record.selectedId || !record.optionIds.includes(routeId) || !route) return;
+    record.selectedId = routeId;
+    record.target = Math.max(1, clampGameNumber(route.target(state)));
+    record.progress = 0;
+    showToast("星路已确认", `${route.title} · 完成后获得 ${STARFALL_DAILY_REWARD} 余辉`, "☄");
+    renderStarfallEvent();
+    saveGame();
+  }
+
+  function claimStarfallRoute(dayKey) {
+    if (getStarfallPhase() !== "active") return;
+    const record = state.starfall.dayRecords.find((entry) => entry.key === dayKey);
+    if (
+      !record ||
+      !getAvailableStarfallDayKeys().includes(dayKey) ||
+      record.claimed ||
+      record.progress < record.target
+    ) return;
+    record.claimed = true;
+    if (!state.starfall.completedDays.includes(dayKey)) {
+      state.starfall.completedDays.push(dayKey);
+    }
+    const gained = grantStarfallCurrency(STARFALL_DAILY_REWARD);
+    addLog(`星雨寄航：完成 ${dayKey} 星路。`);
+    showToast("星路抵达", `星雨余辉 +${gained}`, "☄");
+    renderStarfallEvent();
+    updateStarfallSummary();
+    saveGame();
+  }
+
+  function getStarfallLetterUnlockAt(letter) {
+    return STARFALL_EVENT_START + letter.offset * STARFALL_DAY_MS;
+  }
+
+  function chooseStarfallLetter(letterId, choiceId) {
+    const phase = getStarfallPhase();
+    if (!state.starfall || phase === "preview" || phase === "archived") return;
+    const letter = STARFALL_LETTERS.find((entry) => entry.id === letterId);
+    const choice = letter?.choices.find((entry) => entry.id === choiceId);
+    if (!letter || !choice || Date.now() < getStarfallLetterUnlockAt(letter)) return;
+    if (state.starfall.letterChoices[letter.id]) return;
+    state.starfall.letterChoices[letter.id] = choice.id;
+    const reward = phase === "active" ? grantStarfallCurrency(STARFALL_LETTER_REWARD) : 0;
+    showToast(
+      "星雨信笺已归档",
+      reward ? `${choice.result} · 余辉 +${reward}` : choice.result,
+      "✉",
+    );
+    renderStarfallEvent();
+    updateStarfallSummary();
+    saveGame();
+  }
+
+  function claimStarfallMilestone(milestoneId) {
+    const phase = getStarfallPhase();
+    if (phase === "preview" || phase === "archived") return;
+    const milestone = STARFALL_MILESTONES.find((entry) => entry.id === milestoneId);
+    if (
+      !milestone ||
+      state.starfall.totalEarned < milestone.required ||
+      state.starfall.claimedMilestones.includes(milestone.id)
+    ) return;
+    state.starfall.claimedMilestones.push(milestone.id);
+    if (milestone.type === "dust") {
+      addDust(getMissionRewardDust(5), { trackMissions: false });
+    } else if (milestone.type === "supplies") {
+      state.expedition.supplies = Math.min(EXPEDITION_SUPPLY_CAP, state.expedition.supplies + 4);
+      state.expedition.fragments = Math.min(999000, state.expedition.fragments + 12);
+    } else if (milestone.type === "title") {
+      state.starfall.cosmetics.title = true;
+    } else if (milestone.type === "beacon") {
+      state.starfall.cosmetics.beacon = true;
+    } else if (milestone.type === "letter") {
+      state.starfall.cosmetics.letter = true;
+    } else if (milestone.type === "starport") {
+      state.starfall.cosmetics.starport = true;
+    } else if (milestone.type === "eighth") {
+      state.starfall.cosmetics.backdrop = true;
+      state.starfall.cosmetics.keepsake = true;
+    }
+    applyStarfallCosmetics();
+    showToast("星雨里程碑已领取", milestone.reward, "✦");
+    renderStarfallEvent();
+    saveGame();
+  }
+
+  function purchaseStarfallItem(itemId) {
+    const phase = getStarfallPhase();
+    if (phase !== "active" && phase !== "exchange") return;
+    const item = STARFALL_STORE_ITEMS.find((entry) => entry.id === itemId);
+    const bought = clampGameCount(state.starfall.purchases[itemId]);
+    if (!item || state.starfall.currency < item.cost || (item.limit && bought >= item.limit)) return;
+    state.starfall.currency -= item.cost;
+    state.starfall.purchases[itemId] = bought + 1;
+    if (item.id === "emblem") {
+      state.starfall.cosmetics.emblem = true;
+    } else if (item.id === "postcard") {
+      state.starfall.cosmetics.postcard = true;
+    } else if (item.id === "dust") {
+      addDust(getMissionRewardDust(5), { trackMissions: false });
+    } else if (item.id === "materials") {
+      STARPORT_MATERIALS.forEach((material) => {
+        state.starport.materials[material.id] = Math.min(
+          999000,
+          state.starport.materials[material.id] + 3,
+        );
+      });
+    } else if (item.id === "components") {
+      OPERATION_COMPONENTS.forEach((component) => addOperationComponent(component.id, 2));
+    } else if (item.id === "expedition") {
+      state.expedition.supplies = Math.min(EXPEDITION_SUPPLY_CAP, state.expedition.supplies + 2);
+      state.expedition.fragments = Math.min(999000, state.expedition.fragments + 6);
+    }
+    applyStarfallCosmetics();
+    showToast("兑换完成", `${item.title}已送达航站。`, "☄");
+    renderStarfallEvent();
+    updateStarfallSummary();
+    saveGame();
+  }
+
   function ensureMissionPeriods(now = Date.now()) {
     if (!state.missions || typeof state.missions !== "object") {
       state.missions = freshMissionState();
@@ -4547,6 +5085,7 @@
         item.progress = Math.min(item.target, safeAdd(item.progress, safeAmount));
       });
     });
+    recordStarfallProgress(metric, safeAmount);
   }
 
   function getCompletedMissionCount(period) {
@@ -5942,6 +6481,7 @@
       report = "深空测绘完成，星图碎片 ×3。";
     }
     state.operations.lastReport = `${job.name}：${report}`;
+    recordMissionProgress("operationsCompleted", 1);
     return true;
   }
 
@@ -6388,6 +6928,7 @@
       ? String(raw.buyMode)
       : "1";
     merged.missions = sanitizeMissionState(raw.missions);
+    merged.starfall = sanitizeStarfallState(raw.starfall);
     merged.fleetCommand = sanitizeFleetCommandState(raw.fleetCommand);
     merged.expedition = sanitizeExpeditionState(raw.expedition);
     const rawOperations =
@@ -8386,9 +8927,10 @@
   }
 
   function updatePlayerNameDisplay() {
+    const title = state.starfall?.cosmetics?.title ? " · 等一场星雨" : "";
     elements.playerNameDisplay.textContent = state.playerName
-      ? `指挥官 · ${state.playerName}`
-      : "指挥官 · 未命名";
+      ? `指挥官 · ${state.playerName}${title}`
+      : `指挥官 · 未命名${title}`;
   }
 
   function openNameDialog(required = false) {
@@ -10113,6 +10655,247 @@
     updateMissionSummary();
   }
 
+  function formatStarfallCountdown(milliseconds) {
+    const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    if (days > 0) return `${days} 天 ${hours} 小时`;
+    if (hours > 0) return `${hours} 小时 ${minutes} 分`;
+    return `${minutes} 分 ${totalSeconds % 60} 秒`;
+  }
+
+  function formatStarfallDayLabel(key) {
+    const date = new Date(`${key}T00:00:00Z`);
+    return `${date.getUTCMonth() + 1} 月 ${date.getUTCDate()} 日`;
+  }
+
+  function applyStarfallCosmetics() {
+    const cosmetics = state.starfall?.cosmetics || {};
+    document.body.classList.toggle("starfall-beacon-unlocked", cosmetics.beacon === true);
+    document.body.classList.toggle("starfall-starport-unlocked", cosmetics.starport === true);
+    document.body.classList.toggle("starfall-backdrop-unlocked", cosmetics.backdrop === true);
+  }
+
+  function updateStarfallSummary(now = Date.now()) {
+    const phase = getStarfallPhase(now);
+    const participated = hasStarfallParticipation();
+    const labels = {
+      preview: "8 月 8 日开启",
+      active: "限时观测中",
+      exchange: "余辉兑换期",
+      archived: "观测已归档",
+    };
+    const targets = {
+      preview: STARFALL_EVENT_START,
+      active: STARFALL_EVENT_END,
+      exchange: STARFALL_EXCHANGE_END,
+      archived: now,
+    };
+    const countdown = phase === "archived"
+      ? "活动记录已永久保存"
+      : `${phase === "preview" ? "距离开启" : phase === "active" ? "距离观测结束" : "距离兑换关闭"} ${formatStarfallCountdown(targets[phase] - now)}`;
+    elements.starfallCommandCard.hidden = phase === "archived" && !participated;
+    elements.starfallCommandPhase.textContent = labels[phase];
+    elements.starfallCommandStatus.textContent = countdown;
+    elements.starfallCommandCurrency.textContent = `余辉 ${formatNumber(state.starfall.currency, 0)}`;
+    elements.starfallNavigationBadge.textContent = phase === "active"
+      ? "限时"
+      : phase === "preview"
+        ? "预告"
+        : phase === "exchange"
+          ? "兑换"
+          : "纪念";
+  }
+
+  function renderStarfallDays(now, phase) {
+    elements.starfallDayList.textContent = "";
+    if (phase !== "active") {
+      const empty = document.createElement("article");
+      empty.className = "starfall-empty-state";
+      empty.innerHTML = phase === "preview"
+        ? "<span>☄</span><div><strong>第一条星路将在 8 月 8 日出现</strong><p>活动开始后，每天从三种玩法中选择一种；晚到也能补做最近三天。</p></div>"
+        : "<span>◇</span><div><strong>本次流星观测已经结束</strong><p>星路不再产生余辉，已获得的余辉仍可在兑换期内使用。</p></div>";
+      elements.starfallDayList.appendChild(empty);
+      return;
+    }
+    ensureStarfallDays(now);
+    const availableKeys = getAvailableStarfallDayKeys(now);
+    availableKeys.forEach((key, index) => {
+      const record = state.starfall.dayRecords.find((entry) => entry.key === key);
+      if (!record) return;
+      const card = document.createElement("article");
+      card.className = `starfall-day-card${record.claimed ? " claimed" : ""}`;
+      const isToday = index === availableKeys.length - 1;
+      const heading = document.createElement("header");
+      heading.innerHTML = `<span><small>${isToday ? "今日星路" : "追赶星路"}</small><strong>${formatStarfallDayLabel(key)}</strong></span><b>${record.claimed ? "已抵达" : `+${STARFALL_DAILY_REWARD} 余辉`}</b>`;
+      card.appendChild(heading);
+      if (!record.selectedId) {
+        const options = document.createElement("div");
+        options.className = "starfall-route-options";
+        record.optionIds.forEach((routeId) => {
+          const route = getStarfallRoute(routeId);
+          if (!route) return;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.starfallRoute = route.id;
+          button.dataset.starfallDay = key;
+          button.innerHTML = `<span>${route.icon}</span><strong>${route.title}</strong><small>${route.description}</small><em>选择此星路</em>`;
+          options.appendChild(button);
+        });
+        card.appendChild(options);
+      } else {
+        const route = getStarfallRoute(record.selectedId);
+        const progress = document.createElement("div");
+        progress.className = "starfall-route-progress";
+        const ratio = record.target > 0 ? clamp(record.progress / record.target, 0, 1) : 0;
+        progress.innerHTML = `<span class="starfall-route-icon">${route?.icon || "☄"}</span><div><small>已选择 · ${route?.title || "星路"}</small><strong>${formatMissionProgress(route || { format: "count" }, record.progress)} / ${formatMissionProgress(route || { format: "count" }, record.target)}</strong><div aria-hidden="true"><span style="width:${ratio * 100}%"></span></div></div>`;
+        const claim = document.createElement("button");
+        claim.type = "button";
+        claim.dataset.starfallClaim = key;
+        claim.disabled = record.claimed || record.progress < record.target;
+        claim.textContent = record.claimed
+          ? "已领取"
+          : record.progress >= record.target
+            ? "领取余辉"
+            : "航行中";
+        progress.appendChild(claim);
+        card.appendChild(progress);
+      }
+      elements.starfallDayList.appendChild(card);
+    });
+  }
+
+  function renderStarfallLetters(now, phase) {
+    elements.starfallLetterList.textContent = "";
+    STARFALL_LETTERS.forEach((letter, index) => {
+      const unlockAt = getStarfallLetterUnlockAt(letter);
+      const unlocked = now >= unlockAt && phase !== "preview";
+      const selectedId = state.starfall.letterChoices[letter.id];
+      const selectedChoice = letter.choices.find((choice) => choice.id === selectedId);
+      const card = document.createElement("article");
+      card.className = `starfall-letter${unlocked ? " unlocked" : " locked"}${selectedChoice ? " answered" : ""}`;
+      const header = document.createElement("header");
+      header.innerHTML = `<span>${index + 1}</span><div><small>${unlocked ? "信笺已抵达" : `${formatStarfallDayLabel(getUtcDailyKey(unlockAt))} 解锁`}</small><strong>${unlocked ? letter.title : "未抵达的星光"}</strong></div>`;
+      card.appendChild(header);
+      if (unlocked) {
+        const body = document.createElement("p");
+        body.textContent = letter.body;
+        card.appendChild(body);
+        if (selectedChoice) {
+          const result = document.createElement("blockquote");
+          result.innerHTML = `<strong>${selectedChoice.label}</strong><span>${selectedChoice.result}</span>`;
+          card.appendChild(result);
+        } else {
+          const choices = document.createElement("div");
+          choices.className = "starfall-letter-choices";
+          letter.choices.forEach((choice) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.dataset.starfallLetter = letter.id;
+            button.dataset.starfallChoice = choice.id;
+            button.disabled = phase === "archived";
+            button.textContent = choice.label;
+            choices.appendChild(button);
+          });
+          card.appendChild(choices);
+        }
+      }
+      elements.starfallLetterList.appendChild(card);
+    });
+  }
+
+  function renderStarfallMilestones(phase) {
+    elements.starfallMilestoneList.textContent = "";
+    STARFALL_MILESTONES.forEach((milestone) => {
+      const claimed = state.starfall.claimedMilestones.includes(milestone.id);
+      const reached = state.starfall.totalEarned >= milestone.required;
+      const card = document.createElement("article");
+      card.className = `${reached ? "reached" : ""}${claimed ? " claimed" : ""}`;
+      card.innerHTML = `<span>✦</span><div><small>${formatNumber(milestone.required, 0)} 累计余辉</small><strong>${milestone.title}</strong><p>${milestone.reward}</p></div>`;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.starfallMilestone = milestone.id;
+      button.disabled = !reached || claimed || phase === "preview" || phase === "archived";
+      button.textContent = claimed ? "已领取" : reached ? "领取" : `${formatNumber(state.starfall.totalEarned, 0)} / ${formatNumber(milestone.required, 0)}`;
+      card.appendChild(button);
+      elements.starfallMilestoneList.appendChild(card);
+    });
+  }
+
+  function renderStarfallStore(phase) {
+    elements.starfallStoreGrid.textContent = "";
+    STARFALL_STORE_ITEMS.forEach((item) => {
+      const bought = clampGameCount(state.starfall.purchases[item.id]);
+      const soldOut = item.limit > 0 && bought >= item.limit;
+      const card = document.createElement("article");
+      card.innerHTML = `<span>${item.id === "emblem" ? "◇" : item.id === "postcard" ? "✉" : "✦"}</span><div><small>${item.limit ? "限定兑换" : "可重复兑换"}</small><strong>${item.title}</strong><p>${item.description}</p></div><b>${item.cost} 余辉</b>`;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.starfallStore = item.id;
+      button.disabled = soldOut || state.starfall.currency < item.cost || !["active", "exchange"].includes(phase);
+      button.textContent = soldOut ? "已拥有" : "兑换";
+      card.appendChild(button);
+      elements.starfallStoreGrid.appendChild(card);
+    });
+  }
+
+  function renderStarfallCollection() {
+    const collection = [
+      ["title", "等一场星雨", "限定称号"],
+      ["beacon", "流星尾迹", "信标外观"],
+      ["letter", "英仙星笺", "纪念收藏"],
+      ["starport", "英仙夜航", "星港外观"],
+      ["emblem", "双星愿签", "限定徽记"],
+      ["postcard", "英仙纪念卡", "信笺纪念"],
+      ["keepsake", "第八颗流星", "最终收藏"],
+    ];
+    elements.starfallCollectionGrid.innerHTML = collection.map(([id, name, type]) => {
+      const unlocked = state.starfall.cosmetics[id] === true;
+      return `<article class="${unlocked ? "unlocked" : "locked"}"><span>${unlocked ? "☄" : "◇"}</span><small>${type}</small><strong>${unlocked ? name : "尚未获得"}</strong></article>`;
+    }).join("");
+  }
+
+  function renderStarfallEvent(now = Date.now()) {
+    ensureStarfallDays(now);
+    const phase = getStarfallPhase(now);
+    const phaseLabels = {
+      preview: "活动预告",
+      active: "流星观测中",
+      exchange: "余辉兑换期",
+      archived: "星雨纪念档案",
+    };
+    const targetTime = phase === "preview"
+      ? STARFALL_EVENT_START
+      : phase === "active"
+        ? STARFALL_EVENT_END
+        : STARFALL_EXCHANGE_END;
+    elements.starfallPhaseLabel.textContent = phaseLabels[phase];
+    elements.starfallCountdown.textContent = phase === "archived"
+      ? "活动与兑换均已结束"
+      : `${phase === "preview" ? "距离开启" : phase === "active" ? "距离观测结束" : "距离兑换关闭"} ${formatStarfallCountdown(targetTime - now)}`;
+    elements.starfallStatusNote.textContent = phase === "preview"
+      ? "活动持续至 8 月 22 日，兑换开放至 9 月 22 日。"
+      : phase === "active"
+        ? "每天选一路；错过时可追赶最近三天。"
+        : phase === "exchange"
+          ? "不再获得余辉；信笺可继续阅读，余辉可继续兑换。"
+          : "已获得的外观、信笺选择与收藏会永久保留。";
+    elements.starfallCurrency.textContent = formatNumber(state.starfall.currency, 0);
+    elements.starfallTotalEarned.textContent = formatNumber(state.starfall.totalEarned, 0);
+    const letterCount = Object.keys(state.starfall.letterChoices).length;
+    const milestoneCount = state.starfall.claimedMilestones.length;
+    elements.starfallLetterCount.textContent = `${letterCount} / ${STARFALL_LETTERS.length}`;
+    elements.starfallLetterSummary.textContent = `${letterCount} / ${STARFALL_LETTERS.length}`;
+    elements.starfallMilestoneSummary.textContent = `${milestoneCount} / ${STARFALL_MILESTONES.length}`;
+    renderStarfallDays(now, phase);
+    renderStarfallLetters(now, phase);
+    renderStarfallMilestones(phase);
+    renderStarfallStore(phase);
+    renderStarfallCollection();
+    updateStarfallSummary(now);
+  }
+
   function renderLog() {
     elements.activityLog.textContent = "";
     if (!state.log.length) {
@@ -10163,6 +10946,14 @@
     );
     elements.leaderboardExpeditionArtifacts.textContent =
       `${state.expedition.artifacts.length} / ${EXPEDITION_ARTIFACTS.length}`;
+    elements.leaderboardStarfallEarned.textContent = formatNumber(
+      state.starfall.totalEarned,
+      0,
+    );
+    elements.leaderboardStarfallRoutes.textContent =
+      `${state.starfall.completedDays.length} / 15`;
+    elements.leaderboardStarfallLetters.textContent =
+      `${Object.keys(state.starfall.letterChoices).length} / ${STARFALL_LETTERS.length}`;
     elements.leaderboardCurrentPower.textContent =
       `当前综合战力 ${formatNumber(currentPower, 0)}`;
   }
@@ -10182,6 +10973,8 @@
       expedition:
         targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST ||
         targetState.expedition?.completedRuns > 0,
+      starfall:
+        getStarfallPhase() !== "archived" || hasStarfallParticipation(targetState),
       transcend: isEndgameUnlocked(targetState),
       leaderboard: targetState.lifetimeDust >= 5000,
     };
@@ -10407,6 +11200,9 @@
       case "expedition":
         renderExpedition();
         break;
+      case "starfall":
+        renderStarfallEvent();
+        break;
       case "missions":
         renderMissions();
         break;
@@ -10426,6 +11222,7 @@
 
   function renderAll() {
     applyExpeditionSkin();
+    applyStarfallCosmetics();
     renderActivePageDetails();
     updateBuyModeButtons();
     updatePerformanceControls();
@@ -10459,6 +11256,15 @@
       expeditionArtifacts: Math.min(
         EXPEDITION_ARTIFACTS.length,
         clampGameCount(state.expedition?.artifacts?.length),
+      ),
+      starfallTotalEarned: Math.min(
+        STARFALL_CURRENCY_CAP,
+        clampGameCount(state.starfall?.totalEarned),
+      ),
+      starfallRoutes: Math.min(15, clampGameCount(state.starfall?.completedDays?.length)),
+      starfallLetters: Math.min(
+        STARFALL_LETTERS.length,
+        clampGameCount(Object.keys(state.starfall?.letterChoices || {}).length),
       ),
     };
   }
@@ -10675,6 +11481,7 @@
     elements.cores.textContent = formatNumber(state.cores, 0);
     updateEvent();
     updateMissionSummary();
+    updateStarfallSummary();
     updateNavigationVisibility();
 
     if (state.activePage === "command") {
@@ -10879,6 +11686,9 @@
       if (selected && focus) tab.focus();
     });
     state.activePage = safePage;
+    if (safePage === "starfall" && !state.starfall.firstOpened) {
+      state.starfall.firstOpened = true;
+    }
     renderActivePageDetails(safePage);
     updateUi();
     if (safePage === "leaderboard") {
@@ -11246,6 +12056,38 @@
     elements.commandMissionButton.addEventListener("click", () =>
       activatePrimaryPage("missions", { scroll: true }),
     );
+    elements.starfallCommandCard.addEventListener("click", () =>
+      activatePrimaryPage("starfall", { scroll: true }),
+    );
+    elements.starfallDayList.addEventListener("click", (event) => {
+      const routeButton = event.target.closest("[data-starfall-route]");
+      if (routeButton) {
+        selectStarfallRoute(
+          routeButton.dataset.starfallDay,
+          routeButton.dataset.starfallRoute,
+        );
+        return;
+      }
+      const claimButton = event.target.closest("[data-starfall-claim]");
+      if (claimButton) claimStarfallRoute(claimButton.dataset.starfallClaim);
+    });
+    elements.starfallLetterList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-starfall-letter]");
+      if (button) {
+        chooseStarfallLetter(
+          button.dataset.starfallLetter,
+          button.dataset.starfallChoice,
+        );
+      }
+    });
+    elements.starfallMilestoneList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-starfall-milestone]");
+      if (button) claimStarfallMilestone(button.dataset.starfallMilestone);
+    });
+    elements.starfallStoreGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-starfall-store]");
+      if (button) purchaseStarfallItem(button.dataset.starfallStore);
+    });
     elements.commandGuideAction.addEventListener("click", () => {
       const action = elements.commandGuideAction.dataset.guideAction;
       if (PRIMARY_PAGES.includes(action)) {
@@ -11609,6 +12451,22 @@
     createSnapshot: createCloudSaveSnapshot,
     getMetadata: getCloudSaveMetadata,
     getLeaderboardEntry,
+    getStarfallDiagnostics: (now = Date.now()) => {
+      ensureStarfallDays(now);
+      return JSON.parse(JSON.stringify({
+        phase: getStarfallPhase(now),
+        eventStart: STARFALL_EVENT_START,
+        eventEnd: STARFALL_EVENT_END,
+        exchangeEnd: STARFALL_EXCHANGE_END,
+        availableDayKeys: getAvailableStarfallDayKeys(now),
+        state: state.starfall,
+        letters: STARFALL_LETTERS.map((letter) => ({
+          id: letter.id,
+          unlockAt: getStarfallLetterUnlockAt(letter),
+        })),
+        milestones: STARFALL_MILESTONES,
+      }));
+    },
     getMissionDiagnostics: () => {
       ensureMissionPeriods();
       return JSON.parse(JSON.stringify({

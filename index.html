@@ -11,15 +11,15 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="0.19.1" />
-    <meta name="stellar-release-title" content="航站通讯中心" />
+    <meta name="stellar-game-version" content="0.20.0" />
+    <meta name="stellar-release-title" content="星雨寄航" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.19.1" />
+    <link rel="stylesheet" href="styles.css?v=0.20.0" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/stellar-outpost-bgm.mp3?v=0.19.1"
+      src="assets/stellar-outpost-bgm.mp3?v=0.20.0"
       preload="auto"
       loop
       playsinline
@@ -197,6 +197,18 @@
           >
             <span class="navigation-icon" aria-hidden="true">▱</span>
             <span>远征</span>
+          </button>
+          <button
+            id="starfall-page-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="starfall-page"
+            data-page="starfall"
+          >
+            <span class="navigation-icon" aria-hidden="true">☄</span>
+            <span>星雨</span>
+            <i id="starfall-navigation-badge" class="navigation-badge">限时</i>
           </button>
           <button
             id="missions-page-tab"
@@ -401,6 +413,16 @@
               </button>
             </div>
           </section>
+
+          <button id="starfall-command-card" class="starfall-command-card" type="button">
+            <span class="starfall-command-icon" aria-hidden="true">☄</span>
+            <span>
+              <small id="starfall-command-phase">8 月 8 日开启</small>
+              <strong>星雨寄航</strong>
+              <em id="starfall-command-status">把一颗流星，寄给想一起看星空的人。</em>
+            </span>
+            <b id="starfall-command-currency">余辉 0</b>
+          </button>
 
           <details id="operations-hub" class="operations-hub">
             <summary>
@@ -1186,6 +1208,102 @@
         </section>
 
         <section
+          id="starfall-page"
+          class="panel game-page starfall-panel"
+          role="tabpanel"
+          aria-labelledby="starfall-page-tab starfall-title"
+          hidden
+        >
+          <header class="starfall-hero">
+            <div class="starfall-hero-copy">
+              <p class="eyebrow">英仙座流星雨限时活动</p>
+              <h2 id="starfall-title">星雨寄航</h2>
+              <p>把一颗流星，寄给想一起看星空的人。</p>
+              <div class="starfall-guide" aria-label="活动玩法">
+                <span><b>1</b> 选择一条星路</span>
+                <span><b>2</b> 正常挂机完成</span>
+                <span><b>3</b> 领取余辉并兑换</span>
+              </div>
+            </div>
+            <div class="starfall-orbit" aria-hidden="true">
+              <span>☄</span><i></i><i></i><i></i>
+            </div>
+            <div class="starfall-phase-card">
+              <span id="starfall-phase-label">活动预告</span>
+              <strong id="starfall-countdown">距离开启 --</strong>
+              <small id="starfall-status-note">活动持续至 8 月 22 日，兑换开放至 9 月 22 日。</small>
+            </div>
+          </header>
+
+          <div class="starfall-wallet-row">
+            <div>
+              <small>星雨余辉</small>
+              <strong id="starfall-currency">0</strong>
+              <span>唯一活动货币</span>
+            </div>
+            <div>
+              <small>累计获得</small>
+              <strong id="starfall-total-earned">0</strong>
+              <span>用于解锁里程碑</span>
+            </div>
+            <div>
+              <small>已读信笺</small>
+              <strong id="starfall-letter-count">0 / 7</strong>
+              <span>选择会被永久保存</span>
+            </div>
+          </div>
+
+          <section class="starfall-section starfall-route-section" aria-labelledby="starfall-route-title">
+            <header>
+              <div>
+                <small>每日三选一 · 最近三天可追赶</small>
+                <h3 id="starfall-route-title">今日星路</h3>
+                <p>选一条与你今天玩法相符的航线；确认后不可更换，但三天任务可以同时推进。</p>
+              </div>
+              <span>每条 +240 余辉</span>
+            </header>
+            <div id="starfall-day-list" class="starfall-day-list"></div>
+          </section>
+
+          <details class="starfall-section starfall-fold" open>
+            <summary>
+              <span><small>每两日解锁一封</small><strong>七封星雨信笺</strong></span>
+              <b id="starfall-letter-summary">0 / 7</b>
+            </summary>
+            <p class="starfall-fold-note">选择只改变这封信的结尾，不影响战斗数值；活动期间首次阅读可获得 100 余辉。</p>
+            <div id="starfall-letter-list" class="starfall-letter-list"></div>
+          </details>
+
+          <details class="starfall-section starfall-fold">
+            <summary>
+              <span><small>按累计余辉解锁</small><strong>星雨里程碑</strong></span>
+              <b id="starfall-milestone-summary">0 / 7</b>
+            </summary>
+            <p class="starfall-fold-note">活动外观和收藏品均不提供永久倍率，不会让后期数值继续膨胀。</p>
+            <div id="starfall-milestone-list" class="starfall-milestone-list"></div>
+          </details>
+
+          <details class="starfall-section starfall-fold">
+            <summary>
+              <span><small>开放至 9 月 22 日</small><strong>余辉兑换站</strong></span>
+              <b>奖励回收</b>
+            </summary>
+            <p class="starfall-fold-note">活动结束后不再获得余辉，但兑换站继续保留一个月。</p>
+            <div id="starfall-store-grid" class="starfall-store-grid"></div>
+          </details>
+
+          <section class="starfall-section starfall-collection" aria-labelledby="starfall-collection-title">
+            <header>
+              <div>
+                <small>纯收藏 · 永久保留</small>
+                <h3 id="starfall-collection-title">寄航纪念舱</h3>
+              </div>
+            </header>
+            <div id="starfall-collection-grid" class="starfall-collection-grid"></div>
+          </section>
+        </section>
+
+        <section
           id="missions-page"
           class="panel game-page missions-panel"
           role="tabpanel"
@@ -1364,6 +1482,24 @@
                 <strong id="leaderboard-expedition-artifacts">0 / 8</strong>
                 <p>远征陈列舱已经发现的纯收藏遗物数量</p>
               </article>
+              <article>
+                <span aria-hidden="true">☄</span>
+                <small>累计星雨余辉</small>
+                <strong id="leaderboard-starfall-earned">0</strong>
+                <p>星雨寄航活动期间累计获得的余辉</p>
+              </article>
+              <article>
+                <span aria-hidden="true">◇</span>
+                <small>完成星路</small>
+                <strong id="leaderboard-starfall-routes">0 / 15</strong>
+                <p>成功抵达并领取余辉的每日与追赶星路</p>
+              </article>
+              <article>
+                <span aria-hidden="true">✉</span>
+                <small>星雨信笺</small>
+                <strong id="leaderboard-starfall-letters">0 / 7</strong>
+                <p>已经阅读并作出选择的浪漫信笺数量</p>
+              </article>
             </div>
           </section>
 
@@ -1386,6 +1522,15 @@
               </button>
               <button type="button" data-leaderboard-category="expeditionArtifacts">
                 远征遗物
+              </button>
+              <button type="button" data-leaderboard-category="starfallTotalEarned">
+                星雨余辉
+              </button>
+              <button type="button" data-leaderboard-category="starfallRoutes">
+                完成星路
+              </button>
+              <button type="button" data-leaderboard-category="starfallLetters">
+                星雨信笺
               </button>
             </div>
             <small id="leaderboard-updated-at">等待连接排行榜服务</small>
@@ -1432,7 +1577,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.19.1</span>
+        <span>航站协议 v0.20.0</span>
       </footer>
     </div>
 
@@ -1476,7 +1621,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.19.1</strong>
+          <strong id="patch-notes-current-version">v0.20.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1787,9 +1932,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.19.1"></script>
-    <script src="game.js?v=0.19.1"></script>
-    <script src="firebase-config.js?v=0.19.1"></script>
-    <script type="module" src="cloud-save.js?v=0.19.1"></script>
+    <script src="game-math.js?v=0.20.0"></script>
+    <script src="game.js?v=0.20.0"></script>
+    <script src="firebase-config.js?v=0.20.0"></script>
+    <script type="module" src="cloud-save.js?v=0.20.0"></script>
   </body>
 </html>

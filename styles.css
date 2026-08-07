@@ -1743,6 +1743,716 @@ h2 {
   color: var(--gold);
 }
 
+.fleet-command-deck {
+  position: relative;
+  margin: 0 0 14px;
+  overflow: hidden;
+  border: 1px solid rgba(120, 113, 255, 0.24);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 82% 6%, rgba(120, 113, 255, 0.13), transparent 34%),
+    linear-gradient(135deg, rgba(98, 230, 255, 0.045), transparent 45%),
+    rgba(5, 14, 27, 0.78);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.025);
+}
+
+.fleet-command-loading,
+.fleet-command-locked {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 124px;
+  padding: 20px;
+}
+
+.fleet-command-loading > span,
+.fleet-command-locked > span {
+  display: grid;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgba(120, 113, 255, 0.35);
+  border-radius: 16px;
+  color: var(--purple);
+  background: rgba(120, 113, 255, 0.1);
+  font-size: calc(18px * var(--type-scale));
+}
+
+.fleet-command-locked > div {
+  flex: 1;
+}
+
+.fleet-command-loading small,
+.fleet-command-locked small,
+.fleet-command-header .eyebrow,
+.fleet-weekly-heading .eyebrow {
+  color: var(--cyan);
+}
+
+.fleet-command-loading h3,
+.fleet-command-locked h3,
+.fleet-command-header h3,
+.fleet-weekly-heading h3 {
+  margin: 3px 0 0;
+}
+
+.fleet-command-locked p {
+  margin: 7px 0;
+  color: var(--muted);
+  font-size: calc(8px * var(--type-scale));
+}
+
+.fleet-command-locked strong {
+  color: #d8eaf3;
+  font-size: calc(8px * var(--type-scale));
+}
+
+.fleet-command-unlock-progress {
+  height: 5px;
+  margin: 10px 0 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.fleet-command-unlock-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+}
+
+.fleet-command-header,
+.fleet-weekly-heading,
+.fleet-preset-summary,
+.fleet-challenge-action,
+.fleet-weekly-ranking-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fleet-command-header {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid rgba(98, 230, 255, 0.1);
+}
+
+.fleet-command-header p:not(.eyebrow),
+.fleet-weekly-heading p:not(.eyebrow) {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: calc(8px * var(--type-scale));
+}
+
+.fleet-command-header p strong {
+  color: #ecf8ff;
+}
+
+.fleet-command-state {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(98, 230, 255, 0.18);
+  border-radius: 999px;
+  color: var(--cyan);
+  background: rgba(98, 230, 255, 0.07);
+  font-size: calc(7px * var(--type-scale));
+  font-weight: 800;
+}
+
+.fleet-command-resource-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  padding: 12px 18px 8px;
+}
+
+.fleet-command-resource-grid > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 8px;
+  padding: 10px;
+  border: 1px solid rgba(98, 230, 255, 0.1);
+  border-radius: 11px;
+  background: rgba(6, 19, 33, 0.72);
+}
+
+.fleet-command-resource-grid span {
+  grid-row: 1 / 3;
+  align-self: center;
+  color: var(--purple);
+}
+
+.fleet-command-resource-grid small {
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+.fleet-command-resource-grid strong {
+  color: #e5f6ff;
+  font-size: calc(10px * var(--type-scale));
+}
+
+.fleet-command-craft-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  padding: 0 18px 14px;
+}
+
+.fleet-command-craft-row button,
+.fleet-preset-tabs button,
+.fleet-command-option,
+.fleet-activate-button,
+.fleet-challenge-action button {
+  cursor: pointer;
+  border: 1px solid rgba(98, 230, 255, 0.14);
+  color: #dceef6;
+  background: rgba(7, 22, 37, 0.76);
+}
+
+.fleet-command-craft-row button {
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.fleet-command-craft-row button span,
+.fleet-command-craft-row button small {
+  display: block;
+}
+
+.fleet-command-craft-row button span {
+  color: #dff7ff;
+  font-size: calc(8px * var(--type-scale));
+  font-weight: 800;
+}
+
+.fleet-command-craft-row button small {
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(6.5px * var(--type-scale));
+}
+
+.fleet-command-craft-row button:not(:disabled):hover,
+.fleet-command-option:not(:disabled):hover,
+.fleet-activate-button:not(:disabled):hover,
+.fleet-challenge-action button:not(:disabled):hover {
+  border-color: rgba(98, 230, 255, 0.42);
+  background: rgba(10, 34, 51, 0.9);
+}
+
+.fleet-command-deck button:disabled {
+  cursor: not-allowed;
+  opacity: 0.43;
+}
+
+.fleet-preset-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 5px 18px;
+  border-top: 1px solid rgba(120, 113, 255, 0.12);
+  border-bottom: 1px solid rgba(120, 113, 255, 0.12);
+  background: rgba(4, 12, 23, 0.55);
+}
+
+.fleet-preset-tabs button {
+  min-width: 0;
+  padding: 9px 8px;
+  border-color: transparent;
+  border-radius: 9px;
+  text-align: left;
+}
+
+.fleet-preset-tabs button.selected {
+  border-color: rgba(120, 113, 255, 0.34);
+  background: rgba(120, 113, 255, 0.12);
+}
+
+.fleet-preset-tabs small,
+.fleet-preset-tabs strong {
+  display: block;
+}
+
+.fleet-preset-tabs small {
+  color: var(--muted);
+  font-size: calc(6.5px * var(--type-scale));
+}
+
+.fleet-preset-tabs strong {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #eff8ff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(8px * var(--type-scale));
+}
+
+.fleet-preset-editor {
+  padding: 15px 18px 18px;
+}
+
+.fleet-preset-summary > div {
+  min-width: 0;
+}
+
+.fleet-preset-summary small,
+.fleet-command-option-heading small,
+.fleet-challenge-loadout small,
+.fleet-challenge-action small,
+.fleet-weekly-ranking small {
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+.fleet-preset-summary h4 {
+  margin: 3px 0;
+  color: #edf9ff;
+  font-size: calc(11px * var(--type-scale));
+}
+
+.fleet-preset-summary p {
+  margin: 0;
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+}
+
+.fleet-activate-button {
+  flex: 0 0 auto;
+  min-width: 142px;
+  padding: 10px 12px;
+  border-color: rgba(98, 230, 255, 0.28);
+  border-radius: 11px;
+  background: rgba(98, 230, 255, 0.09);
+}
+
+.fleet-activate-button strong,
+.fleet-activate-button small {
+  display: block;
+}
+
+.fleet-activate-button strong {
+  color: var(--cyan);
+  font-size: calc(8px * var(--type-scale));
+}
+
+.fleet-activate-button small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: calc(6.5px * var(--type-scale));
+}
+
+.fleet-allocation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 13px 0;
+}
+
+.fleet-allocation-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid rgba(98, 230, 255, 0.1);
+  border-radius: 11px;
+  background: rgba(7, 19, 33, 0.64);
+}
+
+.fleet-allocation-card > span {
+  color: var(--cyan);
+  font-size: calc(12px * var(--type-scale));
+}
+
+.fleet-allocation-card.defense > span {
+  color: var(--purple);
+}
+
+.fleet-allocation-card.expedition > span {
+  color: var(--gold);
+}
+
+.fleet-allocation-card small,
+.fleet-allocation-card strong {
+  display: block;
+}
+
+.fleet-allocation-card small {
+  color: var(--muted);
+  font-size: calc(6.5px * var(--type-scale));
+}
+
+.fleet-allocation-card strong {
+  margin-top: 2px;
+  font-size: calc(8px * var(--type-scale));
+}
+
+.fleet-allocation-card b {
+  color: #dff6ff;
+  font-size: calc(10px * var(--type-scale));
+}
+
+.fleet-command-option-group + .fleet-command-option-group {
+  margin-top: 12px;
+}
+
+.fleet-command-option-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.fleet-command-option-heading small {
+  color: #d7eaf4;
+  font-weight: 800;
+}
+
+.fleet-command-option-heading span {
+  color: rgba(143, 176, 192, 0.7);
+  font-size: calc(6px * var(--type-scale));
+}
+
+.fleet-command-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.fleet-command-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 2px 7px;
+  min-width: 0;
+  min-height: 68px;
+  padding: 9px;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.fleet-command-option.selected {
+  border-color: rgba(120, 113, 255, 0.55);
+  background:
+    linear-gradient(135deg, rgba(120, 113, 255, 0.17), transparent),
+    rgba(7, 22, 37, 0.86);
+  box-shadow: inset 0 0 0 1px rgba(120, 113, 255, 0.08);
+}
+
+.fleet-command-option > span {
+  grid-row: 1 / 3;
+  color: var(--purple);
+  font-size: calc(11px * var(--type-scale));
+}
+
+.fleet-command-option strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(7.5px * var(--type-scale));
+}
+
+.fleet-command-option small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: calc(6px * var(--type-scale));
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.fleet-command-cooldown-note {
+  margin: 12px 0 0;
+  padding: 8px 10px;
+  border-radius: 9px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: calc(6.5px * var(--type-scale));
+  text-align: center;
+}
+
+.fleet-weekly-challenge {
+  padding: 18px;
+  border-top: 1px solid rgba(120, 113, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(120, 113, 255, 0.055), transparent 35%),
+    rgba(4, 12, 24, 0.42);
+}
+
+.fleet-weekly-heading p strong {
+  color: var(--purple);
+}
+
+.fleet-weekly-reset {
+  flex: 0 0 auto;
+  padding: 9px 11px;
+  border: 1px solid rgba(120, 113, 255, 0.2);
+  border-radius: 10px;
+  text-align: right;
+}
+
+.fleet-weekly-reset small,
+.fleet-weekly-reset strong {
+  display: block;
+}
+
+.fleet-weekly-reset small {
+  color: var(--muted);
+  font-size: calc(6px * var(--type-scale));
+}
+
+.fleet-weekly-reset strong {
+  margin-top: 2px;
+  color: #dcd9ff;
+  font-size: calc(8px * var(--type-scale));
+}
+
+.fleet-challenge-phases {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 13px 0 8px;
+}
+
+.fleet-challenge-phases > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 8px;
+  padding: 10px;
+  border: 1px solid rgba(98, 230, 255, 0.12);
+  border-radius: 11px;
+  background: rgba(5, 18, 32, 0.75);
+}
+
+.fleet-challenge-phases > div > span {
+  grid-row: 1 / 4;
+  align-self: center;
+  color: var(--cyan);
+  font-size: calc(15px * var(--type-scale));
+}
+
+.fleet-challenge-phases > div.purple > span {
+  color: var(--purple);
+}
+
+.fleet-challenge-phases > div.gold > span {
+  color: var(--gold);
+}
+
+.fleet-challenge-phases small,
+.fleet-challenge-phases strong,
+.fleet-challenge-phases p {
+  margin: 0;
+}
+
+.fleet-challenge-phases small,
+.fleet-challenge-phases p {
+  color: var(--muted);
+  font-size: calc(6px * var(--type-scale));
+}
+
+.fleet-challenge-phases strong {
+  font-size: calc(8px * var(--type-scale));
+}
+
+.fleet-challenge-loadout {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 7px;
+  border: 1px solid rgba(98, 230, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(3, 12, 22, 0.6);
+}
+
+.fleet-challenge-loadout > div {
+  min-width: 0;
+  padding: 4px 7px;
+  border-left: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.fleet-challenge-loadout > div:first-child {
+  border-left: 0;
+}
+
+.fleet-challenge-loadout small,
+.fleet-challenge-loadout strong {
+  display: block;
+}
+
+.fleet-challenge-loadout strong {
+  margin-top: 2px;
+  overflow: hidden;
+  color: #e7f7ff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(7.5px * var(--type-scale));
+}
+
+.fleet-challenge-action {
+  margin-top: 9px;
+  padding: 11px;
+  border: 1px solid rgba(120, 113, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(120, 113, 255, 0.045);
+}
+
+.fleet-challenge-action > div {
+  min-width: 0;
+}
+
+.fleet-challenge-action > div small,
+.fleet-challenge-action > div strong,
+.fleet-challenge-action > div span {
+  display: block;
+}
+
+.fleet-challenge-action > div strong {
+  margin: 3px 0;
+  color: var(--gold);
+  font-size: calc(12px * var(--type-scale));
+}
+
+.fleet-challenge-action > div span {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(6.5px * var(--type-scale));
+}
+
+.fleet-challenge-action button {
+  flex: 0 0 auto;
+  min-width: 176px;
+  padding: 11px 14px;
+  border-color: rgba(120, 113, 255, 0.34);
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgba(120, 113, 255, 0.18), rgba(98, 230, 255, 0.08));
+}
+
+.fleet-challenge-action button strong,
+.fleet-challenge-action button small {
+  display: block;
+}
+
+.fleet-challenge-action button strong {
+  color: #e9e7ff;
+  font-size: calc(8px * var(--type-scale));
+}
+
+.fleet-challenge-action button small {
+  margin-top: 3px;
+}
+
+.fleet-challenge-report {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 9px;
+  color: var(--muted);
+  background: rgba(98, 230, 255, 0.035);
+  font-size: calc(6.5px * var(--type-scale));
+}
+
+.fleet-challenge-report > span {
+  color: var(--cyan);
+}
+
+.fleet-challenge-report p {
+  margin: 0;
+}
+
+.fleet-weekly-ranking {
+  margin-top: 10px;
+}
+
+.fleet-weekly-ranking-heading {
+  margin-bottom: 6px;
+}
+
+.fleet-weekly-ranking-heading small,
+.fleet-weekly-ranking-heading strong {
+  display: block;
+}
+
+.fleet-weekly-ranking-heading strong {
+  margin-top: 2px;
+  font-size: calc(9px * var(--type-scale));
+}
+
+.fleet-weekly-ranking-heading > span {
+  color: var(--muted);
+  font-size: calc(6px * var(--type-scale));
+}
+
+.fleet-weekly-ranking-list {
+  display: grid;
+  gap: 5px;
+}
+
+.fleet-weekly-ranking-list > div {
+  display: grid;
+  grid-template-columns: 28px 1.4fr repeat(3, minmax(0, 0.8fr));
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid rgba(98, 230, 255, 0.08);
+  border-radius: 9px;
+  background: rgba(4, 14, 25, 0.66);
+}
+
+.fleet-weekly-ranking-list > div.clear {
+  border-color: rgba(98, 230, 255, 0.15);
+}
+
+.fleet-weekly-ranking-list > div.failed {
+  opacity: 0.58;
+}
+
+.fleet-weekly-ranking-list > div > b {
+  color: var(--purple);
+  text-align: center;
+}
+
+.fleet-weekly-ranking-list span {
+  min-width: 0;
+}
+
+.fleet-weekly-ranking-list small,
+.fleet-weekly-ranking-list strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fleet-weekly-ranking-list strong {
+  margin-top: 1px;
+  color: #e7f7ff;
+  font-size: calc(7.5px * var(--type-scale));
+}
+
+.fleet-weekly-ranking-list > p {
+  margin: 0;
+  padding: 13px;
+  border: 1px dashed rgba(98, 230, 255, 0.12);
+  border-radius: 9px;
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+  text-align: center;
+}
+
 .building-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6762,6 +7472,22 @@ footer {
     grid-template-columns: 1fr;
   }
 
+  .fleet-command-resource-grid,
+  .fleet-command-craft-row,
+  .fleet-command-options,
+  .fleet-challenge-loadout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fleet-command-craft-row button:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .fleet-weekly-ranking-list > div {
+    grid-template-columns: 26px 1.3fr repeat(3, minmax(55px, 0.7fr));
+    overflow-x: auto;
+  }
+
   .command-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -6833,6 +7559,64 @@ footer {
 
   .fleet-summary small {
     display: none;
+  }
+
+  .fleet-command-header,
+  .fleet-weekly-heading,
+  .fleet-preset-summary,
+  .fleet-challenge-action,
+  .fleet-weekly-ranking-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .fleet-command-state,
+  .fleet-weekly-reset,
+  .fleet-activate-button,
+  .fleet-challenge-action button {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .fleet-command-resource-grid,
+  .fleet-command-craft-row,
+  .fleet-preset-tabs,
+  .fleet-preset-editor,
+  .fleet-weekly-challenge,
+  .fleet-command-header {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .fleet-allocation-grid,
+  .fleet-challenge-phases {
+    grid-template-columns: 1fr;
+  }
+
+  .fleet-command-options {
+    grid-template-columns: 1fr;
+  }
+
+  .fleet-command-option {
+    min-height: 58px;
+  }
+
+  .fleet-challenge-loadout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fleet-challenge-loadout > div:nth-child(3) {
+    border-left: 0;
+  }
+
+  .fleet-weekly-ranking-list {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .fleet-weekly-ranking-list > div {
+    min-width: 450px;
   }
 
   .building-card {

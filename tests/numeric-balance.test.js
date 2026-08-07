@@ -32,7 +32,27 @@ function readArray(name, nextName) {
 const buildings = readArray("BUILDINGS", "UPGRADES");
 const upgrades = readArray("UPGRADES", "ACHIEVEMENTS");
 const starportMaterials = readArray("STARPORT_MATERIALS", "STARPORT_MODULES");
-const starportModules = readArray("STARPORT_MODULES", "SKIRMISH_TARGETS");
+const starportModules = readArray("STARPORT_MODULES", "FLEET_DISTRIBUTIONS");
+const fleetDistributions = readArray(
+  "FLEET_DISTRIBUTIONS",
+  "FLEET_FORMATIONS",
+);
+const fleetFormations = readArray("FLEET_FORMATIONS", "FLEET_WEAPONS");
+const fleetWeapons = readArray("FLEET_WEAPONS", "FLEET_TACTICS");
+const fleetTactics = readArray("FLEET_TACTICS", "FLEET_CHALLENGE_TRAITS");
+const fleetChallengeTraits = readArray(
+  "FLEET_CHALLENGE_TRAITS",
+  "FLEET_CHALLENGE_NAMES",
+);
+const fleetChallengeNames = readArray(
+  "FLEET_CHALLENGE_NAMES",
+  "FLEET_CHALLENGE_HAZARDS",
+);
+const fleetChallengeHazards = readArray(
+  "FLEET_CHALLENGE_HAZARDS",
+  "FLEET_COSMETICS",
+);
+const fleetCosmetics = readArray("FLEET_COSMETICS", "SKIRMISH_TARGETS");
 const skirmishes = readArray("SKIRMISH_TARGETS", "PLANET_TARGETS");
 const companions = readArray(
   "SINGULARITY_COMPANIONS",
@@ -66,7 +86,7 @@ const ecoTickInterval = readConstant("ECO_GAME_TICK_INTERVAL");
 const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
 const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
-assert.equal(readConstant("SAVE_VERSION"), 10, "companion event saves need schema version 10");
+assert.equal(readConstant("SAVE_VERSION"), 11, "fleet command saves need schema version 11");
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),
   6,
@@ -92,6 +112,8 @@ assert.doesNotMatch(source, /requestAnimationFrame\(gameLoop\)/);
 assert.equal(readConstant("EXPEDITION_ROUTE_COUNT"), 5);
 assert.equal(readConstant("EXPEDITION_GEAR_SLOT_LIMIT"), 3);
 assert.equal(readConstant("EXPEDITION_PRESET_COUNT"), 3);
+assert.equal(readConstant("FLEET_COMMAND_PRESET_COUNT"), 3);
+assert.equal(readConstant("FLEET_CHALLENGE_ATTEMPT_LIMIT"), 8);
 assert.equal(readConstant("EXPEDITION_UNLOCK_DUST"), 50000);
 assert.equal(readConstant("MAX_EXPEDITION_ENTRY_DUST_COST"), 300000000);
 assert.equal(readConstant("ENDGAME_UNLOCK_CORES"), 150);
@@ -112,6 +134,20 @@ assert.equal(
 );
 assert.equal(expeditionArtifacts.length, 8, "collection cabin needs eight artifacts");
 assert.equal(expeditionSkins.length, 5, "beacon wardrobe needs five appearances");
+assert.equal(fleetDistributions.length, 4, "fleet command needs four allocation doctrines");
+assert.equal(fleetFormations.length, 3, "fleet command needs three formations");
+assert.equal(fleetWeapons.length, 3, "fleet command needs three weapon families");
+assert.equal(fleetTactics.length, 3, "fleet command needs three tactical orders");
+assert.equal(fleetChallengeTraits.length, 3, "weekly challenge needs three counters");
+assert.ok(fleetChallengeNames.length >= 5, "weekly routes need visible variety");
+assert.equal(fleetChallengeHazards.length, 3, "weekly challenge needs three hazards");
+assert.equal(fleetCosmetics.length, 4, "fleet rewards need four cosmetic badges");
+assert.ok(
+  fleetCosmetics.every(
+    (cosmetic) => !("multiplier" in cosmetic) && !("power" in cosmetic),
+  ),
+  "fleet challenge collectibles must remain cosmetic-only",
+);
 assert.equal(companions.length, 8, "singularity collection needs eight companions");
 assert.equal(companionEvents.length, 8, "each companion needs one observation event");
 assert.ok(

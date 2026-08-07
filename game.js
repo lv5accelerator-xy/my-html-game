@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.17.3";
-  const PATCH_NOTES_VERSION = "0.17.3";
-  const SAVE_VERSION = 10;
+  const GAME_VERSION = "0.18.0";
+  const PATCH_NOTES_VERSION = "0.18.0";
+  const SAVE_VERSION = 11;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -47,6 +47,12 @@
   const MAX_EXPEDITION_ENTRY_DUST_COST = 300000000;
   const EXPEDITION_GEAR_SLOT_LIMIT = 3;
   const EXPEDITION_PRESET_COUNT = 3;
+  const FLEET_COMMAND_UNLOCK_DUST = 25000;
+  const FLEET_COMMAND_RESOURCE_CAP = 9999;
+  const FLEET_COMMAND_PRESET_COUNT = 3;
+  const FLEET_COMMAND_SWITCH_COOLDOWN = 5 * 60 * 1000;
+  const FLEET_COMMAND_RECONFIGURE_COOLDOWN = 75 * 1000;
+  const FLEET_CHALLENGE_ATTEMPT_LIMIT = 8;
   const QUALITY_GAME_TICK_INTERVAL = 100;
   const ECO_GAME_TICK_INTERVAL = 250;
   const QUALITY_STARFIELD_FPS = 60;
@@ -108,6 +114,19 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.18.0",
+      theme: "舰队编成",
+      changes: [
+        "新增工业、守备与远征三支舰队，现有自动化设施会按当前方案分配，不需要从头购买另一套单位。",
+        "新增 3 套可保存编成方案，可配置部署重心、阵型、武器和战术指令；切换与重编需要指挥数据并有整备冷却。",
+        "敌方相位护盾、蜂群集群与重型装甲需要对应武器和阵型克制，战斗结果不再只比较总战斗力。",
+        "新增弹药、维护件与指挥数据三类整备资源，可用星尘和星港建材补充，持续回收后期库存。",
+        "新增每周固定规则舰队演习，记录完成时间、舰损、资源效率与综合评分，并保存本周最佳 8 次战术记录。",
+        "每周首胜和刷新个人最佳可获得远征补给、星图残片、航站凭证、星港建材与纯收藏舰队徽记，不增加永久倍率。",
+        "存档结构升级至第 11 版；旧存档会自动获得三套默认方案和首批整备物资。",
+      ],
+    },
     {
       version: "0.17.3",
       theme: "云存档数据兼容",
@@ -1036,6 +1055,150 @@
       dustGrowth: 1.45,
       maxRank: 12,
     },
+  ];
+  const FLEET_DISTRIBUTIONS = [
+    {
+      id: "balanced",
+      name: "均衡轮值",
+      icon: "◇",
+      description: "三支舰队保持接近的值勤规模，适合日常挂机。",
+      allocation: { production: 34, defense: 33, expedition: 33 },
+    },
+    {
+      id: "industry",
+      name: "工业集结",
+      icon: "⌁",
+      description: "更多单位回到自动生产线，基地与远征准备略有下降。",
+      allocation: { production: 55, defense: 25, expedition: 20 },
+    },
+    {
+      id: "bulwark",
+      name: "守备封锁",
+      icon: "⬡",
+      description: "加强基地防区，对大袭击更稳健，但产量会让位于防御。",
+      allocation: { production: 20, defense: 55, expedition: 25 },
+    },
+    {
+      id: "vanguard",
+      name: "远征先锋",
+      icon: "↟",
+      description: "把最多单位编入远征舰队，用于挑战航线与机制战。",
+      allocation: { production: 20, defense: 25, expedition: 55 },
+    },
+  ];
+  const FLEET_FORMATIONS = [
+    {
+      id: "echelon",
+      name: "交错阵列",
+      icon: "⋰",
+      counters: "shield",
+      description: "多轴包抄相位节点，对护盾目标有效。",
+    },
+    {
+      id: "screen",
+      name: "护航幕墙",
+      icon: "≋",
+      counters: "swarm",
+      description: "扩大警戒面并互相补位，压制蜂群集群。",
+    },
+    {
+      id: "spear",
+      name: "矛尖突击",
+      icon: "◁",
+      counters: "armor",
+      description: "集中推力与火力撕开重型装甲。",
+    },
+  ];
+  const FLEET_WEAPONS = [
+    {
+      id: "ion",
+      name: "离子干扰炮",
+      icon: "ϟ",
+      counters: "shield",
+      description: "快速耗散护盾充能。",
+    },
+    {
+      id: "flak",
+      name: "近炸弹幕",
+      icon: "✣",
+      counters: "swarm",
+      description: "覆盖大量小型目标的航迹。",
+    },
+    {
+      id: "kinetic",
+      name: "质量投射器",
+      icon: "◆",
+      counters: "armor",
+      description: "以高动能穿透厚重装甲。",
+    },
+  ];
+  const FLEET_TACTICS = [
+    {
+      id: "precision",
+      name: "精确齐射",
+      icon: "⌖",
+      power: 1.08,
+      efficiency: 0.94,
+      description: "提高瞬时输出，但额外消耗弹药。",
+    },
+    {
+      id: "suppression",
+      name: "持续压制",
+      icon: "≋",
+      power: 1.02,
+      efficiency: 1.05,
+      description: "输出稳定，降低舰损波动。",
+    },
+    {
+      id: "salvage",
+      name: "战场回收",
+      icon: "⌬",
+      power: 0.96,
+      efficiency: 1.24,
+      description: "牺牲部分火力，提高物资利用率。",
+    },
+  ];
+  const FLEET_CHALLENGE_TRAITS = [
+    { id: "shield", name: "相位护盾", icon: "◈", color: "cyan" },
+    { id: "swarm", name: "蜂群集群", icon: "✣", color: "purple" },
+    { id: "armor", name: "重型装甲", icon: "⬢", color: "gold" },
+  ];
+  const FLEET_CHALLENGE_NAMES = [
+    "赫利俄斯封锁线",
+    "静默回廊演习",
+    "蓝移边境试炼",
+    "第七码头警戒",
+    "破碎月环会战",
+    "拉格朗日风暴眼",
+  ];
+  const FLEET_CHALLENGE_HAZARDS = [
+    {
+      id: "signalFog",
+      name: "信号雾",
+      description: "锁定延迟增加，完成时间权重提高。",
+      timeFactor: 1.08,
+      damageFactor: 1,
+    },
+    {
+      id: "debrisTide",
+      name: "残骸潮",
+      description: "航路持续受损，舰损权重提高。",
+      timeFactor: 1,
+      damageFactor: 1.12,
+    },
+    {
+      id: "supplyRationing",
+      name: "补给配给",
+      description: "资源效率成为本周评分重点。",
+      timeFactor: 1.02,
+      damageFactor: 1.02,
+    },
+  ];
+  const FLEET_COSMETICS = [
+    { id: "foundry", name: "熔炉舰徽", icon: "✦" },
+    { id: "sentinel", name: "哨兵舰徽", icon: "⬡" },
+    { id: "pathfinder", name: "开路者舰徽", icon: "↟" },
+    { id: "nebula", name: "星云舰徽", icon: "☄" },
   ];
   const SKIRMISH_TARGETS = [
     {
@@ -2164,6 +2327,7 @@
     companionLogCount: $("#companion-log-count"),
     companionLogGrid: $("#companion-log-grid"),
     buildingList: $("#building-list"),
+    fleetCommandDeck: $("#fleet-command-deck"),
     upgradeList: $("#upgrade-list"),
     achievementList: $("#achievement-list"),
     researchCount: $("#research-count"),
@@ -2436,6 +2600,49 @@
     };
   }
 
+  function freshFleetCommandState() {
+    return {
+      activePreset: 0,
+      selectedPreset: 0,
+      presets: [
+        {
+          name: "工业轮值",
+          distribution: "industry",
+          formation: "echelon",
+          weapon: "ion",
+          tactic: "salvage",
+        },
+        {
+          name: "基地警戒",
+          distribution: "bulwark",
+          formation: "screen",
+          weapon: "flak",
+          tactic: "suppression",
+        },
+        {
+          name: "远征先锋",
+          distribution: "vanguard",
+          formation: "spear",
+          weapon: "kinetic",
+          tactic: "precision",
+        },
+      ],
+      ammo: 12,
+      maintenance: 12,
+      commandData: 3,
+      switchCooldownUntil: 0,
+      reconfigureCooldownUntil: 0,
+      weekly: {
+        key: "",
+        attempts: [],
+        firstClearClaimed: false,
+      },
+      cosmetics: [],
+      totalChallengeClears: 0,
+      lastReport: "三舰队指挥网已经上线，等待第一份编成命令。",
+    };
+  }
+
   function freshExpeditionState() {
     const bossWins = {};
     EXPEDITION_BOSSES.forEach((boss) => {
@@ -2541,6 +2748,7 @@
       endgame: freshEndgameState(),
       crescentSecret: freshCrescentSecretState(),
       missions: freshMissionState(),
+      fleetCommand: freshFleetCommandState(),
       expedition: freshExpeditionState(),
       log: [
         {
@@ -2684,6 +2892,455 @@
         safeAdd(total, targetState.buildings[building.id] || 0),
       0,
     );
+  }
+
+  function getFleetCommandPreset(
+    targetState = state,
+    index = targetState.fleetCommand?.activePreset || 0,
+  ) {
+    return (
+      targetState.fleetCommand?.presets?.[index] ||
+      freshFleetCommandState().presets[0]
+    );
+  }
+
+  function getFleetDistribution(preset = getFleetCommandPreset()) {
+    return (
+      FLEET_DISTRIBUTIONS.find(
+        (distribution) => distribution.id === preset?.distribution,
+      ) || FLEET_DISTRIBUTIONS[0]
+    );
+  }
+
+  function isFleetCommandUnlocked(targetState = state) {
+    return targetState.lifetimeDust >= FLEET_COMMAND_UNLOCK_DUST;
+  }
+
+  function getFleetProductionMultiplier(targetState = state) {
+    if (!isFleetCommandUnlocked(targetState)) return 1;
+    const allocation = getFleetDistribution(
+      getFleetCommandPreset(targetState),
+    ).allocation.production;
+    return clamp(0.95 + allocation * 0.0015, 0.98, 1.04);
+  }
+
+  function getFleetDefenseMultiplier(targetState = state) {
+    if (!isFleetCommandUnlocked(targetState)) return 1;
+    const allocation = getFleetDistribution(
+      getFleetCommandPreset(targetState),
+    ).allocation.defense;
+    return clamp(0.9 + allocation * 0.003, 0.95, 1.08);
+  }
+
+  function getFleetExpeditionMultiplier(targetState = state) {
+    if (!isFleetCommandUnlocked(targetState)) return 1;
+    const allocation = getFleetDistribution(
+      getFleetCommandPreset(targetState),
+    ).allocation.expedition;
+    return clamp(0.9 + allocation * 0.003, 0.95, 1.08);
+  }
+
+  function ensureFleetChallengePeriod(now = Date.now()) {
+    if (!state.fleetCommand || typeof state.fleetCommand !== "object") {
+      state.fleetCommand = freshFleetCommandState();
+    }
+    const weeklyKey = getUtcWeeklyKey(now);
+    if (state.fleetCommand.weekly?.key === weeklyKey) return false;
+    state.fleetCommand.weekly = {
+      key: weeklyKey,
+      attempts: [],
+      firstClearClaimed: false,
+    };
+    state.fleetCommand.lastReport = `${weeklyKey} 舰队演习规则已经刷新。`;
+    return true;
+  }
+
+  function getFleetChallenge(now = Date.now()) {
+    const key = getUtcWeeklyKey(now);
+    const seed = hashMissionSeed(`fleet-challenge:${key}`);
+    const traits = seededMissionShuffle(
+      FLEET_CHALLENGE_TRAITS,
+      `fleet-traits:${key}`,
+    );
+    return {
+      key,
+      name: FLEET_CHALLENGE_NAMES[seed % FLEET_CHALLENGE_NAMES.length],
+      hazard:
+        FLEET_CHALLENGE_HAZARDS[
+          (seed >>> 5) % FLEET_CHALLENGE_HAZARDS.length
+        ],
+      phases: traits.map((trait, index) => ({
+        trait,
+        powerFactor: [0.9, 1.02, 1.14][index],
+      })),
+    };
+  }
+
+  function getFleetSwitchCost() {
+    return Math.min(
+      3000000,
+      Math.max(15000, Math.round(safeMultiply(calculateRate(state, false), 60))),
+    );
+  }
+
+  function getFleetCraftRecipe(type) {
+    const dustCost = Math.min(
+      type === "data" ? 6000000 : 4000000,
+      Math.max(
+        type === "data" ? 30000 : 18000,
+        Math.round(
+          safeMultiply(
+            calculateRate(state, false),
+            type === "data" ? 150 : 90,
+          ),
+        ),
+      ),
+    );
+    if (type === "ammo") {
+      return {
+        type,
+        label: "装填弹药 +6",
+        icon: "◆",
+        amount: 6,
+        dustCost,
+        materials: { alloy: 2, crystal: 1 },
+      };
+    }
+    if (type === "maintenance") {
+      return {
+        type,
+        label: "制造维护件 +6",
+        icon: "⬡",
+        amount: 6,
+        dustCost,
+        materials: { alloy: 2, circuit: 1 },
+      };
+    }
+    return {
+      type: "data",
+      label: "编译指挥数据 +2",
+      icon: "⌘",
+      amount: 2,
+      dustCost,
+      materials: { relic: 1, sensor: 1 },
+    };
+  }
+
+  function getFleetRecipeText(recipe) {
+    const materials = Object.entries(recipe.materials)
+      .map(([id, amount]) => {
+        const material = STARPORT_MATERIALS.find((entry) => entry.id === id);
+        return `${material?.shortName || id} ${amount}`;
+      })
+      .join(" · ");
+    return `✦ ${formatNumber(recipe.dustCost)} · ${materials}`;
+  }
+
+  function canAffordFleetRecipe(recipe) {
+    return (
+      state.dust >= recipe.dustCost &&
+      Object.entries(recipe.materials).every(
+        ([id, amount]) => (state.starport.materials[id] || 0) >= amount,
+      )
+    );
+  }
+
+  function craftFleetResource(type) {
+    if (!isFleetCommandUnlocked()) return;
+    const recipe = getFleetCraftRecipe(type);
+    if (!canAffordFleetRecipe(recipe)) {
+      showToast(
+        "整备资源不足",
+        `需要 ${getFleetRecipeText(recipe)}。近域清剿可补充星港建材。`,
+        recipe.icon,
+      );
+      return;
+    }
+    state.dust = clampGameNumber(state.dust - recipe.dustCost);
+    recordMissionProgress("dustSpent", recipe.dustCost);
+    Object.entries(recipe.materials).forEach(([id, amount]) => {
+      state.starport.materials[id] = Math.max(
+        0,
+        (state.starport.materials[id] || 0) - amount,
+      );
+    });
+    const field = recipe.type === "data" ? "commandData" : recipe.type;
+    state.fleetCommand[field] = Math.min(
+      FLEET_COMMAND_RESOURCE_CAP,
+      state.fleetCommand[field] + recipe.amount,
+    );
+    state.fleetCommand.lastReport = `${recipe.label}完成，后勤库存已经更新。`;
+    showToast("舰队整备完成", recipe.label, recipe.icon);
+    renderFleetCommand();
+    updateUi();
+    saveGame();
+  }
+
+  function selectFleetPreset(index) {
+    state.fleetCommand.selectedPreset = clamp(
+      Math.floor(Number(index) || 0),
+      0,
+      FLEET_COMMAND_PRESET_COUNT - 1,
+    );
+    renderFleetCommand();
+  }
+
+  function configureFleetPreset(field, value) {
+    if (!isFleetCommandUnlocked()) return;
+    const definitions = {
+      distribution: FLEET_DISTRIBUTIONS,
+      formation: FLEET_FORMATIONS,
+      weapon: FLEET_WEAPONS,
+      tactic: FLEET_TACTICS,
+    };
+    if (!definitions[field]?.some((entry) => entry.id === value)) return;
+    const index = state.fleetCommand.selectedPreset;
+    const preset = state.fleetCommand.presets[index];
+    if (!preset || preset[field] === value) return;
+    const now = Date.now();
+    if (state.fleetCommand.reconfigureCooldownUntil > now) {
+      showToast(
+        "重编冷却中",
+        `还需 ${Math.ceil(
+          (state.fleetCommand.reconfigureCooldownUntil - now) / 1000,
+        )} 秒才能修改方案。`,
+        "⌘",
+      );
+      return;
+    }
+    if (state.fleetCommand.commandData < 1) {
+      showToast("缺少指挥数据", "重编一项方案需要 1 份指挥数据。", "⌘");
+      return;
+    }
+    state.fleetCommand.commandData -= 1;
+    preset[field] = value;
+    state.fleetCommand.reconfigureCooldownUntil =
+      now + FLEET_COMMAND_RECONFIGURE_COOLDOWN;
+    state.fleetCommand.lastReport = `${preset.name}已更新，重编协议进入短暂冷却。`;
+    renderFleetCommand();
+    updateUi();
+    saveGame();
+  }
+
+  function activateFleetPreset() {
+    if (!isFleetCommandUnlocked()) return;
+    const index = state.fleetCommand.selectedPreset;
+    if (index === state.fleetCommand.activePreset) return;
+    const now = Date.now();
+    if (state.fleetCommand.switchCooldownUntil > now) {
+      showToast(
+        "舰队正在换防",
+        `还需 ${Math.ceil(
+          (state.fleetCommand.switchCooldownUntil - now) / 1000,
+        )} 秒才能切换方案。`,
+        "↻",
+      );
+      return;
+    }
+    const dustCost = getFleetSwitchCost();
+    if (state.fleetCommand.commandData < 1 || state.dust < dustCost) {
+      showToast(
+        "无法执行换防",
+        `切换需要 1 指挥数据与 ${formatNumber(dustCost)} 星尘。`,
+        "⌘",
+      );
+      return;
+    }
+    state.fleetCommand.commandData -= 1;
+    state.dust = clampGameNumber(state.dust - dustCost);
+    recordMissionProgress("dustSpent", dustCost);
+    state.fleetCommand.activePreset = index;
+    state.fleetCommand.switchCooldownUntil =
+      now + FLEET_COMMAND_SWITCH_COOLDOWN;
+    state.fleetCommand.lastReport = `${state.fleetCommand.presets[index].name}已经接管三支舰队。`;
+    addLog(`舰队换防完成：${state.fleetCommand.presets[index].name}。`);
+    showToast(
+      "编成方案已启用",
+      "工业、守备与远征单位已按新比例完成调度。",
+      "⌘",
+    );
+    renderFleetCommand();
+    updateUi(calculateRate());
+    saveGame();
+  }
+
+  function runFleetChallenge() {
+    if (!isFleetCommandUnlocked()) return;
+    ensureFleetChallengePeriod();
+    const presetIndex = state.fleetCommand.activePreset;
+    const preset = getFleetCommandPreset(state, presetIndex);
+    const distribution = getFleetDistribution(preset);
+    const formation =
+      FLEET_FORMATIONS.find((entry) => entry.id === preset.formation) ||
+      FLEET_FORMATIONS[0];
+    const weapon =
+      FLEET_WEAPONS.find((entry) => entry.id === preset.weapon) ||
+      FLEET_WEAPONS[0];
+    const tactic =
+      FLEET_TACTICS.find((entry) => entry.id === preset.tactic) ||
+      FLEET_TACTICS[0];
+    const ammoCost = tactic.id === "precision" ? 4 : 3;
+    const maintenanceCost = tactic.id === "suppression" ? 1 : 2;
+    if (
+      state.fleetCommand.ammo < ammoCost ||
+      state.fleetCommand.maintenance < maintenanceCost
+    ) {
+      showToast(
+        "整备不足",
+        `本次演习需要弹药 ${ammoCost}、维护件 ${maintenanceCost}。`,
+        "◆",
+      );
+      return;
+    }
+    state.fleetCommand.ammo -= ammoCost;
+    state.fleetCommand.maintenance -= maintenanceCost;
+    const challenge = getFleetChallenge();
+    const expeditionFactor = getFleetExpeditionMultiplier();
+    let totalTime = 0;
+    let totalDamage = 0;
+    let ratioTotal = 0;
+    let failedPhase = false;
+    challenge.phases.forEach((phase) => {
+      let ratio = safeMultiply(
+        expeditionFactor,
+        tactic.power,
+        1 / phase.powerFactor,
+      );
+      const weaponCounter = weapon.counters === phase.trait.id;
+      const formationCounter = formation.counters === phase.trait.id;
+      if (weaponCounter) ratio = safeMultiply(ratio, 1.2);
+      if (formationCounter) ratio = safeMultiply(ratio, 1.11);
+      if (weaponCounter && formationCounter) ratio = safeMultiply(ratio, 1.04);
+      if (!weaponCounter && !formationCounter) ratio = safeMultiply(ratio, 0.88);
+      ratio = clamp(ratio, 0.35, 1.9);
+      const phaseTime =
+        (68 / ratio) * challenge.hazard.timeFactor;
+      const phaseDamage = clamp(
+        (1.18 - ratio) * 40 * challenge.hazard.damageFactor,
+        2,
+        48,
+      );
+      totalTime += phaseTime;
+      totalDamage += phaseDamage;
+      ratioTotal += ratio;
+      if (ratio < 0.72) failedPhase = true;
+    });
+    totalDamage = clamp(totalDamage, 0, 100);
+    const clear = !failedPhase && totalDamage < 94;
+    const efficiency = clamp(
+      safeMultiply(
+        100,
+        tactic.efficiency,
+        0.94 + distribution.allocation.expedition / 500,
+      ) - totalDamage * 0.12,
+      35,
+      160,
+    );
+    const averageRatio = ratioTotal / challenge.phases.length;
+    const score = Math.max(
+      1,
+      Math.round(
+        clear
+          ? 1250 +
+              averageRatio * 260 -
+              totalTime * 0.9 -
+              totalDamage * 2.2 +
+              efficiency * 2.1
+          : averageRatio * 260 - totalDamage,
+      ),
+    );
+    const previousBest = state.fleetCommand.weekly.attempts
+      .filter((attempt) => attempt.clear)
+      .reduce((best, attempt) => Math.max(best, attempt.score), 0);
+    const attempt = {
+      clear,
+      score,
+      time: Math.round(totalTime * 10) / 10,
+      damage: Math.round(totalDamage * 10) / 10,
+      efficiency: Math.round(efficiency * 10) / 10,
+      preset: presetIndex,
+      timestamp: Date.now(),
+    };
+    state.fleetCommand.weekly.attempts.unshift(attempt);
+    state.fleetCommand.weekly.attempts = state.fleetCommand.weekly.attempts.slice(
+      0,
+      FLEET_CHALLENGE_ATTEMPT_LIMIT,
+    );
+    let rewardText = "本次没有额外战利品。调整克制关系后再试。";
+    if (clear) {
+      state.fleetCommand.totalChallengeClears = clampGameCount(
+        state.fleetCommand.totalChallengeClears + 1,
+      );
+      if (!state.fleetCommand.weekly.firstClearClaimed) {
+        state.fleetCommand.weekly.firstClearClaimed = true;
+        state.expedition.supplies = Math.min(
+          EXPEDITION_SUPPLY_CAP,
+          state.expedition.supplies + 3,
+        );
+        state.expedition.fragments = Math.min(
+          EXPEDITION_FRAGMENT_CAP,
+          state.expedition.fragments + 18,
+        );
+        grantMissionTokens(10);
+        state.fleetCommand.commandData = Math.min(
+          FLEET_COMMAND_RESOURCE_CAP,
+          state.fleetCommand.commandData + 2,
+        );
+        const rewardMaterials = seededMissionShuffle(
+          STARPORT_MATERIALS,
+          `fleet-reward:${challenge.key}`,
+        ).slice(0, 2);
+        rewardMaterials.forEach((material) => {
+          state.starport.materials[material.id] = clampGameCount(
+            (state.starport.materials[material.id] || 0) + 2,
+          );
+        });
+        const cosmetic =
+          FLEET_COSMETICS[
+            hashMissionSeed(challenge.key) % FLEET_COSMETICS.length
+          ];
+        if (!state.fleetCommand.cosmetics.includes(cosmetic.id)) {
+          state.fleetCommand.cosmetics.push(cosmetic.id);
+        }
+        rewardText = `首胜奖励：补给 3、残片 18、凭证 10、指挥数据 2、两类建材各 2，并解锁${cosmetic.name}。`;
+      } else if (score > previousBest) {
+        state.expedition.supplies = Math.min(
+          EXPEDITION_SUPPLY_CAP,
+          state.expedition.supplies + 1,
+        );
+        state.expedition.fragments = Math.min(
+          EXPEDITION_FRAGMENT_CAP,
+          state.expedition.fragments + 6,
+        );
+        state.fleetCommand.commandData = Math.min(
+          FLEET_COMMAND_RESOURCE_CAP,
+          state.fleetCommand.commandData + 1,
+        );
+        const material =
+          STARPORT_MATERIALS[
+            (hashMissionSeed(challenge.key) + score) %
+              STARPORT_MATERIALS.length
+          ];
+        state.starport.materials[material.id] = clampGameCount(
+          (state.starport.materials[material.id] || 0) + 1,
+        );
+        rewardText = `刷新本周最佳：补给 1、残片 6、指挥数据 1、${material.shortName} 1。`;
+      }
+    }
+    state.fleetCommand.lastReport = clear
+      ? `演习完成，评分 ${score}。${rewardText}`
+      : `演习中断，评分 ${score}。至少一个航段未建立有效克制。`;
+    addLog(
+      `${challenge.name}${clear ? "完成" : "失败"}：评分 ${score}。`,
+    );
+    showToast(
+      clear ? "每周演习完成" : "舰队被迫撤离",
+      clear ? rewardText : "检查三段敌方词条，并重新调整武器与阵型。",
+      clear ? "✦" : "!",
+    );
+    renderFleetCommand();
+    updateUi();
+    saveGame();
   }
 
   function getAchievementMultiplier(targetState = state) {
@@ -3425,6 +4082,7 @@
       getAchievementMultiplier(targetState),
       getEndgameProductionMultiplier(targetState),
       getStarportProductionMultiplier(targetState),
+      getFleetProductionMultiplier(targetState),
       safeAdd(
         1,
         safeMultiply(getCoreShopRank("automation", targetState), 0.1),
@@ -4180,6 +4838,113 @@
         clampGameNumber(rawRoute.enemyPower),
       ),
     };
+  }
+
+  function sanitizeFleetCommandState(rawFleetCommand) {
+    const clean = freshFleetCommandState();
+    if (!rawFleetCommand || typeof rawFleetCommand !== "object") return clean;
+    const isKnown = (collection, id) =>
+      collection.some((entry) => entry.id === id);
+    clean.presets = clean.presets.map((fallback, index) => {
+      const rawPreset = rawFleetCommand.presets?.[index];
+      if (!rawPreset || typeof rawPreset !== "object") return fallback;
+      return {
+        name:
+          typeof rawPreset.name === "string" && rawPreset.name.trim()
+            ? rawPreset.name
+                .trim()
+                .replace(/[<>&"'`]/g, "")
+                .slice(0, 8) || fallback.name
+            : fallback.name,
+        distribution: isKnown(
+          FLEET_DISTRIBUTIONS,
+          rawPreset.distribution,
+        )
+          ? rawPreset.distribution
+          : fallback.distribution,
+        formation: isKnown(FLEET_FORMATIONS, rawPreset.formation)
+          ? rawPreset.formation
+          : fallback.formation,
+        weapon: isKnown(FLEET_WEAPONS, rawPreset.weapon)
+          ? rawPreset.weapon
+          : fallback.weapon,
+        tactic: isKnown(FLEET_TACTICS, rawPreset.tactic)
+          ? rawPreset.tactic
+          : fallback.tactic,
+      };
+    });
+    clean.activePreset = clamp(
+      Math.floor(Number(rawFleetCommand.activePreset) || 0),
+      0,
+      FLEET_COMMAND_PRESET_COUNT - 1,
+    );
+    clean.selectedPreset = clamp(
+      Math.floor(
+        Number.isFinite(Number(rawFleetCommand.selectedPreset))
+          ? Number(rawFleetCommand.selectedPreset)
+          : clean.activePreset,
+      ),
+      0,
+      FLEET_COMMAND_PRESET_COUNT - 1,
+    );
+    clean.ammo = Math.min(
+      FLEET_COMMAND_RESOURCE_CAP,
+      clampGameCount(rawFleetCommand.ammo),
+    );
+    clean.maintenance = Math.min(
+      FLEET_COMMAND_RESOURCE_CAP,
+      clampGameCount(rawFleetCommand.maintenance),
+    );
+    clean.commandData = Math.min(
+      FLEET_COMMAND_RESOURCE_CAP,
+      clampGameCount(rawFleetCommand.commandData),
+    );
+    clean.switchCooldownUntil = finiteTimestamp(
+      rawFleetCommand.switchCooldownUntil,
+      0,
+    );
+    clean.reconfigureCooldownUntil = finiteTimestamp(
+      rawFleetCommand.reconfigureCooldownUntil,
+      0,
+    );
+    const rawWeekly = rawFleetCommand.weekly;
+    if (rawWeekly && typeof rawWeekly === "object") {
+      clean.weekly.key =
+        typeof rawWeekly.key === "string" ? rawWeekly.key.slice(0, 16) : "";
+      clean.weekly.firstClearClaimed = rawWeekly.firstClearClaimed === true;
+      clean.weekly.attempts = Array.isArray(rawWeekly.attempts)
+        ? rawWeekly.attempts.slice(0, FLEET_CHALLENGE_ATTEMPT_LIMIT).map(
+            (attempt) => ({
+              clear: attempt?.clear === true,
+              score: Math.min(999999, clampGameCount(attempt?.score)),
+              time: Math.min(9999, clampGameNumber(attempt?.time)),
+              damage: clamp(Number(attempt?.damage) || 0, 0, 100),
+              efficiency: clamp(Number(attempt?.efficiency) || 0, 0, 200),
+              preset: clamp(
+                Math.floor(Number(attempt?.preset) || 0),
+                0,
+                FLEET_COMMAND_PRESET_COUNT - 1,
+              ),
+              timestamp: finiteTimestamp(attempt?.timestamp, Date.now()),
+            }),
+          )
+        : [];
+    }
+    clean.cosmetics = Array.isArray(rawFleetCommand.cosmetics)
+      ? FLEET_COSMETICS.flatMap((cosmetic) =>
+          rawFleetCommand.cosmetics.includes(cosmetic.id)
+            ? [cosmetic.id]
+            : [],
+        )
+      : [];
+    clean.totalChallengeClears = clampGameCount(
+      rawFleetCommand.totalChallengeClears,
+    );
+    clean.lastReport =
+      typeof rawFleetCommand.lastReport === "string"
+        ? rawFleetCommand.lastReport.slice(0, 240)
+        : clean.lastReport;
+    return clean;
   }
 
   function sanitizeExpeditionState(rawExpedition) {
@@ -5245,6 +6010,7 @@
       ? String(raw.buyMode)
       : "1";
     merged.missions = sanitizeMissionState(raw.missions);
+    merged.fleetCommand = sanitizeFleetCommandState(raw.fleetCommand);
     merged.expedition = sanitizeExpeditionState(raw.expedition);
     merged.lastSeen = finiteTimestamp(raw.lastSeen);
     merged.nextEventAt = finiteTimestamp(
@@ -5625,6 +6391,7 @@
       grantInactiveEarnings(state.lastSeen, "load");
     }
     ensureMissionPeriods();
+    ensureFleetChallengePeriod();
     ensureExpeditionRunChoices();
   }
 
@@ -5924,7 +6691,7 @@
       title: companionReward
         ? `坍缩并唤醒${companionReward.name}？`
         : `坍缩并提炼 ${formatNumber(gain, 0)} 枚奇点碎片？`,
-      message: `本次操作将重置星尘、舰队、研究、星核、星核商店、跃迁次数、战斗成长以及星港建筑和材料。成就、边境星区、奇点碎片及全部超越协议永久保留。当前遗产协议会保留每类星核强化 ${legacyRank} 级，并以 ${formatNumber(
+      message: `本次操作将重置星尘、舰队、舰队编成方案与整备物资、研究、星核、星核商店、跃迁次数、战斗成长以及星港建筑和材料。成就、舰队收藏徽记、边境星区、奇点碎片及全部超越协议永久保留。当前遗产协议会保留每类星核强化 ${legacyRank} 级，并以 ${formatNumber(
         startingDust,
       )} 初始星尘开启新周期。${
         companionReward
@@ -5981,6 +6748,13 @@
           state.expedition.lastReport =
             `奇点坍缩中止了进行中的远征；抢救回补给 ${rescuedCargo.supplies}、残片 ${rescuedCargo.fragments}。`;
         }
+        const retainedFleetCosmetics = [...state.fleetCommand.cosmetics];
+        const retainedFleetChallengeClears =
+          state.fleetCommand.totalChallengeClears;
+        state.fleetCommand = freshFleetCommandState();
+        state.fleetCommand.cosmetics = retainedFleetCosmetics;
+        state.fleetCommand.totalChallengeClears = retainedFleetChallengeClears;
+        ensureFleetChallengePeriod();
         state.starport = freshStarportState();
         state.combat = freshCombatState();
         state.event = null;
@@ -6062,6 +6836,7 @@
             COMBAT_POWER_LATE_POWER,
           ),
           getStarportAttackMultiplier(targetState),
+          getFleetExpeditionMultiplier(targetState),
         ),
       ),
     );
@@ -6093,6 +6868,7 @@
             COMBAT_POWER_LATE_POWER,
           ),
           getStarportDefenseMultiplier(targetState),
+          getFleetDefenseMultiplier(targetState),
         ),
       ),
     );
@@ -7388,6 +8164,382 @@
     });
   }
 
+  function renderFleetCommandOptionGroup(title, field, definitions, preset) {
+    return `
+      <div class="fleet-command-option-group">
+        <div class="fleet-command-option-heading">
+          <small>${title}</small>
+          <span>更改消耗 1 指挥数据</span>
+        </div>
+        <div class="fleet-command-options">
+          ${definitions
+            .map(
+              (entry) => `
+                <button
+                  type="button"
+                  class="fleet-command-option${
+                    preset[field] === entry.id ? " selected" : ""
+                  }"
+                  data-fleet-config="${field}"
+                  data-fleet-value="${entry.id}"
+                >
+                  <span aria-hidden="true">${entry.icon}</span>
+                  <strong>${entry.name}</strong>
+                  <small>${entry.description}</small>
+                </button>
+              `,
+            )
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderFleetCommand() {
+    if (!elements.fleetCommandDeck) return;
+    if (!isFleetCommandUnlocked()) {
+      const progress = clamp(
+        state.lifetimeDust / FLEET_COMMAND_UNLOCK_DUST,
+        0,
+        1,
+      );
+      elements.fleetCommandDeck.innerHTML = `
+        <div class="fleet-command-locked">
+          <span aria-hidden="true">⌘</span>
+          <div>
+            <small>编成协议尚未授权</small>
+            <h3 id="fleet-command-title">三舰队指挥网</h3>
+            <p>累计采集 ${formatNumber(
+              FLEET_COMMAND_UNLOCK_DUST,
+            )} 星尘后，可把现有设施编入工业、守备与远征舰队。</p>
+            <div class="fleet-command-unlock-progress" aria-label="解锁进度">
+              <i style="width:${progress * 100}%"></i>
+            </div>
+            <strong>${formatNumber(state.lifetimeDust)} / ${formatNumber(
+              FLEET_COMMAND_UNLOCK_DUST,
+            )}</strong>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    ensureFleetChallengePeriod();
+    const command = state.fleetCommand;
+    const selectedIndex = command.selectedPreset;
+    const selectedPreset = getFleetCommandPreset(state, selectedIndex);
+    const activePreset = getFleetCommandPreset(state, command.activePreset);
+    const distribution = getFleetDistribution(selectedPreset);
+    const activeDistribution = getFleetDistribution(activePreset);
+    const units = getTotalUnits();
+    const allocationCards = [
+      ["production", "工业舰队", "⌁"],
+      ["defense", "守备舰队", "⬡"],
+      ["expedition", "远征舰队", "↟"],
+    ]
+      .map(([id, label, icon]) => {
+        const share = distribution.allocation[id];
+        return `
+          <div class="fleet-allocation-card ${id}">
+            <span aria-hidden="true">${icon}</span>
+            <div>
+              <small>${label}</small>
+              <strong>${formatNumber(Math.floor((units * share) / 100), 0)} 单位</strong>
+            </div>
+            <b>${share}%</b>
+          </div>
+        `;
+      })
+      .join("");
+    const now = Date.now();
+    const switchSeconds = Math.max(
+      0,
+      Math.ceil((command.switchCooldownUntil - now) / 1000),
+    );
+    const reconfigureSeconds = Math.max(
+      0,
+      Math.ceil((command.reconfigureCooldownUntil - now) / 1000),
+    );
+    const switchCost = getFleetSwitchCost();
+    const recipes = ["ammo", "maintenance", "data"].map(
+      getFleetCraftRecipe,
+    );
+    const challenge = getFleetChallenge();
+    const activeFormation =
+      FLEET_FORMATIONS.find((entry) => entry.id === activePreset.formation) ||
+      FLEET_FORMATIONS[0];
+    const activeWeapon =
+      FLEET_WEAPONS.find((entry) => entry.id === activePreset.weapon) ||
+      FLEET_WEAPONS[0];
+    const activeTactic =
+      FLEET_TACTICS.find((entry) => entry.id === activePreset.tactic) ||
+      FLEET_TACTICS[0];
+    const ammoCost = activeTactic.id === "precision" ? 4 : 3;
+    const maintenanceCost = activeTactic.id === "suppression" ? 1 : 2;
+    const attempts = [...command.weekly.attempts].sort(
+      (left, right) => right.score - left.score,
+    );
+    const best = attempts.find((attempt) => attempt.clear) || null;
+    const resetSeconds = Math.max(
+      0,
+      Math.ceil((getNextWeeklyReset() - now) / 1000),
+    );
+    const resetDays = Math.floor(resetSeconds / 86400);
+    const resetHours = Math.floor((resetSeconds % 86400) / 3600);
+    elements.fleetCommandDeck.innerHTML = `
+      <div class="fleet-command-header">
+        <div>
+          <p class="eyebrow">三舰队协同 · v0.18.0</p>
+          <h3 id="fleet-command-title">舰队编成指挥网</h3>
+          <p>当前启用 <strong>${activePreset.name}</strong>：工业 ${
+            activeDistribution.allocation.production
+          }% · 守备 ${activeDistribution.allocation.defense}% · 远征 ${
+            activeDistribution.allocation.expedition
+          }%</p>
+        </div>
+        <span class="fleet-command-state">三舰队在线</span>
+      </div>
+      <div class="fleet-command-resource-grid">
+        <div><span>◆</span><small>战术弹药</small><strong>${formatNumber(
+          command.ammo,
+          0,
+        )}</strong></div>
+        <div><span>⬡</span><small>维护件</small><strong>${formatNumber(
+          command.maintenance,
+          0,
+        )}</strong></div>
+        <div><span>⌘</span><small>指挥数据</small><strong>${formatNumber(
+          command.commandData,
+          0,
+        )}</strong></div>
+        <div><span>✦</span><small>收藏舰徽</small><strong>${
+          command.cosmetics.length
+        } / ${FLEET_COSMETICS.length}</strong></div>
+      </div>
+      <div class="fleet-command-craft-row">
+        ${recipes
+          .map(
+            (recipe) => `
+              <button
+                type="button"
+                data-fleet-craft="${recipe.type}"
+                ${canAffordFleetRecipe(recipe) ? "" : "disabled"}
+              >
+                <span>${recipe.icon} ${recipe.label}</span>
+                <small>${getFleetRecipeText(recipe)}</small>
+              </button>
+            `,
+          )
+          .join("")}
+      </div>
+      <div class="fleet-preset-tabs" role="tablist" aria-label="舰队编成方案">
+        ${command.presets
+          .map(
+            (preset, index) => `
+              <button
+                type="button"
+                class="${selectedIndex === index ? "selected" : ""}"
+                data-fleet-preset="${index}"
+                aria-selected="${selectedIndex === index}"
+              >
+                <small>方案 ${index + 1}${
+                  command.activePreset === index ? " · 当前" : ""
+                }</small>
+                <strong>${preset.name}</strong>
+              </button>
+            `,
+          )
+          .join("")}
+      </div>
+      <div class="fleet-preset-editor">
+        <div class="fleet-preset-summary">
+          <div>
+            <small>部署重心</small>
+            <h4>${distribution.icon} ${distribution.name}</h4>
+            <p>${distribution.description}</p>
+          </div>
+          <button
+            type="button"
+            class="fleet-activate-button"
+            data-fleet-action="activate"
+            ${
+              selectedIndex === command.activePreset ||
+              switchSeconds > 0 ||
+              command.commandData < 1 ||
+              state.dust < switchCost
+                ? "disabled"
+                : ""
+            }
+          >
+            <strong>启用此方案</strong>
+            <small>正在计算换防成本</small>
+          </button>
+        </div>
+        <div class="fleet-allocation-grid">${allocationCards}</div>
+        ${renderFleetCommandOptionGroup(
+          "部署比例",
+          "distribution",
+          FLEET_DISTRIBUTIONS,
+          selectedPreset,
+        )}
+        ${renderFleetCommandOptionGroup(
+          "战斗阵型",
+          "formation",
+          FLEET_FORMATIONS,
+          selectedPreset,
+        )}
+        ${renderFleetCommandOptionGroup(
+          "主武器",
+          "weapon",
+          FLEET_WEAPONS,
+          selectedPreset,
+        )}
+        ${renderFleetCommandOptionGroup(
+          "战术指令",
+          "tactic",
+          FLEET_TACTICS,
+          selectedPreset,
+        )}
+        <p class="fleet-command-cooldown-note">
+          ${
+            reconfigureSeconds > 0
+              ? `方案重编冷却 ${reconfigureSeconds} 秒`
+              : "方案可重编"
+          } · 工业倍率 ×${getFleetProductionMultiplier().toFixed(
+            3,
+          )} · 守备倍率 ×${getFleetDefenseMultiplier().toFixed(3)}
+        </p>
+      </div>
+      <section class="fleet-weekly-challenge" aria-labelledby="fleet-weekly-title">
+        <div class="fleet-weekly-heading">
+          <div>
+            <p class="eyebrow">${challenge.key} · 固定规则</p>
+            <h3 id="fleet-weekly-title">${challenge.name}</h3>
+            <p><strong>${challenge.hazard.name}</strong>：${
+              challenge.hazard.description
+            }</p>
+          </div>
+          <div class="fleet-weekly-reset">
+            <small>规则刷新</small>
+            <strong>${resetDays}天 ${resetHours}时</strong>
+          </div>
+        </div>
+        <div class="fleet-challenge-phases">
+          ${challenge.phases
+            .map(
+              (phase, index) => `
+                <div class="${phase.trait.color}">
+                  <span>${phase.trait.icon}</span>
+                  <small>航段 ${index + 1}</small>
+                  <strong>${phase.trait.name}</strong>
+                  <p>威胁 ×${phase.powerFactor.toFixed(2)}</p>
+                </div>
+              `,
+            )
+            .join("")}
+        </div>
+        <div class="fleet-challenge-loadout">
+          <div><small>当前方案</small><strong>${activePreset.name}</strong></div>
+          <div><small>阵型</small><strong>${activeFormation.name}</strong></div>
+          <div><small>武器</small><strong>${activeWeapon.name}</strong></div>
+          <div><small>战术</small><strong>${activeTactic.name}</strong></div>
+        </div>
+        <div class="fleet-challenge-action">
+          <div>
+            <small>最佳记录</small>
+            <strong>${best ? `${best.score} 分` : "尚未完成"}</strong>
+            <span>${
+              best
+                ? `${best.time.toFixed(1)} 秒 · 舰损 ${best.damage.toFixed(
+                    1,
+                  )}% · 效率 ${best.efficiency.toFixed(1)}`
+                : "正确克制三段敌人可明显提高评分"
+            }</span>
+          </div>
+          <button
+            type="button"
+            data-fleet-action="challenge"
+            ${
+              command.ammo < ammoCost ||
+              command.maintenance < maintenanceCost
+                ? "disabled"
+                : ""
+            }
+          >
+            <strong>开始舰队演习</strong>
+            <small>弹药 ${ammoCost} · 维护件 ${maintenanceCost}</small>
+          </button>
+        </div>
+        <div class="fleet-challenge-report">
+          <span aria-hidden="true">⌁</span>
+          <p>${command.lastReport}</p>
+        </div>
+        <div class="fleet-weekly-ranking">
+          <div class="fleet-weekly-ranking-heading">
+            <div><small>本周战术记录</small><strong>个人周榜</strong></div>
+            <span>按综合评分排序 · 最多保留 ${FLEET_CHALLENGE_ATTEMPT_LIMIT} 次</span>
+          </div>
+          <div class="fleet-weekly-ranking-list">
+            ${
+              attempts.length
+                ? attempts
+                    .map(
+                      (attempt, index) => `
+                        <div class="${attempt.clear ? "clear" : "failed"}">
+                          <b>${index + 1}</b>
+                          <span>
+                            <small>${
+                              command.presets[attempt.preset]?.name || "方案"
+                            }</small>
+                            <strong>${
+                              attempt.clear ? attempt.score : "未通关"
+                            }</strong>
+                          </span>
+                          <span><small>时间</small><strong>${attempt.time.toFixed(
+                            1,
+                          )}s</strong></span>
+                          <span><small>舰损</small><strong>${attempt.damage.toFixed(
+                            1,
+                          )}%</strong></span>
+                          <span><small>效率</small><strong>${attempt.efficiency.toFixed(
+                            1,
+                          )}</strong></span>
+                        </div>
+                      `,
+                    )
+                    .join("")
+                : "<p>本周还没有演习记录。三段词条各需要对应武器或阵型。</p>"
+            }
+          </div>
+        </div>
+      </section>
+    `;
+    const stateBadge = elements.fleetCommandDeck.querySelector(
+      ".fleet-command-state",
+    );
+    if (stateBadge) {
+      stateBadge.textContent = switchSeconds > 0
+        ? `换防 ${switchSeconds} 秒`
+        : "三舰队在线";
+    }
+    const activateButton = elements.fleetCommandDeck.querySelector(
+      ".fleet-activate-button",
+    );
+    if (activateButton) {
+      const title = activateButton.querySelector("strong");
+      const detail = activateButton.querySelector("small");
+      if (selectedIndex === command.activePreset) {
+        title.textContent = "当前启用方案";
+        detail.textContent = "无需重复换防";
+      } else if (switchSeconds > 0) {
+        title.textContent = `换防冷却 ${switchSeconds} 秒`;
+        detail.textContent = "冷却结束后可切换";
+      } else {
+        title.textContent = "启用此方案";
+        detail.textContent = `1 指挥数据 · ✦ ${formatNumber(switchCost)}`;
+      }
+    }
+  }
+
   function renderBuildings() {
     elements.buildingList.textContent = "";
     BUILDINGS.forEach((building) => {
@@ -8592,6 +9744,7 @@
     switch (pageId) {
       case "fleet":
         renderBuildings();
+        renderFleetCommand();
         break;
       case "starport":
         renderStarport();
@@ -9403,6 +10556,32 @@
       const button = event.target.closest("[data-building-id]");
       if (button) buyBuilding(button.dataset.buildingId);
     });
+    elements.fleetCommandDeck.addEventListener("click", (event) => {
+      const presetButton = event.target.closest("[data-fleet-preset]");
+      if (presetButton) {
+        selectFleetPreset(Number(presetButton.dataset.fleetPreset));
+        return;
+      }
+      const configButton = event.target.closest("[data-fleet-config]");
+      if (configButton) {
+        configureFleetPreset(
+          configButton.dataset.fleetConfig,
+          configButton.dataset.fleetValue,
+        );
+        return;
+      }
+      const craftButton = event.target.closest("[data-fleet-craft]");
+      if (craftButton) {
+        craftFleetResource(craftButton.dataset.fleetCraft);
+        return;
+      }
+      const actionButton = event.target.closest("[data-fleet-action]");
+      if (actionButton?.dataset.fleetAction === "activate") {
+        activateFleetPreset();
+      } else if (actionButton?.dataset.fleetAction === "challenge") {
+        runFleetChallenge();
+      }
+    });
     elements.upgradeList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-upgrade-id]");
       if (button) buyUpgrade(button.dataset.upgradeId);
@@ -9738,6 +10917,25 @@
       activeSkin: state.expedition.activeSkin,
       activeRun: state.expedition.activeRun,
     })),
+    getFleetCommandDiagnostics: () => {
+      ensureFleetChallengePeriod();
+      return JSON.parse(JSON.stringify({
+        unlocked: isFleetCommandUnlocked(),
+        activePreset: state.fleetCommand.activePreset,
+        selectedPreset: state.fleetCommand.selectedPreset,
+        presets: state.fleetCommand.presets,
+        ammo: state.fleetCommand.ammo,
+        maintenance: state.fleetCommand.maintenance,
+        commandData: state.fleetCommand.commandData,
+        weekly: state.fleetCommand.weekly,
+        cosmetics: state.fleetCommand.cosmetics,
+        totalChallengeClears: state.fleetCommand.totalChallengeClears,
+        productionMultiplier: getFleetProductionMultiplier(),
+        defenseMultiplier: getFleetDefenseMultiplier(),
+        expeditionMultiplier: getFleetExpeditionMultiplier(),
+        challenge: getFleetChallenge(),
+      }));
+    },
     checkForGameUpdate,
     getPerformanceDiagnostics: () => ({
       mode: performanceMode,

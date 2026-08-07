@@ -61,7 +61,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.3");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.18.0");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -126,18 +126,23 @@ async function main() {
           restoredPresets: restored.expedition.loadoutPresets.length,
         };
       })(),
+      fleetCommand: window.StellarOutpostCloudBridge.getFleetCommandDiagnostics(),
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.17.3");
-    assert.equal(snapshot.saveVersion, 10);
+    assert.equal(snapshot.gameVersion, "0.18.0");
+    assert.equal(snapshot.saveVersion, 11);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.17\.3/);
+    assert.match(snapshot.footer, /v0\.18\.0/);
+    assert.equal(snapshot.fleetCommand.presets.length, 3);
+    assert.equal(snapshot.fleetCommand.challenge.phases.length, 3);
+    assert.equal(snapshot.fleetCommand.ammo, 12);
+    assert.match(snapshot.fleetCommand.weekly.key, /^\d{4}-W\d{2}$/);
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -255,8 +260,11 @@ async function main() {
         coordinationLabel: droneCard.querySelector(".building-rate").textContent,
       };
     });
-    const exactSharedMultiplier = 1.22 * 1.08;
-    assert.ok(Math.abs(productionFormulaCheck.base.total - 241.5) < 1e-9);
+    const fleetIndustryMultiplier = 1.0325;
+    const exactSharedMultiplier = 1.22 * 1.08 * fleetIndustryMultiplier;
+    assert.ok(
+      Math.abs(productionFormulaCheck.base.total - 241.5 * fleetIndustryMultiplier) < 1e-9,
+    );
     assert.ok(
       Math.abs(
         productionFormulaCheck.multiplied.sharedMultiplier - exactSharedMultiplier
@@ -283,7 +291,8 @@ async function main() {
     );
     assert.ok(
       Math.abs(
-        productionFormulaCheck.coordination.buildings.drone.perUnit - 153.6
+        productionFormulaCheck.coordination.buildings.drone.perUnit -
+          153.6 * fleetIndustryMultiplier
       ) < 1e-6,
       "a 95-unit drone fleet must receive its nine coordination doublings",
     );
@@ -858,11 +867,52 @@ async function main() {
     assert.equal(expeditionLeaderboard.personalCards, 6);
     assert.equal(expeditionLeaderboard.categories, 6);
 
+    const fleetCommandCheck = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const fleetSave = bridge.createSnapshot();
+      fleetSave.activePage = "fleet";
+      fleetSave.dust = 900000000;
+      fleetSave.runDust = 900000000;
+      fleetSave.lifetimeDust = 900000000;
+      fleetSave.fleetCommand.ammo = 20;
+      fleetSave.fleetCommand.maintenance = 20;
+      fleetSave.fleetCommand.commandData = 10;
+      fleetSave.fleetCommand.switchCooldownUntil = 0;
+      fleetSave.fleetCommand.reconfigureCooldownUntil = 0;
+      Object.keys(fleetSave.starport.materials).forEach((id) => {
+        fleetSave.starport.materials[id] = 20;
+      });
+      fleetSave.lastSeen = Date.now();
+      bridge.applySnapshot(fleetSave);
+      const before = bridge.getFleetCommandDiagnostics();
+      document.querySelector('[data-fleet-action="challenge"]').click();
+      const after = bridge.getFleetCommandDiagnostics();
+      return {
+        before,
+        after,
+        presetTabs: document.querySelectorAll("[data-fleet-preset]").length,
+        allocationCards: document.querySelectorAll(".fleet-allocation-card").length,
+        phaseCards: document.querySelectorAll(".fleet-challenge-phases > div").length,
+        recordCards: document.querySelectorAll(
+          ".fleet-weekly-ranking-list > div",
+        ).length,
+      };
+    });
+    assert.equal(fleetCommandCheck.presetTabs, 3);
+    assert.equal(fleetCommandCheck.allocationCards, 3);
+    assert.equal(fleetCommandCheck.phaseCards, 3);
+    assert.equal(fleetCommandCheck.after.weekly.attempts.length, 1);
+    assert.equal(fleetCommandCheck.recordCards, 1);
+    assert.ok(fleetCommandCheck.after.ammo < fleetCommandCheck.before.ammo);
+    assert.ok(
+      fleetCommandCheck.after.maintenance < fleetCommandCheck.before.maintenance,
+    );
+
     await page.route("**/index.html?check=*", (route) =>
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.17.4"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.18.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -871,7 +921,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.17\.4/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.18\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

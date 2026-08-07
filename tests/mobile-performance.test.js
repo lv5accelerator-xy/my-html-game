@@ -59,17 +59,28 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.17.3");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.18.0");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
-    dust: 0,
-    runDust: 0,
-    lifetimeDust: 100,
-    careerDust: 100,
+    dust: 900000,
+    runDust: 900000,
+    lifetimeDust: 900000,
+    careerDust: 900000,
     buildings: { drone: 10 },
     upgrades: [],
     achievements: [],
+    starport: {
+      materials: {
+        alloy: 20,
+        crystal: 20,
+        circuit: 20,
+        relic: 20,
+        prism: 20,
+        sensor: 20,
+      },
+      modules: {},
+    },
     activePage: "fleet",
     tutorialSeen: true,
     playerName: "移动端测试",
@@ -88,6 +99,10 @@ async function main() {
       savedMode: localStorage.getItem("stellarOutpostIdlePerformanceMode"),
       status: document.querySelector("#performance-status").textContent,
       bodyAnimation: getComputedStyle(document.body).animationName,
+      fleet: window.StellarOutpostCloudBridge.getFleetCommandDiagnostics(),
+      viewportWidth: document.documentElement.clientWidth,
+      pageWidth: document.documentElement.scrollWidth,
+      fleetDeckWidth: document.querySelector("#fleet-command-deck").scrollWidth,
     }));
     assert.equal(defaultQuality.mode, "quality", "mobile should default to high quality");
     assert.equal(defaultQuality.savedMode, null, "a default must not impersonate a manual choice");
@@ -96,6 +111,13 @@ async function main() {
     assert.equal(defaultQuality.diagnostics.starfield.targetFps, 60);
     assert.equal(defaultQuality.diagnostics.starfield.pixelRatio, 2);
     assert.notEqual(defaultQuality.bodyAnimation, "none");
+    assert.equal(defaultQuality.fleet.unlocked, true);
+    assert.equal(defaultQuality.fleet.presets.length, 3);
+    assert.ok(
+      defaultQuality.pageWidth <= defaultQuality.viewportWidth,
+      `fleet command page must not create horizontal scrolling; got ${defaultQuality.pageWidth}px`,
+    );
+    assert.ok(defaultQuality.fleetDeckWidth <= defaultQuality.viewportWidth);
 
     await page.click("#menu-button");
     await page.click("#performance-button");

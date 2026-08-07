@@ -246,22 +246,6 @@ const LEADERBOARD_CATEGORIES = Object.freeze({
     field: "battleCount",
     label: "战斗次数",
   },
-  expeditionRuns: {
-    field: "expeditionRuns",
-    label: "完整远征",
-    expedition: true,
-  },
-  expeditionBossWins: {
-    field: "expeditionBossWins",
-    label: "机制首领击破",
-    expedition: true,
-  },
-  expeditionArtifacts: {
-    field: "expeditionArtifacts",
-    label: "远征遗物",
-    expedition: true,
-    format: (value) => `${formatGameNumber(value)} / 8`,
-  },
 });
 
 function setLeaderboardStatus(stateName, label) {
@@ -302,18 +286,6 @@ function normalizeLeaderboardEntry(snapshot) {
     careerDust: Math.max(0, Number(data.careerDust) || 0),
     highestPower: Math.max(0, Number(data.highestPower) || 0),
     battleCount: Math.max(0, Math.floor(Number(data.battleCount) || 0)),
-    expeditionRuns: Math.max(
-      0,
-      Math.floor(Number(data.expeditionRuns) || 0),
-    ),
-    expeditionBossWins: Math.max(
-      0,
-      Math.floor(Number(data.expeditionBossWins) || 0),
-    ),
-    expeditionArtifacts: Math.min(
-      8,
-      Math.max(0, Math.floor(Number(data.expeditionArtifacts) || 0)),
-    ),
     transcensions: Math.max(
       0,
       Math.floor(Number(data.transcensions) || 0),
@@ -345,19 +317,15 @@ function renderLeaderboardRows(entries) {
     const name = document.createElement("strong");
     name.textContent = entry.playerName;
     const detail = document.createElement("small");
-    detail.textContent = `${
-      category.expedition
-        ? `完整远征 ${entry.expeditionRuns} · 首领击破 ${entry.expeditionBossWins}`
-        : `奇点超越 ${entry.transcensions} 次`
-    }${entry.id === currentUser?.uid ? " · 当前账号" : ""}`;
+    detail.textContent = `奇点超越 ${entry.transcensions} 次${
+      entry.id === currentUser?.uid ? " · 当前账号" : ""
+    }`;
     identity.append(name, detail);
 
     const score = document.createElement("span");
     score.className = "leaderboard-score";
     const value = document.createElement("strong");
-    value.textContent = category.format
-      ? category.format(entry[category.field])
-      : formatGameNumber(entry[category.field]);
+    value.textContent = formatGameNumber(entry[category.field]);
     const scoreLabel = document.createElement("small");
     scoreLabel.textContent = category.label;
     score.append(value, scoreLabel);
@@ -508,18 +476,6 @@ function getLocalLeaderboardEntry() {
       Number.MAX_SAFE_INTEGER,
       Math.max(0, Math.floor(Number(entry.transcensions) || 0)),
     ),
-    expeditionRuns: Math.min(
-      Number.MAX_SAFE_INTEGER,
-      Math.max(0, Math.floor(Number(entry.expeditionRuns) || 0)),
-    ),
-    expeditionBossWins: Math.min(
-      Number.MAX_SAFE_INTEGER,
-      Math.max(0, Math.floor(Number(entry.expeditionBossWins) || 0)),
-    ),
-    expeditionArtifacts: Math.min(
-      8,
-      Math.max(0, Math.floor(Number(entry.expeditionArtifacts) || 0)),
-    ),
   };
 }
 
@@ -585,18 +541,6 @@ async function publishLeaderboardEntry({ silent = false } = {}) {
           transcensions: Math.max(
             localEntry.transcensions,
             Math.floor(Number(remote.transcensions) || 0),
-          ),
-          expeditionRuns: Math.max(
-            localEntry.expeditionRuns,
-            Math.floor(Number(remote.expeditionRuns) || 0),
-          ),
-          expeditionBossWins: Math.max(
-            localEntry.expeditionBossWins,
-            Math.floor(Number(remote.expeditionBossWins) || 0),
-          ),
-          expeditionArtifacts: Math.max(
-            localEntry.expeditionArtifacts,
-            Math.floor(Number(remote.expeditionArtifacts) || 0),
           ),
           updatedAt: firebaseFirestoreApi.serverTimestamp(),
         });
@@ -880,6 +824,8 @@ async function handleSignedIn(user) {
     "账号已连接",
     "本地存档仍会保留，云端仅保存此账号自己的记录。",
   );
+  clearSyncTimer();
+  clearLeaderboardTimer();
   knownRevision = null;
   remoteRecord = null;
   syncReady = false;
@@ -1025,8 +971,13 @@ function bindUi() {
     }
   });
   elements.download.addEventListener("click", promptRemoteChoice);
-  elements.leaderboardLogin.addEventListener("click", openAccount);
-  elements.leaderboardRefresh.addEventListener("click", refreshLeaderboard);
+  // Optional chaining: the leaderboard page markup isn't in index.html yet,
+  // so these elements are currently null. Without the "?." here, this line
+  // throws and aborts the rest of bindUi() — including the stellar-local-save
+  // listener below, which is what drives automatic cloud sync. That's why
+  // uploads/downloads and even login were silently failing.
+  elements.leaderboardLogin?.addEventListener("click", openAccount);
+  elements.leaderboardRefresh?.addEventListener("click", refreshLeaderboard);
   elements.leaderboardCategories.forEach((button) => {
     button.addEventListener("click", () => {
       const nextCategory = button.dataset.leaderboardCategory;
@@ -1093,7 +1044,19 @@ async function waitForBridge() {
 }
 
 async function initializeCloudService() {
-  bindUi();
+  try {
+    bindUi();
+  } catch (error) {
+    setView("unconfigured");
+    setBanner(
+      "error",
+      "!",
+      "账号面板初始化失败",
+      "页面缺少必要的界面元素，云端同步暂不可用；本地自动存档不受影响。",
+    );
+    setCloudState("error", "异常", "账号与云端存档 · 初始化失败");
+    return;
+  }
   bridge = await waitForBridge();
   const config = globalThis.STELLAR_FIREBASE_CONFIG;
   serviceConfigured = hasValidFirebaseConfig(config);

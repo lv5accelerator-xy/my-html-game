@@ -114,5 +114,66 @@ service cloud.firestore {
         && doesNotLowerCareerRecords();
       allow delete: if isOwner();
     }
+
+    // 玩家只能创建反馈，不能读取、修改或删除任何反馈记录。
+    // Firebase 控制台与 Admin SDK 不受客户端规则限制，开发者可在那里统一查看和处理。
+    match /feedback/{feedbackId} {
+      function hasValidFeedbackShape() {
+        return request.resource.data.keys().hasAll([
+          "userId",
+          "userEmail",
+          "playerName",
+          "gameVersion",
+          "category",
+          "message",
+          "contact",
+          "status",
+          "createdAt"
+        ])
+        && request.resource.data.keys().hasOnly([
+          "userId",
+          "userEmail",
+          "playerName",
+          "gameVersion",
+          "category",
+          "message",
+          "contact",
+          "status",
+          "createdAt"
+        ])
+        && request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userEmail is string
+        && request.resource.data.userEmail.size() <= 254
+        && request.resource.data.playerName is string
+        && request.resource.data.playerName.size() >= 1
+        && request.resource.data.playerName.size() <= 24
+        && request.resource.data.gameVersion is string
+        && request.resource.data.gameVersion.size() <= 20
+        && request.resource.data.category in [
+          "bug",
+          "balance",
+          "experience",
+          "suggestion",
+          "other"
+        ]
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 10
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.contact is string
+        && request.resource.data.contact.size() <= 120
+        && request.resource.data.status == "new"
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt == request.time;
+      }
+
+      allow create: if request.auth != null && hasValidFeedbackShape();
+    }
+
+    // 公告由开发者在 Firebase 控制台发布。客户端只可读取 published=true 的记录。
+    match /announcements/{announcementId} {
+      allow read: if resource.data.published == true;
+      allow write: if false;
+    }
   }
 }

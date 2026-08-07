@@ -249,6 +249,36 @@ assert.match(
   /new TextEncoder\(\)\.encode\(serialized\)\.byteLength/,
   "cloud saves must enforce the document-safe byte limit",
 );
+assert.match(
+  firestoreRules,
+  /match \/feedback\/\{feedbackId\}[\s\S]*?allow create: if request\.auth != null/,
+  "feedback must require an authenticated player",
+);
+assert.match(
+  firestoreRules,
+  /request\.resource\.data\.userId == request\.auth\.uid/,
+  "feedback must carry the submitting player's uid",
+);
+assert.match(
+  firestoreRules,
+  /request\.resource\.data\.message\.size\(\) <= 2000/,
+  "feedback text must have a document-safe limit",
+);
+assert.match(
+  firestoreRules,
+  /match \/announcements\/\{announcementId\}[\s\S]*?allow read: if resource\.data\.published == true/,
+  "only published announcements may be read",
+);
+assert.match(
+  firestoreRules,
+  /match \/announcements\/\{announcementId\}[\s\S]*?allow write: if false/,
+  "the game client must never publish announcements",
+);
+assert.match(
+  cloudSource,
+  /firebaseFirestoreApi\.addDoc\([\s\S]*?FEEDBACK_COLLECTION/,
+  "the in-game form must write feedback through Firestore",
+);
 
 for (const building of buildings) {
   assert.ok(building.baseCost <= 16e6, `${building.id} base cost is too large`);

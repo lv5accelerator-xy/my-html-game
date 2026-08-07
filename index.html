@@ -11,15 +11,15 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="0.19.0" />
-    <meta name="stellar-release-title" content="航站作业与渐进指引" />
+    <meta name="stellar-game-version" content="0.19.1" />
+    <meta name="stellar-release-title" content="航站通讯中心" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.19.0" />
+    <link rel="stylesheet" href="styles.css?v=0.19.1" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/stellar-outpost-bgm.mp3?v=0.19.0"
+      src="assets/stellar-outpost-bgm.mp3?v=0.19.1"
       preload="auto"
       loop
       playsinline
@@ -87,6 +87,11 @@
           <div class="settings-divider" aria-hidden="true"></div>
           <button id="guide-button" type="button">新手指引</button>
           <button id="patch-notes-button" type="button">版本更新记录</button>
+          <button id="announcements-button" class="settings-toggle" type="button">
+            <span>航站公告</span>
+            <strong id="announcements-menu-status">查看</strong>
+          </button>
+          <button id="feedback-button" type="button">问题反馈</button>
           <button id="rename-button" type="button">修改玩家名称</button>
           <button id="navigation-mode-button" class="settings-toggle" type="button">
             <span>导航显示</span>
@@ -1427,7 +1432,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.19.0</span>
+        <span>航站协议 v0.19.1</span>
       </footer>
     </div>
 
@@ -1471,7 +1476,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.19.0</strong>
+          <strong id="patch-notes-current-version">v0.19.1</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1479,6 +1484,80 @@
           <span>完整记录同时保存在发行版 Patch Notes TXT 文件中。</span>
           <button id="patch-notes-confirm" class="primary-button" type="button">进入游戏</button>
         </footer>
+      </section>
+    </div>
+
+    <div id="communication-backdrop" class="modal-backdrop communication-backdrop" hidden>
+      <section
+        class="communication-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="communication-title"
+        aria-describedby="communication-description"
+      >
+        <header class="communication-header">
+          <div>
+            <p class="eyebrow">航站通讯频道</p>
+            <h2 id="communication-title">公告与问题反馈</h2>
+            <p id="communication-description">查看开发者公告，或把遇到的问题直接发送到 Firebase。</p>
+          </div>
+          <button id="communication-close" class="communication-close" type="button" aria-label="关闭通讯中心">×</button>
+        </header>
+        <div class="communication-tabs" role="tablist" aria-label="通讯中心功能">
+          <button id="announcement-tab" class="active" type="button" role="tab" aria-selected="true" aria-controls="announcement-panel">
+            航站公告 <i id="announcement-unread-badge" hidden>0</i>
+          </button>
+          <button id="feedback-tab" type="button" role="tab" aria-selected="false" aria-controls="feedback-panel">问题反馈</button>
+        </div>
+        <section id="announcement-panel" class="communication-panel" role="tabpanel" aria-labelledby="announcement-tab">
+          <div class="announcement-toolbar">
+            <div>
+              <small>由开发者发布</small>
+              <strong>最新航站公告</strong>
+            </div>
+            <button id="announcement-refresh" class="secondary-button" type="button">刷新</button>
+          </div>
+          <div id="announcement-status" class="communication-status" aria-live="polite">正在连接公告频道……</div>
+          <div id="announcement-list" class="announcement-list"></div>
+        </section>
+        <section id="feedback-panel" class="communication-panel" role="tabpanel" aria-labelledby="feedback-tab" hidden>
+          <div id="feedback-login-notice" class="feedback-login-notice">
+            <span aria-hidden="true">⌾</span>
+            <div>
+              <strong>登录后即可直接反馈</strong>
+              <p>登录用于防止匿名滥用，并方便开发者确认问题；游戏不会公开你的邮箱或反馈内容。</p>
+            </div>
+            <button id="feedback-login-button" class="primary-button" type="button">前往登录</button>
+          </div>
+          <form id="feedback-form" class="feedback-form" hidden>
+            <div class="feedback-identity">
+              <small>提交账号</small>
+              <strong id="feedback-user-email">—</strong>
+            </div>
+            <label>
+              <span>反馈类型</span>
+              <select id="feedback-category" required>
+                <option value="bug">游戏 Bug</option>
+                <option value="balance">数值与平衡</option>
+                <option value="experience">界面与体验</option>
+                <option value="suggestion">玩法建议</option>
+                <option value="other">其他问题</option>
+              </select>
+            </label>
+            <label>
+              <span>问题或建议</span>
+              <textarea id="feedback-message" minlength="10" maxlength="2000" rows="7" required placeholder="请描述发生了什么、你希望如何改进；如果是 Bug，建议附上操作步骤。"></textarea>
+              <small><output id="feedback-character-count">0</output> / 2000</small>
+            </label>
+            <label>
+              <span>补充联系方式（选填）</span>
+              <input id="feedback-contact" type="text" maxlength="120" placeholder="微信、Discord 或其他方便联系的方式" />
+            </label>
+            <p class="feedback-privacy">提交时会附带游戏版本、玩家名称和登录邮箱，便于定位存档版本；不会附带完整游戏存档或 Google 密码。</p>
+            <div id="feedback-status" class="communication-status" aria-live="polite"></div>
+            <button id="feedback-submit" class="primary-button" type="submit">发送给开发者</button>
+          </form>
+        </section>
       </section>
     </div>
 
@@ -1708,9 +1787,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.19.0"></script>
-    <script src="game.js?v=0.19.0"></script>
-    <script src="firebase-config.js?v=0.19.0"></script>
-    <script type="module" src="cloud-save.js?v=0.19.0"></script>
+    <script src="game-math.js?v=0.19.1"></script>
+    <script src="game.js?v=0.19.1"></script>
+    <script src="firebase-config.js?v=0.19.1"></script>
+    <script type="module" src="cloud-save.js?v=0.19.1"></script>
   </body>
 </html>

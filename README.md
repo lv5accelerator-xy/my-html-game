@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://lv5accelerator-xy.github.io/my-html-game/"><strong>▶ 在线试玩</strong></a>
   ·
-  <a href="星港拾荒者-v0.1.0-v0.19.0-Patch-Notes.txt">完整更新记录</a>
+  <a href="星港拾荒者-v0.1.0-v0.19.1-Patch-Notes.txt">完整更新记录</a>
   ·
   <a href="历史版本/README.md">历史版本</a>
 </p>
@@ -40,11 +40,13 @@
 - **航站委托**：每日与每周任务记录实际游玩行为，凭证可兑换星尘、材料和舰队整备。
 - **星区远征**：在五段式短局中选择舰装、临时协议与航线，在第五航段迎战两阶段机制首领。
 - **排行榜**：登录后可比较累计星尘、最高战力、战斗次数、完整远征、首领击破和远征遗物。
+- **航站通讯**：在游戏内阅读运营公告；登录后可直接提交问题、建议与联系方式。
 
 ## 当前版本
 
-当前航站协议为 **v0.19.0**。
+当前航站协议为 **v0.19.1**。
 
+- v0.19.1：新增航站公告、未读/重要公告提示与登录玩家问题反馈入口，并补充独立的 Firebase 管理指南。
 - v0.19.0：新增五项航站作业、固定专精、共享工程池与六类组件，并加入渐进导航、单一当前建议和新系统首次说明。
 - v0.18.0：新增三舰队编成、3 套方案、克制型阵型与武器、整备资源消耗和固定规则个人周榜。
 - v0.17.3：修复远征配装嵌套数组导致 Firestore 拒绝云存档的问题，并兼容读取旧格式云档。
@@ -57,7 +59,7 @@
 - v0.14.0：新增每日/每周航站委托、凭证兑换商店与自动新版本提示。
 - v0.13.8：让已解锁伴星以独立颜色、光晕和轨道出现在指挥台，并支持点击查看介绍。
 
-完整版本变化见 [Patch Notes](星港拾荒者-v0.1.0-v0.19.0-Patch-Notes.txt)。
+完整版本变化见 [Patch Notes](星港拾荒者-v0.1.0-v0.19.1-Patch-Notes.txt)。
 
 ## 开始游玩
 
@@ -87,7 +89,7 @@ python -m http.server 8000
 - 基础离线收益最多累计 8 小时，后续可通过永久强化延长。
 - Google 登录与 Firebase 云存档属于可选功能；未连接云服务时，本地游戏不受影响。
 
-云端配置说明见 [FIREBASE-SETUP.txt](FIREBASE-SETUP.txt)。
+云端配置说明见 [FIREBASE-SETUP.txt](FIREBASE-SETUP.txt)，公告发布与反馈处理流程见 [COMMUNICATIONS-GUIDE.txt](COMMUNICATIONS-GUIDE.txt)。
 
 ## 移动端与性能
 
@@ -108,9 +110,10 @@ my-html-game/
 ├─ styles.css              # 界面、响应式布局与视觉效果
 ├─ game.js                 # 游戏状态、玩法、存档和渲染逻辑
 ├─ game-math.js            # 数值安全、软上限与格式化函数
-├─ cloud-save.js           # Google 登录、云存档与排行榜
+├─ cloud-save.js           # Google 登录、云存档、排行榜与航站通讯
 ├─ firebase-config.js      # Firebase Web 配置
-├─ firestore.rules         # 云存档与排行榜访问规则
+├─ firestore.rules         # 云存档、排行榜、公告与反馈访问规则
+├─ COMMUNICATIONS-GUIDE.txt # 公告发布与玩家反馈处理指南
 ├─ assets/                 # 星港图片与原创背景音乐
 ├─ tests/                  # 数值、浏览器和移动端回归测试
 └─ 历史版本/               # 各正式版本 ZIP 归档

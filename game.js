@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.19.0";
-  const PATCH_NOTES_VERSION = "0.19.0";
+  const GAME_VERSION = "0.19.1";
+  const PATCH_NOTES_VERSION = "0.19.1";
   const SAVE_VERSION = 12;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -114,6 +114,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.19.1",
+      theme: "航站通讯中心",
+      changes: [
+        "设置菜单新增航站公告入口，公告由 Firebase 读取并按发布时间由新到旧排列。",
+        "重要公告会在每台设备首次读取时自动打开一次；普通公告通过未读数量提醒，不打断挂机流程。",
+        "新增游戏内问题反馈表单：登录玩家可选择 Bug、数值、体验或玩法建议，内容直接发送到开发者 Firebase 控制台。",
+        "反馈不会上传完整存档；玩家不能读取、修改或删除任何反馈记录，公告客户端也没有发布权限。",
+        "新增公告发布说明与 Firestore 安全规则，手机端通讯中心采用单列自适应布局。",
+      ],
+    },
     {
       version: "0.19.0",
       theme: "航站作业与渐进指引",
@@ -2472,6 +2483,8 @@
     accountButton: $("#account-button"),
     accountBackdrop: $("#account-backdrop"),
     accountClose: $("#account-close"),
+    communicationBackdrop: $("#communication-backdrop"),
+    communicationClose: $("#communication-close"),
     nameBackdrop: $("#name-backdrop"),
     nameModalTitle: $("#name-modal-title"),
     nameModalMessage: $("#name-modal-message"),
@@ -8353,6 +8366,7 @@
       !elements.tutorialBackdrop.hidden ||
       !elements.patchNotesBackdrop.hidden ||
       !elements.crescentLetterBackdrop.hidden ||
+      !elements.communicationBackdrop.hidden ||
       !elements.accountBackdrop.hidden
     ) {
       window.setTimeout(showStartupNotices, 240);
@@ -11480,6 +11494,7 @@
           !elements.nameBackdrop.hidden ||
           !elements.patchNotesBackdrop.hidden ||
           !elements.crescentLetterBackdrop.hidden ||
+          !elements.communicationBackdrop.hidden ||
           !elements.accountBackdrop.hidden)
       ) {
         return;
@@ -11495,6 +11510,7 @@
         elements.settingsMenu.hidden = true;
         if (!elements.patchNotesBackdrop.hidden) closePatchNotes();
         if (!elements.crescentLetterBackdrop.hidden) closeCrescentLetter();
+        if (!elements.communicationBackdrop.hidden) elements.communicationClose.click();
         if (!elements.accountBackdrop.hidden) elements.accountClose.click();
         if (!elements.tutorialBackdrop.hidden) closeTutorial(false);
         if (!elements.modalBackdrop.hidden && !elements.modalCancel.hidden) closeModal(false);

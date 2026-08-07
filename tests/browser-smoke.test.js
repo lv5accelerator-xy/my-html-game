@@ -61,7 +61,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.19.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.19.1");
   }, {
     version: 5,
     playerName: "测试指挥官",
@@ -133,10 +133,11 @@ async function main() {
       })(),
       fleetCommand: window.StellarOutpostCloudBridge.getFleetCommandDiagnostics(),
       operations: window.StellarOutpostCloudBridge.getOperationsDiagnostics(),
+      communicationsReady: Boolean(window.StellarCommunicationsBridge),
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.19.0");
+    assert.equal(snapshot.gameVersion, "0.19.1");
     assert.equal(snapshot.saveVersion, 12);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
@@ -144,7 +145,7 @@ async function main() {
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.19\.0/);
+    assert.match(snapshot.footer, /v0\.19\.1/);
     assert.equal(snapshot.fleetCommand.presets.length, 3);
     assert.equal(snapshot.fleetCommand.challenge.phases.length, 3);
     assert.equal(snapshot.fleetCommand.ammo, 12);
@@ -153,6 +154,22 @@ async function main() {
     assert.equal(Object.keys(snapshot.operations.jobs).length, 5);
     assert.equal(Object.keys(snapshot.operations.components).length, 6);
     assert.equal(snapshot.operations.queueSlots, 2);
+    assert.equal(snapshot.communicationsReady, true);
+
+    await page.evaluate(() => window.StellarCommunicationsBridge.openFeedback());
+    const communicationUi = await page.evaluate(() => ({
+      open: !document.querySelector("#communication-backdrop").hidden,
+      feedbackVisible: !document.querySelector("#feedback-panel").hidden,
+      loginNoticeVisible: !document.querySelector("#feedback-login-notice").hidden,
+      formHidden: document.querySelector("#feedback-form").hidden,
+      categories: document.querySelectorAll("#feedback-category option").length,
+    }));
+    assert.equal(communicationUi.open, true);
+    assert.equal(communicationUi.feedbackVisible, true);
+    assert.equal(communicationUi.loginNoticeVisible, true);
+    assert.equal(communicationUi.formHidden, true);
+    assert.equal(communicationUi.categories, 5);
+    await page.click("#communication-close");
     assert.equal(snapshot.lockedHidden, true, "unlock should hide the locked card");
     assert.equal(snapshot.lockedDisplay, "none", "locked card must be visually hidden");
     assert.equal(snapshot.lockedRects, 0, "locked card must occupy no rendered area");
@@ -937,7 +954,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.19.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.19.2"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -946,7 +963,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.19\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.19\.2/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

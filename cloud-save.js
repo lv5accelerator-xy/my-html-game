@@ -3,11 +3,17 @@ const FIREBASE_SDK_ROOT =
   `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}`;
 const CLOUD_COLLECTION = "saves";
 const LEADERBOARD_COLLECTION = "leaderboards";
+const ANNOUNCEMENT_COLLECTION = "announcements";
+const FEEDBACK_COLLECTION = "feedback";
 const AUTO_SYNC_DELAY = 45_000;
 const LEADERBOARD_SYNC_DELAY = 60_000;
 const LEADERBOARD_LIMIT = 50;
 const MAX_CLOUD_SNAPSHOT_BYTES = 700_000;
 const DEVICE_ID_KEY = "stellarOutpostCloudDeviceId_v1";
+const ANNOUNCEMENT_READ_KEY = "stellarOutpostAnnouncementRead_v1";
+const ANNOUNCEMENT_AUTO_SHOWN_KEY = "stellarOutpostAnnouncementAutoShown_v1";
+const FEEDBACK_LAST_SENT_KEY = "stellarOutpostFeedbackLastSent_v1";
+const FEEDBACK_COOLDOWN = 60_000;
 
 const $ = (selector) => document.querySelector(selector);
 const elements = {
@@ -16,6 +22,29 @@ const elements = {
   cloudMenuButton: $("#cloud-menu-button"),
   cloudMenuStatus: $("#cloud-menu-status"),
   settingsMenu: $("#settings-menu"),
+  announcementsButton: $("#announcements-button"),
+  announcementsMenuStatus: $("#announcements-menu-status"),
+  feedbackButton: $("#feedback-button"),
+  communicationBackdrop: $("#communication-backdrop"),
+  communicationClose: $("#communication-close"),
+  announcementTab: $("#announcement-tab"),
+  feedbackTab: $("#feedback-tab"),
+  announcementPanel: $("#announcement-panel"),
+  feedbackPanel: $("#feedback-panel"),
+  announcementUnreadBadge: $("#announcement-unread-badge"),
+  announcementRefresh: $("#announcement-refresh"),
+  announcementStatus: $("#announcement-status"),
+  announcementList: $("#announcement-list"),
+  feedbackLoginNotice: $("#feedback-login-notice"),
+  feedbackLoginButton: $("#feedback-login-button"),
+  feedbackForm: $("#feedback-form"),
+  feedbackUserEmail: $("#feedback-user-email"),
+  feedbackCategory: $("#feedback-category"),
+  feedbackMessage: $("#feedback-message"),
+  feedbackContact: $("#feedback-contact"),
+  feedbackCharacterCount: $("#feedback-character-count"),
+  feedbackStatus: $("#feedback-status"),
+  feedbackSubmit: $("#feedback-submit"),
   backdrop: $("#account-backdrop"),
   close: $("#account-close"),
   banner: $("#cloud-service-banner"),
@@ -77,6 +106,9 @@ let serviceReady = false;
 let leaderboardCategory = "careerDust";
 let leaderboardTimer = null;
 let leaderboardBusy = false;
+let announcements = [];
+let announcementBusy = false;
+let feedbackBusy = false;
 
 function getDeviceId() {
   try {
@@ -208,6 +240,310 @@ function friendlyError(error) {
   };
   return messages[code] ||
     `云端航站暂时无法完成操作（${code || "unknown"}），请稍后重试。`;
+}
+
+function readStoredIdSet(key) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+    return new Set(Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : []);
+  } catch (error) {
+    return new Set();
+  }
+}
+
+function writeStoredIdSet(key, ids) {
+  try {
+    localStorage.setItem(key, JSON.stringify([...ids].slice(-80)));
+  } catch (error) {
+    // The center still works for the current session when storage is unavailable.
+  }
+}
+
+function communicationTimestamp(value) {
+  if (value && typeof value.toMillis === "function") return value.toMillis();
+  if (value instanceof Date) return value.getTime();
+  return Math.max(0, Number(value) || 0);
+}
+
+function formatAnnouncementTime(value) {
+  const timestamp = communicationTimestamp(value);
+  if (!timestamp) return "发布时间未设置";
+  return new Date(timestamp).toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function setCommunicationStatus(element, message, kind = "") {
+  element.textContent = message;
+  element.className = `communication-status ${kind}`.trim();
+}
+
+function getUnreadAnnouncementIds() {
+  const readIds = readStoredIdSet(ANNOUNCEMENT_READ_KEY);
+  return announcements.filter((announcement) => !readIds.has(announcement.id));
+}
+
+function updateAnnouncementBadge() {
+  const unread = getUnreadAnnouncementIds().length;
+  elements.announcementUnreadBadge.hidden = unread === 0;
+  elements.announcementUnreadBadge.textContent = String(unread);
+  elements.announcementsMenuStatus.textContent = unread > 0 ? `新 ${unread}` : "查看";
+  elements.announcementsButton.classList.toggle("has-update", unread > 0);
+}
+
+function markAnnouncementsRead() {
+  if (!announcements.length) return;
+  const readIds = readStoredIdSet(ANNOUNCEMENT_READ_KEY);
+  announcements.forEach((announcement) => readIds.add(announcement.id));
+  writeStoredIdSet(ANNOUNCEMENT_READ_KEY, readIds);
+  updateAnnouncementBadge();
+  renderAnnouncements();
+}
+
+function renderAnnouncements() {
+  elements.announcementList.textContent = "";
+  const readIds = readStoredIdSet(ANNOUNCEMENT_READ_KEY);
+  if (!announcements.length) {
+    const empty = document.createElement("div");
+    empty.className = "announcement-empty";
+    empty.textContent = "目前没有已发布公告。新公告会在这里显示。";
+    elements.announcementList.appendChild(empty);
+    updateAnnouncementBadge();
+    return;
+  }
+  announcements.forEach((announcement) => {
+    const card = document.createElement("article");
+    card.className = `announcement-card${
+      announcement.priority === "important" ? " important" : ""
+    }${readIds.has(announcement.id) ? "" : " unread"}`;
+    const header = document.createElement("header");
+    const badge = document.createElement("span");
+    badge.textContent = announcement.priority === "important" ? "重要公告" : "航站公告";
+    header.appendChild(badge);
+    const title = document.createElement("h3");
+    title.textContent = announcement.title;
+    const body = document.createElement("p");
+    body.textContent = announcement.body;
+    const time = document.createElement("time");
+    time.dateTime = announcement.publishedAt
+      ? new Date(announcement.publishedAt).toISOString()
+      : "";
+    time.textContent = formatAnnouncementTime(announcement.publishedAt);
+    card.append(header, title, body, time);
+    elements.announcementList.appendChild(card);
+  });
+  updateAnnouncementBadge();
+}
+
+function normalizeAnnouncement(documentSnapshot) {
+  const data = documentSnapshot?.data?.();
+  if (!data || data.published !== true) return null;
+  const title = String(data.title || "").trim().slice(0, 80);
+  const body = String(data.body || "").trim().slice(0, 4000);
+  if (!title || !body) return null;
+  const expiresAt = communicationTimestamp(data.expiresAt);
+  if (expiresAt > 0 && expiresAt <= Date.now()) return null;
+  return {
+    id: documentSnapshot.id,
+    title,
+    body,
+    priority: data.priority === "important" ? "important" : "normal",
+    publishedAt: communicationTimestamp(data.publishedAt),
+    expiresAt,
+  };
+}
+
+function maybeAutoOpenImportantAnnouncement() {
+  const shownIds = readStoredIdSet(ANNOUNCEMENT_AUTO_SHOWN_KEY);
+  const important = announcements.find(
+    (announcement) => announcement.priority === "important" && !shownIds.has(announcement.id),
+  );
+  if (!important) return;
+  let attempts = 0;
+  const tryOpen = () => {
+    attempts += 1;
+    const anotherDialogOpen = document.querySelector(
+      ".modal-backdrop:not([hidden])",
+    );
+    if (anotherDialogOpen) {
+      if (attempts < 7) window.setTimeout(tryOpen, 2200);
+      return;
+    }
+    shownIds.add(important.id);
+    writeStoredIdSet(ANNOUNCEMENT_AUTO_SHOWN_KEY, shownIds);
+    openCommunication("announcements");
+  };
+  window.setTimeout(tryOpen, 1600);
+}
+
+async function loadAnnouncements({ silent = false } = {}) {
+  if (announcementBusy || !db || !firebaseFirestoreApi) return;
+  announcementBusy = true;
+  elements.announcementRefresh.disabled = true;
+  if (!silent) setCommunicationStatus(elements.announcementStatus, "正在读取最新公告……");
+  try {
+    const announcementQuery = firebaseFirestoreApi.query(
+      firebaseFirestoreApi.collection(db, ANNOUNCEMENT_COLLECTION),
+      firebaseFirestoreApi.where("published", "==", true),
+      firebaseFirestoreApi.limit(30),
+    );
+    const snapshot = await firebaseFirestoreApi.getDocs(announcementQuery);
+    announcements = snapshot.docs
+      .map(normalizeAnnouncement)
+      .filter(Boolean)
+      .sort((left, right) => right.publishedAt - left.publishedAt);
+    renderAnnouncements();
+    setCommunicationStatus(
+      elements.announcementStatus,
+      announcements.length
+        ? `已载入 ${announcements.length} 条公告，按发布时间由新到旧排列。`
+        : "公告频道已连接。",
+      "success",
+    );
+    maybeAutoOpenImportantAnnouncement();
+  } catch (error) {
+    setCommunicationStatus(
+      elements.announcementStatus,
+      error?.code === "permission-denied"
+        ? "公告安全规则尚未发布，请部署最新版 firestore.rules。"
+        : friendlyError(error),
+      "error",
+    );
+    if (!announcements.length) renderAnnouncements();
+  } finally {
+    announcementBusy = false;
+    elements.announcementRefresh.disabled = false;
+  }
+}
+
+function activateCommunicationTab(tabName) {
+  const showFeedback = tabName === "feedback";
+  elements.announcementTab.classList.toggle("active", !showFeedback);
+  elements.feedbackTab.classList.toggle("active", showFeedback);
+  elements.announcementTab.setAttribute("aria-selected", String(!showFeedback));
+  elements.feedbackTab.setAttribute("aria-selected", String(showFeedback));
+  elements.announcementPanel.hidden = showFeedback;
+  elements.feedbackPanel.hidden = !showFeedback;
+  if (showFeedback) {
+    updateFeedbackAccessState();
+  } else {
+    markAnnouncementsRead();
+  }
+}
+
+function openCommunication(tabName = "announcements") {
+  elements.settingsMenu.hidden = true;
+  elements.communicationBackdrop.hidden = false;
+  document.body.classList.add("communication-open");
+  activateCommunicationTab(tabName);
+  window.requestAnimationFrame(() => {
+    if (tabName === "feedback" && currentUser) elements.feedbackMessage.focus();
+    else if (tabName === "feedback") elements.feedbackLoginButton.focus();
+    else elements.communicationClose.focus();
+  });
+}
+
+function closeCommunication() {
+  elements.communicationBackdrop.hidden = true;
+  document.body.classList.remove("communication-open");
+}
+
+function updateFeedbackAccessState() {
+  const canSubmit = Boolean(currentUser && serviceReady && db);
+  elements.feedbackLoginNotice.hidden = canSubmit;
+  elements.feedbackForm.hidden = !canSubmit;
+  elements.feedbackUserEmail.textContent = currentUser?.email || "已验证账号";
+  elements.feedbackSubmit.disabled = feedbackBusy || !canSubmit;
+  if (!serviceReady) {
+    setCommunicationStatus(
+      elements.feedbackStatus,
+      "反馈服务尚未连接，本地游戏与存档不受影响。",
+      "error",
+    );
+  } else if (canSubmit && !feedbackBusy && !elements.feedbackStatus.textContent) {
+    setCommunicationStatus(elements.feedbackStatus, "反馈会直接保存到开发者的 Firebase 控制台。", "");
+  }
+}
+
+async function submitFeedback(event) {
+  event.preventDefault();
+  if (feedbackBusy || !currentUser || !db || !bridge) {
+    updateFeedbackAccessState();
+    return;
+  }
+  const message = elements.feedbackMessage.value.trim();
+  const contact = elements.feedbackContact.value.trim().slice(0, 120);
+  if (message.length < 10) {
+    setCommunicationStatus(elements.feedbackStatus, "请至少填写 10 个字符，方便开发者理解问题。", "error");
+    elements.feedbackMessage.focus();
+    return;
+  }
+  let lastSentAt = 0;
+  try {
+    lastSentAt = Number(localStorage.getItem(FEEDBACK_LAST_SENT_KEY)) || 0;
+  } catch (error) {
+    lastSentAt = 0;
+  }
+  const waitMs = FEEDBACK_COOLDOWN - (Date.now() - lastSentAt);
+  if (waitMs > 0) {
+    setCommunicationStatus(
+      elements.feedbackStatus,
+      `为防止重复提交，请 ${Math.ceil(waitMs / 1000)} 秒后再发送。`,
+      "error",
+    );
+    return;
+  }
+  feedbackBusy = true;
+  elements.feedbackSubmit.disabled = true;
+  elements.feedbackSubmit.textContent = "正在发送……";
+  setCommunicationStatus(elements.feedbackStatus, "正在连接反馈频道……");
+  try {
+    const metadata = bridge.getMetadata(bridge.createSnapshot());
+    await firebaseFirestoreApi.addDoc(
+      firebaseFirestoreApi.collection(db, FEEDBACK_COLLECTION),
+      {
+        userId: currentUser.uid,
+        userEmail: String(currentUser.email || "").slice(0, 254),
+        playerName: String(metadata.playerName || "未命名指挥官").slice(0, 24),
+        gameVersion: String(bridge.gameVersion || "unknown").slice(0, 20),
+        category: elements.feedbackCategory.value,
+        message: message.slice(0, 2000),
+        contact,
+        status: "new",
+        createdAt: firebaseFirestoreApi.serverTimestamp(),
+      },
+    );
+    try {
+      localStorage.setItem(FEEDBACK_LAST_SENT_KEY, String(Date.now()));
+    } catch (error) {
+      // Cooldown remains best-effort when browser storage is unavailable.
+    }
+    elements.feedbackMessage.value = "";
+    elements.feedbackContact.value = "";
+    elements.feedbackCharacterCount.textContent = "0";
+    setCommunicationStatus(
+      elements.feedbackStatus,
+      "反馈已发送给开发者，感谢你帮助改进航站。",
+      "success",
+    );
+    bridge.notify("反馈发送成功", "开发者可以在 Firebase 控制台中看到这条记录。", "✓");
+  } catch (error) {
+    setCommunicationStatus(
+      elements.feedbackStatus,
+      error?.code === "permission-denied"
+        ? "反馈安全规则尚未生效，或登录状态已经过期。"
+        : friendlyError(error),
+      "error",
+    );
+  } finally {
+    feedbackBusy = false;
+    elements.feedbackSubmit.disabled = false;
+    elements.feedbackSubmit.textContent = "发送给开发者";
+  }
 }
 
 function formatDuration(seconds) {
@@ -933,6 +1269,7 @@ function chooseCloudSave() {
 
 async function handleSignedIn(user) {
   currentUser = user;
+  updateFeedbackAccessState();
   elements.userEmail.textContent = user.email || "已验证账号";
   setView("signed-in");
   setBanner(
@@ -1001,6 +1338,7 @@ async function handleSignedIn(user) {
 
 function handleSignedOut() {
   currentUser = null;
+  updateFeedbackAccessState();
   knownRevision = null;
   remoteRecord = null;
   syncReady = false;
@@ -1064,6 +1402,40 @@ async function signOutAccount() {
 }
 
 function bindUi() {
+  elements.announcementsButton.addEventListener("click", () =>
+    openCommunication("announcements"),
+  );
+  elements.feedbackButton.addEventListener("click", () =>
+    openCommunication("feedback"),
+  );
+  elements.communicationClose.addEventListener("click", closeCommunication);
+  elements.communicationBackdrop.addEventListener("click", (event) => {
+    if (event.target === elements.communicationBackdrop) closeCommunication();
+  });
+  elements.announcementTab.addEventListener("click", () =>
+    activateCommunicationTab("announcements"),
+  );
+  elements.feedbackTab.addEventListener("click", () =>
+    activateCommunicationTab("feedback"),
+  );
+  elements.announcementRefresh.addEventListener("click", () =>
+    loadAnnouncements(),
+  );
+  elements.feedbackLoginButton.addEventListener("click", () => {
+    closeCommunication();
+    openAccount();
+  });
+  elements.feedbackMessage.addEventListener("input", () => {
+    elements.feedbackCharacterCount.textContent = String(
+      elements.feedbackMessage.value.length,
+    );
+  });
+  elements.feedbackForm.addEventListener("submit", submitFeedback);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !elements.communicationBackdrop.hidden) {
+      closeCommunication();
+    }
+  });
   elements.accountButton.addEventListener("click", openAccount);
   elements.cloudMenuButton.addEventListener("click", openAccount);
   elements.close.addEventListener("click", closeAccount);
@@ -1204,6 +1576,10 @@ async function initializeCloudService() {
     );
     serviceReady = true;
     updateLeaderboardAccessState();
+    updateFeedbackAccessState();
+    loadAnnouncements().catch(() => {
+      // The communications panel exposes a retry button and the precise error.
+    });
     firebaseAuthApi.onAuthStateChanged(auth, (user) => {
       if (user) {
         handleSignedIn(user);
@@ -1222,7 +1598,25 @@ async function initializeCloudService() {
     );
     setCloudState("error", "异常", "账号与云端存档 · 连接失败");
     updateLeaderboardAccessState();
+    updateFeedbackAccessState();
+    setCommunicationStatus(
+      elements.announcementStatus,
+      "公告服务连接失败，请稍后刷新。",
+      "error",
+    );
   }
 }
+
+globalThis.StellarCommunicationsBridge = Object.freeze({
+  openAnnouncements: () => openCommunication("announcements"),
+  openFeedback: () => openCommunication("feedback"),
+  getDiagnostics: () => ({
+    serviceReady,
+    signedIn: Boolean(currentUser),
+    announcementCount: announcements.length,
+    unreadCount: getUnreadAnnouncementIds().length,
+    feedbackBusy,
+  }),
+});
 
 initializeCloudService();

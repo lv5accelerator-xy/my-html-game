@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.19.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.19.1");
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
     version: 6,
@@ -134,6 +134,18 @@ async function main() {
     assert.equal(operationsLayout.compactNavigation, true);
     assert.ok(operationsLayout.pageWidth <= operationsLayout.viewportWidth);
     assert.ok(operationsLayout.hubWidth <= operationsLayout.viewportWidth);
+
+    await page.evaluate(() => window.StellarCommunicationsBridge.openFeedback());
+    const communicationLayout = await page.evaluate(() => ({
+      viewportWidth: document.documentElement.clientWidth,
+      pageWidth: document.documentElement.scrollWidth,
+      modalWidth: document.querySelector(".communication-modal").scrollWidth,
+      formCategories: document.querySelectorAll("#feedback-category option").length,
+    }));
+    assert.equal(communicationLayout.formCategories, 5);
+    assert.ok(communicationLayout.pageWidth <= communicationLayout.viewportWidth);
+    assert.ok(communicationLayout.modalWidth <= communicationLayout.viewportWidth);
+    await page.click("#communication-close");
 
     await page.click("#fleet-page-tab");
 

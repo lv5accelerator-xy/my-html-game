@@ -1,0 +1,81 @@
+《星港拾荒者》公告发布与玩家反馈查看说明
+适用版本：v0.19.1
+
+============================================================
+
+一、首次启用
+
+1. 打开 Firebase Console：
+   https://console.firebase.google.com/project/stellar-outpost-idle/firestore
+2. 进入 Firestore Database → 规则。
+3. 将仓库中的 firestore.rules 完整复制进去并点击“发布”。
+4. 规则生效后，游戏会自动连接 announcements 与 feedback 集合。
+
+============================================================
+
+二、发布公告
+
+进入 Firestore Database → 数据：
+
+1. 点击“开始集合”或“添加集合”。
+2. 集合 ID 必须填写：announcements
+3. 文档 ID 选择“自动生成”。
+4. 添加以下字段：
+
+   title       字符串     公告标题，建议不超过 40 字
+   body        字符串     公告正文，支持换行
+   priority    字符串     normal 或 important
+   published   布尔值     true
+   publishedAt 时间戳     公告正式发布时间
+
+5. 可选字段：
+
+   expiresAt   时间戳     到达该时间后客户端不再显示；不填则长期保留
+
+说明：
+
+- priority=normal：仅显示未读数量，不主动打断玩家。
+- priority=important：每台设备第一次读取时会自动打开公告中心一次。
+- 公告按 publishedAt 从新到旧排列。
+- 将 published 改为 false 即可撤下公告。
+- 不要把草稿设置为 published=true；客户端只允许读取已发布记录。
+
+示例：
+
+title       = v0.19.1 已发布
+body        = 航站通讯中心现已上线。遇到问题可以在设置 → 问题反馈中直接告诉我。
+priority    = important
+published   = true
+publishedAt = 当前时间
+
+============================================================
+
+三、查看玩家反馈
+
+进入 Firestore Database → 数据 → feedback。
+
+每条文档包含：
+
+- category：bug、balance、experience、suggestion 或 other
+- message：玩家填写的问题或建议
+- contact：玩家选填的补充联系方式
+- playerName：游戏内玩家名称
+- userEmail：登录 Google 邮箱
+- gameVersion：提交时的游戏版本
+- userId：Firebase Authentication UID
+- createdAt：提交时间
+- status：新反馈固定为 new
+
+你可以直接在 Firebase 控制台中把 status 改为 reading、resolved 等自定义状态。
+玩家端没有读取、修改或删除反馈的权限，其他玩家也无法看到这些内容。
+
+============================================================
+
+四、隐私与防滥用
+
+- 只有 Firebase 登录玩家可以提交反馈。
+- 每台设备提交后有 60 秒冷却，减少误触重复发送。
+- 单条正文限制为 10 至 2000 字符，联系方式限制为 120 字符。
+- 不会上传完整游戏存档、Google 密码或其他浏览器数据。
+- Firebase 控制台管理员仍可查看和管理所有记录。
+

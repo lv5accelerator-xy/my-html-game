@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.20.1";
-  const PATCH_NOTES_VERSION = "0.20.1";
+  const GAME_VERSION = "0.21.0";
+  const PATCH_NOTES_VERSION = "0.21.0";
   const SAVE_VERSION = 13;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -92,6 +92,37 @@
   const CAREER_DUST_CAP = 999000000;
   const CORE_RESERVE_CAP = 999000000;
   const ENDGAME_RESOURCE_CAP = 999000000;
+  const BGM_PLAYLIST_SELECTION = "playlist";
+  const BGM_TRACKS = Object.freeze([
+    Object.freeze({
+      id: "outpost-beyond-orion",
+      title: "猎户座外的前哨",
+      src: "assets/outpost-beyond-orion.mp3?v=0.21.0",
+      loopStartSeconds: 0.2,
+      loopEndTrimSeconds: 3.7,
+    }),
+    Object.freeze({
+      id: "outpost-beyond-orion-2",
+      title: "猎户座外·静默航线",
+      src: "assets/outpost-beyond-orion-2.mp3?v=0.21.0",
+      loopStartSeconds: 0.1,
+      loopEndTrimSeconds: 2.6,
+    }),
+    Object.freeze({
+      id: "signal-at-kestrel-nine",
+      title: "红隼九号信号",
+      src: "assets/signal-at-kestrel-nine.mp3?v=0.21.0",
+      loopStartSeconds: 0.7,
+      loopEndTrimSeconds: 0,
+    }),
+    Object.freeze({
+      id: "signal-at-kestrel-nine-2",
+      title: "红隼九号·深空回声",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.21.0",
+      loopStartSeconds: 0.7,
+      loopEndTrimSeconds: 2,
+    }),
+  ]);
   const LEGACY_DUST_SOFT_CAP = 10000000;
   const LEGACY_DUST_LATE_POWER = 0.1;
   const LEGACY_CORE_SOFT_CAP = 5000;
@@ -123,6 +154,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.21.0",
+      theme: "深空声轨",
+      changes: [
+        "背景音乐替换为仓库作者原创制作的四首深空乐章，并移除最早的原航站乐章。",
+        "设置菜单新增背景音乐选择，可使用四首自动轮播，也可固定播放任意单曲。",
+        "曲目选择写入本地与云端存档；今后增加新 MP3 只需登记曲目信息即可加入播放列表。",
+        "《Outpost Beyond Orion》循环时会跳过开头约 0.2 秒与结尾约 3.7 秒静音，减少每轮之间的明显停顿。",
+        "默认音量继续保持 22%，音频回归检查覆盖播放列表、选曲存档与循环参数。",
+      ],
+    },
     {
       version: "0.20.1",
       theme: "星尘储量扩容",
@@ -2653,6 +2695,7 @@
     performanceStatus: $("#performance-status"),
     bgmButton: $("#bgm-button"),
     bgmStatus: $("#bgm-status"),
+    bgmTrack: $("#bgm-track"),
     bgmVolume: $("#bgm-volume"),
     bgmVolumeValue: $("#bgm-volume-value"),
     bgmAudio: $("#bgm-audio"),
@@ -3117,6 +3160,7 @@
       buyMode: "1",
       sound: true,
       bgmEnabled: true,
+      bgmTrackSelection: BGM_PLAYLIST_SELECTION,
       bgmVolume: 0.22,
       playTime: 0,
       lastSeen: Date.now(),
@@ -3152,6 +3196,8 @@
   let lastSave = Date.now();
   let modalCallback = null;
   let audioContext = null;
+  let currentBgmTrackIndex = 0;
+  let bgmTrackSwitchInProgress = false;
   let tutorialIndex = 0;
   let nameDialogRequired = false;
   let patchNotesAutoOpened = false;
@@ -6937,6 +6983,13 @@
     merged.playTime = clampGameNumber(raw.playTime);
     merged.sound = raw.sound !== false;
     merged.bgmEnabled = raw.bgmEnabled !== false;
+    const savedBgmTrackSelection = String(raw.bgmTrackSelection || "");
+    merged.bgmTrackSelection = (
+      savedBgmTrackSelection === BGM_PLAYLIST_SELECTION
+      || BGM_TRACKS.some((track) => track.id === savedBgmTrackSelection)
+    )
+      ? savedBgmTrackSelection
+      : base.bgmTrackSelection;
     const savedBgmVolume = Number(raw.bgmVolume);
     merged.bgmVolume = clamp(
       Number.isFinite(savedBgmVolume) ? savedBgmVolume : base.bgmVolume,
@@ -9075,6 +9128,66 @@
     }
   }
 
+  function getCurrentBgmTrack() {
+    return BGM_TRACKS[currentBgmTrackIndex] || BGM_TRACKS[0];
+  }
+
+  function getBgmTrackIndex(trackId) {
+    const index = BGM_TRACKS.findIndex((track) => track.id === trackId);
+    return index >= 0 ? index : 0;
+  }
+
+  function applyBgmTrack(trackIndex, { autoplay = false, restart = false } = {}) {
+    const normalizedIndex = (
+      (Math.trunc(trackIndex) % BGM_TRACKS.length) + BGM_TRACKS.length
+    ) % BGM_TRACKS.length;
+    const track = BGM_TRACKS[normalizedIndex];
+    const changed = elements.bgmAudio.dataset.trackId !== track.id;
+    currentBgmTrackIndex = normalizedIndex;
+    elements.bgmAudio.dataset.trackId = track.id;
+    elements.bgmAudio.dataset.trackTitle = track.title;
+    elements.bgmAudio.dataset.loopStartSeconds = String(track.loopStartSeconds);
+    elements.bgmAudio.dataset.loopEndTrimSeconds = String(track.loopEndTrimSeconds);
+    if (changed) {
+      bgmTrackSwitchInProgress = true;
+      elements.bgmAudio.pause();
+      elements.bgmAudio.src = track.src;
+      elements.bgmAudio.load();
+    } else if (restart && elements.bgmAudio.readyState >= 1) {
+      elements.bgmAudio.currentTime = track.loopStartSeconds;
+    }
+    if (autoplay && state.bgmEnabled) startBgm();
+  }
+
+  function syncBgmTrackSelection({ autoplay = false } = {}) {
+    const trackIndex = state.bgmTrackSelection === BGM_PLAYLIST_SELECTION
+      ? currentBgmTrackIndex
+      : getBgmTrackIndex(state.bgmTrackSelection);
+    applyBgmTrack(trackIndex, { autoplay });
+  }
+
+  function advanceBgmTrack() {
+    if (bgmTrackSwitchInProgress) return;
+    const nextIndex = state.bgmTrackSelection === BGM_PLAYLIST_SELECTION
+      ? (currentBgmTrackIndex + 1) % BGM_TRACKS.length
+      : getBgmTrackIndex(state.bgmTrackSelection);
+    applyBgmTrack(nextIndex, { autoplay: true, restart: true });
+  }
+
+  function maintainBgmLoop() {
+    const track = getCurrentBgmTrack();
+    const duration = Number(elements.bgmAudio.duration);
+    if (
+      !Number.isFinite(duration)
+      || duration <= 0
+      || track.loopEndTrimSeconds <= 0
+      || elements.bgmAudio.currentTime < duration - track.loopEndTrimSeconds
+    ) {
+      return;
+    }
+    advanceBgmTrack();
+  }
+
   function setBgmVolume() {
     elements.bgmAudio.volume = clamp(state.bgmVolume, 0, 1);
   }
@@ -9082,6 +9195,12 @@
   function startBgm() {
     if (!state.bgmEnabled || !elements.bgmAudio.paused) return;
     setBgmVolume();
+    if (
+      elements.bgmAudio.readyState >= 1
+      && elements.bgmAudio.currentTime < getCurrentBgmTrack().loopStartSeconds
+    ) {
+      elements.bgmAudio.currentTime = getCurrentBgmTrack().loopStartSeconds;
+    }
     elements.bgmAudio.play().catch(() => {
       // Browsers can require a pointer or keyboard gesture before media playback.
     });
@@ -9098,6 +9217,9 @@
       "aria-pressed",
       state.bgmEnabled ? "true" : "false",
     );
+    if (elements.bgmTrack.value !== state.bgmTrackSelection) {
+      elements.bgmTrack.value = state.bgmTrackSelection;
+    }
     const percentage = Math.round(state.bgmVolume * 100);
     if (Number(elements.bgmVolume.value) !== percentage) {
       elements.bgmVolume.value = String(percentage);
@@ -9106,6 +9228,7 @@
   }
 
   function syncBgmState() {
+    syncBgmTrackSelection();
     if (state.bgmEnabled) {
       setBgmVolume();
       startBgm();
@@ -12289,6 +12412,25 @@
       updateBgmControls();
     });
     elements.bgmVolume.addEventListener("change", () => saveGame());
+    elements.bgmTrack.addEventListener("change", () => {
+      state.bgmTrackSelection = elements.bgmTrack.value;
+      syncBgmTrackSelection({ autoplay: state.bgmEnabled });
+      const selectedTitle = state.bgmTrackSelection === BGM_PLAYLIST_SELECTION
+        ? "自动轮播"
+        : BGM_TRACKS[getBgmTrackIndex(state.bgmTrackSelection)].title;
+      showToast("背景音乐已切换", selectedTitle, "♫");
+      updateBgmControls();
+      saveGame();
+    });
+    elements.bgmAudio.addEventListener("loadedmetadata", () => {
+      bgmTrackSwitchInProgress = false;
+      const loopStartSeconds = getCurrentBgmTrack().loopStartSeconds;
+      if (elements.bgmAudio.currentTime < loopStartSeconds) {
+        elements.bgmAudio.currentTime = loopStartSeconds;
+      }
+    });
+    elements.bgmAudio.addEventListener("timeupdate", maintainBgmLoop);
+    elements.bgmAudio.addEventListener("ended", advanceBgmTrack);
     elements.menuButton.addEventListener("click", (event) => {
       event.stopPropagation();
       elements.settingsMenu.hidden = !elements.settingsMenu.hidden;
@@ -12464,6 +12606,7 @@
   setupStarfield();
   bindEvents();
   installVersionChecks();
+  syncBgmState();
   renderAll();
   globalThis.StellarOutpostCloudBridge = Object.freeze({
     gameVersion: GAME_VERSION,

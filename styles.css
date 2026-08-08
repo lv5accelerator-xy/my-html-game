@@ -490,14 +490,32 @@ a:focus-visible {
   background: rgba(255, 201, 104, 0.08);
 }
 
+.music-track,
 .music-volume {
   display: grid;
-  grid-template-columns: auto minmax(60px, 1fr) 34px;
   align-items: center;
   gap: 8px;
   padding: 8px 12px 10px;
   color: var(--muted);
   font-size: calc(9px * var(--type-scale));
+}
+
+.music-track {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.music-volume {
+  grid-template-columns: auto minmax(60px, 1fr) 34px;
+}
+
+.music-track select {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid rgba(94, 214, 255, 0.18);
+  border-radius: 8px;
+  color: #dff6ff;
+  background: #0b1a29;
+  font: inherit;
 }
 
 .music-volume input {

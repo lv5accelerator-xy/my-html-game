@@ -56,12 +56,19 @@ async function main() {
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("requestfailed", (request) => {
     if (request.url().startsWith(origin)) {
+      const expectedAudioSwitchAbort = (
+        new URL(request.url()).pathname.endsWith(".mp3")
+        && request.failure()?.errorText === "net::ERR_ABORTED"
+      );
+      if (expectedAudioSwitchAbort) return;
       failedLocalRequests.push(`${request.method()} ${request.url()}`);
     }
   });
   await context.addInitScript((legacySave) => {
-    localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.20.1");
+    if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
+      localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
+    }
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.21.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -140,9 +147,16 @@ async function main() {
       leaderboard: window.StellarOutpostCloudBridge.getLeaderboardEntry(),
       communicationsReady: Boolean(window.StellarCommunicationsBridge),
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
+      bgmTrackTitle: document.querySelector("#bgm-audio").dataset.trackTitle,
+      bgmLoopStart: Number(document.querySelector("#bgm-audio").dataset.loopStartSeconds),
+      bgmLoopEndTrim: Number(
+        document.querySelector("#bgm-audio").dataset.loopEndTrimSeconds,
+      ),
+      bgmSelection: document.querySelector("#bgm-track").value,
+      bgmOptions: document.querySelectorAll("#bgm-track option").length,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.20.1");
+    assert.equal(snapshot.gameVersion, "0.21.0");
     assert.equal(snapshot.saveVersion, 13);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
@@ -150,7 +164,7 @@ async function main() {
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.20\.1/);
+    assert.match(snapshot.footer, /v0\.21\.0/);
     assert.equal(snapshot.starfall.phase, "active");
     assert.deepEqual(snapshot.starfall.availableDayKeys, [
       "2026-08-08",
@@ -194,10 +208,52 @@ async function main() {
     assert.equal(snapshot.contentHidden, false, "unlock should expose endgame content");
     assert.notEqual(snapshot.contentDisplay, "none", "endgame content must be visible");
     assert.ok(snapshot.contentRects > 0, "endgame content must occupy rendered area");
-    assert.match(snapshot.bgmPath, /stellar-outpost-bgm\.mp3$/);
+    assert.match(snapshot.bgmPath, /outpost-beyond-orion\.mp3$/);
+    assert.equal(snapshot.bgmTrackTitle, "猎户座外的前哨");
+    assert.equal(snapshot.bgmLoopStart, 0.2);
+    assert.equal(snapshot.bgmLoopEndTrim, 3.7);
+    assert.equal(snapshot.bgmSelection, "playlist");
+    assert.equal(snapshot.bgmOptions, 5);
     assert.ok(snapshot.metadata.lifetimeDust < 1e9);
     assert.ok(snapshot.metadata.totalCores >= 5000);
     assert.doesNotMatch(`${snapshot.dust} ${snapshot.rate} ${snapshot.cores}`, /[BTP]/);
+
+    await page.selectOption("#bgm-track", "signal-at-kestrel-nine", { force: true });
+    await page.waitForFunction(() => {
+      const audio = document.querySelector("#bgm-audio");
+      return audio.dataset.trackId === "signal-at-kestrel-nine" && audio.readyState >= 1;
+    });
+    const manualBgmSelection = await page.evaluate(() => ({
+      path: new URL(document.querySelector("#bgm-audio").src).pathname,
+      title: document.querySelector("#bgm-audio").dataset.trackTitle,
+      savedSelection: window.StellarOutpostCloudBridge.createSnapshot().bgmTrackSelection,
+    }));
+    assert.match(manualBgmSelection.path, /signal-at-kestrel-nine\.mp3$/);
+    assert.equal(manualBgmSelection.title, "红隼九号信号");
+    assert.equal(manualBgmSelection.savedSelection, "signal-at-kestrel-nine");
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => {
+      const audio = document.querySelector("#bgm-audio");
+      return Boolean(window.StellarOutpostCloudBridge)
+        && audio.dataset.trackId === "signal-at-kestrel-nine"
+        && document.querySelector("#bgm-track").value === "signal-at-kestrel-nine";
+    });
+
+    await page.selectOption("#bgm-track", "playlist", { force: true });
+    await page.evaluate(() => {
+      document.querySelector("#bgm-audio").dispatchEvent(new Event("ended"));
+    });
+    await page.waitForFunction(() => {
+      const audio = document.querySelector("#bgm-audio");
+      return audio.dataset.trackId === "signal-at-kestrel-nine-2" && audio.readyState >= 1;
+    });
+    const playlistAdvance = await page.evaluate(() => ({
+      trackId: document.querySelector("#bgm-audio").dataset.trackId,
+      savedSelection: window.StellarOutpostCloudBridge.createSnapshot().bgmTrackSelection,
+    }));
+    assert.equal(playlistAdvance.trackId, "signal-at-kestrel-nine-2");
+    assert.equal(playlistAdvance.savedSelection, "playlist");
 
     await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
@@ -979,7 +1035,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.20.2"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.21.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -988,7 +1044,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.20\.2/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.21\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

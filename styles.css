@@ -351,8 +351,74 @@ a:focus-visible {
 
 .top-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.music-player-button {
+  display: flex;
+  width: 168px;
+  height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+  padding: 0 11px;
+  overflow: hidden;
+  border: 1px solid rgba(98, 230, 255, 0.24);
+  border-radius: 11px;
+  cursor: pointer;
+  color: #dff7ff;
+  background: linear-gradient(135deg, rgba(31, 91, 121, 0.42), rgba(30, 38, 75, 0.5));
+  transition: 160ms ease;
+}
+
+.music-player-button:hover {
+  border-color: var(--line-bright);
+  background: linear-gradient(135deg, rgba(39, 112, 148, 0.52), rgba(48, 49, 101, 0.6));
+}
+
+.music-player-button.off {
+  color: var(--muted);
+  background: rgba(15, 35, 53, 0.58);
+}
+
+.music-player-glyph {
+  flex: 0 0 auto;
+  color: var(--cyan);
+  font-size: calc(16px * var(--type-scale));
+  text-shadow: 0 0 12px rgba(98, 230, 255, 0.65);
+}
+
+.music-player-button.off .music-player-glyph {
+  color: var(--muted);
+  text-shadow: none;
+}
+
+.music-player-copy {
+  display: block;
+  min-width: 0;
+  text-align: left;
+}
+
+.music-player-copy small,
+.music-player-copy strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-player-copy small {
+  margin-bottom: 1px;
+  color: var(--muted);
+  font-size: calc(7px * var(--type-scale));
+  font-weight: 500;
+}
+
+.music-player-copy strong {
+  font-size: calc(9px * var(--type-scale));
+  font-weight: 650;
 }
 
 .icon-button,
@@ -8150,6 +8216,12 @@ footer {
     display: none;
   }
 
+  .music-player-button {
+    width: 140px;
+    height: 36px;
+    padding: 0 9px;
+  }
+
   .resource-strip {
     grid-template-columns: 1.2fr 0.9fr 0.6fr;
   }
@@ -8337,6 +8409,10 @@ footer {
 }
 
 @media (max-width: 460px) {
+  .brand > span:last-child {
+    display: none;
+  }
+
   .operations-hub > summary {
     grid-template-columns: auto minmax(0, 1fr);
   }
@@ -8370,6 +8446,20 @@ footer {
 
   .top-actions {
     gap: 5px;
+  }
+
+  .music-player-button {
+    width: 112px;
+    gap: 6px;
+    padding: 0 8px;
+  }
+
+  .music-player-copy small {
+    display: none;
+  }
+
+  .music-player-copy strong {
+    font-size: calc(8px * var(--type-scale));
   }
 
   .icon-button {

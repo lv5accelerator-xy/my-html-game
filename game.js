@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.21.0";
-  const PATCH_NOTES_VERSION = "0.21.0";
+  const GAME_VERSION = "0.21.1";
+  const PATCH_NOTES_VERSION = "0.21.1";
   const SAVE_VERSION = 13;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -97,28 +97,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=0.21.0",
+      src: "assets/outpost-beyond-orion.mp3?v=0.21.1",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=0.21.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=0.21.1",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=0.21.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=0.21.1",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.21.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.21.1",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -154,6 +154,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.21.1",
+      theme: "顶栏乐章",
+      changes: [
+        "背景音乐播放器从设置菜单移到顶栏操作音效按钮左侧，音乐开关随时可见。",
+        "播放器持续显示当前播放曲名；自动轮播切歌、手动选曲和读取存档后都会立即更新。",
+        "选曲与音量仍保留在设置菜单，避免顶栏承载过多操作。",
+        "手机端缩短播放器宽度并省略辅助标签，仍保留当前曲名且不造成页面横向溢出。",
+      ],
+    },
     {
       version: "0.21.0",
       theme: "深空声轨",
@@ -2695,6 +2705,7 @@
     performanceStatus: $("#performance-status"),
     bgmButton: $("#bgm-button"),
     bgmStatus: $("#bgm-status"),
+    bgmCurrentTitle: $("#bgm-current-title"),
     bgmTrack: $("#bgm-track"),
     bgmVolume: $("#bgm-volume"),
     bgmVolumeValue: $("#bgm-volume-value"),
@@ -9148,6 +9159,7 @@
     elements.bgmAudio.dataset.trackTitle = track.title;
     elements.bgmAudio.dataset.loopStartSeconds = String(track.loopStartSeconds);
     elements.bgmAudio.dataset.loopEndTrimSeconds = String(track.loopEndTrimSeconds);
+    updateBgmPlaybackDisplay();
     if (changed) {
       bgmTrackSwitchInProgress = true;
       elements.bgmAudio.pause();
@@ -9210,13 +9222,24 @@
     elements.bgmAudio.pause();
   }
 
-  function updateBgmControls() {
-    elements.bgmStatus.textContent = state.bgmEnabled ? "开" : "关";
+  function updateBgmPlaybackDisplay() {
+    const track = getCurrentBgmTrack();
+    elements.bgmStatus.textContent = state.bgmEnabled ? "正在播放" : "音乐已暂停";
+    elements.bgmCurrentTitle.textContent = track.title;
     elements.bgmButton.classList.toggle("off", !state.bgmEnabled);
     elements.bgmButton.setAttribute(
       "aria-pressed",
       state.bgmEnabled ? "true" : "false",
     );
+    elements.bgmButton.setAttribute(
+      "aria-label",
+      `${state.bgmEnabled ? "暂停" : "播放"}背景音乐：${track.title}`,
+    );
+    elements.bgmButton.title = `${state.bgmEnabled ? "暂停" : "播放"}背景音乐 · ${track.title}`;
+  }
+
+  function updateBgmControls() {
+    updateBgmPlaybackDisplay();
     if (elements.bgmTrack.value !== state.bgmTrackSelection) {
       elements.bgmTrack.value = state.bgmTrackSelection;
     }

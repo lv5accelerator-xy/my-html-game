@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.21.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.21.1");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -154,9 +154,12 @@ async function main() {
       ),
       bgmSelection: document.querySelector("#bgm-track").value,
       bgmOptions: document.querySelectorAll("#bgm-track option").length,
+      bgmPlayerTitle: document.querySelector("#bgm-current-title").textContent,
+      bgmPlayerBeforeSound: document.querySelector("#sound-button").previousElementSibling
+        === document.querySelector("#bgm-button"),
     }));
 
-    assert.equal(snapshot.gameVersion, "0.21.0");
+    assert.equal(snapshot.gameVersion, "0.21.1");
     assert.equal(snapshot.saveVersion, 13);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
@@ -164,7 +167,7 @@ async function main() {
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.21\.0/);
+    assert.match(snapshot.footer, /v0\.21\.1/);
     assert.equal(snapshot.starfall.phase, "active");
     assert.deepEqual(snapshot.starfall.availableDayKeys, [
       "2026-08-08",
@@ -214,6 +217,8 @@ async function main() {
     assert.equal(snapshot.bgmLoopEndTrim, 3.7);
     assert.equal(snapshot.bgmSelection, "playlist");
     assert.equal(snapshot.bgmOptions, 5);
+    assert.equal(snapshot.bgmPlayerTitle, "猎户座外的前哨");
+    assert.equal(snapshot.bgmPlayerBeforeSound, true);
     assert.ok(snapshot.metadata.lifetimeDust < 1e9);
     assert.ok(snapshot.metadata.totalCores >= 5000);
     assert.doesNotMatch(`${snapshot.dust} ${snapshot.rate} ${snapshot.cores}`, /[BTP]/);
@@ -237,6 +242,7 @@ async function main() {
       const audio = document.querySelector("#bgm-audio");
       return Boolean(window.StellarOutpostCloudBridge)
         && audio.dataset.trackId === "signal-at-kestrel-nine"
+        && document.querySelector("#bgm-current-title").textContent === "红隼九号信号"
         && document.querySelector("#bgm-track").value === "signal-at-kestrel-nine";
     });
 
@@ -250,9 +256,11 @@ async function main() {
     });
     const playlistAdvance = await page.evaluate(() => ({
       trackId: document.querySelector("#bgm-audio").dataset.trackId,
+      title: document.querySelector("#bgm-current-title").textContent,
       savedSelection: window.StellarOutpostCloudBridge.createSnapshot().bgmTrackSelection,
     }));
     assert.equal(playlistAdvance.trackId, "signal-at-kestrel-nine-2");
+    assert.equal(playlistAdvance.title, "红隼九号·深空回声");
     assert.equal(playlistAdvance.savedSelection, "playlist");
 
     await page.evaluate(() => {
@@ -1035,7 +1043,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.21.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.21.2"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1044,7 +1052,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.21\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.21\.2/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

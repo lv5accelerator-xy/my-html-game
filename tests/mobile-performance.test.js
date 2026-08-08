@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.21.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.21.1");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
@@ -94,17 +94,25 @@ async function main() {
     assert.equal(response.status(), 200);
     await page.waitForFunction(() => Boolean(window.StellarOutpostCloudBridge));
 
-    const defaultQuality = await page.evaluate(() => ({
-      diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
-      mode: document.documentElement.dataset.performanceMode,
-      savedMode: localStorage.getItem("stellarOutpostIdlePerformanceMode"),
-      status: document.querySelector("#performance-status").textContent,
-      bodyAnimation: getComputedStyle(document.body).animationName,
-      fleet: window.StellarOutpostCloudBridge.getFleetCommandDiagnostics(),
-      viewportWidth: document.documentElement.clientWidth,
-      pageWidth: document.documentElement.scrollWidth,
-      fleetDeckWidth: document.querySelector("#fleet-command-deck").scrollWidth,
-    }));
+    const defaultQuality = await page.evaluate(() => {
+      const musicRect = document.querySelector("#bgm-button").getBoundingClientRect();
+      const soundRect = document.querySelector("#sound-button").getBoundingClientRect();
+      return {
+        diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
+        mode: document.documentElement.dataset.performanceMode,
+        savedMode: localStorage.getItem("stellarOutpostIdlePerformanceMode"),
+        status: document.querySelector("#performance-status").textContent,
+        bodyAnimation: getComputedStyle(document.body).animationName,
+        fleet: window.StellarOutpostCloudBridge.getFleetCommandDiagnostics(),
+        viewportWidth: document.documentElement.clientWidth,
+        pageWidth: document.documentElement.scrollWidth,
+        fleetDeckWidth: document.querySelector("#fleet-command-deck").scrollWidth,
+        musicTitle: document.querySelector("#bgm-current-title").textContent,
+        musicStatus: document.querySelector("#bgm-status").textContent,
+        musicRight: musicRect.right,
+        soundLeft: soundRect.left,
+      };
+    });
     assert.equal(defaultQuality.mode, "quality", "mobile should default to high quality");
     assert.equal(defaultQuality.savedMode, null, "a default must not impersonate a manual choice");
     assert.equal(defaultQuality.status, "高画质");
@@ -114,6 +122,9 @@ async function main() {
     assert.notEqual(defaultQuality.bodyAnimation, "none");
     assert.equal(defaultQuality.fleet.unlocked, true);
     assert.equal(defaultQuality.fleet.presets.length, 3);
+    assert.equal(defaultQuality.musicTitle, "猎户座外的前哨");
+    assert.equal(defaultQuality.musicStatus, "音乐已暂停");
+    assert.ok(defaultQuality.musicRight <= defaultQuality.soundLeft);
     assert.ok(
       defaultQuality.pageWidth <= defaultQuality.viewportWidth,
       `fleet command page must not create horizontal scrolling; got ${defaultQuality.pageWidth}px`,

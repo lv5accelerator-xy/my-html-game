@@ -11,15 +11,15 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="0.22.0" />
+    <meta name="stellar-game-version" content="0.23.0" />
     <meta name="stellar-release-title" content="顶栏乐章" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.22.0" />
+    <link rel="stylesheet" href="styles.css?v=0.23.0" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=0.22.0"
+      src="assets/outpost-beyond-orion.mp3?v=0.23.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -657,7 +657,7 @@
               <p class="eyebrow">长期进展</p>
               <h2 id="research-title">研究终端</h2>
             </div>
-            <span class="research-count" id="research-count">0 / 12</span>
+            <span class="research-count" id="research-count">0 / 24</span>
           </div>
 
           <div class="tabs" role="tablist" aria-label="研究终端页面">
@@ -1491,20 +1491,32 @@
                 <small>我的永久记录</small>
                 <h3 id="leaderboard-personal-title">当前指挥官数据</h3>
               </div>
-              <span id="leaderboard-current-power">当前综合战力 55</span>
+              <span id="leaderboard-current-rate">当前自动产量 0 / 秒</span>
             </header>
             <div class="leaderboard-personal-grid">
               <article>
                 <span aria-hidden="true">✦</span>
-                <small>累计星尘</small>
-                <strong id="leaderboard-career-dust">0</strong>
-                <p>跨越普通跃迁与奇点超越永久累计</p>
+                <small>最高自动产量</small>
+                <strong id="leaderboard-highest-rate">0 / 秒</strong>
+                <p>不含临时增益的历史最高自动星尘产量</p>
               </article>
               <article>
                 <span aria-hidden="true">⬡</span>
                 <small>最高综合战力</small>
                 <strong id="leaderboard-highest-power">55</strong>
                 <p>历史最高舰队攻击力与基地防御力之和</p>
+              </article>
+              <article>
+                <span aria-hidden="true">⌘</span>
+                <small>研究网络峰值</small>
+                <strong id="leaderboard-highest-research">0 / 24</strong>
+                <p>单个跃迁周期内完成的科技树节点峰值</p>
+              </article>
+              <article>
+                <span aria-hidden="true">▦</span>
+                <small>星港建设峰值</small>
+                <strong id="leaderboard-highest-starport">0 / 72</strong>
+                <p>单个奇点周期内六座星港建筑的总等级峰值</p>
               </article>
               <article>
                 <span aria-hidden="true">◎</span>
@@ -1525,39 +1537,33 @@
                 <p>永昼壁垒号、群巢母舰与虚空合唱体击破总数</p>
               </article>
               <article>
-                <span aria-hidden="true">✧</span>
-                <small>远征遗物</small>
-                <strong id="leaderboard-expedition-artifacts">0 / 8</strong>
-                <p>远征陈列舱已经发现的纯收藏遗物数量</p>
+                <span aria-hidden="true">∞</span>
+                <small>奇点超越</small>
+                <strong id="leaderboard-transcensions">0</strong>
+                <p>完成奇点坍缩并进入永久成长周期的次数</p>
               </article>
               <article>
-                <span aria-hidden="true">☄</span>
-                <small>累计星雨余辉</small>
-                <strong id="leaderboard-starfall-earned">0</strong>
-                <p>星雨寄航活动期间累计获得的余辉</p>
-              </article>
-              <article>
-                <span aria-hidden="true">◇</span>
-                <small>完成星路</small>
-                <strong id="leaderboard-starfall-routes">0 / 15</strong>
-                <p>成功抵达并领取余辉的每日与追赶星路</p>
-              </article>
-              <article>
-                <span aria-hidden="true">✉</span>
-                <small>星雨信笺</small>
-                <strong id="leaderboard-starfall-letters">0 / 7</strong>
-                <p>已经阅读并作出选择的浪漫信笺数量</p>
+                <span aria-hidden="true">◉</span>
+                <small>边境星区</small>
+                <strong id="leaderboard-frontier-sectors">0</strong>
+                <p>永久稳定并推进的循环边境星区层数</p>
               </article>
             </div>
           </section>
 
           <div class="leaderboard-toolbar">
             <div class="leaderboard-categories" role="group" aria-label="排行榜分类">
-              <button class="active" type="button" data-leaderboard-category="careerDust">
-                累计星尘
+              <button class="active" type="button" data-leaderboard-category="highestRate">
+                最高产量
               </button>
               <button type="button" data-leaderboard-category="highestPower">
                 最高战力
+              </button>
+              <button type="button" data-leaderboard-category="highestResearch">
+                研究网络
+              </button>
+              <button type="button" data-leaderboard-category="highestStarport">
+                星港建设
               </button>
               <button type="button" data-leaderboard-category="battleCount">
                 战斗次数
@@ -1568,17 +1574,11 @@
               <button type="button" data-leaderboard-category="expeditionBossWins">
                 首领击破
               </button>
-              <button type="button" data-leaderboard-category="expeditionArtifacts">
-                远征遗物
+              <button type="button" data-leaderboard-category="transcensions">
+                奇点超越
               </button>
-              <button type="button" data-leaderboard-category="starfallTotalEarned">
-                星雨余辉
-              </button>
-              <button type="button" data-leaderboard-category="starfallRoutes">
-                完成星路
-              </button>
-              <button type="button" data-leaderboard-category="starfallLetters">
-                星雨信笺
+              <button type="button" data-leaderboard-category="frontierSectors">
+                边境星区
               </button>
             </div>
             <small id="leaderboard-updated-at">等待连接排行榜服务</small>
@@ -1625,7 +1625,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.22.0</span>
+        <span>航站协议 v0.23.0</span>
       </footer>
     </div>
 
@@ -1669,7 +1669,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.22.0</strong>
+          <strong id="patch-notes-current-version">v0.23.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1980,9 +1980,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.22.0"></script>
-    <script src="game.js?v=0.22.0"></script>
-    <script src="firebase-config.js?v=0.22.0"></script>
-    <script type="module" src="cloud-save.js?v=0.22.0"></script>
+    <script src="game-math.js?v=0.23.0"></script>
+    <script src="game.js?v=0.23.0"></script>
+    <script src="firebase-config.js?v=0.23.0"></script>
+    <script type="module" src="cloud-save.js?v=0.23.0"></script>
   </body>
 </html>

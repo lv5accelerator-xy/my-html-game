@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.22.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.23.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
@@ -166,13 +166,18 @@ async function main() {
       viewportWidth: document.documentElement.clientWidth,
       pageWidth: document.documentElement.scrollWidth,
       branches: document.querySelectorAll(".research-branch").length,
+      nodes: document.querySelectorAll(".research-node").length,
       branchColumns: getComputedStyle(document.querySelector("#upgrade-list"))
+        .gridTemplateColumns.split(" ").length,
+      trackColumns: getComputedStyle(document.querySelector(".research-track"))
         .gridTemplateColumns.split(" ").length,
       overviewColumns: getComputedStyle(document.querySelector(".research-overview"))
         .gridTemplateColumns.split(" ").length,
     }));
     assert.equal(researchLayout.branches, 4);
+    assert.equal(researchLayout.nodes, 24);
     assert.equal(researchLayout.branchColumns, 1);
+    assert.equal(researchLayout.trackColumns, 1);
     assert.equal(researchLayout.overviewColumns, 1);
     assert.ok(researchLayout.pageWidth <= researchLayout.viewportWidth);
 

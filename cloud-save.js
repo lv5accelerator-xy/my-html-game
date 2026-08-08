@@ -5,7 +5,8 @@ const CLOUD_COLLECTION = "saves";
 const LEADERBOARD_COLLECTION = "leaderboards";
 const ANNOUNCEMENT_COLLECTION = "announcements";
 const FEEDBACK_COLLECTION = "feedback";
-const AUTO_SYNC_DELAY = 45_000;
+const AUTO_SYNC_DELAY = 30_000;
+const AUTO_SYNC_RETRY_DELAY = 45_000;
 const LEADERBOARD_SYNC_DELAY = 60_000;
 const LEADERBOARD_LIMIT = 50;
 const MAX_CLOUD_SNAPSHOT_BYTES = 700_000;
@@ -110,10 +111,13 @@ let syncReady = false;
 let dirty = false;
 let applyingRemote = false;
 let syncTimer = null;
+let syncDueAt = 0;
+let dirtyVersion = 0;
+let activeUploadPromise = null;
 let busy = false;
 let serviceConfigured = false;
 let serviceReady = false;
-let leaderboardCategory = "careerDust";
+let leaderboardCategory = "highestRate";
 let leaderboardTimer = null;
 let leaderboardBusy = false;
 let announcements = [...BUILTIN_ANNOUNCEMENTS];
@@ -593,50 +597,53 @@ function formatSaveTime(value) {
 }
 
 const LEADERBOARD_CATEGORIES = Object.freeze({
-  careerDust: {
-    field: "careerDust",
-    label: "累计星尘",
+  highestRate: {
+    field: "highestRate",
+    label: "最高自动产量",
+    context: "production",
+    format: (value) => `${formatProductionRate(value)} / 秒`,
   },
   highestPower: {
     field: "highestPower",
     label: "最高综合战力",
+    context: "combat",
+  },
+  highestResearch: {
+    field: "highestResearch",
+    label: "研究网络峰值",
+    context: "production",
+    format: (value) => `${formatGameNumber(value)} / 24`,
+  },
+  highestStarport: {
+    field: "highestStarport",
+    label: "星港建设峰值",
+    context: "production",
+    format: (value) => `${formatGameNumber(value)} / 72`,
   },
   battleCount: {
     field: "battleCount",
     label: "战斗次数",
+    context: "combat",
   },
   expeditionRuns: {
     field: "expeditionRuns",
     label: "完整远征",
-    expedition: true,
+    context: "expedition",
   },
   expeditionBossWins: {
     field: "expeditionBossWins",
     label: "机制首领击破",
-    expedition: true,
+    context: "expedition",
   },
-  expeditionArtifacts: {
-    field: "expeditionArtifacts",
-    label: "远征遗物",
-    expedition: true,
-    format: (value) => `${formatGameNumber(value)} / 8`,
+  transcensions: {
+    field: "transcensions",
+    label: "奇点超越",
+    context: "frontier",
   },
-  starfallTotalEarned: {
-    field: "starfallTotalEarned",
-    label: "累计星雨余辉",
-    starfall: true,
-  },
-  starfallRoutes: {
-    field: "starfallRoutes",
-    label: "完成星路",
-    starfall: true,
-    format: (value) => `${formatGameNumber(value)} / 15`,
-  },
-  starfallLetters: {
-    field: "starfallLetters",
-    label: "星雨信笺",
-    starfall: true,
-    format: (value) => `${formatGameNumber(value)} / 7`,
+  frontierSectors: {
+    field: "frontierSectors",
+    label: "边境星区",
+    context: "frontier",
   },
 });
 
@@ -675,8 +682,16 @@ function normalizeLeaderboardEntry(snapshot) {
   return {
     id: snapshot.id,
     playerName: String(data.playerName || "未命名指挥官").slice(0, 12),
-    careerDust: Math.max(0, Number(data.careerDust) || 0),
+    highestRate: Math.max(0, Number(data.highestRate) || 0),
     highestPower: Math.max(0, Number(data.highestPower) || 0),
+    highestResearch: Math.min(
+      24,
+      Math.max(0, Math.floor(Number(data.highestResearch) || 0)),
+    ),
+    highestStarport: Math.min(
+      72,
+      Math.max(0, Math.floor(Number(data.highestStarport) || 0)),
+    ),
     battleCount: Math.max(0, Math.floor(Number(data.battleCount) || 0)),
     expeditionRuns: Math.max(
       0,
@@ -686,25 +701,13 @@ function normalizeLeaderboardEntry(snapshot) {
       0,
       Math.floor(Number(data.expeditionBossWins) || 0),
     ),
-    expeditionArtifacts: Math.min(
-      8,
-      Math.max(0, Math.floor(Number(data.expeditionArtifacts) || 0)),
-    ),
-    starfallTotalEarned: Math.min(
-      99999,
-      Math.max(0, Math.floor(Number(data.starfallTotalEarned) || 0)),
-    ),
-    starfallRoutes: Math.min(
-      15,
-      Math.max(0, Math.floor(Number(data.starfallRoutes) || 0)),
-    ),
-    starfallLetters: Math.min(
-      7,
-      Math.max(0, Math.floor(Number(data.starfallLetters) || 0)),
-    ),
     transcensions: Math.max(
       0,
       Math.floor(Number(data.transcensions) || 0),
+    ),
+    frontierSectors: Math.max(
+      0,
+      Math.floor(Number(data.frontierSectors) || 0),
     ),
     updatedAt: leaderboardTimestamp(data.updatedAt),
   };
@@ -733,13 +736,15 @@ function renderLeaderboardRows(entries) {
     const name = document.createElement("strong");
     name.textContent = entry.playerName;
     const detail = document.createElement("small");
-    detail.textContent = `${
-      category.starfall
-        ? `星路 ${entry.starfallRoutes} · 信笺 ${entry.starfallLetters}`
-        : category.expedition
-        ? `完整远征 ${entry.expeditionRuns} · 首领击破 ${entry.expeditionBossWins}`
-        : `奇点超越 ${entry.transcensions} 次`
-    }${entry.id === currentUser?.uid ? " · 当前账号" : ""}`;
+    const detailByContext = {
+      production: `研究 ${entry.highestResearch}/24 · 星港 ${entry.highestStarport}/72`,
+      combat: `战斗 ${entry.battleCount} · 最高战力 ${formatGameNumber(entry.highestPower)}`,
+      expedition: `完整远征 ${entry.expeditionRuns} · 首领击破 ${entry.expeditionBossWins}`,
+      frontier: `奇点超越 ${entry.transcensions} · 边境星区 ${entry.frontierSectors}`,
+    };
+    detail.textContent = `${detailByContext[category.context] || "长期航站记录"}${
+      entry.id === currentUser?.uid ? " · 当前账号" : ""
+    }`;
     identity.append(name, detail);
 
     const score = document.createElement("span");
@@ -905,10 +910,21 @@ function getLocalLeaderboardEntry() {
   const entry = bridge.getLeaderboardEntry();
   return {
     playerName: String(entry.playerName || "未命名指挥官").slice(0, 12),
-    careerDust: Math.min(1e300, Math.max(0, Number(entry.careerDust) || 0)),
+    highestRate: Math.min(
+      9_999_000_000,
+      Math.max(0, Number(entry.highestRate) || 0),
+    ),
     highestPower: Math.min(
       1e300,
       Math.max(0, Number(entry.highestPower) || 0),
+    ),
+    highestResearch: Math.min(
+      24,
+      Math.max(0, Math.floor(Number(entry.highestResearch) || 0)),
+    ),
+    highestStarport: Math.min(
+      72,
+      Math.max(0, Math.floor(Number(entry.highestStarport) || 0)),
     ),
     battleCount: Math.min(
       Number.MAX_SAFE_INTEGER,
@@ -926,21 +942,9 @@ function getLocalLeaderboardEntry() {
       Number.MAX_SAFE_INTEGER,
       Math.max(0, Math.floor(Number(entry.expeditionBossWins) || 0)),
     ),
-    expeditionArtifacts: Math.min(
-      8,
-      Math.max(0, Math.floor(Number(entry.expeditionArtifacts) || 0)),
-    ),
-    starfallTotalEarned: Math.min(
-      99999,
-      Math.max(0, Math.floor(Number(entry.starfallTotalEarned) || 0)),
-    ),
-    starfallRoutes: Math.min(
-      15,
-      Math.max(0, Math.floor(Number(entry.starfallRoutes) || 0)),
-    ),
-    starfallLetters: Math.min(
-      7,
-      Math.max(0, Math.floor(Number(entry.starfallLetters) || 0)),
+    frontierSectors: Math.min(
+      Number.MAX_SAFE_INTEGER,
+      Math.max(0, Math.floor(Number(entry.frontierSectors) || 0)),
     ),
   };
 }
@@ -992,13 +996,21 @@ async function publishLeaderboardEntry({ silent = false } = {}) {
         transaction.set(reference, {
           gameVersion: bridge.gameVersion,
           playerName: localEntry.playerName,
-          careerDust: Math.max(
-            localEntry.careerDust,
-            Number(remote.careerDust) || 0,
+          highestRate: Math.max(
+            localEntry.highestRate,
+            Number(remote.highestRate) || 0,
           ),
           highestPower: Math.max(
             localEntry.highestPower,
             Number(remote.highestPower) || 0,
+          ),
+          highestResearch: Math.max(
+            localEntry.highestResearch,
+            Math.floor(Number(remote.highestResearch) || 0),
+          ),
+          highestStarport: Math.max(
+            localEntry.highestStarport,
+            Math.floor(Number(remote.highestStarport) || 0),
           ),
           battleCount: Math.max(
             localEntry.battleCount,
@@ -1016,21 +1028,9 @@ async function publishLeaderboardEntry({ silent = false } = {}) {
             localEntry.expeditionBossWins,
             Math.floor(Number(remote.expeditionBossWins) || 0),
           ),
-          expeditionArtifacts: Math.max(
-            localEntry.expeditionArtifacts,
-            Math.floor(Number(remote.expeditionArtifacts) || 0),
-          ),
-          starfallTotalEarned: Math.max(
-            localEntry.starfallTotalEarned,
-            Math.floor(Number(remote.starfallTotalEarned) || 0),
-          ),
-          starfallRoutes: Math.max(
-            localEntry.starfallRoutes,
-            Math.floor(Number(remote.starfallRoutes) || 0),
-          ),
-          starfallLetters: Math.max(
-            localEntry.starfallLetters,
-            Math.floor(Number(remote.starfallLetters) || 0),
+          frontierSectors: Math.max(
+            localEntry.frontierSectors,
+            Math.floor(Number(remote.frontierSectors) || 0),
           ),
           updatedAt: firebaseFirestoreApi.serverTimestamp(),
         });
@@ -1138,17 +1138,57 @@ function clearSyncTimer() {
     window.clearTimeout(syncTimer);
     syncTimer = null;
   }
+  syncDueAt = 0;
+}
+
+function formatProductionRate(value) {
+  const numeric = Math.max(0, Number(value) || 0);
+  if (numeric >= 1e6) {
+    const millions = numeric / 1e6;
+    const digits = millions >= 1000 ? 0 : millions >= 100 ? 1 : 2;
+    return `${millions.toFixed(digits).replace(/(\.\d*?[1-9])0+$|\.0+$/, "$1")}M`;
+  }
+  if (numeric >= 1e3) {
+    return `${(numeric / 1e3).toFixed(numeric >= 1e5 ? 0 : 1).replace(/\.0$/, "")}K`;
+  }
+  return formatGameNumber(numeric);
+}
+
+function markCloudDirty() {
+  dirty = true;
+  dirtyVersion += 1;
 }
 
 function scheduleCloudSync(delay = AUTO_SYNC_DELAY) {
-  clearSyncTimer();
   if (!currentUser || !syncReady || !dirty || !navigator.onLine) return;
+  const normalizedDelay = Math.max(500, Number(delay) || AUTO_SYNC_DELAY);
+  const requestedDueAt = Date.now() + normalizedDelay;
+  if (syncTimer !== null && syncDueAt > 0 && syncDueAt <= requestedDueAt) {
+    return;
+  }
+  clearSyncTimer();
+  syncDueAt = requestedDueAt;
+  setSyncStatus(
+    "syncing",
+    "云端自动上传已排队",
+    `将在 ${Math.max(1, Math.ceil(normalizedDelay / 1000))} 秒内同步`,
+    "↥",
+  );
   syncTimer = window.setTimeout(() => {
     syncTimer = null;
+    syncDueAt = 0;
     uploadLocalSave().catch(() => {
       // uploadLocalSave updates the visible status and keeps the dirty marker.
     });
-  }, Math.max(500, delay));
+  }, normalizedDelay);
+}
+
+function flushCloudSync() {
+  if (!currentUser || !syncReady || !dirty || !navigator.onLine) return;
+  clearSyncTimer();
+  uploadLocalSave().catch(() => {
+    // The retry remains queued and the account panel exposes the failure.
+  });
 }
 
 async function commitCloudSave({
@@ -1193,9 +1233,10 @@ async function commitCloudSave({
   );
 }
 
-async function uploadLocalSave({ force = false } = {}) {
+async function performLocalSaveUpload({ force = false } = {}) {
   if (!currentUser || !db || !bridge) return;
   if (!force && !syncReady) return;
+  const uploadedDirtyVersion = dirtyVersion;
   const localSnapshot = bridge.createSnapshot();
   const metadata = bridge.getMetadata(localSnapshot);
   const expectedRevision = Math.max(0, Number(knownRevision) || 0);
@@ -1236,7 +1277,8 @@ async function uploadLocalSave({ force = false } = {}) {
       snapshot: localSnapshot,
     };
     syncReady = true;
-    dirty = false;
+    clearSyncTimer();
+    dirty = dirtyVersion !== uploadedDirtyVersion;
     hideConflict();
     setSyncStatus(
       "synced",
@@ -1245,6 +1287,7 @@ async function uploadLocalSave({ force = false } = {}) {
       "✓",
     );
     scheduleLeaderboardPublish(1_500);
+    if (dirty) scheduleCloudSync(1_200);
     updateLeaderboardAccessState();
     refreshLeaderboardIfVisible();
   } catch (error) {
@@ -1258,10 +1301,18 @@ async function uploadLocalSave({ force = false } = {}) {
       }
     } else {
       setSyncStatus("error", "云端同步失败", friendlyError(error), "!");
-      scheduleCloudSync(AUTO_SYNC_DELAY);
+      scheduleCloudSync(AUTO_SYNC_RETRY_DELAY);
     }
     throw error;
   }
+}
+
+function uploadLocalSave(options = {}) {
+  if (activeUploadPromise) return activeUploadPromise;
+  activeUploadPromise = performLocalSaveUpload(options).finally(() => {
+    activeUploadPromise = null;
+  });
+  return activeUploadPromise;
 }
 
 function applyRemoteSave(record, { claimCurrentDevice = false } = {}) {
@@ -1275,7 +1326,8 @@ function applyRemoteSave(record, { claimCurrentDevice = false } = {}) {
   knownRevision = record.revision;
   remoteRecord = record;
   syncReady = true;
-  dirty = claimCurrentDevice;
+  dirty = false;
+  if (claimCurrentDevice) markCloudDirty();
   hideConflict();
   setSyncStatus(
     "synced",
@@ -1317,7 +1369,7 @@ async function chooseLocalSave() {
   setBusy(true);
   try {
     syncReady = true;
-    dirty = true;
+    markCloudDirty();
     await uploadLocalSave({ force: true });
     bridge.notify("已保留本地存档", "当前设备的进度已上传并成为最新云端记录。", "↥");
   } catch (error) {
@@ -1354,6 +1406,7 @@ async function handleSignedIn(user) {
   remoteRecord = null;
   syncReady = false;
   dirty = false;
+  dirtyVersion = 0;
   hideConflict();
   setSyncStatus("syncing", "正在检查云端记录", "请稍候", "◇");
   updateLeaderboardAccessState();
@@ -1365,7 +1418,7 @@ async function handleSignedIn(user) {
     if (!latest) {
       knownRevision = 0;
       syncReady = true;
-      dirty = true;
+      markCloudDirty();
       await uploadLocalSave();
       bridge.notify("云端航站已建立", "当前本地进度已成为这个账号的首份云存档。", "☁");
       return;
@@ -1378,7 +1431,7 @@ async function handleSignedIn(user) {
       if (latest.clientSavedAt > localMetadata.lastSeen + 1_500) {
         applyRemoteSave(latest);
       } else if (localMetadata.lastSeen > latest.clientSavedAt + 1_500) {
-        dirty = true;
+        markCloudDirty();
         setSyncStatus(
           "synced",
           "本地进度等待同步",
@@ -1413,6 +1466,7 @@ function handleSignedOut() {
   remoteRecord = null;
   syncReady = false;
   dirty = false;
+  dirtyVersion = 0;
   clearSyncTimer();
   clearLeaderboardTimer();
   hideConflict();
@@ -1520,7 +1574,7 @@ function bindUi() {
     if (busy) return;
     setBusy(true);
     try {
-      dirty = true;
+      markCloudDirty();
       await uploadLocalSave();
       bridge.notify("云端同步完成", "当前本地进度已上传。", "✓");
     } catch (error) {
@@ -1577,9 +1631,13 @@ function bindUi() {
       setLeaderboardStatus("error", "当前离线");
     }
   });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) flushCloudSync();
+  });
+  window.addEventListener("pagehide", flushCloudSync);
   window.addEventListener("stellar-local-save", (event) => {
     if (applyingRemote || !currentUser) return;
-    dirty = true;
+    markCloudDirty();
     const urgent =
       event.detail?.manual === true || event.detail?.urgent === true;
     scheduleCloudSync(urgent ? 750 : AUTO_SYNC_DELAY);
@@ -1588,6 +1646,16 @@ function bindUi() {
     );
   });
 }
+
+globalThis.StellarCloudSaveDiagnostics = () => ({
+  signedIn: Boolean(currentUser),
+  syncReady,
+  dirty,
+  dirtyVersion,
+  uploadInFlight: Boolean(activeUploadPromise),
+  timerScheduled: syncTimer !== null,
+  syncDueAt,
+});
 
 async function waitForBridge() {
   if (globalThis.StellarOutpostCloudBridge) {

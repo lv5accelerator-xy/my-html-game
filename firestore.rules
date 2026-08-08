@@ -38,25 +38,29 @@ service cloud.firestore {
         return request.resource.data.keys().hasAll([
           "gameVersion",
           "playerName",
-          "careerDust",
+          "highestRate",
           "highestPower",
+          "highestResearch",
+          "highestStarport",
           "battleCount",
+          "expeditionRuns",
+          "expeditionBossWins",
           "transcensions",
+          "frontierSectors",
           "updatedAt"
         ])
         && request.resource.data.keys().hasOnly([
           "gameVersion",
           "playerName",
-          "careerDust",
+          "highestRate",
           "highestPower",
+          "highestResearch",
+          "highestStarport",
           "battleCount",
-          "transcensions",
           "expeditionRuns",
           "expeditionBossWins",
-          "expeditionArtifacts",
-          "starfallTotalEarned",
-          "starfallRoutes",
-          "starfallLetters",
+          "transcensions",
+          "frontierSectors",
           "updatedAt"
         ])
         && request.resource.data.gameVersion is string
@@ -64,75 +68,55 @@ service cloud.firestore {
         && request.resource.data.playerName is string
         && request.resource.data.playerName.size() >= 1
         && request.resource.data.playerName.size() <= 24
-        && request.resource.data.careerDust is number
-        && request.resource.data.careerDust >= 0
+        && request.resource.data.highestRate is number
+        && request.resource.data.highestRate >= 0
+        && request.resource.data.highestRate <= 9999000000
         && request.resource.data.highestPower is number
         && request.resource.data.highestPower >= 0
+        && request.resource.data.highestResearch is int
+        && request.resource.data.highestResearch >= 0
+        && request.resource.data.highestResearch <= 24
+        && request.resource.data.highestStarport is int
+        && request.resource.data.highestStarport >= 0
+        && request.resource.data.highestStarport <= 72
         && request.resource.data.battleCount is int
         && request.resource.data.battleCount >= 0
         && request.resource.data.battleCount <= 9007199254740991
         && request.resource.data.transcensions is int
         && request.resource.data.transcensions >= 0
         && request.resource.data.transcensions <= 9007199254740991
-        && (!request.resource.data.keys().hasAll(["expeditionRuns"])
-          || (request.resource.data.expeditionRuns is int
-            && request.resource.data.expeditionRuns >= 0
-            && request.resource.data.expeditionRuns <= 9007199254740991))
-        && (!request.resource.data.keys().hasAll(["expeditionBossWins"])
-          || (request.resource.data.expeditionBossWins is int
-            && request.resource.data.expeditionBossWins >= 0
-            && request.resource.data.expeditionBossWins <= 9007199254740991))
-        && (!request.resource.data.keys().hasAll(["expeditionArtifacts"])
-          || (request.resource.data.expeditionArtifacts is int
-            && request.resource.data.expeditionArtifacts >= 0
-            && request.resource.data.expeditionArtifacts <= 8))
-        && (!request.resource.data.keys().hasAll(["starfallTotalEarned"])
-          || (request.resource.data.starfallTotalEarned is int
-            && request.resource.data.starfallTotalEarned >= 0
-            && request.resource.data.starfallTotalEarned <= 99999))
-        && (!request.resource.data.keys().hasAll(["starfallRoutes"])
-          || (request.resource.data.starfallRoutes is int
-            && request.resource.data.starfallRoutes >= 0
-            && request.resource.data.starfallRoutes <= 15))
-        && (!request.resource.data.keys().hasAll(["starfallLetters"])
-          || (request.resource.data.starfallLetters is int
-            && request.resource.data.starfallLetters >= 0
-            && request.resource.data.starfallLetters <= 7))
+        && request.resource.data.expeditionRuns is int
+        && request.resource.data.expeditionRuns >= 0
+        && request.resource.data.expeditionRuns <= 9007199254740991
+        && request.resource.data.expeditionBossWins is int
+        && request.resource.data.expeditionBossWins >= 0
+        && request.resource.data.expeditionBossWins <= 9007199254740991
+        && request.resource.data.frontierSectors is int
+        && request.resource.data.frontierSectors >= 0
+        && request.resource.data.frontierSectors <= 9007199254740991
         && request.resource.data.updatedAt is timestamp
         && request.resource.data.updatedAt == request.time;
       }
 
       function doesNotLowerCareerRecords() {
-        return request.resource.data.careerDust >= resource.data.careerDust
-          && request.resource.data.highestPower >= resource.data.highestPower
-          && request.resource.data.battleCount >= resource.data.battleCount
-          && request.resource.data.transcensions >= resource.data.transcensions
-          && (!resource.data.keys().hasAll([
-              "expeditionRuns",
-              "expeditionBossWins",
-              "expeditionArtifacts"
-            ])
-            || (request.resource.data.keys().hasAll([
-                "expeditionRuns",
-                "expeditionBossWins",
-                "expeditionArtifacts"
-              ])
-              && request.resource.data.expeditionRuns >= resource.data.expeditionRuns
-              && request.resource.data.expeditionBossWins >= resource.data.expeditionBossWins
-              && request.resource.data.expeditionArtifacts >= resource.data.expeditionArtifacts))
-          && (!resource.data.keys().hasAll([
-              "starfallTotalEarned",
-              "starfallRoutes",
-              "starfallLetters"
-            ])
-            || (request.resource.data.keys().hasAll([
-                "starfallTotalEarned",
-                "starfallRoutes",
-                "starfallLetters"
-              ])
-              && request.resource.data.starfallTotalEarned >= resource.data.starfallTotalEarned
-              && request.resource.data.starfallRoutes >= resource.data.starfallRoutes
-              && request.resource.data.starfallLetters >= resource.data.starfallLetters));
+        return (!resource.data.keys().hasAll(["highestRate"])
+            || request.resource.data.highestRate >= resource.data.highestRate)
+          && (!resource.data.keys().hasAll(["highestPower"])
+            || request.resource.data.highestPower >= resource.data.highestPower)
+          && (!resource.data.keys().hasAll(["highestResearch"])
+            || request.resource.data.highestResearch >= resource.data.highestResearch)
+          && (!resource.data.keys().hasAll(["highestStarport"])
+            || request.resource.data.highestStarport >= resource.data.highestStarport)
+          && (!resource.data.keys().hasAll(["battleCount"])
+            || request.resource.data.battleCount >= resource.data.battleCount)
+          && (!resource.data.keys().hasAll(["expeditionRuns"])
+            || request.resource.data.expeditionRuns >= resource.data.expeditionRuns)
+          && (!resource.data.keys().hasAll(["expeditionBossWins"])
+            || request.resource.data.expeditionBossWins >= resource.data.expeditionBossWins)
+          && (!resource.data.keys().hasAll(["transcensions"])
+            || request.resource.data.transcensions >= resource.data.transcensions)
+          && (!resource.data.keys().hasAll(["frontierSectors"])
+            || request.resource.data.frontierSectors >= resource.data.frontierSectors);
       }
 
       allow read: if request.auth != null;

@@ -87,7 +87,7 @@ const ecoTickInterval = readConstant("ECO_GAME_TICK_INTERVAL");
 const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
 const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
-assert.equal(readConstant("SAVE_VERSION"), 13, "starfall event saves need schema version 13");
+assert.equal(readConstant("SAVE_VERSION"), 14, "career peak records need schema version 14");
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),
   6,
@@ -173,9 +173,15 @@ assert.ok(
 );
 
 for (const field of [
+  "highestRate",
+  "highestPower",
+  "highestResearch",
+  "highestStarport",
+  "battleCount",
   "expeditionRuns",
   "expeditionBossWins",
-  "expeditionArtifacts",
+  "transcensions",
+  "frontierSectors",
 ]) {
   assert.match(
     cloudSource,
@@ -195,6 +201,27 @@ for (const field of [
     `Firestore rules must keep ${field} monotonic`,
   );
 }
+
+assert.match(
+  cloudSource,
+  /syncDueAt\s*<=\s*requestedDueAt/,
+  "periodic local saves must preserve the earliest pending cloud upload",
+);
+assert.match(
+  cloudSource,
+  /window\.addEventListener\("stellar-local-save"[\s\S]*?markCloudDirty\(\)/,
+  "every local save must mark the cloud snapshot dirty",
+);
+assert.match(
+  cloudSource,
+  /document\.addEventListener\("visibilitychange"[\s\S]*?flushCloudSync\(\)/,
+  "backgrounding the page must flush pending cloud progress",
+);
+assert.match(
+  cloudSource,
+  /dirty\s*=\s*dirtyVersion\s*!==\s*uploadedDirtyVersion/,
+  "an upload must retain changes created while it was in flight",
+);
 
 const saveRules = firestoreRules.match(
   /match \/saves\/\{userId\} \{([\s\S]*?)\n    match \/leaderboards/,
@@ -344,9 +371,27 @@ for (const upgrade of upgrades) {
 assert.equal(researchBranches.length, 4, "research must expose four focused branches");
 assert.equal(
   new Set(upgrades.map((upgrade) => upgrade.id)).size,
-  12,
-  "legacy research ids must remain unique and compatible",
+  24,
+  "the expanded research tree must expose 24 unique compatible ids",
 );
+for (const branch of researchBranches) {
+  const branchUpgrades = upgrades.filter((upgrade) => upgrade.branch === branch.id);
+  assert.equal(branchUpgrades.length, 6, `${branch.id} must expose six research nodes`);
+  assert.equal(
+    branchUpgrades.filter((upgrade) => upgrade.tier === 1).length,
+    1,
+    `${branch.id} must begin at one root node`,
+  );
+  assert.equal(
+    branchUpgrades.filter((upgrade) => upgrade.tier === 4).length,
+    1,
+    `${branch.id} must merge into one final node`,
+  );
+  assert.ok(
+    branchUpgrades.every((upgrade) => ["left", "right", "full"].includes(upgrade.lane)),
+    `${branch.id} nodes need explicit tree lanes`,
+  );
+}
 assert.match(source, /!isUpgradePathAvailable\(upgrade\)/);
 
 for (const target of skirmishes) {
@@ -363,6 +408,11 @@ for (const target of skirmishes) {
 
 assert.equal(starportMaterials.length, 6, "starport needs six material types");
 assert.equal(starportModules.length, 6, "starport needs six module slots");
+assert.equal(
+  readConstant("STARPORT_TOTAL_MAX_RANK"),
+  starportModules.reduce((total, module) => total + module.maxRank, 0),
+  "leaderboard starport peak must match the real construction cap",
+);
 const materialIds = new Set(starportMaterials.map((material) => material.id));
 const moduleMaterialIds = new Set();
 for (const module of starportModules) {

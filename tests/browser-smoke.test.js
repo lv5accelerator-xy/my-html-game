@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.22.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.23.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -145,6 +145,8 @@ async function main() {
         Date.UTC(2026, 7, 10, 12, 0, 0),
       ),
       leaderboard: window.StellarOutpostCloudBridge.getLeaderboardEntry(),
+      cloudDiagnosticsReady:
+        typeof window.StellarCloudSaveDiagnostics === "function",
       communicationsReady: Boolean(window.StellarCommunicationsBridge),
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
       bgmTrackTitle: document.querySelector("#bgm-audio").dataset.trackTitle,
@@ -161,15 +163,15 @@ async function main() {
         === document.querySelector(".music-player-shell"),
     }));
 
-    assert.equal(snapshot.gameVersion, "0.22.0");
-    assert.equal(snapshot.saveVersion, 13);
+    assert.equal(snapshot.gameVersion, "0.23.0");
+    assert.equal(snapshot.saveVersion, 14);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.22\.0/);
+    assert.match(snapshot.footer, /v0\.23\.0/);
     assert.equal(snapshot.starfall.phase, "active");
     assert.deepEqual(snapshot.starfall.availableDayKeys, [
       "2026-08-08",
@@ -180,9 +182,11 @@ async function main() {
     assert.ok(snapshot.starfall.state.dayRecords.every((record) => record.optionIds.length === 3));
     assert.equal(snapshot.starfall.letters.length, 7);
     assert.equal(snapshot.starfall.milestones.length, 7);
-    assert.equal(snapshot.leaderboard.starfallTotalEarned, 0);
-    assert.equal(snapshot.leaderboard.starfallRoutes, 0);
-    assert.equal(snapshot.leaderboard.starfallLetters, 0);
+    assert.ok(snapshot.leaderboard.highestRate > 0);
+    assert.equal(snapshot.leaderboard.highestResearch, 0);
+    assert.equal(snapshot.leaderboard.highestStarport, 0);
+    assert.equal(snapshot.leaderboard.frontierSectors, 0);
+    assert.equal(snapshot.cloudDiagnosticsReady, true);
     assert.equal(snapshot.fleetCommand.presets.length, 3);
     assert.equal(snapshot.fleetCommand.challenge.phases.length, 3);
     assert.equal(snapshot.fleetCommand.ammo, 12);
@@ -462,6 +466,10 @@ async function main() {
       const solarLensButton = document.querySelector('[data-upgrade-id="solarLens"]');
       return {
         branches: document.querySelectorAll(".research-branch").length,
+        nodes: document.querySelectorAll(".research-node").length,
+        fullNodes: document.querySelectorAll(".research-node.lane-full").length,
+        leftNodes: document.querySelectorAll(".research-node.lane-left").length,
+        rightNodes: document.querySelectorAll(".research-node.lane-right").length,
         available: document.querySelector("#research-available").textContent,
         output: document.querySelector("#research-output").textContent,
         droneAiDisabled: droneAiButton.disabled,
@@ -473,6 +481,10 @@ async function main() {
       };
     });
     assert.equal(researchTreeBefore.branches, 4);
+    assert.equal(researchTreeBefore.nodes, 24);
+    assert.equal(researchTreeBefore.fullNodes, 8);
+    assert.equal(researchTreeBefore.leftNodes, 8);
+    assert.equal(researchTreeBefore.rightNodes, 8);
     assert.equal(researchTreeBefore.droneAiDisabled, false);
     assert.equal(researchTreeBefore.solarLensDisabled, true);
     assert.equal(researchTreeBefore.solarLensLabel, "需前置");
@@ -1076,28 +1088,43 @@ async function main() {
         swarmMatriarch: 4,
         voidChoir: 5,
       };
-      leaderboardSave.expedition.artifacts = [
-        "glassCompass",
-        "silentBeacon",
-        "foldedWing",
-        "blueEmber",
+      leaderboardSave.upgrades = [
+        "gloves",
+        "scanner",
+        "vectorGrip",
+        "quantumSorting",
+        "echoCache",
+        "beaconConvergence",
       ];
+      leaderboardSave.highestResearchCount = 0;
+      leaderboardSave.starport.modules = {
+        refinery: 1,
+        droneDock: 2,
+        logistics: 3,
+        battery: 4,
+        shield: 5,
+        radar: 6,
+      };
+      leaderboardSave.highestStarportRanks = 0;
       bridge.applySnapshot(leaderboardSave);
       return {
         entry: bridge.getLeaderboardEntry(),
         runs: document.querySelector("#leaderboard-expedition-runs").textContent,
         bosses: document.querySelector("#leaderboard-boss-victories").textContent,
-        artifacts: document.querySelector("#leaderboard-expedition-artifacts").textContent,
+        research: document.querySelector("#leaderboard-highest-research").textContent,
+        starport: document.querySelector("#leaderboard-highest-starport").textContent,
         personalCards: document.querySelectorAll(".leaderboard-personal-grid article").length,
         categories: document.querySelectorAll("[data-leaderboard-category]").length,
       };
     });
     assert.equal(expeditionLeaderboard.entry.expeditionRuns, 17);
     assert.equal(expeditionLeaderboard.entry.expeditionBossWins, 12);
-    assert.equal(expeditionLeaderboard.entry.expeditionArtifacts, 4);
+    assert.equal(expeditionLeaderboard.entry.highestResearch, 6);
+    assert.equal(expeditionLeaderboard.entry.highestStarport, 21);
     assert.equal(expeditionLeaderboard.runs, "17");
     assert.equal(expeditionLeaderboard.bosses, "12");
-    assert.equal(expeditionLeaderboard.artifacts, "4 / 8");
+    assert.equal(expeditionLeaderboard.research, "6 / 24");
+    assert.equal(expeditionLeaderboard.starport, "21 / 72");
     assert.equal(expeditionLeaderboard.personalCards, 9);
     assert.equal(expeditionLeaderboard.categories, 9);
 
@@ -1146,7 +1173,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.22.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.23.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1155,7 +1182,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.22\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.23\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

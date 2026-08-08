@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.22.0";
-  const PATCH_NOTES_VERSION = "0.22.0";
-  const SAVE_VERSION = 13;
+  const GAME_VERSION = "0.23.0";
+  const PATCH_NOTES_VERSION = "0.23.0";
+  const SAVE_VERSION = 14;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -90,6 +90,7 @@
   const MAX_COMBAT_UPGRADE_COST = 60000000;
   const DUST_RESERVE_CAP = 9999000000;
   const CAREER_DUST_CAP = 999000000;
+  const STARPORT_TOTAL_MAX_RANK = 72;
   const CORE_RESERVE_CAP = 999000000;
   const ENDGAME_RESOURCE_CAP = 999000000;
   const BGM_PLAYLIST_SELECTION = "playlist";
@@ -97,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=0.22.0",
+      src: "assets/outpost-beyond-orion.mp3?v=0.23.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=0.22.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=0.23.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=0.22.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=0.23.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.22.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.23.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -154,6 +155,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.23.0",
+      theme: "科技航图",
+      changes: [
+        "研究终端扩展为四条各六节点的科技树；每条路线都包含根节点、双分支和汇聚终点，共 24 项研究。",
+        "排行榜按当前长期玩法重做，新增最高自动产量、研究网络、星港建设、奇点超越与边境星区记录，并移除旧活动分类。",
+        "新增自动产量、研究节点和星港总等级永久峰值；跃迁与奇点坍缩前会先固化纪录，旧存档自动补齐。",
+        "修复周期性本地存档不断延后云端自动上传的问题；隐藏页面时会立即尝试同步，并保护上传期间产生的新进度。",
+        "排行榜安全规则升级为新字段只增不减，旧榜单记录可由本版本首次上传安全迁移。",
+      ],
+    },
     {
       version: "0.22.0",
       theme: "产能重构",
@@ -770,6 +782,7 @@
       description: "手动回收产量 ×2",
       branch: "salvage",
       tier: 1,
+      lane: "full",
       requires: [],
       cost: 40,
       unlock: 20,
@@ -782,10 +795,63 @@
       description: "手动回收产量 ×3",
       branch: "salvage",
       tier: 2,
+      lane: "left",
       requires: ["gloves"],
       cost: 320,
       unlock: 180,
       effect: { click: 3 },
+    },
+    {
+      id: "vectorGrip",
+      name: "矢量牵引腕带",
+      icon: "⌁",
+      description: "手动回收产量 ×1.5",
+      branch: "salvage",
+      tier: 2,
+      lane: "right",
+      requires: ["gloves"],
+      cost: 180,
+      unlock: 90,
+      effect: { click: 1.5 },
+    },
+    {
+      id: "quantumSorting",
+      name: "量子分拣缓存",
+      icon: "▦",
+      description: "手动回收产量 ×2",
+      branch: "salvage",
+      tier: 3,
+      lane: "left",
+      requires: ["scanner"],
+      cost: 1200,
+      unlock: 700,
+      effect: { click: 2 },
+    },
+    {
+      id: "echoCache",
+      name: "回波定位阵列",
+      icon: "⌖",
+      description: "手动回收产量 ×2",
+      branch: "salvage",
+      tier: 3,
+      lane: "right",
+      requires: ["vectorGrip"],
+      cost: 3800,
+      unlock: 2500,
+      effect: { click: 2 },
+    },
+    {
+      id: "beaconConvergence",
+      name: "信标汇聚协议",
+      icon: "✦",
+      description: "手动回收产量 ×2",
+      branch: "salvage",
+      tier: 4,
+      lane: "full",
+      requires: ["quantumSorting", "echoCache"],
+      cost: 18000,
+      unlock: 12000,
+      effect: { click: 2 },
     },
     {
       id: "droneAi",
@@ -794,6 +860,7 @@
       description: "拾荒无人机原始产量 ×2",
       branch: "automation",
       tier: 1,
+      lane: "full",
       requires: [],
       cost: 520,
       unlock: 300,
@@ -806,10 +873,24 @@
       description: "光帆采集器原始产量 ×2",
       branch: "automation",
       tier: 2,
+      lane: "left",
       requires: ["droneAi"],
       cost: 2500,
       unlock: 1800,
       effect: { building: "sail", multiplier: 2 },
+    },
+    {
+      id: "swarmRouting",
+      name: "蜂群航线编排",
+      icon: "⌘",
+      description: "无人机与光帆原始产量 ×1.5",
+      branch: "automation",
+      tier: 2,
+      lane: "right",
+      requires: ["droneAi"],
+      cost: 4200,
+      unlock: 2800,
+      effect: { buildings: ["drone", "sail"], multiplier: 1.5 },
     },
     {
       id: "zeroG",
@@ -818,10 +899,37 @@
       description: "所有设施原始产量 ×1.5",
       branch: "automation",
       tier: 3,
+      lane: "left",
       requires: ["solarLens"],
       cost: 12000,
       unlock: 8500,
       effect: { global: 1.5 },
+    },
+    {
+      id: "adaptiveCoordination",
+      name: "自适应编队算法",
+      icon: "⟲",
+      description: "所有设施原始产量 ×1.25",
+      branch: "automation",
+      tier: 3,
+      lane: "right",
+      requires: ["swarmRouting"],
+      cost: 32000,
+      unlock: 22000,
+      effect: { global: 1.25 },
+    },
+    {
+      id: "autonomousFoundry",
+      name: "自治生产核心",
+      icon: "∞",
+      description: "所有设施原始产量 ×1.4",
+      branch: "automation",
+      tier: 4,
+      lane: "full",
+      requires: ["zeroG", "adaptiveCoordination"],
+      cost: 95000,
+      unlock: 68000,
+      effect: { global: 1.4 },
     },
     {
       id: "crystalResonance",
@@ -830,6 +938,7 @@
       description: "分析舱与熔铸站原始产量 ×2",
       branch: "industry",
       tier: 1,
+      lane: "full",
       requires: [],
       cost: 60000,
       unlock: 45000,
@@ -842,10 +951,24 @@
       description: "深空中继环原始产量 ×3",
       branch: "industry",
       tier: 2,
+      lane: "left",
       requires: ["crystalResonance"],
       cost: 260000,
       unlock: 190000,
       effect: { building: "relay", multiplier: 3 },
+    },
+    {
+      id: "quantumForge",
+      name: "量子铸造矩阵",
+      icon: "⬡",
+      description: "分析舱与熔铸站原始产量 ×1.5",
+      branch: "industry",
+      tier: 2,
+      lane: "right",
+      requires: ["crystalResonance"],
+      cost: 150000,
+      unlock: 100000,
+      effect: { buildings: ["lab", "forge"], multiplier: 1.5 },
     },
     {
       id: "timeFold",
@@ -854,10 +977,37 @@
       description: "所有设施原始产量 ×2",
       branch: "industry",
       tier: 3,
+      lane: "left",
       requires: ["relayProtocol"],
       cost: 1100000,
       unlock: 800000,
       effect: { global: 2 },
+    },
+    {
+      id: "dysonLogistics",
+      name: "戴森物流闭环",
+      icon: "☼",
+      description: "中继环与戴森阵列原始产量 ×1.6",
+      branch: "industry",
+      tier: 3,
+      lane: "right",
+      requires: ["quantumForge"],
+      cost: 680000,
+      unlock: 460000,
+      effect: { buildings: ["relay", "dyson"], multiplier: 1.6 },
+    },
+    {
+      id: "orbitalSynthesis",
+      name: "轨道工业合成",
+      icon: "◎",
+      description: "所有设施原始产量 ×1.4",
+      branch: "industry",
+      tier: 4,
+      lane: "full",
+      requires: ["timeFold", "dysonLogistics"],
+      cost: 2800000,
+      unlock: 1900000,
+      effect: { global: 1.4 },
     },
     {
       id: "ringDismantling",
@@ -866,6 +1016,7 @@
       description: "行星环拆解场原始产量 ×2",
       branch: "frontier",
       tier: 1,
+      lane: "full",
       requires: [],
       cost: 4200000,
       unlock: 3000000,
@@ -878,10 +1029,24 @@
       description: "裂隙捕获网原始产量 ×2",
       branch: "frontier",
       tier: 2,
+      lane: "left",
       requires: ["ringDismantling"],
       cost: 12000000,
       unlock: 8000000,
       effect: { building: "riftNet", multiplier: 2 },
+    },
+    {
+      id: "vacuumCartography",
+      name: "真空结构测绘",
+      icon: "◇",
+      description: "星环与裂隙设施原始产量 ×1.5",
+      branch: "frontier",
+      tier: 2,
+      lane: "right",
+      requires: ["ringDismantling"],
+      cost: 7500000,
+      unlock: 5000000,
+      effect: { buildings: ["ringYard", "riftNet"], multiplier: 1.5 },
     },
     {
       id: "horizonAnchors",
@@ -890,10 +1055,24 @@
       description: "视界潮汐矿场原始产量 ×2",
       branch: "frontier",
       tier: 3,
+      lane: "left",
       requires: ["riftHarmonics"],
       cost: 36000000,
       unlock: 24000000,
       effect: { building: "horizonMine", multiplier: 2 },
+    },
+    {
+      id: "eventHorizonLenses",
+      name: "事件视界透镜",
+      icon: "◉",
+      description: "视界矿场与宇宙弦织机原始产量 ×1.5",
+      branch: "frontier",
+      tier: 3,
+      lane: "right",
+      requires: ["vacuumCartography"],
+      cost: 22000000,
+      unlock: 15000000,
+      effect: { buildings: ["horizonMine", "cosmicLoom"], multiplier: 1.5 },
     },
     {
       id: "cosmicReclamation",
@@ -902,7 +1081,8 @@
       description: "宇宙弦织取机原始产量 ×3",
       branch: "frontier",
       tier: 4,
-      requires: ["horizonAnchors"],
+      lane: "full",
+      requires: ["horizonAnchors", "eventHorizonLenses"],
       cost: 78000000,
       unlock: 50000000,
       effect: { building: "cosmicLoom", multiplier: 3 },
@@ -2989,16 +3169,16 @@
     expeditionCollectionCount: $("#expedition-collection-count"),
     expeditionArtifactGrid: $("#expedition-artifact-grid"),
     expeditionSkinGrid: $("#expedition-skin-grid"),
-    leaderboardCareerDust: $("#leaderboard-career-dust"),
+    leaderboardHighestRate: $("#leaderboard-highest-rate"),
     leaderboardHighestPower: $("#leaderboard-highest-power"),
+    leaderboardHighestResearch: $("#leaderboard-highest-research"),
+    leaderboardHighestStarport: $("#leaderboard-highest-starport"),
     leaderboardBattleCount: $("#leaderboard-battle-count"),
     leaderboardExpeditionRuns: $("#leaderboard-expedition-runs"),
     leaderboardBossVictories: $("#leaderboard-boss-victories"),
-    leaderboardExpeditionArtifacts: $("#leaderboard-expedition-artifacts"),
-    leaderboardStarfallEarned: $("#leaderboard-starfall-earned"),
-    leaderboardStarfallRoutes: $("#leaderboard-starfall-routes"),
-    leaderboardStarfallLetters: $("#leaderboard-starfall-letters"),
-    leaderboardCurrentPower: $("#leaderboard-current-power"),
+    leaderboardTranscensions: $("#leaderboard-transcensions"),
+    leaderboardFrontierSectors: $("#leaderboard-frontier-sectors"),
+    leaderboardCurrentRate: $("#leaderboard-current-rate"),
     starfield: $("#starfield"),
   };
 
@@ -3236,6 +3416,9 @@
       careerDust: 0,
       careerBattles: 0,
       highestCombinedPower: 0,
+      highestAutomaticRate: 0,
+      highestResearchCount: 0,
+      highestStarportRanks: 0,
       lifetimeClicks: 0,
       buildings,
       upgrades: [],
@@ -7300,6 +7483,20 @@
         safeAdd(getCombatPower(merged), getDefensePower(merged)),
       ),
     );
+    merged.highestAutomaticRate = Math.min(
+      DUST_RESERVE_CAP,
+      clampGameNumber(raw.highestAutomaticRate),
+    );
+    merged.highestResearchCount = clamp(
+      Math.floor(Number(raw.highestResearchCount) || 0),
+      0,
+      UPGRADES.length,
+    );
+    merged.highestStarportRanks = clamp(
+      Math.floor(Number(raw.highestStarportRanks) || 0),
+      0,
+      STARPORT_TOTAL_MAX_RANK,
+    );
     merged.buildings = { ...base.buildings };
     BUILDINGS.forEach((building) => {
       merged.buildings[building.id] = clampGameCount(
@@ -7350,7 +7547,7 @@
     } else {
       merged.buff = null;
     }
-    return merged;
+    return refreshCareerRecords(merged);
   }
 
   function readBestSaveSnapshot() {
@@ -7772,6 +7969,7 @@
       confirmText: "确认跃迁",
       cancelText: "暂不跃迁",
       onConfirm: () => {
+        refreshCareerRecords();
         state.cores = Math.min(
           CORE_RESERVE_CAP,
           safeAdd(state.cores, gain),
@@ -7891,6 +8089,7 @@
       confirmText: "确认坍缩",
       cancelText: "继续当前周期",
       onConfirm: () => {
+        refreshCareerRecords();
         state.endgame.shards = Math.min(
           ENDGAME_RESOURCE_CAP,
           safeAdd(state.endgame.shards, gain),
@@ -8581,6 +8780,29 @@
         Number(targetState.highestCombinedPower) || 0,
         getCombinedPower(targetState),
       ),
+    );
+    targetState.highestAutomaticRate = Math.min(
+      DUST_RESERVE_CAP,
+      Math.max(
+        Number(targetState.highestAutomaticRate) || 0,
+        calculateRate(targetState, false),
+      ),
+    );
+    targetState.highestResearchCount = clamp(
+      Math.max(
+        Number(targetState.highestResearchCount) || 0,
+        targetState.upgrades?.length || 0,
+      ),
+      0,
+      UPGRADES.length,
+    );
+    targetState.highestStarportRanks = clamp(
+      Math.max(
+        Number(targetState.highestStarportRanks) || 0,
+        getTotalStarportRanks(targetState),
+      ),
+      0,
+      STARPORT_TOTAL_MAX_RANK,
     );
     return targetState;
   }
@@ -9964,11 +10186,16 @@
         const affordable = state.dust >= upgrade.cost;
         const requirements = getUpgradeRequirements(upgrade);
         const card = document.createElement("article");
-        card.className = `upgrade-card${bought ? " bought" : ""}${
+        const lane = ["left", "right", "full"].includes(upgrade.lane)
+          ? upgrade.lane
+          : "full";
+        card.className = `upgrade-card research-node lane-${lane}${bought ? " bought" : ""}${
           discovered ? "" : " undiscovered"
         }${pathAvailable ? "" : " path-locked"}${
           !bought && discovered && pathAvailable && affordable ? " available" : ""
         }`;
+        card.dataset.tier = String(upgrade.tier);
+        card.style.gridRow = String(upgrade.tier);
 
         const icon = document.createElement("span");
         icon.className = "upgrade-icon";
@@ -11341,15 +11568,18 @@
 
   function renderLeaderboardSummary() {
     refreshCareerRecords();
-    const currentPower = getCombinedPower();
-    elements.leaderboardCareerDust.textContent = formatNumber(
-      state.careerDust,
-      0,
-    );
+    const currentRate = calculateRate();
+    elements.leaderboardHighestRate.textContent = `${formatProductionRate(
+      state.highestAutomaticRate,
+    )} / 秒`;
     elements.leaderboardHighestPower.textContent = formatNumber(
       state.highestCombinedPower,
       0,
     );
+    elements.leaderboardHighestResearch.textContent =
+      `${state.highestResearchCount} / ${UPGRADES.length}`;
+    elements.leaderboardHighestStarport.textContent =
+      `${state.highestStarportRanks} / ${STARPORT_TOTAL_MAX_RANK}`;
     elements.leaderboardBattleCount.textContent = formatNumber(
       state.careerBattles,
       0,
@@ -11362,18 +11592,16 @@
       getTotalBossWins(),
       0,
     );
-    elements.leaderboardExpeditionArtifacts.textContent =
-      `${state.expedition.artifacts.length} / ${EXPEDITION_ARTIFACTS.length}`;
-    elements.leaderboardStarfallEarned.textContent = formatNumber(
-      state.starfall.totalEarned,
+    elements.leaderboardTranscensions.textContent = formatNumber(
+      state.endgame.transcensions,
       0,
     );
-    elements.leaderboardStarfallRoutes.textContent =
-      `${state.starfall.completedDays.length} / 15`;
-    elements.leaderboardStarfallLetters.textContent =
-      `${Object.keys(state.starfall.letterChoices).length} / ${STARFALL_LETTERS.length}`;
-    elements.leaderboardCurrentPower.textContent =
-      `当前综合战力 ${formatNumber(currentPower, 0)}`;
+    elements.leaderboardFrontierSectors.textContent = formatNumber(
+      state.endgame.sectorLevel,
+      0,
+    );
+    elements.leaderboardCurrentRate.textContent =
+      `当前自动产量 ${formatProductionRate(currentRate)} / 秒`;
   }
 
   function isPrimaryPageUnlocked(pageId, targetState = state) {
@@ -11665,25 +11893,21 @@
     refreshCareerRecords();
     return {
       playerName: normalizePlayerName(state.playerName) || "未命名指挥官",
-      careerDust: clampGameNumber(state.careerDust),
+      highestRate: clampGameNumber(state.highestAutomaticRate),
       highestPower: clampGameNumber(state.highestCombinedPower),
+      highestResearch: Math.min(
+        UPGRADES.length,
+        clampGameCount(state.highestResearchCount),
+      ),
+      highestStarport: Math.min(
+        STARPORT_TOTAL_MAX_RANK,
+        clampGameCount(state.highestStarportRanks),
+      ),
       battleCount: clampGameCount(state.careerBattles),
       transcensions: clampGameCount(state.endgame?.transcensions),
       expeditionRuns: clampGameCount(state.expedition?.completedRuns),
       expeditionBossWins: clampGameCount(getTotalBossWins()),
-      expeditionArtifacts: Math.min(
-        EXPEDITION_ARTIFACTS.length,
-        clampGameCount(state.expedition?.artifacts?.length),
-      ),
-      starfallTotalEarned: Math.min(
-        STARFALL_CURRENCY_CAP,
-        clampGameCount(state.starfall?.totalEarned),
-      ),
-      starfallRoutes: Math.min(15, clampGameCount(state.starfall?.completedDays?.length)),
-      starfallLetters: Math.min(
-        STARFALL_LETTERS.length,
-        clampGameCount(Object.keys(state.starfall?.letterChoices || {}).length),
-      ),
+      frontierSectors: clampGameCount(state.endgame?.sectorLevel),
     };
   }
 

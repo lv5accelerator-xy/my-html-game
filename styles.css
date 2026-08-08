@@ -3295,8 +3295,60 @@ h2 {
 
 .research-track {
   display: grid;
-  gap: 7px;
-  padding: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 8px;
+  row-gap: 18px;
+  padding: 16px 8px 10px;
+}
+
+.research-node {
+  position: relative;
+  z-index: 1;
+}
+
+.research-node.lane-left {
+  grid-column: 1;
+}
+
+.research-node.lane-right {
+  grid-column: 2;
+}
+
+.research-node.lane-full {
+  width: calc(50% - 4px);
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+.research-node::before {
+  position: absolute;
+  z-index: -1;
+  top: -19px;
+  left: 50%;
+  width: 1px;
+  height: 18px;
+  content: "";
+  background: linear-gradient(transparent, rgba(184, 140, 255, 0.42));
+}
+
+.research-node[data-tier="1"]::before {
+  display: none;
+}
+
+.research-node::after {
+  position: absolute;
+  top: -4px;
+  left: calc(50% - 3px);
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgba(184, 140, 255, 0.5);
+  border-radius: 50%;
+  content: "";
+  background: #101a2b;
+}
+
+.research-node[data-tier="1"]::after {
+  display: none;
 }
 
 .upgrade-card,
@@ -8532,6 +8584,30 @@ footer {
   .upgrade-list,
   .achievement-list {
     grid-template-columns: 1fr;
+  }
+
+  .research-track {
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+  }
+
+  .research-node.lane-left,
+  .research-node.lane-right,
+  .research-node.lane-full {
+    width: 100%;
+    grid-column: 1;
+    grid-row: auto !important;
+  }
+
+  .research-node::before {
+    left: 24px;
+    height: 10px;
+    top: -11px;
+  }
+
+  .research-node::after {
+    top: -4px;
+    left: 21px;
   }
 
   .building-list {

@@ -61,7 +61,7 @@ async function main() {
   });
   await context.addInitScript((legacySave) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.20.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.20.1");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -142,7 +142,7 @@ async function main() {
       bgmPath: new URL(document.querySelector("#bgm-audio").src).pathname,
     }));
 
-    assert.equal(snapshot.gameVersion, "0.20.0");
+    assert.equal(snapshot.gameVersion, "0.20.1");
     assert.equal(snapshot.saveVersion, 13);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
@@ -150,7 +150,7 @@ async function main() {
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.20\.0/);
+    assert.match(snapshot.footer, /v0\.20\.1/);
     assert.equal(snapshot.starfall.phase, "active");
     assert.deepEqual(snapshot.starfall.availableDayKeys, [
       "2026-08-08",
@@ -363,9 +363,10 @@ async function main() {
       const growthSave = bridge.createSnapshot();
       growthSave.version = 6;
       growthSave.activePage = "fleet";
-      growthSave.dust = 999000000;
-      growthSave.runDust = 999000000;
-      growthSave.lifetimeDust = 999000000;
+      growthSave.dust = 9999000000;
+      growthSave.runDust = 9999000000;
+      growthSave.lifetimeDust = 9999000000;
+      growthSave.careerDust = 9999000000;
       growthSave.cores = 999000000;
       growthSave.totalCores = 999000000;
       growthSave.buyMode = "10";
@@ -383,8 +384,14 @@ async function main() {
       return {
         rate: bridge.getStarportDiagnostics().automaticRate,
         label: document.querySelector("#rate-value").textContent,
+        dust: bridge.createSnapshot().dust,
+        careerDust: bridge.createSnapshot().careerDust,
+        dustLabel: document.querySelector("#dust-value").textContent,
       };
     });
+    assert.equal(cappedGrowthBefore.dust, 9999000000);
+    assert.equal(cappedGrowthBefore.careerDust, 999000000);
+    assert.equal(cappedGrowthBefore.dustLabel, "9999M");
     assert.ok(
       cappedGrowthBefore.rate > 999000,
       "late-game production must grow past the former 999K hard cap",
@@ -972,7 +979,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.20.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.20.2"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -981,7 +988,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.20\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.20\.2/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

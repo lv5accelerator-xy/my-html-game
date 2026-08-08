@@ -97,12 +97,12 @@ assert.match(
   /sourceVersion\s*<\s*NUMERIC_MIGRATION_VERSION/,
   "numeric migration must be decoupled from ordinary save migrations",
 );
-assert.equal(dustCap, 999000000, "late-game reserve must allow long idle sessions");
-assert.ok(dustCap < 1e9, "active dust reserve must remain below B notation");
+assert.equal(dustCap, 9999000000, "late-game reserve must reach 9999M");
+assert.ok(dustCap < 1e10, "active dust reserve must stop at 9999M");
 assert.ok(careerDustCap < 1e9, "career dust must remain below B notation");
 assert.ok(maxBuildingUnitCost < dustCap, "one facility must always be affordable");
 assert.ok(maxCombatUpgradeCost < dustCap, "one combat upgrade must stay affordable");
-assert.doesNotMatch(math.formatNumber(dustCap), /[BTP]/);
+assert.doesNotMatch(math.formatNumber(dustCap), /[PT]/);
 assert.doesNotMatch(math.formatNumber(careerDustCap), /[BTP]/);
 assert.equal(qualityTickInterval, 100, "quality logic must be capped at 10 Hz");
 assert.equal(ecoTickInterval, 250, "eco logic must be capped at 4 Hz");

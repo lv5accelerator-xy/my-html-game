@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.20.0";
-  const PATCH_NOTES_VERSION = "0.20.0";
+  const GAME_VERSION = "0.20.1";
+  const PATCH_NOTES_VERSION = "0.20.1";
   const SAVE_VERSION = 13;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -88,7 +88,7 @@
   const COMBAT_COST_LATE_POWER = 0.25;
   const MAX_BUILDING_UNIT_COST = 60000000;
   const MAX_COMBAT_UPGRADE_COST = 60000000;
-  const DUST_RESERVE_CAP = 999000000;
+  const DUST_RESERVE_CAP = 9999000000;
   const CAREER_DUST_CAP = 999000000;
   const CORE_RESERVE_CAP = 999000000;
   const ENDGAME_RESOURCE_CAP = 999000000;
@@ -123,6 +123,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.20.1",
+      theme: "星尘储量扩容",
+      changes: [
+        "星尘储量上限由 999M 提高至 9999M，延长后期挂机、舰队建设、星港升级与活动兑换的连续操作空间。",
+        "顶部星尘储量在超过 999M 后继续使用 M 单位显示，最高明确显示为 9999M。",
+        "可用星尘、本轮星尘、历史星尘、星区星尘和旧存档清洗统一使用新上限，避免重新载入后被截回 999M。",
+        "生涯星尘排行榜继续保持 999M 统计上限，防止扩容影响既有榜单排序与 Firestore 校验。",
+        "回归测试新增 9999M 存档清洗、界面显示和生涯统计独立封顶检查。",
+      ],
+    },
     {
       version: "0.20.0",
       theme: "星雨寄航",
@@ -3172,6 +3183,12 @@
       .toFixed(digits)
       .replace(/\.?0+$/, "");
     return `${numericValue < 0 ? "-" : ""}${trimmed}${unit.suffix}`;
+  }
+
+  function formatDustReserve(value) {
+    const numericValue = clampGameNumber(value);
+    if (numericValue < 1e9) return formatNumber(numericValue);
+    return `${Math.floor(numericValue / 1e6)}M`;
   }
 
   function randomBetween(min, max) {
@@ -6737,9 +6754,12 @@
       merged.runDust,
       sanitizeDustNumber(raw.lifetimeDust),
     );
-    merged.careerDust = Math.max(
-      merged.lifetimeDust,
-      sanitizeDustNumber(raw.careerDust, CAREER_DUST_CAP),
+    merged.careerDust = Math.min(
+      CAREER_DUST_CAP,
+      Math.max(
+        Math.min(merged.lifetimeDust, CAREER_DUST_CAP),
+        sanitizeDustNumber(raw.careerDust, CAREER_DUST_CAP),
+      ),
     );
     merged.lifetimeClicks = clampGameCount(raw.lifetimeClicks);
     const rawAvailableCores = clampGameNumber(
@@ -11476,7 +11496,7 @@
     const rate = Number.isFinite(rateOverride) ? rateOverride : calculateRate();
 
     updatePlayerNameDisplay();
-    elements.dust.textContent = formatNumber(state.dust);
+    elements.dust.textContent = formatDustReserve(state.dust);
     elements.rate.textContent = `${formatProductionRate(rate)} / 秒`;
     elements.cores.textContent = formatNumber(state.cores, 0);
     updateEvent();

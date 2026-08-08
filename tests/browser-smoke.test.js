@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.21.1");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.22.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -154,12 +154,14 @@ async function main() {
       ),
       bgmSelection: document.querySelector("#bgm-track").value,
       bgmOptions: document.querySelectorAll("#bgm-track option").length,
+      topBgmSelection: document.querySelector("#top-bgm-track").value,
+      topBgmOptions: document.querySelectorAll("#top-bgm-track option").length,
       bgmPlayerTitle: document.querySelector("#bgm-current-title").textContent,
       bgmPlayerBeforeSound: document.querySelector("#sound-button").previousElementSibling
-        === document.querySelector("#bgm-button"),
+        === document.querySelector(".music-player-shell"),
     }));
 
-    assert.equal(snapshot.gameVersion, "0.21.1");
+    assert.equal(snapshot.gameVersion, "0.22.0");
     assert.equal(snapshot.saveVersion, 13);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
@@ -167,7 +169,7 @@ async function main() {
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.21\.1/);
+    assert.match(snapshot.footer, /v0\.22\.0/);
     assert.equal(snapshot.starfall.phase, "active");
     assert.deepEqual(snapshot.starfall.availableDayKeys, [
       "2026-08-08",
@@ -217,13 +219,15 @@ async function main() {
     assert.equal(snapshot.bgmLoopEndTrim, 3.7);
     assert.equal(snapshot.bgmSelection, "playlist");
     assert.equal(snapshot.bgmOptions, 5);
+    assert.equal(snapshot.topBgmSelection, "playlist");
+    assert.equal(snapshot.topBgmOptions, 5);
     assert.equal(snapshot.bgmPlayerTitle, "猎户座外的前哨");
     assert.equal(snapshot.bgmPlayerBeforeSound, true);
     assert.ok(snapshot.metadata.lifetimeDust < 1e9);
     assert.ok(snapshot.metadata.totalCores >= 5000);
     assert.doesNotMatch(`${snapshot.dust} ${snapshot.rate} ${snapshot.cores}`, /[BTP]/);
 
-    await page.selectOption("#bgm-track", "signal-at-kestrel-nine", { force: true });
+    await page.selectOption("#top-bgm-track", "signal-at-kestrel-nine", { force: true });
     await page.waitForFunction(() => {
       const audio = document.querySelector("#bgm-audio");
       return audio.dataset.trackId === "signal-at-kestrel-nine" && audio.readyState >= 1;
@@ -232,10 +236,14 @@ async function main() {
       path: new URL(document.querySelector("#bgm-audio").src).pathname,
       title: document.querySelector("#bgm-audio").dataset.trackTitle,
       savedSelection: window.StellarOutpostCloudBridge.createSnapshot().bgmTrackSelection,
+      settingsSelection: document.querySelector("#bgm-track").value,
+      topSelection: document.querySelector("#top-bgm-track").value,
     }));
     assert.match(manualBgmSelection.path, /signal-at-kestrel-nine\.mp3$/);
     assert.equal(manualBgmSelection.title, "红隼九号信号");
     assert.equal(manualBgmSelection.savedSelection, "signal-at-kestrel-nine");
+    assert.equal(manualBgmSelection.settingsSelection, "signal-at-kestrel-nine");
+    assert.equal(manualBgmSelection.topSelection, "signal-at-kestrel-nine");
 
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => {
@@ -243,7 +251,8 @@ async function main() {
       return Boolean(window.StellarOutpostCloudBridge)
         && audio.dataset.trackId === "signal-at-kestrel-nine"
         && document.querySelector("#bgm-current-title").textContent === "红隼九号信号"
-        && document.querySelector("#bgm-track").value === "signal-at-kestrel-nine";
+        && document.querySelector("#bgm-track").value === "signal-at-kestrel-nine"
+        && document.querySelector("#top-bgm-track").value === "signal-at-kestrel-nine";
     });
 
     await page.selectOption("#bgm-track", "playlist", { force: true });
@@ -382,12 +391,19 @@ async function main() {
         addedTier,
         coordination,
         coordinationLabel: droneCard.querySelector(".building-rate").textContent,
+        purchasePreview: droneCard.querySelector(".building-purchase-preview").textContent,
       };
     });
     const fleetIndustryMultiplier = 1.0325;
     const exactSharedMultiplier = 1.22 * 1.08 * fleetIndustryMultiplier;
+    const coordinationMultiplier = (owned) => 2 ** Math.min(8, owned / 25);
+    const baseRaw =
+      5 * 0.3 * coordinationMultiplier(5)
+      + 2 * 120 * coordinationMultiplier(2);
     assert.ok(
-      Math.abs(productionFormulaCheck.base.total - 241.5 * fleetIndustryMultiplier) < 1e-9,
+      Math.abs(
+        productionFormulaCheck.base.total - baseRaw * fleetIndustryMultiplier
+      ) < 1e-9,
     );
     assert.ok(
       Math.abs(
@@ -398,7 +414,7 @@ async function main() {
     assert.ok(
       Math.abs(
         productionFormulaCheck.multiplied.total -
-          241.5 * 1.5 * 2 * exactSharedMultiplier
+          baseRaw * 1.5 * 2 * exactSharedMultiplier
       ) < 1e-6,
       "advertised production multipliers must apply exactly below overflow compression",
     );
@@ -416,11 +432,83 @@ async function main() {
     assert.ok(
       Math.abs(
         productionFormulaCheck.coordination.buildings.drone.perUnit -
-          153.6 * fleetIndustryMultiplier
+          (
+            96 * 0.3 * coordinationMultiplier(96)
+            - 95 * 0.3 * coordinationMultiplier(95)
+          ) * fleetIndustryMultiplier
       ) < 1e-6,
-      "a 95-unit drone fleet must receive its nine coordination doublings",
+      "continuous coordination preview must equal the exact 95 to 96 unit delta",
     );
-    assert.match(productionFormulaCheck.coordinationLabel, /编队 ×512/);
+    assert.match(productionFormulaCheck.coordinationLabel, /协同 ×13\.9/);
+    assert.match(productionFormulaCheck.purchasePreview, /购买预览/);
+    assert.match(productionFormulaCheck.purchasePreview, /本次 \+/);
+
+    const researchTreeBefore = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const researchSave = bridge.createSnapshot();
+      researchSave.activePage = "research";
+      researchSave.dust = 100000;
+      researchSave.runDust = 100000;
+      researchSave.lifetimeDust = 100000;
+      researchSave.upgrades = [];
+      researchSave.buff = null;
+      Object.keys(researchSave.buildings).forEach((id) => {
+        researchSave.buildings[id] = 0;
+      });
+      researchSave.buildings.drone = 20;
+      researchSave.lastSeen = Date.now();
+      bridge.applySnapshot(researchSave);
+      const droneAiButton = document.querySelector('[data-upgrade-id="droneAi"]');
+      const solarLensButton = document.querySelector('[data-upgrade-id="solarLens"]');
+      return {
+        branches: document.querySelectorAll(".research-branch").length,
+        available: document.querySelector("#research-available").textContent,
+        output: document.querySelector("#research-output").textContent,
+        droneAiDisabled: droneAiButton.disabled,
+        solarLensDisabled: solarLensButton.disabled,
+        solarLensLabel: solarLensButton.textContent,
+        droneAiImpact: droneAiButton
+          .closest(".upgrade-card")
+          .querySelector(".upgrade-impact").textContent,
+      };
+    });
+    assert.equal(researchTreeBefore.branches, 4);
+    assert.equal(researchTreeBefore.droneAiDisabled, false);
+    assert.equal(researchTreeBefore.solarLensDisabled, true);
+    assert.equal(researchTreeBefore.solarLensLabel, "需前置");
+    assert.match(researchTreeBefore.droneAiImpact, /收益预览/);
+    assert.match(researchTreeBefore.output, /秒/);
+    assert.ok(Number(researchTreeBefore.available) >= 3);
+
+    await page.click('[data-upgrade-id="droneAi"]');
+    const researchTreeAfter = await page.evaluate(() => ({
+      upgrades: window.StellarOutpostCloudBridge.createSnapshot().upgrades,
+      solarLensDisabled: document.querySelector('[data-upgrade-id="solarLens"]').disabled,
+      solarLensLabel: document.querySelector('[data-upgrade-id="solarLens"]').textContent,
+    }));
+    assert.ok(researchTreeAfter.upgrades.includes("droneAi"));
+    assert.equal(researchTreeAfter.solarLensDisabled, false);
+    assert.match(researchTreeAfter.solarLensLabel, /2\.5K/);
+
+    const legacyResearchCompatibility = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const legacyResearchSave = bridge.createSnapshot();
+      legacyResearchSave.activePage = "research";
+      legacyResearchSave.upgrades = ["cosmicReclamation"];
+      legacyResearchSave.lastSeen = Date.now();
+      bridge.applySnapshot(legacyResearchSave);
+      const button = document.querySelector(
+        '[data-upgrade-id="cosmicReclamation"]',
+      );
+      return {
+        upgrades: bridge.createSnapshot().upgrades,
+        label: button.textContent,
+        bought: button.closest(".upgrade-card").classList.contains("bought"),
+      };
+    });
+    assert.deepEqual(legacyResearchCompatibility.upgrades, ["cosmicReclamation"]);
+    assert.equal(legacyResearchCompatibility.label, "已接入");
+    assert.equal(legacyResearchCompatibility.bought, true);
 
     const cappedGrowthBefore = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
@@ -435,6 +523,7 @@ async function main() {
       growthSave.totalCores = 999000000;
       growthSave.buyMode = "10";
       growthSave.buff = null;
+      growthSave.upgrades = [];
       Object.keys(growthSave.buildings).forEach((id) => {
         growthSave.buildings[id] = 10000;
       });
@@ -445,8 +534,10 @@ async function main() {
       growthSave.endgame.sectorLevel = 1000000000000000;
       growthSave.endgame.protocols.production = 20;
       bridge.applySnapshot(growthSave);
+      const production = bridge.getProductionDiagnostics();
       return {
         rate: bridge.getStarportDiagnostics().automaticRate,
+        purchasePreview: production.purchasePreviews.cosmicLoom,
         label: document.querySelector("#rate-value").textContent,
         dust: bridge.createSnapshot().dust,
         careerDust: bridge.createSnapshot().careerDust,
@@ -474,6 +565,14 @@ async function main() {
     assert.ok(
       cappedGrowthAfter.rate > cappedGrowthBefore.rate,
       "buying fleet units above 999K/s must still increase production",
+    );
+    assert.equal(cappedGrowthBefore.purchasePreview.amount, 10);
+    assert.ok(
+      Math.abs(
+        cappedGrowthAfter.rate - cappedGrowthBefore.rate
+        - cappedGrowthBefore.purchasePreview.purchaseIncrease
+      ) < 1e-6,
+      "selected-batch preview must equal the production gained after purchase",
     );
     assert.notEqual(
       cappedGrowthAfter.label,
@@ -592,12 +691,16 @@ async function main() {
         companionLogCards: document.querySelectorAll("[data-companion-log]").length,
       };
     });
-    assert.equal(fleetAndCombatCheck.dust, "900M");
+    assert.ok(
+      Number.parseFloat(fleetAndCombatCheck.dust) >= 900
+      && Number.parseFloat(fleetAndCombatCheck.dust) <= 902,
+      "live production may advance the displayed reserve by a small amount",
+    );
     assert.ok(fleetAndCombatCheck.buyEnabled, "late-game ×10 purchase must be usable");
     assert.match(fleetAndCombatCheck.buyLabel, /\+10/);
     assert.ok(
       fleetAndCombatCheck.fleetRate.includes(
-        `实际贡献 ${fleetAndCombatCheck.topRate} / 秒`,
+        `折算贡献 ${fleetAndCombatCheck.topRate} / 秒`,
       ),
       "fleet contribution must match the actual compressed total",
     );
@@ -1043,7 +1146,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.21.2"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.22.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1052,7 +1155,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.21\.2/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.22\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

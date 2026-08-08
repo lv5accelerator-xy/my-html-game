@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.21.1");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.22.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
@@ -95,7 +95,7 @@ async function main() {
     await page.waitForFunction(() => Boolean(window.StellarOutpostCloudBridge));
 
     const defaultQuality = await page.evaluate(() => {
-      const musicRect = document.querySelector("#bgm-button").getBoundingClientRect();
+      const musicRect = document.querySelector(".music-player-shell").getBoundingClientRect();
       const soundRect = document.querySelector("#sound-button").getBoundingClientRect();
       return {
         diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
@@ -109,6 +109,7 @@ async function main() {
         fleetDeckWidth: document.querySelector("#fleet-command-deck").scrollWidth,
         musicTitle: document.querySelector("#bgm-current-title").textContent,
         musicStatus: document.querySelector("#bgm-status").textContent,
+        musicOptions: document.querySelectorAll("#top-bgm-track option").length,
         musicRight: musicRect.right,
         soundLeft: soundRect.left,
       };
@@ -124,6 +125,7 @@ async function main() {
     assert.equal(defaultQuality.fleet.presets.length, 3);
     assert.equal(defaultQuality.musicTitle, "猎户座外的前哨");
     assert.equal(defaultQuality.musicStatus, "音乐已暂停");
+    assert.equal(defaultQuality.musicOptions, 5);
     assert.ok(defaultQuality.musicRight <= defaultQuality.soundLeft);
     assert.ok(
       defaultQuality.pageWidth <= defaultQuality.viewportWidth,
@@ -158,6 +160,21 @@ async function main() {
     assert.ok(communicationLayout.pageWidth <= communicationLayout.viewportWidth);
     assert.ok(communicationLayout.modalWidth <= communicationLayout.viewportWidth);
     await page.click("#communication-close");
+
+    await page.click("#research-page-tab");
+    const researchLayout = await page.evaluate(() => ({
+      viewportWidth: document.documentElement.clientWidth,
+      pageWidth: document.documentElement.scrollWidth,
+      branches: document.querySelectorAll(".research-branch").length,
+      branchColumns: getComputedStyle(document.querySelector("#upgrade-list"))
+        .gridTemplateColumns.split(" ").length,
+      overviewColumns: getComputedStyle(document.querySelector(".research-overview"))
+        .gridTemplateColumns.split(" ").length,
+    }));
+    assert.equal(researchLayout.branches, 4);
+    assert.equal(researchLayout.branchColumns, 1);
+    assert.equal(researchLayout.overviewColumns, 1);
+    assert.ok(researchLayout.pageWidth <= researchLayout.viewportWidth);
 
     await page.click("#starfall-page-tab");
     const starfallLayout = await page.evaluate(() => ({

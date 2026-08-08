@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.21.1";
-  const PATCH_NOTES_VERSION = "0.21.1";
+  const GAME_VERSION = "0.22.0";
+  const PATCH_NOTES_VERSION = "0.22.0";
   const SAVE_VERSION = 13;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -65,9 +65,9 @@
   const MAX_OFFLINE_MAJOR_RAIDS = 24;
   const MAX_OFFLINE_RAID_LOSS_RATIO = 0.35;
   const BUILDING_GROWTH = 1.12;
-  const BUILDING_COORDINATION_STEP = 10;
+  const BUILDING_COORDINATION_DOUBLING_UNITS = 25;
   const BUILDING_COORDINATION_MULTIPLIER = 2;
-  const BUILDING_COORDINATION_MAX_TIERS = 20;
+  const BUILDING_COORDINATION_MAX_EXPONENT = 8;
   const MAX_AUTOMATIC_PRODUCTION_MULTIPLIER = 1000000000;
   const PRESTIGE_BASE_DUST = 25000;
   const PRESTIGE_RATIO_SOFT_CAP = 400;
@@ -76,8 +76,8 @@
   const CORE_MULTIPLIER_LATE_POWER = 0.25;
   const TRANSCEND_CORE_SOFT_CAP = 25000;
   const TRANSCEND_CORE_LATE_POWER = 0.3;
-  const MAX_AUTO_RATE = 999000;
-  const AUTO_RATE_OVERFLOW_SCALE = 75000;
+  const AUTOMATIC_RATE_SOFT_CAP = 999000;
+  const AUTOMATIC_RATE_LATE_POWER = 0.28;
   const CLICK_SOFT_CAP = 1000;
   const CLICK_LATE_POWER = 0.12;
   const MAX_CLICK_VALUE = 99900;
@@ -97,28 +97,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=0.21.1",
+      src: "assets/outpost-beyond-orion.mp3?v=0.22.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=0.21.1",
+      src: "assets/outpost-beyond-orion-2.mp3?v=0.22.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=0.21.1",
+      src: "assets/signal-at-kestrel-nine.mp3?v=0.22.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.21.1",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.22.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -154,6 +154,18 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.22.0",
+      theme: "产能重构",
+      changes: [
+        "自动产量改为先汇总设施原始产能，再对全舰队进行一次平滑软上限折算；高阶设施、研究和永久增幅不会再被单设施对数公式抹平。",
+        "原先每 10 个设施突然翻倍的编队断层改为连续协同曲线：每 25 个单位平滑翻倍，最高提供 ×256 协同。",
+        "舰队卡片新增所选批量的真实收益预览，直接显示购买前后总产量与净增量，最大购买不再错误展示下一台的收益。",
+        "研究终端重做为信标回收、自治舰群、轨道工业与边境物理四条研究链，新增前置科技、分支进度、可研究数量与精确收益预览。",
+        "顶栏音乐播放器新增曲目下拉框，可直接切换自动轮播或四首单曲，并与设置菜单实时同步。",
+        "旧存档中的 12 项研究 ID 全部保留；已完成研究不会丢失，也不会因新增前置条件被撤销。",
+      ],
+    },
     {
       version: "0.21.1",
       theme: "顶栏乐章",
@@ -723,12 +735,42 @@
     },
   ];
 
+  const RESEARCH_BRANCHES = [
+    {
+      id: "salvage",
+      name: "信标回收",
+      icon: "✦",
+      description: "强化主动采集与信标响应。",
+    },
+    {
+      id: "automation",
+      name: "自治舰群",
+      icon: "⌁",
+      description: "扩展无人系统与基础采集链。",
+    },
+    {
+      id: "industry",
+      name: "轨道工业",
+      icon: "◎",
+      description: "提高加工、中继与全局生产效率。",
+    },
+    {
+      id: "frontier",
+      name: "边境物理",
+      icon: "◉",
+      description: "解锁后期设施的专属增幅。",
+    },
+  ];
+
   const UPGRADES = [
     {
       id: "gloves",
       name: "磁力手套",
       icon: "✧",
       description: "手动回收产量 ×2",
+      branch: "salvage",
+      tier: 1,
+      requires: [],
       cost: 40,
       unlock: 20,
       effect: { click: 2 },
@@ -738,6 +780,9 @@
       name: "脉冲扫描仪",
       icon: "⌖",
       description: "手动回收产量 ×3",
+      branch: "salvage",
+      tier: 2,
+      requires: ["gloves"],
       cost: 320,
       unlock: 180,
       effect: { click: 3 },
@@ -746,7 +791,10 @@
       id: "droneAi",
       name: "无人机群智",
       icon: "⌁",
-      description: "拾荒无人机产量 ×2",
+      description: "拾荒无人机原始产量 ×2",
+      branch: "automation",
+      tier: 1,
+      requires: [],
       cost: 520,
       unlock: 300,
       effect: { building: "drone", multiplier: 2 },
@@ -755,7 +803,10 @@
       id: "solarLens",
       name: "超薄聚光层",
       icon: "◈",
-      description: "光帆采集器产量 ×2",
+      description: "光帆采集器原始产量 ×2",
+      branch: "automation",
+      tier: 2,
+      requires: ["droneAi"],
       cost: 2500,
       unlock: 1800,
       effect: { building: "sail", multiplier: 2 },
@@ -764,7 +815,10 @@
       id: "zeroG",
       name: "零重力流水线",
       icon: "∞",
-      description: "所有自动产量 ×1.5",
+      description: "所有设施原始产量 ×1.5",
+      branch: "automation",
+      tier: 3,
+      requires: ["solarLens"],
       cost: 12000,
       unlock: 8500,
       effect: { global: 1.5 },
@@ -773,7 +827,10 @@
       id: "crystalResonance",
       name: "陨晶共振",
       icon: "⬡",
-      description: "分析舱与熔铸站产量 ×2",
+      description: "分析舱与熔铸站原始产量 ×2",
+      branch: "industry",
+      tier: 1,
+      requires: [],
       cost: 60000,
       unlock: 45000,
       effect: { buildings: ["lab", "forge"], multiplier: 2 },
@@ -782,7 +839,10 @@
       id: "relayProtocol",
       name: "中继共享协议",
       icon: "◎",
-      description: "深空中继环产量 ×3",
+      description: "深空中继环原始产量 ×3",
+      branch: "industry",
+      tier: 2,
+      requires: ["crystalResonance"],
       cost: 260000,
       unlock: 190000,
       effect: { building: "relay", multiplier: 3 },
@@ -791,7 +851,10 @@
       id: "timeFold",
       name: "局部时间折叠",
       icon: "◌",
-      description: "所有自动产量 ×2",
+      description: "所有设施原始产量 ×2",
+      branch: "industry",
+      tier: 3,
+      requires: ["relayProtocol"],
       cost: 1100000,
       unlock: 800000,
       effect: { global: 2 },
@@ -800,7 +863,10 @@
       id: "ringDismantling",
       name: "星环剥离协议",
       icon: "◑",
-      description: "行星环拆解场产量 ×2",
+      description: "行星环拆解场原始产量 ×2",
+      branch: "frontier",
+      tier: 1,
+      requires: [],
       cost: 4200000,
       unlock: 3000000,
       effect: { building: "ringYard", multiplier: 2 },
@@ -809,7 +875,10 @@
       id: "riftHarmonics",
       name: "裂隙谐振捕获",
       icon: "⌬",
-      description: "裂隙捕获网产量 ×2",
+      description: "裂隙捕获网原始产量 ×2",
+      branch: "frontier",
+      tier: 2,
+      requires: ["ringDismantling"],
       cost: 12000000,
       unlock: 8000000,
       effect: { building: "riftNet", multiplier: 2 },
@@ -818,7 +887,10 @@
       id: "horizonAnchors",
       name: "事件视界锚定",
       icon: "◉",
-      description: "视界潮汐矿场产量 ×2",
+      description: "视界潮汐矿场原始产量 ×2",
+      branch: "frontier",
+      tier: 3,
+      requires: ["riftHarmonics"],
       cost: 36000000,
       unlock: 24000000,
       effect: { building: "horizonMine", multiplier: 2 },
@@ -827,7 +899,10 @@
       id: "cosmicReclamation",
       name: "终末回收协议",
       icon: "≋",
-      description: "宇宙弦织取机产量 ×3",
+      description: "宇宙弦织取机原始产量 ×3",
+      branch: "frontier",
+      tier: 4,
+      requires: ["horizonAnchors"],
       cost: 78000000,
       unlock: 50000000,
       effect: { building: "cosmicLoom", multiplier: 3 },
@@ -2680,6 +2755,8 @@
     upgradeList: $("#upgrade-list"),
     achievementList: $("#achievement-list"),
     researchCount: $("#research-count"),
+    researchAvailable: $("#research-available"),
+    researchOutput: $("#research-output"),
     lifetimeDust: $("#lifetime-dust"),
     lifetimeClicks: $("#lifetime-clicks"),
     rebirthCount: $("#rebirth-count"),
@@ -2706,6 +2783,7 @@
     bgmButton: $("#bgm-button"),
     bgmStatus: $("#bgm-status"),
     bgmCurrentTitle: $("#bgm-current-title"),
+    topBgmTrack: $("#top-bgm-track"),
     bgmTrack: $("#bgm-track"),
     bgmVolume: $("#bgm-volume"),
     bgmVolumeValue: $("#bgm-volume-value"),
@@ -4461,6 +4539,46 @@
     return targetState.upgrades.includes(id);
   }
 
+  function getUpgradeRequirements(upgrade) {
+    return (upgrade?.requires || [])
+      .map((id) => UPGRADES.find((entry) => entry.id === id))
+      .filter(Boolean);
+  }
+
+  function isUpgradePathAvailable(upgrade, targetState = state) {
+    return getUpgradeRequirements(upgrade).every((requirement) =>
+      hasUpgrade(requirement.id, targetState),
+    );
+  }
+
+  function getUpgradeImpact(upgrade, targetState = state) {
+    if (!upgrade || hasUpgrade(upgrade.id, targetState)) {
+      return { kind: "complete", before: 0, after: 0, increase: 0 };
+    }
+    const previewState = {
+      ...targetState,
+      upgrades: [...targetState.upgrades, upgrade.id],
+    };
+    if (upgrade.effect.click) {
+      const before = getClickValue(targetState);
+      const after = getClickValue(previewState);
+      return {
+        kind: "click",
+        before,
+        after,
+        increase: Math.max(0, after - before),
+      };
+    }
+    const before = calculateRate(targetState, false);
+    const after = calculateRate(previewState, false);
+    return {
+      kind: "production",
+      before,
+      after,
+      increase: Math.max(0, after - before),
+    };
+  }
+
   function getClickValue(targetState = state) {
     let multiplier = safeMultiply(
       getCoreMultiplier(targetState),
@@ -4508,14 +4626,12 @@
   }
 
   function compressAutomaticRate(value) {
-    const safeValue = clampGameNumber(value);
-    if (safeValue <= MAX_AUTO_RATE) return safeValue;
-    const overflowRatio = (safeValue - MAX_AUTO_RATE) / MAX_AUTO_RATE;
     return Math.min(
       DUST_RESERVE_CAP,
-      safeAdd(
-        MAX_AUTO_RATE,
-        safeMultiply(Math.log1p(overflowRatio), AUTO_RATE_OVERFLOW_SCALE),
+      softCapGameNumber(
+        value,
+        AUTOMATIC_RATE_SOFT_CAP,
+        AUTOMATIC_RATE_LATE_POWER,
       ),
     );
   }
@@ -4553,38 +4669,42 @@
     return safePow(
       BUILDING_COORDINATION_MULTIPLIER,
       Math.min(
-        BUILDING_COORDINATION_MAX_TIERS,
-        Math.floor(owned / BUILDING_COORDINATION_STEP),
+        BUILDING_COORDINATION_MAX_EXPONENT,
+        owned / BUILDING_COORDINATION_DOUBLING_UNITS,
       ),
     );
   }
 
-  function calculateBuildingRate(
+  function calculateBuildingRawRate(
     building,
     targetState = state,
     includeTemporary = true,
   ) {
     if (!building) return 0;
     const owned = targetState.buildings[building.id] || 0;
-    return compressAutomaticRate(
-      safeMultiply(
-        owned,
-        building.baseRate,
-        getBuildingMultiplier(building.id, targetState),
-        getBuildingCoordinationMultiplier(building.id, targetState),
-        getAutomaticProductionMultiplier(targetState, includeTemporary),
-      ),
+    return safeMultiply(
+      owned,
+      building.baseRate,
+      getBuildingMultiplier(building.id, targetState),
+      getBuildingCoordinationMultiplier(building.id, targetState),
+      getAutomaticProductionMultiplier(targetState, includeTemporary),
     );
   }
 
-  function calculateRate(targetState = state, includeTemporary = true) {
+  function calculateRawRate(targetState = state, includeTemporary = true) {
     return BUILDINGS.reduce(
       (rate, building) =>
         safeAdd(
           rate,
-          calculateBuildingRate(building, targetState, includeTemporary),
+          calculateBuildingRawRate(building, targetState, includeTemporary),
         ),
       0,
+    );
+  }
+
+  function calculateRate(targetState = state, includeTemporary = true) {
+    return compressAutomaticRate(
+      calculateRawRate(targetState, includeTemporary),
     );
   }
 
@@ -4592,31 +4712,49 @@
     buildingId,
     targetState = state,
     includeTemporary = true,
+    purchaseAmount = 1,
   ) {
     const building = BUILDINGS.find((entry) => entry.id === buildingId);
-    if (!building) return { total: 0, perUnit: 0 };
+    if (!building) {
+      return {
+        total: 0,
+        rawTotal: 0,
+        perUnit: 0,
+        purchaseIncrease: 0,
+        currentRate: 0,
+        nextRate: 0,
+      };
+    }
     const owned = targetState.buildings[buildingId] || 0;
-    const actualContribution = calculateBuildingRate(
+    const amount = clampGameCount(purchaseAmount);
+    const rawContribution = calculateBuildingRawRate(
       building,
       targetState,
       includeTemporary,
     );
+    const rawRate = calculateRawRate(targetState, includeTemporary);
+    const currentRate = compressAutomaticRate(rawRate);
+    const effectiveContribution = rawRate > 0
+      ? safeMultiply(currentRate, rawContribution / rawRate)
+      : 0;
     const previewState = {
       ...targetState,
       buildings: {
         ...targetState.buildings,
-        [buildingId]: owned + 1,
+        [buildingId]: clampGameCount(owned + amount),
       },
     };
-    const nextContribution = calculateBuildingRate(
-      building,
-      previewState,
-      includeTemporary,
-    );
-    const perUnit = Math.max(0, nextContribution - actualContribution);
+    const nextRate = amount > 0
+      ? calculateRate(previewState, includeTemporary)
+      : currentRate;
+    const purchaseIncrease = Math.max(0, nextRate - currentRate);
     return {
-      total: actualContribution,
-      perUnit,
+      total: effectiveContribution,
+      rawTotal: rawContribution,
+      perUnit: amount > 0 ? purchaseIncrease / amount : 0,
+      purchaseIncrease,
+      currentRate,
+      nextRate,
     };
   }
 
@@ -7495,6 +7633,7 @@
     if (
       !upgrade ||
       hasUpgrade(id) ||
+      !isUpgradePathAvailable(upgrade) ||
       state.lifetimeDust < upgrade.unlock ||
       state.dust < upgrade.cost
     ) {
@@ -9240,9 +9379,11 @@
 
   function updateBgmControls() {
     updateBgmPlaybackDisplay();
-    if (elements.bgmTrack.value !== state.bgmTrackSelection) {
-      elements.bgmTrack.value = state.bgmTrackSelection;
-    }
+    [elements.topBgmTrack, elements.bgmTrack].forEach((control) => {
+      if (control.value !== state.bgmTrackSelection) {
+        control.value = state.bgmTrackSelection;
+      }
+    });
     const percentage = Math.round(state.bgmVolume * 100);
     if (Number(elements.bgmVolume.value) !== percentage) {
       elements.bgmVolume.value = String(percentage);
@@ -9259,6 +9400,21 @@
       stopBgm();
     }
     updateBgmControls();
+  }
+
+  function selectBgmTrack(trackId) {
+    const requested = String(trackId || "");
+    state.bgmTrackSelection = requested === BGM_PLAYLIST_SELECTION
+      || BGM_TRACKS.some((track) => track.id === requested)
+      ? requested
+      : BGM_PLAYLIST_SELECTION;
+    syncBgmTrackSelection({ autoplay: state.bgmEnabled });
+    const selectedTitle = state.bgmTrackSelection === BGM_PLAYLIST_SELECTION
+      ? "自动轮播"
+      : BGM_TRACKS[getBgmTrackIndex(state.bgmTrackSelection)].title;
+    showToast("背景音乐已切换", selectedTitle, "♫");
+    updateBgmControls();
+    saveGame();
   }
 
   function playTone(frequency, duration, type = "sine", volume = 0.035) {
@@ -9725,20 +9881,34 @@
       description.textContent = building.description;
       const rate = document.createElement("div");
       rate.className = "building-rate";
-      const actualRate = getBuildingRateBreakdown(building.id);
+      const actualRate = getBuildingRateBreakdown(
+        building.id,
+        state,
+        true,
+        purchase.amount,
+      );
       const coordinationMultiplier = getBuildingCoordinationMultiplier(
         building.id,
       );
-      rate.innerHTML = `<span>↟</span> 实际贡献 ${formatProductionRate(
+      rate.innerHTML = `<span>↟</span> 折算贡献 ${formatProductionRate(
         actualRate.total,
-      )} / 秒 · 下一级实际 +${formatProductionRate(
-        actualRate.perUnit,
-      )} / 秒${
+      )} / 秒 · 原始 ${formatProductionRate(actualRate.rawTotal)} / 秒${
         coordinationMultiplier > 1
-          ? ` · 编队 ×${formatNumber(coordinationMultiplier)}`
+          ? ` · 协同 ×${formatNumber(coordinationMultiplier, 2)}`
           : ""
       }`;
-      info.append(titleRow, description, rate);
+      const purchasePreview = document.createElement("div");
+      purchasePreview.className = "building-purchase-preview";
+      purchasePreview.textContent = purchase.amount > 0
+        ? `购买预览 ${formatProductionRate(
+            actualRate.currentRate,
+          )} → ${formatProductionRate(
+            actualRate.nextRate,
+          )} / 秒 · 本次 +${formatProductionRate(
+            actualRate.purchaseIncrease,
+          )} / 秒`
+        : "购买预览：当前星尘不足";
+      info.append(titleRow, description, rate, purchasePreview);
 
       const button = document.createElement("button");
       button.className = "building-buy";
@@ -9761,41 +9931,123 @@
 
   function renderUpgrades() {
     elements.upgradeList.textContent = "";
-    UPGRADES.forEach((upgrade) => {
-      const bought = hasUpgrade(upgrade.id);
-      const unlocked = state.lifetimeDust >= upgrade.unlock;
-      const card = document.createElement("article");
-      card.className = `upgrade-card${bought ? " bought" : ""}${
-        unlocked ? "" : " locked"
-      }`;
+    RESEARCH_BRANCHES.forEach((branch) => {
+      const branchUpgrades = UPGRADES
+        .filter((upgrade) => upgrade.branch === branch.id)
+        .sort((left, right) => left.tier - right.tier);
+      const completed = branchUpgrades.filter((upgrade) =>
+        hasUpgrade(upgrade.id),
+      ).length;
+      const branchCard = document.createElement("section");
+      branchCard.className = `research-branch research-branch-${branch.id}`;
 
-      const icon = document.createElement("span");
-      icon.className = "upgrade-icon";
-      icon.textContent = unlocked ? upgrade.icon : "?";
+      const branchHeading = document.createElement("header");
+      branchHeading.className = "research-branch-heading";
+      const branchIcon = document.createElement("span");
+      branchIcon.textContent = branch.icon;
+      const branchCopy = document.createElement("div");
+      const branchTitle = document.createElement("h3");
+      branchTitle.textContent = branch.name;
+      const branchDescription = document.createElement("p");
+      branchDescription.textContent = branch.description;
+      branchCopy.append(branchTitle, branchDescription);
+      const branchProgress = document.createElement("strong");
+      branchProgress.textContent = `${completed} / ${branchUpgrades.length}`;
+      branchHeading.append(branchIcon, branchCopy, branchProgress);
 
-      const copy = document.createElement("div");
-      copy.className = "upgrade-copy";
-      const title = document.createElement("h3");
-      title.textContent = unlocked ? upgrade.name : "加密研究";
-      const description = document.createElement("p");
-      description.textContent = bought
-        ? "研究已完成"
-        : unlocked
+      const branchTrack = document.createElement("div");
+      branchTrack.className = "research-track";
+      branchUpgrades.forEach((upgrade) => {
+        const bought = hasUpgrade(upgrade.id);
+        const discovered = state.lifetimeDust >= upgrade.unlock;
+        const pathAvailable = isUpgradePathAvailable(upgrade);
+        const affordable = state.dust >= upgrade.cost;
+        const requirements = getUpgradeRequirements(upgrade);
+        const card = document.createElement("article");
+        card.className = `upgrade-card${bought ? " bought" : ""}${
+          discovered ? "" : " undiscovered"
+        }${pathAvailable ? "" : " path-locked"}${
+          !bought && discovered && pathAvailable && affordable ? " available" : ""
+        }`;
+
+        const icon = document.createElement("span");
+        icon.className = "upgrade-icon";
+        icon.textContent = discovered ? upgrade.icon : "?";
+
+        const copy = document.createElement("div");
+        copy.className = "upgrade-copy";
+        const titleRow = document.createElement("div");
+        titleRow.className = "upgrade-title-row";
+        const title = document.createElement("h3");
+        title.textContent = discovered ? upgrade.name : "加密研究";
+        const tier = document.createElement("span");
+        tier.className = "upgrade-tier";
+        tier.textContent = `T${upgrade.tier}`;
+        titleRow.append(title, tier);
+        const description = document.createElement("p");
+        description.textContent = discovered
           ? upgrade.description
-          : `累计获得 ${formatNumber(upgrade.unlock)} 星尘后解锁`;
-      copy.append(title, description);
+          : `累计获得 ${formatNumber(upgrade.unlock)} 星尘后解密`;
+        const prerequisite = document.createElement("small");
+        prerequisite.className = `upgrade-prerequisite${
+          pathAvailable ? " ready" : ""
+        }`;
+        prerequisite.textContent = requirements.length
+          ? `前置：${requirements.map((entry) => entry.name).join("、")}`
+          : "分支起点";
+        const impact = document.createElement("small");
+        impact.className = "upgrade-impact";
+        if (bought) {
+          impact.textContent = "已接入当前航站系统";
+        } else if (!discovered) {
+          impact.textContent = "收益数据尚未解密";
+        } else {
+          const preview = getUpgradeImpact(upgrade);
+          impact.textContent = preview.kind === "click"
+            ? `收益预览 ${formatNumber(preview.before)} → ${formatNumber(
+                preview.after,
+              )} / 次（+${formatNumber(preview.increase)}）`
+            : `收益预览 ${formatProductionRate(
+                preview.before,
+              )} → ${formatProductionRate(
+                preview.after,
+              )} / 秒（+${formatProductionRate(preview.increase)}）`;
+        }
+        copy.append(titleRow, description, prerequisite, impact);
 
-      const button = document.createElement("button");
-      button.className = "upgrade-buy";
-      button.type = "button";
-      button.dataset.upgradeId = upgrade.id;
-      button.disabled = bought || !unlocked || state.dust < upgrade.cost;
-      button.textContent = bought ? "已完成" : `✦ ${formatNumber(upgrade.cost)}`;
+        const button = document.createElement("button");
+        button.className = "upgrade-buy";
+        button.type = "button";
+        button.dataset.upgradeId = upgrade.id;
+        button.disabled = bought || !discovered || !pathAvailable || !affordable;
+        button.textContent = bought
+          ? "已接入"
+          : !discovered
+            ? "待解密"
+            : !pathAvailable
+              ? "需前置"
+              : `✦ ${formatNumber(upgrade.cost)}`;
 
-      card.append(icon, copy, button);
-      elements.upgradeList.appendChild(card);
+        card.append(icon, copy, button);
+        branchTrack.appendChild(card);
+      });
+      branchCard.append(branchHeading, branchTrack);
+      elements.upgradeList.appendChild(branchCard);
     });
-    elements.researchCount.textContent = `${state.upgrades.length} / ${UPGRADES.length}`;
+    const completedResearch = UPGRADES.filter((upgrade) =>
+      hasUpgrade(upgrade.id),
+    ).length;
+    const availableResearch = UPGRADES.filter((upgrade) =>
+      !hasUpgrade(upgrade.id)
+      && state.lifetimeDust >= upgrade.unlock
+      && isUpgradePathAvailable(upgrade)
+      && state.dust >= upgrade.cost,
+    ).length;
+    elements.researchCount.textContent = `${completedResearch} / ${UPGRADES.length}`;
+    elements.researchAvailable.textContent = String(availableResearch);
+    elements.researchOutput.textContent = `${formatProductionRate(
+      calculateRate(state, false),
+    )} / 秒`;
   }
 
   function renderAchievements() {
@@ -12436,14 +12688,10 @@
     });
     elements.bgmVolume.addEventListener("change", () => saveGame());
     elements.bgmTrack.addEventListener("change", () => {
-      state.bgmTrackSelection = elements.bgmTrack.value;
-      syncBgmTrackSelection({ autoplay: state.bgmEnabled });
-      const selectedTitle = state.bgmTrackSelection === BGM_PLAYLIST_SELECTION
-        ? "自动轮播"
-        : BGM_TRACKS[getBgmTrackIndex(state.bgmTrackSelection)].title;
-      showToast("背景音乐已切换", selectedTitle, "♫");
-      updateBgmControls();
-      saveGame();
+      selectBgmTrack(elements.bgmTrack.value);
+    });
+    elements.topBgmTrack.addEventListener("change", () => {
+      selectBgmTrack(elements.topBgmTrack.value);
     });
     elements.bgmAudio.addEventListener("loadedmetadata", () => {
       bgmTrackSwitchInProgress = false;
@@ -12718,12 +12966,31 @@
     }),
     getProductionDiagnostics: () => ({
       total: calculateRate(),
+      rawTotal: calculateRawRate(),
       sharedMultiplier: getAutomaticProductionMultiplier(),
       buildings: Object.fromEntries(
         BUILDINGS.map((building) => [
           building.id,
           getBuildingRateBreakdown(building.id),
         ]),
+      ),
+      purchasePreviews: Object.fromEntries(
+        BUILDINGS.map((building) => {
+          const purchase = selectedPurchase(building);
+          return [
+            building.id,
+            {
+              amount: purchase.amount,
+              cost: purchase.cost,
+              ...getBuildingRateBreakdown(
+                building.id,
+                state,
+                true,
+                purchase.amount,
+              ),
+            },
+          ];
+        }),
       ),
     }),
     getStarportDiagnostics: () => ({

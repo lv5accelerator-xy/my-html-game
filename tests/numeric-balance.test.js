@@ -29,7 +29,8 @@ function readArray(name, nextName) {
   return vm.runInNewContext(`(${match[1]})`, Object.create(null));
 }
 
-const buildings = readArray("BUILDINGS", "UPGRADES");
+const buildings = readArray("BUILDINGS", "RESEARCH_BRANCHES");
+const researchBranches = readArray("RESEARCH_BRANCHES", "UPGRADES");
 const upgrades = readArray("UPGRADES", "ACHIEVEMENTS");
 const starportMaterials = readArray("STARPORT_MATERIALS", "STARPORT_MODULES");
 const starportModules = readArray("STARPORT_MODULES", "FLEET_DISTRIBUTIONS");
@@ -73,8 +74,8 @@ const expeditionSkins = readArray("EXPEDITION_SKINS", "MISSION_TEMPLATES");
 
 const dustCap = readConstant("DUST_RESERVE_CAP");
 const careerDustCap = readConstant("CAREER_DUST_CAP");
-const maxAutoRate = readConstant("MAX_AUTO_RATE");
-const autoRateOverflowScale = readConstant("AUTO_RATE_OVERFLOW_SCALE");
+const automaticRateSoftCap = readConstant("AUTOMATIC_RATE_SOFT_CAP");
+const automaticRateLatePower = readConstant("AUTOMATIC_RATE_LATE_POWER");
 const maxBuildingUnitCost = readConstant("MAX_BUILDING_UNIT_COST");
 const maxCombatUpgradeCost = readConstant("MAX_COMBAT_UPGRADE_COST");
 const legacyDustSoftCap = readConstant("LEGACY_DUST_SOFT_CAP");
@@ -121,9 +122,9 @@ assert.equal(readConstant("OPERATIONS_MAX_MASTERY"), 30);
 assert.equal(readConstant("MAX_EXPEDITION_ENTRY_DUST_COST"), 300000000);
 assert.equal(readConstant("ENDGAME_UNLOCK_CORES"), 150);
 assert.equal(readConstant("COMPANION_OBSERVATION_SIGNAL_CAP"), 12);
-assert.equal(readConstant("BUILDING_COORDINATION_STEP"), 10);
+assert.equal(readConstant("BUILDING_COORDINATION_DOUBLING_UNITS"), 25);
 assert.equal(readConstant("BUILDING_COORDINATION_MULTIPLIER"), 2);
-assert.equal(readConstant("BUILDING_COORDINATION_MAX_TIERS"), 20);
+assert.equal(readConstant("BUILDING_COORDINATION_MAX_EXPONENT"), 8);
 assert.equal(readConstant("MAX_AUTOMATIC_PRODUCTION_MULTIPLIER"), 1000000000);
 assert.equal(expeditionRoutes.length, 5, "expeditions need five route archetypes");
 assert.equal(expeditionAffixes.length, 5, "expeditions need five enemy affixes");
@@ -327,7 +328,26 @@ assert.equal(
 for (const upgrade of upgrades) {
   assert.ok(upgrade.cost < dustCap, `${upgrade.id} cannot fit in the reserve cap`);
   assert.ok(upgrade.unlock <= 50e6, `${upgrade.id} unlock is too large`);
+  assert.ok(
+    researchBranches.some((branch) => branch.id === upgrade.branch),
+    `${upgrade.id} must belong to a visible research branch`,
+  );
+  assert.ok(Number.isInteger(upgrade.tier) && upgrade.tier > 0);
+  assert.ok(Array.isArray(upgrade.requires));
+  for (const requirementId of upgrade.requires) {
+    const requirement = upgrades.find((entry) => entry.id === requirementId);
+    assert.ok(requirement, `${upgrade.id} has a missing prerequisite`);
+    assert.equal(requirement.branch, upgrade.branch);
+    assert.ok(requirement.tier < upgrade.tier);
+  }
 }
+assert.equal(researchBranches.length, 4, "research must expose four focused branches");
+assert.equal(
+  new Set(upgrades.map((upgrade) => upgrade.id)).size,
+  12,
+  "legacy research ids must remain unique and compatible",
+);
+assert.match(source, /!isUpgradePathAvailable\(upgrade\)/);
 
 for (const target of skirmishes) {
   assert.equal(
@@ -377,28 +397,47 @@ assert.deepEqual(
   "near-zone targets must cover every starport material exactly once",
 );
 
-const overflowInput = maxAutoRate * 10;
-const overflowRate =
-  maxAutoRate +
-  Math.log1p((overflowInput - maxAutoRate) / maxAutoRate) *
-    autoRateOverflowScale;
-assert.ok(overflowRate > maxAutoRate, "automatic production must grow past 999K/s");
+const overflowInput = automaticRateSoftCap * 10;
+const overflowRate = math.softCapGameNumber(
+  overflowInput,
+  automaticRateSoftCap,
+  automaticRateLatePower,
+);
+assert.ok(
+  overflowRate > automaticRateSoftCap,
+  "automatic production must grow past 999K/s",
+);
 assert.ok(overflowRate < 2e6, "overflow production must remain in the low M range");
 assert.doesNotMatch(math.formatNumber(overflowRate), /[BTP]/);
 assert.doesNotMatch(
   source,
-  /return\s+Math\.min\(\s*MAX_AUTO_RATE/,
+  /Math\.log1p\(overflowRatio\)/,
   "automatic production must not use the former hard cap",
 );
 assert.match(
   source,
-  /function calculateBuildingRate\([\s\S]*?compressAutomaticRate/,
-  "each facility type needs an independent monotonic production stream",
+  /function calculateBuildingRawRate\([\s\S]*?getBuildingCoordinationMultiplier/,
+  "each facility must keep an uncompressed raw production stream",
 );
 assert.match(
   source,
-  /function calculateRate\([\s\S]*?BUILDINGS\.reduce/,
-  "fleet production must add independent facility contributions",
+  /function calculateRawRate\([\s\S]*?BUILDINGS\.reduce/,
+  "fleet production must sum raw facility contributions",
+);
+assert.match(
+  source,
+  /function calculateRate\([\s\S]*?compressAutomaticRate\(\s*calculateRawRate/,
+  "the soft cap must be applied once to total fleet production",
+);
+assert.match(
+  source,
+  /owned\s*\/\s*BUILDING_COORDINATION_DOUBLING_UNITS/,
+  "coordination must grow continuously without ten-unit cliffs",
+);
+assert.match(
+  source,
+  /purchaseIncrease\s*=\s*Math\.max\(0,\s*nextRate\s*-\s*currentRate\)/,
+  "purchase preview must compare the exact selected batch totals",
 );
 
 const legacyDust = Math.min(

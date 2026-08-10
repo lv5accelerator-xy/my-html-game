@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.23.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.24.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -141,6 +141,9 @@ async function main() {
       })(),
       fleetCommand: window.StellarOutpostCloudBridge.getFleetCommandDiagnostics(),
       operations: window.StellarOutpostCloudBridge.getOperationsDiagnostics(),
+      focus: window.StellarOutpostCloudBridge.getFocusDiagnostics(
+        Date.UTC(2026, 7, 10, 12, 0, 0),
+      ),
       starfall: window.StellarOutpostCloudBridge.getStarfallDiagnostics(
         Date.UTC(2026, 7, 10, 12, 0, 0),
       ),
@@ -163,15 +166,15 @@ async function main() {
         === document.querySelector(".music-player-shell"),
     }));
 
-    assert.equal(snapshot.gameVersion, "0.23.0");
-    assert.equal(snapshot.saveVersion, 14);
+    assert.equal(snapshot.gameVersion, "0.24.0");
+    assert.equal(snapshot.saveVersion, 15);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.23\.0/);
+    assert.match(snapshot.footer, /v0\.24\.0/);
     assert.equal(snapshot.starfall.phase, "active");
     assert.deepEqual(snapshot.starfall.availableDayKeys, [
       "2026-08-08",
@@ -195,7 +198,28 @@ async function main() {
     assert.equal(Object.keys(snapshot.operations.jobs).length, 5);
     assert.equal(Object.keys(snapshot.operations.components).length, 6);
     assert.equal(snapshot.operations.queueSlots, 2);
+    assert.equal(snapshot.focus.compactNavigation, true);
+    assert.equal(snapshot.focus.routes.length, 3);
+    assert.equal(snapshot.focus.duty.rewardDay, 1);
+    assert.equal(snapshot.focus.dutyState.totalClaims, 0);
+    assert.ok(snapshot.focus.visiblePages.includes("command"));
+    assert.ok(snapshot.focus.visiblePages.includes("missions"));
+    assert.ok(snapshot.focus.visiblePages.includes("starfall"));
+    assert.equal(snapshot.focus.visiblePages.includes("leaderboard"), false);
+    await page.locator("#command-page-tab").click();
+    assert.equal(await page.locator("#focus-route-list .focus-route").count(), 3);
+    assert.equal(await page.locator("#duty-progress i").count(), 7);
+    assert.equal(await page.locator("#navigation-expand-button").isVisible(), true);
     assert.equal(snapshot.communicationsReady, true);
+
+    await page.locator("#duty-claim-button").click();
+    const claimedDuty = await page.evaluate(() =>
+      window.StellarOutpostCloudBridge.getFocusDiagnostics(),
+    );
+    assert.equal(claimedDuty.duty.claimedToday, true);
+    assert.equal(claimedDuty.dutyState.streak, 1);
+    assert.equal(claimedDuty.dutyState.totalClaims, 1);
+    assert.equal(await page.locator("#duty-claim-button").isDisabled(), true);
 
     await page.evaluate(() => window.StellarCommunicationsBridge.openFeedback());
     const communicationUi = await page.evaluate(() => ({
@@ -1173,7 +1197,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.23.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.24.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1182,7 +1206,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.23\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.24\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.23.0";
-  const PATCH_NOTES_VERSION = "0.23.0";
-  const SAVE_VERSION = 14;
+  const GAME_VERSION = "0.24.0";
+  const PATCH_NOTES_VERSION = "0.24.0";
+  const SAVE_VERSION = 15;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=0.23.0",
+      src: "assets/outpost-beyond-orion.mp3?v=0.24.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=0.23.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=0.24.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=0.23.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=0.24.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.23.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.24.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -141,6 +141,21 @@
   const STARFALL_DAILY_REWARD = 240;
   const STARFALL_LETTER_REWARD = 100;
   const STARFALL_CATCHUP_DAYS = 3;
+  const DUTY_REWARDS = Object.freeze([
+    Object.freeze({ minutes: 2, tokens: 2, materials: 0, supplies: 0 }),
+    Object.freeze({ minutes: 3, tokens: 3, materials: 0, supplies: 0 }),
+    Object.freeze({ minutes: 4, tokens: 3, materials: 1, supplies: 0 }),
+    Object.freeze({ minutes: 5, tokens: 4, materials: 0, supplies: 0 }),
+    Object.freeze({ minutes: 7, tokens: 4, materials: 1, supplies: 0 }),
+    Object.freeze({ minutes: 10, tokens: 5, materials: 0, supplies: 1 }),
+    Object.freeze({ minutes: 15, tokens: 8, materials: 2, supplies: 1 }),
+  ]);
+  const FOCUSED_NAVIGATION_PAGES = Object.freeze([
+    "command",
+    "fleet",
+    "research",
+    "missions",
+  ]);
   const PRIMARY_PAGES = [
     "command",
     "fleet",
@@ -155,6 +170,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.24.0",
+      theme: "专注航程",
+      changes: [
+        "导航默认改为专注模式：只显示四个核心入口、当前紧急系统和限时活动，其余已解锁内容收进一个清晰的“全部功能”按钮。",
+        "指挥台新增“今天只做三件事”，把主线建议、可领取奖励和当前最相关系统集中到同一区域，并可直接前往目标。",
+        "新增七日值守补给，奖励只使用星尘、航站凭证、现有材料和远征补给，不增加新货币；漏签一天也不会立刻中断连续记录。",
+        "新增委托奖励一键领取入口，减少在每日、每周任务和里程碑之间反复点击的操作负担。",
+        "后期未参与的系统不再同时占满一级导航；完整模式仍可随时展开，任何已解锁功能和原有进度都不会消失。",
+      ],
+    },
     {
       version: "0.23.0",
       theme: "科技航图",
@@ -2915,6 +2941,12 @@
     commandGuideDescription: $("#command-guide-description"),
     commandGuideProgress: $("#command-guide-progress"),
     commandGuideAction: $("#command-guide-action"),
+    dutyStreak: $("#duty-streak"),
+    dutyTodayStatus: $("#duty-today-status"),
+    dutyReward: $("#duty-reward"),
+    dutyProgress: $("#duty-progress"),
+    dutyClaimButton: $("#duty-claim-button"),
+    focusRouteList: $("#focus-route-list"),
     commandCompanionSystem: $("#command-companion-system"),
     commandCompanionStage: $("#command-companion-stage"),
     commandCompanionCount: $("#command-companion-count"),
@@ -2958,6 +2990,8 @@
     playerNameDisplay: $("#player-name-display"),
     navigationModeButton: $("#navigation-mode-button"),
     navigationModeStatus: $("#navigation-mode-status"),
+    navigationExpandButton: $("#navigation-expand-button"),
+    navigationHiddenCount: $("#navigation-hidden-count"),
     performanceButton: $("#performance-button"),
     performanceStatus: $("#performance-status"),
     bgmButton: $("#bgm-button"),
@@ -3364,6 +3398,15 @@
     };
   }
 
+  function freshDutyState() {
+    return {
+      lastClaimKey: "",
+      streak: 0,
+      bestStreak: 0,
+      totalClaims: 0,
+    };
+  }
+
   function freshStarportState() {
     const materials = {};
     const modules = {};
@@ -3450,6 +3493,7 @@
       expedition: freshExpeditionState(),
       operations: freshOperationsState(),
       guidance: freshGuidanceState(),
+      duty: freshDutyState(),
       log: [
         {
           text: "拾荒单元 07 已上线。等待首条回收指令。",
@@ -3463,6 +3507,7 @@
   let performanceMode = loadPerformanceMode();
   document.documentElement.dataset.performanceMode = performanceMode;
   let renderedCommandCompanionSignature = null;
+  let renderedFocusRouteSignature = null;
   let lastWallClock = Date.now();
   let lastUi = 0;
   let lastSave = Date.now();
@@ -5609,6 +5654,159 @@
     saveGame();
   }
 
+  function getDutyDayOrdinal(key) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(key || ""))) return null;
+    const milliseconds = Date.parse(`${key}T00:00:00Z`);
+    return Number.isFinite(milliseconds)
+      ? Math.floor(milliseconds / STARFALL_DAY_MS)
+      : null;
+  }
+
+  function getDutyStatus(now = Date.now(), targetState = state) {
+    const todayKey = getUtcDailyKey(now);
+    const lastKey = targetState.duty?.lastClaimKey || "";
+    const claimedToday = lastKey === todayKey;
+    const todayOrdinal = getDutyDayOrdinal(todayKey);
+    const lastOrdinal = getDutyDayOrdinal(lastKey);
+    const gap = lastOrdinal === null ? null : todayOrdinal - lastOrdinal;
+    const currentStreak = Math.min(9999, clampGameCount(targetState.duty?.streak));
+    const nextStreak = claimedToday
+      ? currentStreak
+      : gap !== null && gap >= 1 && gap <= 2
+        ? Math.min(9999, currentStreak + 1)
+        : 1;
+    const rewardDay = Math.max(1, ((Math.max(1, nextStreak) - 1) % DUTY_REWARDS.length) + 1);
+    const baseReward = DUTY_REWARDS[rewardDay - 1];
+    const materialsUnlocked = targetState.lifetimeDust >= COMBAT_UNLOCK_DUST;
+    const suppliesUnlocked = targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST;
+    const convertedTokens =
+      (materialsUnlocked ? 0 : baseReward.materials * 2) +
+      (suppliesUnlocked ? 0 : baseReward.supplies * 2);
+    return {
+      todayKey,
+      claimedToday,
+      nextStreak,
+      rewardDay,
+      reward: {
+        minutes: baseReward.minutes,
+        tokens: baseReward.tokens + convertedTokens,
+        materials: materialsUnlocked ? baseReward.materials : 0,
+        supplies: suppliesUnlocked ? baseReward.supplies : 0,
+      },
+      graceUsed: gap === 2,
+    };
+  }
+
+  function formatDutyReward(reward) {
+    return [
+      `${reward.minutes} 分钟产量`,
+      `${reward.tokens} 凭证`,
+      reward.materials > 0 ? `每种材料 +${reward.materials}` : "",
+      reward.supplies > 0 ? `远征补给 +${reward.supplies}` : "",
+    ].filter(Boolean).join(" · ");
+  }
+
+  function claimDailyDuty() {
+    const duty = getDutyStatus();
+    if (duty.claimedToday) return;
+    state.duty.lastClaimKey = duty.todayKey;
+    state.duty.streak = duty.nextStreak;
+    state.duty.bestStreak = Math.max(state.duty.bestStreak, duty.nextStreak);
+    state.duty.totalClaims = clampGameCount(state.duty.totalClaims + 1);
+    const rewardDust = getMissionRewardDust(duty.reward.minutes);
+    grantMissionTokens(duty.reward.tokens);
+    grantMissionMaterials(duty.reward.materials);
+    if (duty.reward.supplies > 0) {
+      state.expedition.supplies = Math.min(
+        EXPEDITION_SUPPLY_CAP,
+        state.expedition.supplies + duty.reward.supplies,
+      );
+    }
+    addDust(rewardDust, { trackMissions: false });
+    addLog(`连续值守第 ${duty.rewardDay} 日补给已领取。`);
+    showToast(
+      `连续值守 ${duty.nextStreak} 天`,
+      `+${formatNumber(rewardDust)} 星尘 · ${formatDutyReward(duty.reward).replace(`${duty.reward.minutes} 分钟产量 · `, "")}`,
+      "◈",
+    );
+    renderedFocusRouteSignature = null;
+    renderFocusCenter();
+    renderMissions();
+    saveGame();
+  }
+
+  function claimAllMissionRewards() {
+    ensureMissionPeriods();
+    let claims = 0;
+    let dailyClaims = 0;
+    let tokens = 0;
+    let rewardDust = 0;
+    let materials = 0;
+    let signalReward = 0;
+    [
+      [state.missions.daily, "daily"],
+      [state.missions.weekly, "weekly"],
+    ].forEach(([period, kind]) => {
+      period.items.forEach((item) => {
+        if (item.claimed || item.progress < item.target) return;
+        item.claimed = true;
+        claims += 1;
+        tokens += kind === "weekly" ? 12 : 5;
+        rewardDust = safeAdd(
+          rewardDust,
+          getMissionRewardDust(kind === "weekly" ? 5 : 1),
+        );
+        if (kind === "daily") dailyClaims += 1;
+      });
+    });
+    if (
+      !state.missions.daily.completionClaimed &&
+      getCompletedMissionCount(state.missions.daily) >= 3
+    ) {
+      state.missions.daily.completionClaimed = true;
+      claims += 1;
+      tokens += 15;
+      rewardDust = safeAdd(rewardDust, getMissionRewardDust(10));
+      if (getSingularityCompanions().length > 0) {
+        signalReward = grantCompanionSignals(1);
+      }
+    }
+    const weeklyCompleted = getCompletedMissionCount(state.missions.weekly);
+    WEEKLY_MISSION_MILESTONES.forEach((milestone, index) => {
+      if (
+        state.missions.weekly.milestonesClaimed.includes(index) ||
+        weeklyCompleted < milestone.required
+      ) return;
+      state.missions.weekly.milestonesClaimed.push(index);
+      claims += 1;
+      tokens += milestone.tokens;
+      materials += milestone.materials;
+      rewardDust = safeAdd(
+        rewardDust,
+        getMissionRewardDust(milestone.dustMinutes),
+      );
+    });
+    if (claims < 1) {
+      activatePrimaryPage("missions", { scroll: true });
+      return;
+    }
+    grantMissionTokens(tokens);
+    grantMissionMaterials(materials);
+    addDust(rewardDust, { trackMissions: false });
+    if (dailyClaims > 0) recordMissionProgress("dailyClaims", dailyClaims);
+    addLog(`一键领取 ${claims} 项航站委托奖励。`);
+    showToast(
+      "航站奖励已集中领取",
+      `${claims} 项 · +${tokens} 凭证 · +${formatNumber(rewardDust)} 星尘${materials ? ` · 每种材料 +${materials}` : ""}${signalReward ? ` · 观测信号 +${signalReward}` : ""}`,
+      "☷",
+    );
+    renderedFocusRouteSignature = null;
+    renderMissions();
+    updateMissionSummary();
+    renderFocusCenter();
+    saveGame();
+  }
+
   function rerollDailyMission() {
     ensureMissionPeriods();
     const period = state.missions.daily;
@@ -7383,6 +7581,20 @@
       compactNavigation: raw.guidance?.compactNavigation !== false,
       seenFeatures: [...new Set(seenFeatures)].slice(0, 32),
     };
+    const rawDuty = raw.duty && typeof raw.duty === "object" ? raw.duty : {};
+    const savedDutyKey = /^\d{4}-\d{2}-\d{2}$/.test(String(rawDuty.lastClaimKey || ""))
+      ? String(rawDuty.lastClaimKey)
+      : "";
+    merged.duty = {
+      lastClaimKey: savedDutyKey,
+      streak: Math.min(9999, clampGameCount(rawDuty.streak)),
+      bestStreak: Math.min(9999, clampGameCount(rawDuty.bestStreak)),
+      totalClaims: clampGameCount(rawDuty.totalClaims),
+    };
+    merged.duty.bestStreak = Math.max(
+      merged.duty.bestStreak,
+      merged.duty.streak,
+    );
     merged.lastSeen = finiteTimestamp(raw.lastSeen);
     merged.nextEventAt = finiteTimestamp(
       raw.nextEventAt,
@@ -11629,19 +11841,46 @@
 
   function updateNavigationVisibility() {
     const compact = state.guidance.compactNavigation;
-    document.querySelectorAll("#primary-navigation [role='tab']").forEach((tab) => {
+    const focusedPages = new Set(FOCUSED_NAVIGATION_PAGES);
+    if (["active", "exchange"].includes(getStarfallPhase())) {
+      focusedPages.add("starfall");
+    }
+    if (state.combat.incomingRaid) focusedPages.add("combat");
+    focusedPages.add(state.activePage);
+    const guideAction = getCommandRecommendation().action;
+    if (PRIMARY_PAGES.includes(guideAction)) focusedPages.add(guideAction);
+    const tabs = Array.from(
+      document.querySelectorAll("#primary-navigation [role='tab']"),
+    );
+    let unlockedCount = 0;
+    let visibleCount = 0;
+    tabs.forEach((tab) => {
       const unlocked = isPrimaryPageUnlocked(tab.dataset.page);
-      tab.hidden = compact && !unlocked;
-      tab.disabled = !compact && !unlocked;
+      const visible = unlocked && (!compact || focusedPages.has(tab.dataset.page));
+      if (unlocked) unlockedCount += 1;
+      if (visible) visibleCount += 1;
+      tab.hidden = !visible;
+      tab.disabled = !unlocked;
       tab.classList.toggle("locked-navigation", !unlocked);
       tab.title = unlocked ? "" : "继续推进当前建议后解锁";
     });
-    elements.navigationModeStatus.textContent = compact ? "渐进" : "完整";
+    const hiddenCount = Math.max(0, unlockedCount - visibleCount);
+    elements.navigationModeStatus.textContent = compact ? "专注" : "完整";
     elements.navigationModeButton.classList.toggle("off", !compact);
     elements.navigationModeButton.setAttribute(
       "aria-label",
-      compact ? "当前只显示已解锁功能，点击显示完整导航" : "当前显示全部功能，点击启用渐进导航",
+      compact ? "当前使用专注导航，点击显示全部已解锁功能" : "当前显示全部已解锁功能，点击启用专注导航",
     );
+    elements.navigationExpandButton.hidden = unlockedCount <= FOCUSED_NAVIGATION_PAGES.length;
+    elements.navigationExpandButton.setAttribute("aria-expanded", String(!compact));
+    elements.navigationExpandButton.querySelector("span").textContent = compact ? "＋" : "−";
+    elements.navigationExpandButton.querySelector("strong").textContent = compact
+      ? "全部功能"
+      : "收起功能";
+    elements.navigationHiddenCount.textContent = compact ? String(hiddenCount) : "专注";
+    document.getElementById("primary-navigation").dataset.mode = compact
+      ? "focus"
+      : "complete";
   }
 
   function getCommandRecommendation() {
@@ -11749,6 +11988,134 @@
     elements.commandGuideProgress.style.width = `${clamp(guide.progress, 0, 1) * 100}%`;
     elements.commandGuideAction.textContent = guide.label;
     elements.commandGuideAction.dataset.guideAction = guide.action;
+  }
+
+  function getFocusRoutes() {
+    ensureMissionPeriods();
+    const guide = getCommandRecommendation();
+    const dailyCompleted = getCompletedMissionCount(state.missions.daily);
+    const claimable = getMissionClaimableCount();
+    const routes = [
+      {
+        icon: guide.icon,
+        eyebrow: "主线推进",
+        title: guide.title,
+        status: guide.label,
+        action: guide.action,
+      },
+      {
+        icon: "☷",
+        eyebrow: "今日委托",
+        title: claimable > 0
+          ? `${claimable} 项奖励可以集中领取`
+          : `今日完成 ${Math.min(dailyCompleted, 3)} / 3`,
+        status: claimable > 0 ? "一键领取" : "查看委托",
+        action: claimable > 0 ? "claim-missions" : "missions",
+      },
+    ];
+    const starfallPhase = getStarfallPhase();
+    if (["active", "exchange"].includes(starfallPhase)) {
+      routes.push({
+        icon: "☄",
+        eyebrow: starfallPhase === "active" ? "限时航程" : "活动兑换",
+        title: starfallPhase === "active"
+          ? `星雨余辉 ${formatNumber(state.starfall.currency, 0)} · 继续寄航`
+          : `余辉 ${formatNumber(state.starfall.currency, 0)} · 兑换即将结束`,
+        status: "前往星雨",
+        action: "starfall",
+      });
+    } else if (state.combat.incomingRaid) {
+      routes.push({
+        icon: "⬡",
+        eyebrow: "紧急信号",
+        title: `${state.combat.incomingRaid.type === "major" ? "大袭击" : "边境遭遇"}正在接近基地`,
+        status: "前往防卫",
+        action: "combat",
+      });
+    } else if (state.lifetimeDust >= OPERATIONS_UNLOCK_DUST) {
+      routes.push({
+        icon: "▦",
+        eyebrow: "挂机安排",
+        title: state.operations.queue.length
+          ? `${state.operations.queue.length} 项作业正在自动运行`
+          : "作业队列为空，安排一项连续作业",
+        status: "查看作业",
+        action: "operations",
+      });
+    } else {
+      routes.push({
+        icon: "◎",
+        eyebrow: "自动生产",
+        title: `${formatNumber(getTotalUnits(), 0)} 个单元正在回收星尘`,
+        status: "扩建舰队",
+        action: "fleet",
+      });
+    }
+    return routes.slice(0, 3);
+  }
+
+  function renderFocusCenter() {
+    const duty = getDutyStatus();
+    const completedInCycle = duty.claimedToday ? duty.rewardDay : duty.rewardDay - 1;
+    elements.dutyStreak.textContent = `连续值守 ${state.duty.streak} 天`;
+    elements.dutyTodayStatus.textContent = duty.claimedToday
+      ? `第 ${duty.rewardDay} 日补给已领取`
+      : duty.graceUsed
+        ? `缓冲生效 · 第 ${duty.rewardDay} 日待领取`
+        : `第 ${duty.rewardDay} 日补给待领取`;
+    elements.dutyReward.textContent = formatDutyReward(duty.reward);
+    elements.dutyClaimButton.disabled = duty.claimedToday;
+    elements.dutyClaimButton.textContent = duty.claimedToday
+      ? "今日已领取"
+      : "领取今日补给";
+    elements.dutyProgress.innerHTML = DUTY_REWARDS.map((_, index) =>
+      `<i class="${index < completedInCycle ? "complete" : index === duty.rewardDay - 1 ? "current" : ""}"><span>${index + 1}</span></i>`,
+    ).join("");
+
+    const routes = getFocusRoutes();
+    const signature = JSON.stringify(routes);
+    if (signature === renderedFocusRouteSignature) return;
+    renderedFocusRouteSignature = signature;
+    elements.focusRouteList.replaceChildren();
+    routes.forEach((route, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.focusAction = route.action;
+      button.className = "focus-route";
+      const order = document.createElement("b");
+      order.textContent = String(index + 1);
+      const icon = document.createElement("span");
+      icon.textContent = route.icon;
+      const copy = document.createElement("span");
+      const eyebrow = document.createElement("small");
+      eyebrow.textContent = route.eyebrow;
+      const title = document.createElement("strong");
+      title.textContent = route.title;
+      copy.append(eyebrow, title);
+      const status = document.createElement("em");
+      status.textContent = route.status;
+      button.append(order, icon, copy, status);
+      elements.focusRouteList.appendChild(button);
+    });
+  }
+
+  function performGuidanceAction(action) {
+    if (action === "claim-missions") {
+      claimAllMissionRewards();
+    } else if (PRIMARY_PAGES.includes(action)) {
+      activatePrimaryPage(action, { scroll: true });
+    } else if (action === "collect") {
+      elements.collect.scrollIntoView({ behavior: "smooth", block: "center" });
+      elements.collect.focus();
+    } else if (action === "operations") {
+      activatePrimaryPage("command", { scroll: true });
+      elements.operationsHub.open = true;
+      elements.operationsHub.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (action === "prestige") {
+      activatePrimaryPage("command", { scroll: true });
+      elements.prestigeButton.scrollIntoView({ behavior: "smooth", block: "center" });
+      elements.prestigeButton.focus();
+    }
   }
 
   function renderOperations() {
@@ -12191,6 +12558,7 @@
       }
       updateGoal();
       updateCommandGuide();
+      renderFocusCenter();
     } else if (state.activePage === "fleet") {
       const units = getTotalUnits();
       elements.unitCount.textContent = formatNumber(units, 0);
@@ -12731,19 +13099,12 @@
       if (button) purchaseStarfallItem(button.dataset.starfallStore);
     });
     elements.commandGuideAction.addEventListener("click", () => {
-      const action = elements.commandGuideAction.dataset.guideAction;
-      if (PRIMARY_PAGES.includes(action)) {
-        activatePrimaryPage(action, { scroll: true });
-      } else if (action === "collect") {
-        elements.collect.scrollIntoView({ behavior: "smooth", block: "center" });
-        elements.collect.focus();
-      } else if (action === "operations") {
-        elements.operationsHub.open = true;
-        elements.operationsHub.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else if (action === "prestige") {
-        elements.prestigeButton.scrollIntoView({ behavior: "smooth", block: "center" });
-        elements.prestigeButton.focus();
-      }
+      performGuidanceAction(elements.commandGuideAction.dataset.guideAction);
+    });
+    elements.dutyClaimButton.addEventListener("click", claimDailyDuty);
+    elements.focusRouteList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-focus-action]");
+      if (button) performGuidanceAction(button.dataset.focusAction);
     });
     elements.operationsHub.addEventListener("toggle", () => {
       if (
@@ -12886,12 +13247,29 @@
       updateNavigationVisibility();
       saveGame();
       showToast(
-        state.guidance.compactNavigation ? "渐进导航已启用" : "完整导航已显示",
+        state.guidance.compactNavigation ? "专注导航已启用" : "全部功能已展开",
         state.guidance.compactNavigation
-          ? "暂时隐藏尚未到阶段的系统，已获得的功能不会消失。"
-          : "全部系统入口已经显示，未解锁页面会保持不可用。",
+          ? "首栏只保留核心、紧急和限时入口，其他已解锁功能仍可随时展开。"
+          : "当前显示全部已解锁系统；尚未解锁的入口继续保持隐藏。",
         "➜",
       );
+    });
+    elements.navigationExpandButton.addEventListener("click", () => {
+      state.guidance.compactNavigation = !state.guidance.compactNavigation;
+      updateNavigationVisibility();
+      saveGame();
+      if (!state.guidance.seenFeatures.includes("focus-navigation-v024")) {
+        state.guidance.seenFeatures.push("focus-navigation-v024");
+        saveGame();
+        window.setTimeout(() => showModal({
+          eyebrow: "v0.24.0 · 专注航程",
+          icon: "➜",
+          title: "功能没有减少，只是更容易找到",
+          message: "专注模式只保留核心入口、当前紧急事项和限时活动；点击“全部功能”可展开所有已解锁系统。指挥台的“今天只做三件事”会持续替你整理下一步。",
+          confirmText: "知道了",
+          cancelText: null,
+        }), 100);
+      }
     });
     elements.bgmButton.addEventListener("click", () => {
       state.bgmEnabled = !state.bgmEnabled;
@@ -13132,6 +13510,19 @@
         daily: state.missions.daily,
         weekly: state.missions.weekly,
         claimable: getMissionClaimableCount(),
+      }));
+    },
+    getFocusDiagnostics: (now = Date.now()) => {
+      const duty = getDutyStatus(now);
+      return JSON.parse(JSON.stringify({
+        compactNavigation: state.guidance.compactNavigation,
+        duty,
+        dutyState: state.duty,
+        routes: getFocusRoutes(),
+        claimableMissions: getMissionClaimableCount(),
+        visiblePages: Array.from(
+          document.querySelectorAll("#primary-navigation [role='tab']"),
+        ).filter((tab) => !tab.hidden).map((tab) => tab.dataset.page),
       }));
     },
     getExpeditionDiagnostics: () => JSON.parse(JSON.stringify({

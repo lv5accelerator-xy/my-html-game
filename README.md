@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://lv5accelerator-xy.github.io/my-html-game/"><strong>▶ 在线试玩</strong></a>
   ·
-  <a href="星港拾荒者-v0.1.0-v0.23.0-Patch-Notes.txt">完整更新记录</a>
+  <a href="星港拾荒者-v0.1.0-v0.24.0-Patch-Notes.txt">完整更新记录</a>
   ·
   <a href="历史版本/README.md">历史版本</a>
 </p>
@@ -45,8 +45,9 @@
 
 ## 当前版本
 
-当前航站协议为 **v0.23.0**。
+当前航站协议为 **v0.24.0**。
 
+- v0.24.0：新增专注导航、“今天只做三件事”、七日值守补给和委托一键领取，在不删除原玩法的前提下收束后期复杂度。
 - v0.23.0：研究网络扩展为 24 节点双分支科技树；排行榜重做为当前长期指标；修复自动云上传长期被本地存档延后的问题。
 - v0.22.0：重建全舰队产量公式、连续编队协同与批量真实收益预览；研究终端改为四条前置研究链；顶栏播放器可直接选曲。
 - v0.21.1：音乐播放器移至顶栏操作音效左侧，并持续显示当前播放曲名。
@@ -66,7 +67,7 @@
 - v0.14.0：新增每日/每周航站委托、凭证兑换商店与自动新版本提示。
 - v0.13.8：让已解锁伴星以独立颜色、光晕和轨道出现在指挥台，并支持点击查看介绍。
 
-完整版本变化见 [Patch Notes](星港拾荒者-v0.1.0-v0.23.0-Patch-Notes.txt)。
+完整版本变化见 [Patch Notes](星港拾荒者-v0.1.0-v0.24.0-Patch-Notes.txt)。
 
 ## 开始游玩
 
@@ -96,7 +97,7 @@ python -m http.server 8000
 - 基础离线收益最多累计 8 小时，后续可通过永久强化延长。
 - Google 登录与 Firebase 云存档属于可选功能；未连接云服务时，本地游戏不受影响。
 
-云端配置说明见 [FIREBASE-SETUP.txt](FIREBASE-SETUP.txt)，公告发布与反馈处理流程见 [COMMUNICATIONS-GUIDE.txt](COMMUNICATIONS-GUIDE.txt)。
+云端配置说明见 [FIREBASE-SETUP.txt](FIREBASE-SETUP.txt)，公告发布与反馈处理流程见 [COMMUNICATIONS-GUIDE.txt](COMMUNICATIONS-GUIDE.txt)，换电脑继续开发请先阅读 [新电脑维护交接说明-v0.24.0.md](新电脑维护交接说明-v0.24.0.md)。
 
 ## 移动端与性能
 

@@ -87,7 +87,7 @@ const ecoTickInterval = readConstant("ECO_GAME_TICK_INTERVAL");
 const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
 const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
-assert.equal(readConstant("SAVE_VERSION"), 14, "career peak records need schema version 14");
+assert.equal(readConstant("SAVE_VERSION"), 15, "daily duty streaks need schema version 15");
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),
   6,

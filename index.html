@@ -11,15 +11,15 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="0.23.0" />
+    <meta name="stellar-game-version" content="0.24.0" />
     <meta name="stellar-release-title" content="顶栏乐章" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.23.0" />
+    <link rel="stylesheet" href="styles.css?v=0.24.0" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=0.23.0"
+      src="assets/outpost-beyond-orion.mp3?v=0.24.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -282,6 +282,16 @@
             <span>排行榜</span>
           </button>
         </div>
+        <button
+          id="navigation-expand-button"
+          class="navigation-expand-button"
+          type="button"
+          aria-expanded="false"
+        >
+          <span aria-hidden="true">＋</span>
+          <strong>全部功能</strong>
+          <small id="navigation-hidden-count">0</small>
+        </button>
       </nav>
 
       <main class="game-grid">
@@ -298,6 +308,29 @@
             </div>
             <span class="status-chip"><i></i> 在线</span>
           </div>
+
+          <section class="focus-center" aria-labelledby="focus-center-title">
+            <header class="focus-center-heading">
+              <div>
+                <small>专注航程 · 不必同时管理全部系统</small>
+                <h2 id="focus-center-title">今天只做三件事</h2>
+              </div>
+              <span id="duty-streak">连续值守 0 天</span>
+            </header>
+            <div class="duty-supply">
+              <div class="duty-supply-copy">
+                <span class="duty-supply-icon" aria-hidden="true">◈</span>
+                <span>
+                  <small id="duty-today-status">今日补给待领取</small>
+                  <strong id="duty-reward">2 分钟产量 · 2 凭证</strong>
+                  <em>允许漏签 1 天，连续记录不会立刻清零。</em>
+                </span>
+              </div>
+              <div id="duty-progress" class="duty-progress" aria-label="七日值守进度"></div>
+              <button id="duty-claim-button" type="button">领取今日补给</button>
+            </div>
+            <div id="focus-route-list" class="focus-route-list" aria-label="今日推荐航程"></div>
+          </section>
 
           <div class="beacon-zone">
             <div
@@ -386,7 +419,7 @@
             </div>
           </div>
 
-          <section id="command-guide" class="command-guide" aria-labelledby="command-guide-title">
+          <section id="command-guide" class="command-guide" aria-labelledby="command-guide-title" hidden>
             <span id="command-guide-icon" class="command-guide-icon" aria-hidden="true">➜</span>
             <div class="command-guide-copy">
               <small>当前建议 · 一次只做一件事</small>
@@ -1625,7 +1658,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.23.0</span>
+        <span>航站协议 v0.24.0</span>
       </footer>
     </div>
 
@@ -1669,7 +1702,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.23.0</strong>
+          <strong id="patch-notes-current-version">v0.24.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -1980,9 +2013,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.23.0"></script>
-    <script src="game.js?v=0.23.0"></script>
-    <script src="firebase-config.js?v=0.23.0"></script>
-    <script type="module" src="cloud-save.js?v=0.23.0"></script>
+    <script src="game-math.js?v=0.24.0"></script>
+    <script src="game.js?v=0.24.0"></script>
+    <script src="firebase-config.js?v=0.24.0"></script>
+    <script type="module" src="cloud-save.js?v=0.24.0"></script>
   </body>
 </html>

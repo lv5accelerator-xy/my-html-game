@@ -713,6 +713,53 @@ function normalizeLeaderboardEntry(snapshot) {
   };
 }
 
+function getCommunityBeaconContribution(entry) {
+  return Math.max(
+    0,
+    Math.floor(
+      Math.min(1000, entry.battleCount || 0) +
+      Math.min(250, entry.expeditionRuns || 0) * 6 +
+      Math.min(120, entry.expeditionBossWins || 0) * 18 +
+      Math.min(60, entry.transcensions || 0) * 45 +
+      Math.min(120, entry.frontierSectors || 0) * 24,
+    ),
+  );
+}
+
+function dispatchCommunityBeacon(entries = [], online = false) {
+  window.dispatchEvent(new CustomEvent("stellar-community-beacon-update", {
+    detail: {
+      total: entries.reduce(
+        (total, entry) => total + getCommunityBeaconContribution(entry),
+        0,
+      ),
+      participants: entries.length,
+      online,
+    },
+  }));
+}
+
+async function loadCommunityBeacon() {
+  if (!currentUser || !db || !serviceReady || !syncReady) {
+    dispatchCommunityBeacon([], false);
+    return;
+  }
+  try {
+    const beaconQuery = firebaseFirestoreApi.query(
+      firebaseFirestoreApi.collection(db, LEADERBOARD_COLLECTION),
+      firebaseFirestoreApi.orderBy("battleCount", "desc"),
+      firebaseFirestoreApi.limit(LEADERBOARD_LIMIT),
+    );
+    const snapshot = await firebaseFirestoreApi.getDocs(beaconQuery);
+    dispatchCommunityBeacon(
+      snapshot.docs.map(normalizeLeaderboardEntry).filter(Boolean),
+      true,
+    );
+  } catch (error) {
+    dispatchCommunityBeacon([], false);
+  }
+}
+
 function renderLeaderboardRows(entries) {
   if (!elements.leaderboardList) return;
   elements.leaderboardList.textContent = "";
@@ -1059,10 +1106,12 @@ async function loadLeaderboard() {
   updateLeaderboardAccessState();
   if (!currentUser || !db || !serviceReady) {
     renderLeaderboardEmpty("登录后即可读取排行榜。");
+    dispatchCommunityBeacon([], false);
     return;
   }
   if (!syncReady) {
     renderLeaderboardEmpty("请先在账号窗口确认要使用的云端存档。");
+    dispatchCommunityBeacon([], false);
     return;
   }
   const category = LEADERBOARD_CATEGORIES[leaderboardCategory];
@@ -1086,6 +1135,7 @@ async function loadLeaderboard() {
     setLeaderboardNote("排行榜已连接", "当前成绩会定时更新。", {
       hidden: true,
     });
+    await loadCommunityBeacon();
   } catch (error) {
     setLeaderboardStatus("error", "读取失败");
     renderLeaderboardEmpty("排行榜暂时无法读取，请稍后重试。");
@@ -1095,6 +1145,7 @@ async function loadLeaderboard() {
         ? "请确认已经登录，并部署最新的 Firestore 排行榜安全规则。"
         : friendlyError(error),
     );
+    dispatchCommunityBeacon([], false);
   } finally {
     leaderboardBusy = false;
     updateLeaderboardAccessState();

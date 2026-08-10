@@ -11,15 +11,15 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="0.24.0" />
-    <meta name="stellar-release-title" content="顶栏乐章" />
+    <meta name="stellar-game-version" content="0.25.0" />
+    <meta name="stellar-release-title" content="航路共鸣" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.24.0" />
+    <link rel="stylesheet" href="styles.css?v=0.25.0" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=0.24.0"
+      src="assets/outpost-beyond-orion.mp3?v=0.25.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -317,6 +317,25 @@
               </div>
               <span id="duty-streak">连续值守 0 天</span>
             </header>
+            <article class="journey-card" aria-labelledby="journey-title">
+              <div class="journey-card-copy">
+                <span id="journey-icon" class="journey-icon" aria-hidden="true">✦</span>
+                <span>
+                  <small id="journey-chapter-label">第一章 · 航站苏醒</small>
+                  <strong id="journey-title">回收第一束星尘</strong>
+                  <em id="journey-description">先熟悉信标，只处理眼前的一项目标。</em>
+                </span>
+              </div>
+              <div class="journey-objective">
+                <span id="journey-objective-label">手动回收 5 次</span>
+                <strong id="journey-objective-progress">0 / 5</strong>
+                <div class="journey-progress" aria-hidden="true">
+                  <span id="journey-progress-bar"></span>
+                </div>
+              </div>
+              <div id="journey-chapter-dots" class="journey-chapter-dots" aria-label="新手航路进度"></div>
+              <button id="journey-action-button" type="button">开始回收</button>
+            </article>
             <div class="duty-supply">
               <div class="duty-supply-copy">
                 <span class="duty-supply-icon" aria-hidden="true">◈</span>
@@ -483,6 +502,37 @@
               </button>
             </div>
           </section>
+
+          <details id="atlas-hub" class="atlas-hub">
+            <summary>
+              <span class="atlas-summary-icon" aria-hidden="true">◈</span>
+              <span>
+                <small>探索自动记录 · 不增加永久倍率</small>
+                <strong>星海图鉴</strong>
+                <em id="atlas-summary-status">已发现 0 / 33</em>
+              </span>
+              <b id="atlas-summary-reward">下一奖励 5 项</b>
+            </summary>
+            <div class="atlas-content">
+              <header class="atlas-heading">
+                <div>
+                  <small>战斗、远征和伴星共同填充</small>
+                  <h3>把走过的星海留下来</h3>
+                  <p>图鉴只记录已经发生的冒险；重复收藏会自动转化为现有资源，不引入新货币。</p>
+                </div>
+                <strong id="atlas-count">0 / 33</strong>
+              </header>
+              <div id="atlas-milestones" class="atlas-milestones"></div>
+              <div id="atlas-filters" class="atlas-filters" role="group" aria-label="图鉴分类">
+                <button class="active" type="button" data-atlas-filter="all">全部</button>
+                <button type="button" data-atlas-filter="enemy">敌对目标</button>
+                <button type="button" data-atlas-filter="boss">首领</button>
+                <button type="button" data-atlas-filter="artifact">遗物</button>
+                <button type="button" data-atlas-filter="companion">伴星</button>
+              </div>
+              <div id="atlas-grid" class="atlas-grid"></div>
+            </div>
+          </details>
 
           <button id="starfall-command-card" class="starfall-command-card" type="button">
             <span class="starfall-command-icon" aria-hidden="true">☄</span>
@@ -926,6 +976,39 @@
               <div id="planet-target-list" class="planet-target-list"></div>
             </section>
           </div>
+
+          <section id="boss-trial" class="boss-trial" aria-labelledby="boss-trial-title">
+            <header class="boss-trial-heading">
+              <span id="boss-trial-icon" aria-hidden="true">◈</span>
+              <div>
+                <small>每日机制战 · 战力只决定入场，不决定答案</small>
+                <h3 id="boss-trial-title">棱镜守望者</h3>
+                <p id="boss-trial-description">读取三段战场信号，用正确战术破解首领机制。</p>
+              </div>
+              <strong id="boss-trial-status">今日未挑战</strong>
+            </header>
+            <div class="boss-trial-body">
+              <div class="boss-trial-signal">
+                <small id="boss-trial-phase">准备阶段</small>
+                <strong id="boss-trial-signal">等待战术链路接入</strong>
+                <p id="boss-trial-hint">破译关键词后，在突击、干扰与固守中选择应对方案。</p>
+                <div class="boss-integrity" aria-label="舰队完整度">
+                  <span><small>舰队完整度</small><strong id="boss-integrity-value">100%</strong></span>
+                  <div aria-hidden="true"><i id="boss-integrity-bar"></i></div>
+                </div>
+              </div>
+              <div id="boss-tactic-buttons" class="boss-tactic-buttons">
+                <button type="button" data-boss-tactic="strike"><span>↟</span><strong>集中突击</strong><small>核心暴露时直取要害</small></button>
+                <button type="button" data-boss-tactic="disrupt"><span>⌁</span><strong>信号干扰</strong><small>充能或同步时切断链路</small></button>
+                <button type="button" data-boss-tactic="brace"><span>⬡</span><strong>阵列固守</strong><small>过载与冲击前保存舰队</small></button>
+              </div>
+              <button id="boss-trial-start" class="boss-trial-start" type="button">开始今日试炼</button>
+            </div>
+            <div class="boss-trial-footer">
+              <p id="boss-trial-report">每日可尝试 3 次；正确破解至少 2 段机制即可带回奖励。</p>
+              <span id="boss-trial-record">累计击破 0 · 完美破解 0</span>
+            </div>
+          </section>
 
           <div class="combat-report" id="combat-report" aria-live="polite">
             <span aria-hidden="true">◈</span>
@@ -1517,6 +1600,30 @@
             </button>
           </div>
 
+          <section class="community-beacon" aria-labelledby="community-beacon-title">
+            <header>
+              <span class="community-beacon-icon" aria-hidden="true">✧</span>
+              <div>
+                <small>全服合作目标 · 使用现有长期记录</small>
+                <h3 id="community-beacon-title">共同航标 · 点亮远方</h3>
+                <p id="community-beacon-description">登录后汇总活跃指挥官的战斗、远征与边境记录，共同完成四段建设。</p>
+              </div>
+              <strong id="community-beacon-participants">本地预览</strong>
+            </header>
+            <div class="community-beacon-progress">
+              <span>
+                <small>航标共鸣</small>
+                <strong><b id="community-beacon-total">0</b> / 12,000</strong>
+              </span>
+              <div aria-hidden="true"><i id="community-beacon-bar"></i></div>
+            </div>
+            <div class="community-personal-contribution">
+              <span>我的贡献 <strong id="community-personal-score">0</strong></span>
+              <small>战斗、完整远征、首领击破、超越与边境推进都会自动计入。</small>
+            </div>
+            <div id="community-beacon-milestones" class="community-beacon-milestones"></div>
+          </section>
+
           <section class="leaderboard-personal" aria-labelledby="leaderboard-personal-title">
             <header>
               <span aria-hidden="true">◇</span>
@@ -1658,7 +1765,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.24.0</span>
+        <span>航站协议 v0.25.0</span>
       </footer>
     </div>
 
@@ -1702,7 +1809,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.24.0</strong>
+          <strong id="patch-notes-current-version">v0.25.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2013,9 +2120,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.24.0"></script>
-    <script src="game.js?v=0.24.0"></script>
-    <script src="firebase-config.js?v=0.24.0"></script>
-    <script type="module" src="cloud-save.js?v=0.24.0"></script>
+    <script src="game-math.js?v=0.25.0"></script>
+    <script src="game.js?v=0.25.0"></script>
+    <script src="firebase-config.js?v=0.25.0"></script>
+    <script type="module" src="cloud-save.js?v=0.25.0"></script>
   </body>
 </html>

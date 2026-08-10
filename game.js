@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.24.0";
-  const PATCH_NOTES_VERSION = "0.24.0";
-  const SAVE_VERSION = 15;
+  const GAME_VERSION = "0.25.0";
+  const PATCH_NOTES_VERSION = "0.25.0";
+  const SAVE_VERSION = 16;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=0.24.0",
+      src: "assets/outpost-beyond-orion.mp3?v=0.25.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=0.24.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=0.25.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=0.24.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=0.25.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.24.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.25.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -150,6 +150,125 @@
     Object.freeze({ minutes: 10, tokens: 5, materials: 0, supplies: 1 }),
     Object.freeze({ minutes: 15, tokens: 8, materials: 2, supplies: 1 }),
   ]);
+  const JOURNEY_CHAPTERS = Object.freeze([
+    Object.freeze({
+      id: "signal",
+      chapter: "第一章 · 航站苏醒",
+      icon: "✦",
+      title: "回收第一束星尘",
+      description: "先熟悉信标，只处理眼前的一项目标。",
+      objective: "手动回收 5 次",
+      goal: 5,
+      progress: (targetState) => targetState.lifetimeClicks,
+      action: "collect",
+      actionLabel: "开始回收",
+      reward: { minutes: 2 },
+    }),
+    Object.freeze({
+      id: "automation",
+      chapter: "第二章 · 第一位同伴",
+      icon: "◎",
+      title: "部署拾荒无人机",
+      description: "让第一台自动设施接手重复工作。",
+      objective: "拥有 1 个自动化单元",
+      goal: 1,
+      progress: (targetState) => getTotalUnits(targetState),
+      action: "fleet",
+      actionLabel: "前往舰队",
+      reward: { minutes: 3 },
+    }),
+    Object.freeze({
+      id: "research",
+      chapter: "第三章 · 研究起点",
+      icon: "◒",
+      title: "完成第一项研究",
+      description: "只需沿一条路线前进，其他分支稍后再看。",
+      objective: "完成 1 项研究",
+      goal: 1,
+      progress: (targetState) => targetState.upgrades.length,
+      action: "research",
+      actionLabel: "前往研究",
+      reward: { tokens: 2, minutes: 3 },
+    }),
+    Object.freeze({
+      id: "border",
+      chapter: "第四章 · 边境回声",
+      icon: "⬡",
+      title: "赢得第一场主动战斗",
+      description: "强化舰炮后清剿最弱目标，认识战力与材料。",
+      objective: "主动战斗胜利 1 次",
+      goal: 1,
+      progress: (targetState) => targetState.combat?.activeWins || 0,
+      action: "combat",
+      actionLabel: "前往战斗",
+      reward: { tokens: 3, materials: { alloy: 5, crystal: 5 } },
+    }),
+    Object.freeze({
+      id: "starport",
+      chapter: "第五章 · 轨道家园",
+      icon: "⌬",
+      title: "建成第一座星港设施",
+      description: "把战利品变成明确、可见的长期建设。",
+      objective: "星港建筑总等级达到 1",
+      goal: 1,
+      progress: (targetState) => getTotalStarportRanks(targetState),
+      action: "starport",
+      actionLabel: "前往星港",
+      reward: { tokens: 4, supplies: 1 },
+    }),
+    Object.freeze({
+      id: "jump",
+      chapter: "第六章 · 深空跃迁",
+      icon: "✣",
+      title: "完成第一次深空跃迁",
+      description: "用一次主动重建换取永久星核成长。",
+      objective: "深空跃迁 1 次",
+      goal: 1,
+      progress: (targetState) => targetState.rebirths,
+      action: "prestige",
+      actionLabel: "查看跃迁",
+      reward: { tokens: 5, minutes: 8 },
+    }),
+    Object.freeze({
+      id: "expedition",
+      chapter: "第七章 · 星区远征",
+      icon: "▱",
+      title: "带回第一份完整远征记录",
+      description: "在短航程中做选择，而不是继续堆倍率。",
+      objective: "完成 1 次远征",
+      goal: 1,
+      progress: (targetState) => targetState.expedition?.completedRuns || 0,
+      action: "expedition",
+      actionLabel: "前往远征",
+      reward: { tokens: 6, supplies: 2 },
+    }),
+    Object.freeze({
+      id: "transcend",
+      chapter: "终章 · 穿过奇点",
+      icon: "∞",
+      title: "完成第一次奇点超越",
+      description: "从这里开始，所有玩法都将成为你的自由航线。",
+      objective: "奇点超越 1 次",
+      goal: 1,
+      progress: (targetState) => targetState.endgame?.transcensions || 0,
+      action: "transcend",
+      actionLabel: "前往超越",
+      reward: { tokens: 10, supplies: 3, minutes: 15 },
+    }),
+  ]);
+  const ATLAS_MILESTONES = Object.freeze([
+    Object.freeze({ count: 5, label: "初见星海", reward: { tokens: 3, minutes: 4 } }),
+    Object.freeze({ count: 12, label: "航迹成册", reward: { tokens: 6, supplies: 1 } }),
+    Object.freeze({ count: 20, label: "深空见闻", reward: { tokens: 10, supplies: 2, materials: 2 } }),
+    Object.freeze({ count: 33, label: "群星作证", reward: { tokens: 16, supplies: 3, materials: 4, minutes: 12 } }),
+  ]);
+  const COMMUNITY_BEACON_TARGET = 12000;
+  const COMMUNITY_BEACON_MILESTONES = Object.freeze([
+    Object.freeze({ score: 3000, personal: 20, label: "校准阵列", reward: { tokens: 3, minutes: 3 } }),
+    Object.freeze({ score: 6000, personal: 50, label: "接通航路", reward: { tokens: 5, supplies: 1 } }),
+    Object.freeze({ score: 9000, personal: 100, label: "跨站共鸣", reward: { tokens: 8, supplies: 2, materials: 2 } }),
+    Object.freeze({ score: 12000, personal: 180, label: "点亮远方", reward: { tokens: 12, supplies: 3, materials: 3, minutes: 10 } }),
+  ]);
   const FOCUSED_NAVIGATION_PAGES = Object.freeze([
     "command",
     "fleet",
@@ -170,6 +289,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.25.0",
+      theme: "航路共鸣",
+      changes: [
+        "新增八章“新手航路”，每次只展示一个当前目标、直接前往按钮和完成奖励；研究、战斗、星港、远征与超越按真实进度渐进开放。",
+        "新增 33 项星海图鉴，把现有敌对目标、远征首领、遗物与伴星记录汇总为可筛选收藏；四段里程碑只奖励现有资源与收藏进度。",
+        "战斗页新增每日机制首领试炼：阅读战场信号，在突击、干扰与固守中选择反制；每天最多三次尝试，策略正确比单纯战力更重要。",
+        "排行榜页新增“共同航标”，登录后使用现有战斗、远征、超越和边境记录汇总全服合作进度，不增加新的上传字段或 Firestore 配置。",
+        "新增功能全部并入指挥台、战斗与排行榜现有页面，不增加一级导航；首次打开图鉴和首领试炼时提供简短情境提示。",
+      ],
+    },
     {
       version: "0.24.0",
       theme: "专注航程",
@@ -1778,6 +1908,49 @@
     { id: "marauderCarrier", name: "深空掠夺母舰", icon: "◉" },
     { id: "entropyArmada", name: "熵蚀者主力舰队", icon: "⬢" },
   ];
+  const BOSS_TRIAL_TACTICS = Object.freeze({
+    strike: Object.freeze({ id: "strike", name: "集中突击", icon: "↟" }),
+    disrupt: Object.freeze({ id: "disrupt", name: "信号干扰", icon: "⌁" }),
+    brace: Object.freeze({ id: "brace", name: "阵列固守", icon: "⬡" }),
+  });
+  const BOSS_TRIALS = Object.freeze([
+    Object.freeze({
+      id: "prismWarden",
+      name: "棱镜守望者",
+      icon: "◈",
+      description: "它依靠折射阵列轮流充能、过载并暴露核心。",
+      minimumPower: 90,
+      phases: Object.freeze([
+        Object.freeze({ signal: "镜群正在同步充能", hint: "连续光脉冲正在建立统一节拍。", counter: "disrupt" }),
+        Object.freeze({ signal: "棱镜阵列进入折射过载", hint: "正面输出会被完整反射，冲击即将抵达。", counter: "brace" }),
+        Object.freeze({ signal: "中央核心短暂暴露", hint: "所有护盾都被牵引到外环。", counter: "strike" }),
+      ]),
+    }),
+    Object.freeze({
+      id: "swarmRegent",
+      name: "蜂群摄政体",
+      icon: "✣",
+      description: "蜂群会先冲击阵线、开放孵化舱，再重建共享意识。",
+      minimumPower: 150,
+      phases: Object.freeze([
+        Object.freeze({ signal: "自爆蜂群正在汇成潮汐", hint: "正面冲击无法被临时转向。", counter: "brace" }),
+        Object.freeze({ signal: "母巢孵化舱全部开启", hint: "装甲让位于新单位投放。", counter: "strike" }),
+        Object.freeze({ signal: "共享意识开始重新同步", hint: "切断链路能让舰群失去协调。", counter: "disrupt" }),
+      ]),
+    }),
+    Object.freeze({
+      id: "voidCantor",
+      name: "虚空领唱者",
+      icon: "●",
+      description: "它在引力静默、合唱共振与坍缩波之间切换。",
+      minimumPower: 240,
+      phases: Object.freeze([
+        Object.freeze({ signal: "静默场中央出现实体轮廓", hint: "领唱者失去回声掩护。", counter: "strike" }),
+        Object.freeze({ signal: "多重回声开始合唱共振", hint: "统一频率是这段结构的弱点。", counter: "disrupt" }),
+        Object.freeze({ signal: "坍缩波越过事件视界", hint: "此时继续追击只会扩大舰损。", counter: "brace" }),
+      ]),
+    }),
+  ]);
   const CORE_SHOP_ITEMS = [
     {
       id: "resonance",
@@ -2947,6 +3120,22 @@
     dutyProgress: $("#duty-progress"),
     dutyClaimButton: $("#duty-claim-button"),
     focusRouteList: $("#focus-route-list"),
+    journeyIcon: $("#journey-icon"),
+    journeyChapterLabel: $("#journey-chapter-label"),
+    journeyTitle: $("#journey-title"),
+    journeyDescription: $("#journey-description"),
+    journeyObjectiveLabel: $("#journey-objective-label"),
+    journeyObjectiveProgress: $("#journey-objective-progress"),
+    journeyProgressBar: $("#journey-progress-bar"),
+    journeyChapterDots: $("#journey-chapter-dots"),
+    journeyActionButton: $("#journey-action-button"),
+    atlasHub: $("#atlas-hub"),
+    atlasSummaryStatus: $("#atlas-summary-status"),
+    atlasSummaryReward: $("#atlas-summary-reward"),
+    atlasCount: $("#atlas-count"),
+    atlasMilestones: $("#atlas-milestones"),
+    atlasFilters: $("#atlas-filters"),
+    atlasGrid: $("#atlas-grid"),
     commandCompanionSystem: $("#command-companion-system"),
     commandCompanionStage: $("#command-companion-stage"),
     commandCompanionCount: $("#command-companion-count"),
@@ -3091,6 +3280,20 @@
     skirmishTargetList: $("#skirmish-target-list"),
     planetTargetList: $("#planet-target-list"),
     combatReportText: $("#combat-report-text"),
+    bossTrial: $("#boss-trial"),
+    bossTrialIcon: $("#boss-trial-icon"),
+    bossTrialTitle: $("#boss-trial-title"),
+    bossTrialDescription: $("#boss-trial-description"),
+    bossTrialStatus: $("#boss-trial-status"),
+    bossTrialPhase: $("#boss-trial-phase"),
+    bossTrialSignal: $("#boss-trial-signal"),
+    bossTrialHint: $("#boss-trial-hint"),
+    bossIntegrityValue: $("#boss-integrity-value"),
+    bossIntegrityBar: $("#boss-integrity-bar"),
+    bossTacticButtons: $("#boss-tactic-buttons"),
+    bossTrialStart: $("#boss-trial-start"),
+    bossTrialReport: $("#boss-trial-report"),
+    bossTrialRecord: $("#boss-trial-record"),
     coreShopBalance: $("#core-shop-balance"),
     totalCoresEarned: $("#total-cores-earned"),
     coreYieldMultiplier: $("#core-yield-multiplier"),
@@ -3213,6 +3416,12 @@
     leaderboardTranscensions: $("#leaderboard-transcensions"),
     leaderboardFrontierSectors: $("#leaderboard-frontier-sectors"),
     leaderboardCurrentRate: $("#leaderboard-current-rate"),
+    communityBeaconDescription: $("#community-beacon-description"),
+    communityBeaconParticipants: $("#community-beacon-participants"),
+    communityBeaconTotal: $("#community-beacon-total"),
+    communityBeaconBar: $("#community-beacon-bar"),
+    communityPersonalScore: $("#community-personal-score"),
+    communityBeaconMilestones: $("#community-beacon-milestones"),
     starfield: $("#starfield"),
   };
 
@@ -3407,6 +3616,47 @@
     };
   }
 
+  function freshJourneyState() {
+    return {
+      claimedChapters: [],
+    };
+  }
+
+  function freshAtlasState() {
+    return {
+      claimedMilestones: [],
+      activeFilter: "all",
+    };
+  }
+
+  function freshBossTrialState() {
+    const victoriesByBoss = {};
+    BOSS_TRIALS.forEach((boss) => {
+      victoriesByBoss[boss.id] = 0;
+    });
+    return {
+      dayKey: "",
+      bossId: BOSS_TRIALS[0].id,
+      attempts: 0,
+      active: false,
+      phase: 0,
+      integrity: 100,
+      currentCorrect: 0,
+      resolved: false,
+      victory: false,
+      totalVictories: 0,
+      perfectVictories: 0,
+      victoriesByBoss,
+      lastReport: "每日可尝试 3 次；正确破解至少 2 段机制即可带回奖励。",
+    };
+  }
+
+  function freshCommunityBeaconState() {
+    return {
+      claimedMilestones: [],
+    };
+  }
+
   function freshStarportState() {
     const materials = {};
     const modules = {};
@@ -3494,6 +3744,10 @@
       operations: freshOperationsState(),
       guidance: freshGuidanceState(),
       duty: freshDutyState(),
+      journey: freshJourneyState(),
+      atlas: freshAtlasState(),
+      bossTrial: freshBossTrialState(),
+      communityBeacon: freshCommunityBeaconState(),
       log: [
         {
           text: "拾荒单元 07 已上线。等待首条回收指令。",
@@ -3508,6 +3762,13 @@
   document.documentElement.dataset.performanceMode = performanceMode;
   let renderedCommandCompanionSignature = null;
   let renderedFocusRouteSignature = null;
+  let renderedJourneySignature = null;
+  let renderedAtlasSignature = null;
+  let communityBeaconNetwork = {
+    total: 0,
+    participants: 0,
+    online: false,
+  };
   let lastWallClock = Date.now();
   let lastUi = 0;
   let lastSave = Date.now();
@@ -3645,6 +3906,484 @@
         safeAdd(total, targetState.buildings[building.id] || 0),
       0,
     );
+  }
+
+  function normalizeExistingRewardMaterials(materials) {
+    if (materials && typeof materials === "object") return materials;
+    const amount = Math.max(0, Math.floor(Number(materials) || 0));
+    return amount > 0
+      ? Object.fromEntries(STARPORT_MATERIALS.map((material) => [material.id, amount]))
+      : {};
+  }
+
+  function formatExistingReward(reward) {
+    const parts = [];
+    if (reward.minutes) parts.push(`${reward.minutes} 分钟产量`);
+    if (reward.tokens) parts.push(`凭证 ×${reward.tokens}`);
+    if (reward.supplies) parts.push(`补给 ×${reward.supplies}`);
+    const materials = normalizeExistingRewardMaterials(reward.materials);
+    const materialTotal = Object.values(materials).reduce(
+      (total, amount) => total + Math.max(0, Number(amount) || 0),
+      0,
+    );
+    if (materialTotal > 0) parts.push(`建材 ×${materialTotal}`);
+    return parts.join(" · ") || "航站纪念记录";
+  }
+
+  function grantExistingReward(reward) {
+    const granted = [];
+    if (reward.minutes) {
+      const dustReward = Math.max(
+        reward.minutes * 15,
+        safeMultiply(calculateRate(), reward.minutes * 60),
+      );
+      addDust(dustReward);
+      granted.push(`${formatNumber(dustReward)} 星尘`);
+    }
+    if (reward.tokens) {
+      state.missions.tokens = Math.min(
+        MISSION_TOKEN_CAP,
+        clampGameCount(state.missions.tokens + reward.tokens),
+      );
+      granted.push(`凭证 ×${reward.tokens}`);
+    }
+    if (reward.supplies) {
+      state.expedition.supplies = Math.min(
+        EXPEDITION_SUPPLY_CAP,
+        clampGameCount(state.expedition.supplies + reward.supplies),
+      );
+      granted.push(`补给 ×${reward.supplies}`);
+    }
+    const materials = normalizeExistingRewardMaterials(reward.materials);
+    if (Object.keys(materials).length) {
+      addStarportMaterials(materials);
+      granted.push(describeMaterials(materials));
+    }
+    return granted.join(" · ");
+  }
+
+  function getJourneyProgress(chapter, targetState = state) {
+    return Math.min(
+      chapter.goal,
+      clampGameNumber(chapter.progress(targetState)),
+    );
+  }
+
+  function isJourneyChapterComplete(chapterId, targetState = state) {
+    const chapter = JOURNEY_CHAPTERS.find((entry) => entry.id === chapterId);
+    return Boolean(
+      chapter && getJourneyProgress(chapter, targetState) >= chapter.goal,
+    );
+  }
+
+  function getCurrentJourneyChapter(targetState = state) {
+    const claimed = new Set(targetState.journey?.claimedChapters || []);
+    return JOURNEY_CHAPTERS.find((chapter) => !claimed.has(chapter.id)) || null;
+  }
+
+  function claimJourneyChapter() {
+    const chapter = getCurrentJourneyChapter();
+    if (!chapter || !isJourneyChapterComplete(chapter.id)) return;
+    state.journey.claimedChapters.push(chapter.id);
+    const rewardText = grantExistingReward(chapter.reward);
+    addLog(`新手航路“${chapter.title}”完成：${rewardText}。`);
+    showToast("航路章节完成", rewardText, chapter.icon);
+    playAchievementTone();
+    renderedJourneySignature = null;
+    renderedFocusRouteSignature = null;
+    renderJourney();
+    renderFocusCenter();
+    updateNavigationVisibility();
+    updateUi();
+    saveGame();
+  }
+
+  function performJourneyAction() {
+    const chapter = getCurrentJourneyChapter();
+    if (!chapter) {
+      elements.atlasHub.open = true;
+      elements.atlasHub.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (isJourneyChapterComplete(chapter.id)) {
+      claimJourneyChapter();
+      return;
+    }
+    performGuidanceAction(chapter.action);
+  }
+
+  function renderJourney() {
+    const chapter = getCurrentJourneyChapter();
+    const claimedCount = state.journey.claimedChapters.length;
+    if (!chapter) {
+      elements.journeyIcon.textContent = "✧";
+      elements.journeyChapterLabel.textContent = "八章完成 · 自由航行";
+      elements.journeyTitle.textContent = "新手航路已经完成";
+      elements.journeyDescription.textContent = "所有系统都已串成一条完整航线，接下来可以按自己的节奏探索图鉴。";
+      elements.journeyObjectiveLabel.textContent = "航路完成度";
+      elements.journeyObjectiveProgress.textContent = "8 / 8";
+      elements.journeyProgressBar.style.width = "100%";
+      elements.journeyActionButton.textContent = "查看星海图鉴";
+      elements.journeyActionButton.dataset.state = "complete";
+    } else {
+      const progress = getJourneyProgress(chapter);
+      const complete = progress >= chapter.goal;
+      elements.journeyIcon.textContent = chapter.icon;
+      elements.journeyChapterLabel.textContent = chapter.chapter;
+      elements.journeyTitle.textContent = chapter.title;
+      elements.journeyDescription.textContent = chapter.description;
+      elements.journeyObjectiveLabel.textContent = chapter.objective;
+      elements.journeyObjectiveProgress.textContent = `${formatNumber(progress, 0)} / ${formatNumber(chapter.goal, 0)}`;
+      elements.journeyProgressBar.style.width = `${clamp(progress / chapter.goal, 0, 1) * 100}%`;
+      elements.journeyActionButton.textContent = complete
+        ? `领取 · ${formatExistingReward(chapter.reward)}`
+        : chapter.actionLabel;
+      elements.journeyActionButton.dataset.state = complete ? "claim" : "action";
+    }
+    const signature = `${claimedCount}:${chapter?.id || "complete"}:${chapter ? getJourneyProgress(chapter) : 8}`;
+    if (signature !== renderedJourneySignature) {
+      renderedJourneySignature = signature;
+      elements.journeyChapterDots.innerHTML = JOURNEY_CHAPTERS.map((entry, index) => {
+        const claimed = state.journey.claimedChapters.includes(entry.id);
+        const current = entry.id === chapter?.id;
+        return `<i class="${claimed ? "complete" : current ? "current" : ""}" title="${entry.chapter}"><span>${claimed ? "✓" : index + 1}</span></i>`;
+      }).join("");
+    }
+  }
+
+  function getAtlasEntries(targetState = state) {
+    const entries = [];
+    SKIRMISH_TARGETS.forEach((target) => entries.push({
+      id: `enemy-${target.id}`,
+      category: "enemy",
+      icon: target.icon,
+      name: target.name,
+      lore: `${target.location}的近域威胁。`,
+      hint: `在${target.location}完成一次清剿`,
+      discovered: (targetState.combat?.enemyVictories?.[target.id] || 0) > 0,
+    }));
+    PLANET_TARGETS.forEach((target) => entries.push({
+      id: `enemy-${target.id}`,
+      category: "enemy",
+      icon: target.icon,
+      name: target.name,
+      lore: `${target.location}留下的主动战斗记录。`,
+      hint: `击退${target.name}`,
+      discovered: (targetState.combat?.enemyVictories?.[target.id] || 0) > 0,
+    }));
+    EXPEDITION_BOSSES.forEach((boss) => entries.push({
+      id: `boss-expedition-${boss.id}`,
+      category: "boss",
+      icon: boss.icon,
+      name: boss.name,
+      lore: boss.description,
+      hint: "在星区远征第五航段击破",
+      discovered: (targetState.expedition?.bossWins?.[boss.id] || 0) > 0,
+    }));
+    BOSS_TRIALS.forEach((boss) => entries.push({
+      id: `boss-trial-${boss.id}`,
+      category: "boss",
+      icon: boss.icon,
+      name: boss.name,
+      lore: boss.description,
+      hint: "在每日机制试炼中破解",
+      discovered: (targetState.bossTrial?.victoriesByBoss?.[boss.id] || 0) > 0,
+    }));
+    EXPEDITION_ARTIFACTS.forEach((artifact) => entries.push({
+      id: `artifact-${artifact.id}`,
+      category: "artifact",
+      icon: artifact.icon,
+      name: artifact.name,
+      lore: artifact.lore,
+      hint: "完成远征并搜索遗物",
+      discovered: targetState.expedition?.artifacts?.includes(artifact.id),
+    }));
+    SINGULARITY_COMPANIONS.forEach((companion) => entries.push({
+      id: `companion-${companion.id}`,
+      category: "companion",
+      icon: companion.icon,
+      name: companion.name,
+      lore: companion.description,
+      hint: "超越后唤醒并完成一次伴星观测",
+      discovered: (targetState.endgame?.companionObservations || []).some(
+        (observation) => observation.companionId === companion.id,
+      ),
+    }));
+    return entries;
+  }
+
+  function getAtlasDiscoveredCount(targetState = state) {
+    return getAtlasEntries(targetState).filter((entry) => entry.discovered).length;
+  }
+
+  function claimAtlasMilestone(count) {
+    const milestone = ATLAS_MILESTONES.find((entry) => entry.count === count);
+    if (
+      !milestone ||
+      getAtlasDiscoveredCount() < milestone.count ||
+      state.atlas.claimedMilestones.includes(milestone.count)
+    ) return;
+    state.atlas.claimedMilestones.push(milestone.count);
+    const rewardText = grantExistingReward(milestone.reward);
+    addLog(`星海图鉴“${milestone.label}”完成：${rewardText}。`);
+    showToast(milestone.label, rewardText, "◈");
+    playAchievementTone();
+    renderedAtlasSignature = null;
+    renderAtlas();
+    updateUi();
+    saveGame();
+  }
+
+  function renderAtlas() {
+    const entries = getAtlasEntries();
+    const discovered = entries.filter((entry) => entry.discovered).length;
+    const nextMilestone = ATLAS_MILESTONES.find(
+      (milestone) => !state.atlas.claimedMilestones.includes(milestone.count),
+    );
+    elements.atlasSummaryStatus.textContent = `已发现 ${discovered} / ${entries.length}`;
+    elements.atlasCount.textContent = `${discovered} / ${entries.length}`;
+    elements.atlasSummaryReward.textContent = nextMilestone
+      ? discovered >= nextMilestone.count
+        ? "有奖励可领取"
+        : `下一奖励 ${nextMilestone.count} 项`
+      : "图鉴里程碑完成";
+    elements.atlasMilestones.innerHTML = ATLAS_MILESTONES.map((milestone) => {
+      const claimed = state.atlas.claimedMilestones.includes(milestone.count);
+      const ready = discovered >= milestone.count;
+      return `<article class="${claimed ? "claimed" : ready ? "ready" : ""}"><span>${milestone.count}</span><div><strong>${milestone.label}</strong><small>${formatExistingReward(milestone.reward)}</small></div><button type="button" data-atlas-milestone="${milestone.count}" ${claimed || !ready ? "disabled" : ""}>${claimed ? "已领取" : ready ? "领取" : `${discovered}/${milestone.count}`}</button></article>`;
+    }).join("");
+    const activeFilter = state.atlas.activeFilter;
+    elements.atlasFilters.querySelectorAll("[data-atlas-filter]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.atlasFilter === activeFilter);
+    });
+    const visibleEntries = entries.filter(
+      (entry) => activeFilter === "all" || entry.category === activeFilter,
+    );
+    const signature = JSON.stringify([
+      activeFilter,
+      visibleEntries.map((entry) => [entry.id, entry.discovered]),
+    ]);
+    if (signature === renderedAtlasSignature) return;
+    renderedAtlasSignature = signature;
+    elements.atlasGrid.innerHTML = visibleEntries.map((entry) =>
+      `<article class="atlas-entry ${entry.discovered ? "discovered" : "locked"}"><span aria-hidden="true">${entry.discovered ? entry.icon : "?"}</span><div><small>${entry.category === "enemy" ? "敌对目标" : entry.category === "boss" ? "首领记录" : entry.category === "artifact" ? "远征遗物" : "观赏伴星"}</small><strong>${entry.discovered ? entry.name : "未知记录"}</strong><p>${entry.discovered ? entry.lore : entry.hint}</p></div></article>`,
+    ).join("");
+  }
+
+  function getBossTrialForDay(dayKey = getUtcDailyKey()) {
+    const dayNumber = Math.floor(Date.parse(`${dayKey}T00:00:00Z`) / STARFALL_DAY_MS);
+    return BOSS_TRIALS[Math.abs(dayNumber) % BOSS_TRIALS.length];
+  }
+
+  function ensureBossTrialDay(now = Date.now()) {
+    const dayKey = getUtcDailyKey(now);
+    if (state.bossTrial.dayKey === dayKey) return;
+    const boss = getBossTrialForDay(dayKey);
+    state.bossTrial.dayKey = dayKey;
+    state.bossTrial.bossId = boss.id;
+    state.bossTrial.attempts = 0;
+    state.bossTrial.active = false;
+    state.bossTrial.phase = 0;
+    state.bossTrial.integrity = 100;
+    state.bossTrial.currentCorrect = 0;
+    state.bossTrial.resolved = false;
+    state.bossTrial.victory = false;
+    state.bossTrial.lastReport = "今日信号已刷新。阅读三段信号，正确破解至少两段即可胜利。";
+  }
+
+  function getActiveBossTrial(now = Date.now()) {
+    ensureBossTrialDay(now);
+    return BOSS_TRIALS.find((boss) => boss.id === state.bossTrial.bossId) || BOSS_TRIALS[0];
+  }
+
+  function beginBossTrial() {
+    ensureBossTrialDay();
+    const boss = getActiveBossTrial();
+    if (state.bossTrial.resolved || state.bossTrial.active || state.bossTrial.attempts >= 3) return;
+    if (getCombatPower() < boss.minimumPower) {
+      showToast("战力不足", `至少需要 ${formatNumber(boss.minimumPower, 0)} 战力接入试炼。`, "⬡");
+      return;
+    }
+    state.bossTrial.attempts += 1;
+    state.bossTrial.active = true;
+    state.bossTrial.phase = 0;
+    state.bossTrial.integrity = 100;
+    state.bossTrial.currentCorrect = 0;
+    state.bossTrial.lastReport = `第 ${state.bossTrial.attempts} 次尝试开始。先读信号，再选择战术。`;
+    renderBossTrial();
+    saveGame();
+  }
+
+  function requestBossTrialStart() {
+    if (!state.guidance.seenFeatures.includes("boss-trial-v025")) {
+      state.guidance.seenFeatures.push("boss-trial-v025");
+      saveGame();
+      showModal({
+        eyebrow: "三步读懂机制首领",
+        icon: "◆",
+        title: "看信号，再下命令",
+        message: "① 先读首领信号与提示；② 核心暴露用突击、同步充能用干扰、过载冲击用固守；③ 三段中破解至少两段即可胜利，每天最多尝试三次。",
+        confirmText: "接入试炼",
+        cancelText: "稍后",
+        onConfirm: beginBossTrial,
+      });
+      return;
+    }
+    beginBossTrial();
+  }
+
+  function chooseBossTrialTactic(tacticId) {
+    if (!BOSS_TRIAL_TACTICS[tacticId]) return;
+    const boss = getActiveBossTrial();
+    if (!state.bossTrial.active || state.bossTrial.phase >= boss.phases.length) return;
+    const phase = boss.phases[state.bossTrial.phase];
+    const correct = phase.counter === tacticId;
+    if (correct) {
+      state.bossTrial.currentCorrect += 1;
+      state.bossTrial.lastReport = `${BOSS_TRIAL_TACTICS[tacticId].name}奏效，机制链路已破解。`;
+      playTone(560, 0.1, "triangle", 0.025);
+    } else {
+      state.bossTrial.integrity = Math.max(0, state.bossTrial.integrity - 36);
+      state.bossTrial.lastReport = `${BOSS_TRIAL_TACTICS[tacticId].name}未能反制信号，舰队完整度下降。`;
+      playTone(120, 0.18, "sawtooth", 0.028);
+    }
+    state.bossTrial.phase += 1;
+    if (state.bossTrial.phase >= boss.phases.length) {
+      state.bossTrial.active = false;
+      recordCareerBattle();
+      const victory = state.bossTrial.currentCorrect >= 2 && state.bossTrial.integrity > 0;
+      if (victory) {
+        state.bossTrial.resolved = true;
+        state.bossTrial.victory = true;
+        state.bossTrial.totalVictories = clampGameCount(state.bossTrial.totalVictories + 1);
+        state.bossTrial.victoriesByBoss[boss.id] = clampGameCount(
+          state.bossTrial.victoriesByBoss[boss.id] + 1,
+        );
+        if (state.bossTrial.currentCorrect === boss.phases.length) {
+          state.bossTrial.perfectVictories = clampGameCount(state.bossTrial.perfectVictories + 1);
+        }
+        state.combat.wins = clampGameCount(state.combat.wins + 1);
+        state.combat.activeWins = clampGameCount(state.combat.activeWins + 1);
+        recordMissionProgress("battlesWon", 1);
+        const reward = {
+          minutes: 4 + state.bossTrial.currentCorrect * 2,
+          tokens: 2 + state.bossTrial.currentCorrect,
+          supplies: state.bossTrial.currentCorrect === 3 ? 2 : 1,
+        };
+        const rewardText = grantExistingReward(reward);
+        state.bossTrial.lastReport = `击破${boss.name}：破解 ${state.bossTrial.currentCorrect} / 3 段机制，获得 ${rewardText}。`;
+        addLog(state.bossTrial.lastReport);
+        showToast("机制首领击破", rewardText, boss.icon);
+        playAchievementTone();
+      } else if (state.bossTrial.attempts >= 3) {
+        state.bossTrial.resolved = true;
+        state.bossTrial.victory = false;
+        state.combat.losses = clampGameCount(state.combat.losses + 1);
+        state.bossTrial.lastReport = "今日三次战术链路均已使用。信号将在下一个 UTC 日刷新。";
+      } else {
+        state.combat.losses = clampGameCount(state.combat.losses + 1);
+        state.bossTrial.lastReport = `本次仅破解 ${state.bossTrial.currentCorrect} / 3 段机制，还可尝试 ${3 - state.bossTrial.attempts} 次。`;
+      }
+      renderedAtlasSignature = null;
+    }
+    renderBossTrial();
+    renderAtlas();
+    updateUi();
+    saveGame();
+  }
+
+  function renderBossTrial() {
+    ensureBossTrialDay();
+    const trial = state.bossTrial;
+    const boss = getActiveBossTrial();
+    const phase = boss.phases[Math.min(trial.phase, boss.phases.length - 1)];
+    const unlocked = state.lifetimeDust >= COMBAT_UNLOCK_DUST;
+    elements.bossTrial.hidden = !unlocked;
+    if (!unlocked) return;
+    elements.bossTrialIcon.textContent = boss.icon;
+    elements.bossTrialTitle.textContent = boss.name;
+    elements.bossTrialDescription.textContent = `${boss.description} · 入场战力 ${formatNumber(boss.minimumPower, 0)}`;
+    elements.bossTrialStatus.textContent = trial.resolved
+      ? trial.victory ? "今日已击破" : "今日试炼结束"
+      : trial.active ? `第 ${trial.phase + 1} / 3 阶段` : `剩余 ${3 - trial.attempts} 次`;
+    elements.bossTrialPhase.textContent = trial.active
+      ? `战场信号 ${trial.phase + 1} / 3`
+      : trial.resolved ? "今日记录" : "准备阶段";
+    elements.bossTrialSignal.textContent = trial.active
+      ? phase.signal
+      : trial.resolved
+        ? trial.victory ? "机制链路已全部归档" : "信号已经离开本星区"
+        : "等待战术链路接入";
+    elements.bossTrialHint.textContent = trial.active
+      ? phase.hint
+      : "破译关键词后，在突击、干扰与固守中选择应对方案。";
+    elements.bossIntegrityValue.textContent = `${trial.integrity}%`;
+    elements.bossIntegrityBar.style.width = `${trial.integrity}%`;
+    elements.bossTacticButtons.querySelectorAll("[data-boss-tactic]").forEach((button) => {
+      button.disabled = !trial.active;
+    });
+    elements.bossTrialStart.hidden = trial.active || trial.resolved;
+    elements.bossTrialStart.disabled = getCombatPower() < boss.minimumPower || trial.attempts >= 3;
+    elements.bossTrialStart.textContent = trial.attempts > 0
+      ? `再次挑战 · 剩余 ${3 - trial.attempts} 次`
+      : getCombatPower() < boss.minimumPower
+        ? `战力 ${formatNumber(boss.minimumPower, 0)} 解锁`
+        : "开始今日试炼";
+    elements.bossTrialReport.textContent = trial.lastReport;
+    elements.bossTrialRecord.textContent = `累计击破 ${formatNumber(trial.totalVictories, 0)} · 完美破解 ${formatNumber(trial.perfectVictories, 0)}`;
+  }
+
+  function getPersonalBeaconScore(targetState = state) {
+    return clampGameCount(
+      Math.min(1000, targetState.careerBattles || 0) +
+      Math.min(250, targetState.expedition?.completedRuns || 0) * 6 +
+      Math.min(120, getTotalBossWins(targetState)) * 18 +
+      Math.min(60, targetState.endgame?.transcensions || 0) * 45 +
+      Math.min(120, targetState.endgame?.sectorLevel || 0) * 24,
+    );
+  }
+
+  function claimCommunityBeaconMilestone(score) {
+    const milestone = COMMUNITY_BEACON_MILESTONES.find((entry) => entry.score === score);
+    const personal = getPersonalBeaconScore();
+    if (
+      !milestone ||
+      !communityBeaconNetwork.online ||
+      communityBeaconNetwork.total < milestone.score ||
+      personal < milestone.personal ||
+      state.communityBeacon.claimedMilestones.includes(milestone.score)
+    ) return;
+    state.communityBeacon.claimedMilestones.push(milestone.score);
+    const rewardText = grantExistingReward(milestone.reward);
+    addLog(`共同航标“${milestone.label}”建设完成：${rewardText}。`);
+    showToast(milestone.label, rewardText, "✧");
+    playAchievementTone();
+    renderCommunityBeacon();
+    updateUi();
+    saveGame();
+  }
+
+  function renderCommunityBeacon() {
+    const personal = getPersonalBeaconScore();
+    const total = communityBeaconNetwork.online
+      ? Math.max(personal, communityBeaconNetwork.total)
+      : personal;
+    elements.communityBeaconTotal.textContent = formatNumber(total, 0);
+    elements.communityBeaconBar.style.width = `${clamp(total / COMMUNITY_BEACON_TARGET, 0, 1) * 100}%`;
+    elements.communityPersonalScore.textContent = formatNumber(personal, 0);
+    elements.communityBeaconParticipants.textContent = communityBeaconNetwork.online
+      ? `${communityBeaconNetwork.participants} 座航站已接入`
+      : "登录后连接全服";
+    elements.communityBeaconDescription.textContent = communityBeaconNetwork.online
+      ? "全服进度已经同步；满足个人贡献要求后即可领取已点亮阶段的奖励。"
+      : "当前显示你的本地贡献预览。登录并打开排行榜后即可汇入全服航标。";
+    elements.communityBeaconMilestones.innerHTML = COMMUNITY_BEACON_MILESTONES.map((milestone) => {
+      const claimed = state.communityBeacon.claimedMilestones.includes(milestone.score);
+      const globalReady = communityBeaconNetwork.online && total >= milestone.score;
+      const personalReady = personal >= milestone.personal;
+      const ready = globalReady && personalReady;
+      return `<article class="${claimed ? "claimed" : ready ? "ready" : ""}"><span>${formatNumber(milestone.score, 0)}</span><div><strong>${milestone.label}</strong><small>个人贡献 ${formatNumber(personal, 0)} / ${milestone.personal} · ${formatExistingReward(milestone.reward)}</small></div><button type="button" data-community-milestone="${milestone.score}" ${claimed || !ready ? "disabled" : ""}>${claimed ? "已领取" : !communityBeaconNetwork.online ? "等待连接" : !globalReady ? "全服建设中" : !personalReady ? "贡献不足" : "领取"}</button></article>`;
+    }).join("");
   }
 
   function getFleetCommandPreset(
@@ -5956,10 +6695,14 @@
   }
 
   function getTotalBossWins(targetState = state) {
-    return EXPEDITION_BOSSES.reduce(
+    const expeditionWins = EXPEDITION_BOSSES.reduce(
       (total, boss) =>
         safeAdd(total, targetState.expedition?.bossWins?.[boss.id] || 0),
       0,
+    );
+    return safeAdd(
+      expeditionWins,
+      targetState.bossTrial?.totalVictories || 0,
     );
   }
 
@@ -7579,7 +8322,7 @@
       : [];
     merged.guidance = {
       compactNavigation: raw.guidance?.compactNavigation !== false,
-      seenFeatures: [...new Set(seenFeatures)].slice(0, 32),
+      seenFeatures: [...new Set(seenFeatures)].slice(0, 48),
     };
     const rawDuty = raw.duty && typeof raw.duty === "object" ? raw.duty : {};
     const savedDutyKey = /^\d{4}-\d{2}-\d{2}$/.test(String(rawDuty.lastClaimKey || ""))
@@ -7595,6 +8338,70 @@
       merged.duty.bestStreak,
       merged.duty.streak,
     );
+    const validJourneyIds = new Set(JOURNEY_CHAPTERS.map((chapter) => chapter.id));
+    merged.journey = {
+      claimedChapters: Array.isArray(raw.journey?.claimedChapters)
+        ? [...new Set(raw.journey.claimedChapters)].filter((id) => validJourneyIds.has(id))
+        : [],
+    };
+    const validAtlasMilestones = new Set(ATLAS_MILESTONES.map((entry) => entry.count));
+    const validAtlasFilters = new Set(["all", "enemy", "boss", "artifact", "companion"]);
+    merged.atlas = {
+      claimedMilestones: Array.isArray(raw.atlas?.claimedMilestones)
+        ? [...new Set(raw.atlas.claimedMilestones.map((value) => Math.floor(Number(value) || 0)))]
+            .filter((value) => validAtlasMilestones.has(value))
+        : [],
+      activeFilter: validAtlasFilters.has(raw.atlas?.activeFilter)
+        ? raw.atlas.activeFilter
+        : "all",
+    };
+    const validCommunityMilestones = new Set(
+      COMMUNITY_BEACON_MILESTONES.map((entry) => entry.score),
+    );
+    merged.communityBeacon = {
+      claimedMilestones: Array.isArray(raw.communityBeacon?.claimedMilestones)
+        ? [...new Set(raw.communityBeacon.claimedMilestones.map((value) => Math.floor(Number(value) || 0)))]
+            .filter((value) => validCommunityMilestones.has(value))
+        : [],
+    };
+    const bossBase = freshBossTrialState();
+    const rawBossTrial = raw.bossTrial && typeof raw.bossTrial === "object"
+      ? raw.bossTrial
+      : {};
+    const savedBoss = BOSS_TRIALS.find((boss) => boss.id === rawBossTrial.bossId);
+    const bossVictories = { ...bossBase.victoriesByBoss };
+    BOSS_TRIALS.forEach((boss) => {
+      bossVictories[boss.id] = clampGameCount(rawBossTrial.victoriesByBoss?.[boss.id]);
+    });
+    merged.bossTrial = {
+      dayKey: /^\d{4}-\d{2}-\d{2}$/.test(String(rawBossTrial.dayKey || ""))
+        ? String(rawBossTrial.dayKey)
+        : "",
+      bossId: savedBoss?.id || bossBase.bossId,
+      attempts: clamp(Math.floor(Number(rawBossTrial.attempts) || 0), 0, 3),
+      active: rawBossTrial.active === true,
+      phase: clamp(Math.floor(Number(rawBossTrial.phase) || 0), 0, 3),
+      integrity: clamp(Math.floor(Number(rawBossTrial.integrity) || 0), 0, 100),
+      currentCorrect: clamp(Math.floor(Number(rawBossTrial.currentCorrect) || 0), 0, 3),
+      resolved: rawBossTrial.resolved === true,
+      victory: rawBossTrial.victory === true,
+      totalVictories: clampGameCount(rawBossTrial.totalVictories),
+      perfectVictories: clampGameCount(rawBossTrial.perfectVictories),
+      victoriesByBoss: bossVictories,
+      lastReport: String(rawBossTrial.lastReport || bossBase.lastReport).slice(0, 260),
+    };
+    merged.bossTrial.totalVictories = Math.max(
+      merged.bossTrial.totalVictories,
+      Object.values(bossVictories).reduce((total, value) => safeAdd(total, value), 0),
+    );
+    merged.bossTrial.perfectVictories = Math.min(
+      merged.bossTrial.totalVictories,
+      merged.bossTrial.perfectVictories,
+    );
+    if (merged.bossTrial.resolved) merged.bossTrial.active = false;
+    if (merged.bossTrial.active && merged.bossTrial.attempts < 1) {
+      merged.bossTrial.attempts = 1;
+    }
     merged.lastSeen = finiteTimestamp(raw.lastSeen);
     merged.nextEventAt = finiteTimestamp(
       raw.nextEventAt,
@@ -11820,21 +12627,40 @@
     const hasStarportProgress =
       Object.values(targetState.starport?.materials || {}).some((value) => value > 0) ||
       Object.values(targetState.starport?.modules || {}).some((value) => value > 0);
+    const hasEstablishedProgress =
+      (targetState.rebirths || 0) > 0 ||
+      (targetState.totalCores || 0) > 0 ||
+      (targetState.endgame?.transcensions || 0) > 0 ||
+      (targetState.expedition?.completedRuns || 0) > 0 ||
+      (targetState.expedition?.failedRuns || 0) > 0;
     const rules = {
       command: true,
       fleet: true,
-      research: targetState.lifetimeDust >= 60 || targetState.upgrades.length > 0,
-      missions: targetState.lifetimeDust >= 120 || targetState.missions?.tokens > 0,
-      combat: targetState.lifetimeDust >= COMBAT_UNLOCK_DUST || targetState.combat?.wins > 0,
-      starport: targetState.lifetimeDust >= COMBAT_UNLOCK_DUST || hasStarportProgress,
+      research:
+        (targetState.lifetimeDust >= 60 && (isJourneyChapterComplete("automation", targetState) || hasEstablishedProgress)) ||
+        targetState.upgrades.length > 0,
+      missions:
+        (targetState.lifetimeDust >= 120 && (isJourneyChapterComplete("automation", targetState) || hasEstablishedProgress)) ||
+        targetState.missions?.tokens > 0,
+      combat:
+        (targetState.lifetimeDust >= COMBAT_UNLOCK_DUST && (isJourneyChapterComplete("research", targetState) || hasEstablishedProgress)) ||
+        targetState.combat?.wins > 0 ||
+        (targetState.combat?.attackLevel || 0) + (targetState.combat?.defenseLevel || 0) > 0,
+      starport:
+        (targetState.lifetimeDust >= COMBAT_UNLOCK_DUST && (isJourneyChapterComplete("border", targetState) || hasEstablishedProgress)) ||
+        hasStarportProgress,
       "core-shop": targetState.totalCores > 0 || targetState.rebirths > 0,
       expedition:
-        targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST ||
-        targetState.expedition?.completedRuns > 0,
+        (targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST && (isJourneyChapterComplete("jump", targetState) || hasEstablishedProgress)) ||
+        targetState.expedition?.completedRuns > 0 ||
+        targetState.expedition?.failedRuns > 0 ||
+        Boolean(targetState.expedition?.activeRun),
       starfall:
         getStarfallPhase() !== "archived" || hasStarfallParticipation(targetState),
       transcend: isEndgameUnlocked(targetState),
-      leaderboard: targetState.lifetimeDust >= 5000,
+      leaderboard:
+        (targetState.lifetimeDust >= 5000 && (isJourneyChapterComplete("border", targetState) || hasEstablishedProgress)) ||
+        targetState.careerBattles > 0,
     };
     return rules[pageId] !== false;
   }
@@ -11884,6 +12710,23 @@
   }
 
   function getCommandRecommendation() {
+    const journeyChapter = getCurrentJourneyChapter();
+    if (journeyChapter) {
+      const progress = getJourneyProgress(journeyChapter);
+      const complete = progress >= journeyChapter.goal;
+      return {
+        icon: journeyChapter.icon,
+        title: complete
+          ? `领取“${journeyChapter.title}”章节奖励`
+          : journeyChapter.title,
+        description: complete
+          ? `本章已经完成：${formatExistingReward(journeyChapter.reward)}。`
+          : journeyChapter.description,
+        progress: progress / Math.max(1, journeyChapter.goal),
+        action: complete ? "journey" : journeyChapter.action,
+        label: complete ? "领取章节" : journeyChapter.actionLabel,
+      };
+    }
     const units = getTotalUnits();
     if (units === 0 && state.dust < 15) {
       return {
@@ -12102,6 +12945,8 @@
   function performGuidanceAction(action) {
     if (action === "claim-missions") {
       claimAllMissionRewards();
+    } else if (action === "journey") {
+      performJourneyAction();
     } else if (PRIMARY_PAGES.includes(action)) {
       activatePrimaryPage(action, { scroll: true });
     } else if (action === "collect") {
@@ -12209,6 +13054,7 @@
         break;
       case "combat":
         renderCombatTargets();
+        renderBossTrial();
         break;
       case "expedition":
         renderExpedition();
@@ -12224,9 +13070,12 @@
         break;
       case "leaderboard":
         renderLeaderboardSummary();
+        renderCommunityBeacon();
         break;
       case "command":
         renderOperations();
+        renderJourney();
+        renderAtlas();
         break;
       default:
         break;
@@ -12558,6 +13407,7 @@
       }
       updateGoal();
       updateCommandGuide();
+      renderJourney();
       renderFocusCenter();
     } else if (state.activePage === "fleet") {
       const units = getTotalUnits();
@@ -13106,6 +13956,37 @@
       const button = event.target.closest("[data-focus-action]");
       if (button) performGuidanceAction(button.dataset.focusAction);
     });
+    elements.journeyActionButton.addEventListener("click", performJourneyAction);
+    elements.atlasHub.addEventListener("toggle", () => {
+      if (
+        elements.atlasHub.open &&
+        !state.guidance.seenFeatures.includes("star-atlas-v025")
+      ) {
+        state.guidance.seenFeatures.push("star-atlas-v025");
+        saveGame();
+        window.setTimeout(() => showModal({
+          eyebrow: "探索会自动留下记录",
+          icon: "◈",
+          title: "图鉴不是另一份作业清单",
+          message: "正常战斗、完成远征、找到遗物和观测伴星都会自动填充图鉴。你不需要重复刷指定目标；到达 5、12、20 和 33 项时回来领取现有资源即可。",
+          confirmText: "查看图鉴",
+          cancelText: null,
+        }), 100);
+      }
+      if (elements.atlasHub.open) renderAtlas();
+    });
+    elements.atlasMilestones.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-atlas-milestone]");
+      if (button) claimAtlasMilestone(Number(button.dataset.atlasMilestone));
+    });
+    elements.atlasFilters.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-atlas-filter]");
+      if (!button) return;
+      state.atlas.activeFilter = button.dataset.atlasFilter;
+      renderedAtlasSignature = null;
+      renderAtlas();
+      saveGame();
+    });
     elements.operationsHub.addEventListener("toggle", () => {
       if (
         elements.operationsHub.open &&
@@ -13187,6 +14068,11 @@
       const button = event.target.closest("[data-planet-id]");
       if (button) attackPlanet(button.dataset.planetId);
     });
+    elements.bossTrialStart.addEventListener("click", requestBossTrialStart);
+    elements.bossTacticButtons.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-boss-tactic]");
+      if (button) chooseBossTrialTactic(button.dataset.bossTactic);
+    });
     elements.expeditionPresetButtons.addEventListener("click", (event) => {
       const button = event.target.closest("[data-expedition-preset]");
       if (button) selectExpeditionPreset(Number(button.dataset.expeditionPreset));
@@ -13233,6 +14119,19 @@
     elements.collapseButton.addEventListener("click", transcend);
     elements.crescentSignal.addEventListener("click", unlockCrescentMission);
     elements.crescentLetterButton.addEventListener("click", openCrescentLetter);
+    elements.communityBeaconMilestones.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-community-milestone]");
+      if (button) claimCommunityBeaconMilestone(Number(button.dataset.communityMilestone));
+    });
+    window.addEventListener("stellar-community-beacon-update", (event) => {
+      const detail = event.detail && typeof event.detail === "object" ? event.detail : {};
+      communityBeaconNetwork = {
+        total: clampGameCount(detail.total),
+        participants: clampGameCount(detail.participants),
+        online: detail.online === true,
+      };
+      if (state.activePage === "leaderboard") renderCommunityBeacon();
+    });
     elements.saveButton.addEventListener("click", () => saveGame(true));
     elements.soundButton.addEventListener("click", () => {
       state.sound = !state.sound;
@@ -13525,6 +14424,46 @@
         ).filter((tab) => !tab.hidden).map((tab) => tab.dataset.page),
       }));
     },
+    getJourneyDiagnostics: () => {
+      const chapter = getCurrentJourneyChapter();
+      return JSON.parse(JSON.stringify({
+        claimedChapters: state.journey.claimedChapters,
+        currentChapter: chapter
+          ? {
+              id: chapter.id,
+              progress: getJourneyProgress(chapter),
+              goal: chapter.goal,
+              complete: isJourneyChapterComplete(chapter.id),
+              action: chapter.action,
+            }
+          : null,
+        totalChapters: JOURNEY_CHAPTERS.length,
+      }));
+    },
+    getAtlasDiagnostics: () => {
+      const entries = getAtlasEntries();
+      return JSON.parse(JSON.stringify({
+        discovered: entries.filter((entry) => entry.discovered).length,
+        total: entries.length,
+        entries,
+        claimedMilestones: state.atlas.claimedMilestones,
+        activeFilter: state.atlas.activeFilter,
+      }));
+    },
+    getBossTrialDiagnostics: (now = Date.now()) => {
+      ensureBossTrialDay(now);
+      return JSON.parse(JSON.stringify({
+        boss: getActiveBossTrial(now),
+        state: state.bossTrial,
+      }));
+    },
+    getCommunityBeaconDiagnostics: () => JSON.parse(JSON.stringify({
+      personal: getPersonalBeaconScore(),
+      network: communityBeaconNetwork,
+      claimedMilestones: state.communityBeacon.claimedMilestones,
+      milestones: COMMUNITY_BEACON_MILESTONES,
+      target: COMMUNITY_BEACON_TARGET,
+    })),
     getExpeditionDiagnostics: () => JSON.parse(JSON.stringify({
       supplies: state.expedition.supplies,
       fragments: state.expedition.fragments,

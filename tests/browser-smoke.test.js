@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.24.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.25.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -144,6 +144,10 @@ async function main() {
       focus: window.StellarOutpostCloudBridge.getFocusDiagnostics(
         Date.UTC(2026, 7, 10, 12, 0, 0),
       ),
+      journey: window.StellarOutpostCloudBridge.getJourneyDiagnostics(),
+      atlas: window.StellarOutpostCloudBridge.getAtlasDiagnostics(),
+      bossTrial: window.StellarOutpostCloudBridge.getBossTrialDiagnostics(),
+      community: window.StellarOutpostCloudBridge.getCommunityBeaconDiagnostics(),
       starfall: window.StellarOutpostCloudBridge.getStarfallDiagnostics(
         Date.UTC(2026, 7, 10, 12, 0, 0),
       ),
@@ -166,15 +170,15 @@ async function main() {
         === document.querySelector(".music-player-shell"),
     }));
 
-    assert.equal(snapshot.gameVersion, "0.24.0");
-    assert.equal(snapshot.saveVersion, 15);
+    assert.equal(snapshot.gameVersion, "0.25.0");
+    assert.equal(snapshot.saveVersion, 16);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.24\.0/);
+    assert.match(snapshot.footer, /v0\.25\.0/);
     assert.equal(snapshot.starfall.phase, "active");
     assert.deepEqual(snapshot.starfall.availableDayKeys, [
       "2026-08-08",
@@ -202,6 +206,13 @@ async function main() {
     assert.equal(snapshot.focus.routes.length, 3);
     assert.equal(snapshot.focus.duty.rewardDay, 1);
     assert.equal(snapshot.focus.dutyState.totalClaims, 0);
+    assert.equal(snapshot.journey.currentChapter.id, "signal");
+    assert.equal(snapshot.journey.totalChapters, 8);
+    assert.equal(snapshot.atlas.total, 33);
+    assert.equal(snapshot.atlas.discovered, 0);
+    assert.equal(snapshot.bossTrial.boss.phases.length, 3);
+    assert.equal(snapshot.bossTrial.state.attempts, 0);
+    assert.equal(snapshot.community.target, 12000);
     assert.ok(snapshot.focus.visiblePages.includes("command"));
     assert.ok(snapshot.focus.visiblePages.includes("missions"));
     assert.ok(snapshot.focus.visiblePages.includes("starfall"));
@@ -209,6 +220,8 @@ async function main() {
     await page.locator("#command-page-tab").click();
     assert.equal(await page.locator("#focus-route-list .focus-route").count(), 3);
     assert.equal(await page.locator("#duty-progress i").count(), 7);
+    assert.equal(await page.locator("#journey-chapter-dots i").count(), 8);
+    assert.equal(await page.locator("#atlas-grid .atlas-entry").count(), 33);
     assert.equal(await page.locator("#navigation-expand-button").isVisible(), true);
     assert.equal(snapshot.communicationsReady, true);
 
@@ -1193,11 +1206,55 @@ async function main() {
       fleetCommandCheck.after.maintenance < fleetCommandCheck.before.maintenance,
     );
 
+    await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const trialSave = bridge.createSnapshot();
+      trialSave.activePage = "combat";
+      trialSave.dust = 900000000;
+      trialSave.runDust = 900000000;
+      trialSave.lifetimeDust = 900000000;
+      trialSave.combat.attackLevel = 60;
+      trialSave.combat.defenseLevel = 60;
+      trialSave.bossTrial.dayKey = "";
+      trialSave.bossTrial.attempts = 0;
+      trialSave.bossTrial.active = false;
+      trialSave.bossTrial.phase = 0;
+      trialSave.bossTrial.integrity = 100;
+      trialSave.bossTrial.currentCorrect = 0;
+      trialSave.bossTrial.resolved = false;
+      trialSave.bossTrial.victory = false;
+      bridge.applySnapshot(trialSave);
+    });
+    await page.locator("#boss-trial-start").click();
+    if (await page.locator("#modal-confirm").isVisible()) {
+      await page.locator("#modal-confirm").click();
+    }
+    for (let phaseIndex = 0; phaseIndex < 3; phaseIndex += 1) {
+      const counter = await page.evaluate(() => {
+        const diagnostics = window.StellarOutpostCloudBridge.getBossTrialDiagnostics();
+        return diagnostics.boss.phases[diagnostics.state.phase].counter;
+      });
+      await page.locator(`[data-boss-tactic="${counter}"]`).click();
+    }
+    const bossTrialResult = await page.evaluate(() => ({
+      trial: window.StellarOutpostCloudBridge.getBossTrialDiagnostics(),
+      atlas: window.StellarOutpostCloudBridge.getAtlasDiagnostics(),
+    }));
+    assert.equal(bossTrialResult.trial.state.victory, true);
+    assert.equal(bossTrialResult.trial.state.currentCorrect, 3);
+    assert.equal(bossTrialResult.trial.state.integrity, 100);
+    assert.ok(bossTrialResult.trial.state.totalVictories >= 1);
+    assert.ok(
+      bossTrialResult.atlas.entries.some(
+        (entry) => entry.id.startsWith("boss-trial-") && entry.discovered,
+      ),
+    );
+
     await page.route("**/index.html?check=*", (route) =>
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.24.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.25.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1206,7 +1263,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.24\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.25\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

@@ -87,7 +87,11 @@ const ecoTickInterval = readConstant("ECO_GAME_TICK_INTERVAL");
 const qualityStarfieldFps = readConstant("QUALITY_STARFIELD_FPS");
 const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
-assert.equal(readConstant("SAVE_VERSION"), 16, "journey, atlas and boss trials need schema version 16");
+assert.equal(
+  readConstant("SAVE_VERSION"),
+  19,
+  "return protocol, doctrines and anomalies need schema version 19",
+);
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),
   6,

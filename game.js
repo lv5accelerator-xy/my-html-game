@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.25.0";
-  const PATCH_NOTES_VERSION = "0.25.0";
-  const SAVE_VERSION = 16;
+  const GAME_VERSION = "0.28.0";
+  const PATCH_NOTES_VERSION = "0.28.0";
+  const SAVE_VERSION = 19;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=0.25.0",
+      src: "assets/outpost-beyond-orion.mp3?v=0.28.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=0.25.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=0.28.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=0.25.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=0.28.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.25.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.28.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -149,6 +149,62 @@
     Object.freeze({ minutes: 7, tokens: 4, materials: 1, supplies: 0 }),
     Object.freeze({ minutes: 10, tokens: 5, materials: 0, supplies: 1 }),
     Object.freeze({ minutes: 15, tokens: 8, materials: 2, supplies: 1 }),
+  ]);
+  const RETURN_DUTY_REWARD = Object.freeze({
+    tokens: 5,
+    supplies: 1,
+    materials: 1,
+    minutes: 4,
+  });
+  const JUMP_DOCTRINES = Object.freeze([
+    Object.freeze({
+      id: "industry",
+      icon: "◎",
+      name: "群星工约",
+      motto: "让每条航迹都成为生产线",
+      benefit: "自动产量 +12%",
+      tradeoff: "舰队攻击力 -8%",
+      production: 1.12,
+      attack: 0.92,
+      defense: 1,
+      click: 1,
+      expeditionChance: 0,
+    }),
+    Object.freeze({
+      id: "sentinel",
+      icon: "⬡",
+      name: "守夜军规",
+      motto: "先守住灯火，再谈远方",
+      benefit: "攻击力 +12% · 防御力 +15%",
+      tradeoff: "自动产量 -8%",
+      production: 0.92,
+      attack: 1.12,
+      defense: 1.15,
+      click: 1,
+      expeditionChance: 0,
+    }),
+    Object.freeze({
+      id: "pathfinder",
+      icon: "▱",
+      name: "远航公约",
+      motto: "在未知抵达之前作出选择",
+      benefit: "远征成功率 +6%",
+      tradeoff: "手动回收 -15%",
+      production: 1,
+      attack: 1,
+      defense: 1,
+      click: 0.85,
+      expeditionChance: 0.06,
+    }),
+  ]);
+  const DEEP_SPACE_ANOMALIES = Object.freeze([
+    Object.freeze({ id: "lensSea", icon: "◇", name: "折光海", signal: "镜面星云把安全航线折成无数倒影。", metric: "expeditionRoutes", goal: 4, action: "expedition", requires: "expedition", benefit: "远征成功率 +4%", risk: "远征船体损伤 +15%", production: 1, click: 1, expeditionChance: 0.04, expeditionDamage: 1.15, operationInterval: 1, reward: { tokens: 8, supplies: 2, fragments: 18, materials: 1, minutes: 5 } }),
+    Object.freeze({ id: "redGrave", icon: "◆", name: "赤潮坟场", signal: "旧战场沿恒星风扩散，残骸仍在发出求救码。", metric: "battlesWon", goal: 4, action: "combat", requires: "combat", benefit: "攻击与防御 +8%", risk: "自动产量 -6%", production: 0.94, click: 1, attack: 1.08, defense: 1.08, expeditionChance: 0, expeditionDamage: 1, operationInterval: 1, reward: { tokens: 9, supplies: 1, fragments: 16, materials: 2, minutes: 4 } }),
+    Object.freeze({ id: "silentClock", icon: "◷", name: "静默钟", signal: "所有广播每隔七十七秒同时沉默一次。", metric: "operationsCompleted", goal: 10, action: "operations", requires: "operations", benefit: "航站作业速度 +10%", risk: "自动产量 -5%", production: 0.95, click: 1, expeditionChance: 0, expeditionDamage: 1, operationInterval: 0.9, reward: { tokens: 8, supplies: 1, fragments: 14, materials: 2, minutes: 5 } }),
+    Object.freeze({ id: "gravityBloom", icon: "✤", name: "引力花园", signal: "小行星像花瓣一样围绕不可见的质量核心开放。", metric: "unitsBought", goal: 8, action: "fleet", requires: "always", benefit: "自动产量 +8%", risk: "手动回收 -12%", production: 1.08, click: 0.88, expeditionChance: 0, expeditionDamage: 1, operationInterval: 1, reward: { tokens: 7, supplies: 1, fragments: 12, materials: 2, minutes: 5 } }),
+    Object.freeze({ id: "voidCorridor", icon: "▰", name: "无光回廊", signal: "星图上出现一条不反射任何光线的狭长通道。", metric: "bossVictories", goal: 1, action: "expedition", requires: "expedition", benefit: "远征与首领成功率 +7%", risk: "自动产量 -4%", production: 0.96, click: 1, expeditionChance: 0.07, expeditionDamage: 1, operationInterval: 1, reward: { tokens: 10, supplies: 3, fragments: 24, materials: 1, minutes: 6 } }),
+    Object.freeze({ id: "driftingMoon", icon: "☾", name: "漂流月", signal: "一枚没有恒星的月亮请求短暂靠泊。", metric: "companionObservations", goal: 1, action: "command", requires: "companion", benefit: "手动回收 +10%", risk: "自动产量 -4%", production: 0.96, click: 1.1, expeditionChance: 0, expeditionDamage: 1, operationInterval: 1, reward: { tokens: 8, supplies: 2, fragments: 20, materials: 1, minutes: 5 } }),
+    Object.freeze({ id: "echoCache", icon: "⌁", name: "回声货仓", signal: "废弃货仓会在每次主动信标后重复一次旧坐标。", metric: "manualClicks", goal: 50, action: "collect", requires: "always", benefit: "手动回收 +15%", risk: "自动产量 -6%", production: 0.94, click: 1.15, expeditionChance: 0, expeditionDamage: 1, operationInterval: 1, reward: { tokens: 7, supplies: 1, fragments: 12, materials: 2, minutes: 4 } }),
   ]);
   const JOURNEY_CHAPTERS = Object.freeze([
     Object.freeze({
@@ -289,6 +345,38 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "0.28.0",
+      theme: "深空异象",
+      changes: [
+        "远征页新增每周深空异象：系统从当前已解锁玩法中轮换三份异常委托，每周只能选择并完成其中一份。",
+        "七种异象分别连接舰队扩建、手动回收、航站作业、战斗、远征航段、机制首领与伴星观测，复用现有操作而不增加一级页面。",
+        "每种异象都拥有一项临时收益和一项明确风险；效果在领取本周奖励后结束，不会形成永久倍率膨胀。",
+        "完成异象会写入纯收藏观测档案；重复观测会转化为额外星图残片，奖励只使用现有资源。",
+        "异象候选会避开尚未解锁的玩法，并提供直接前往目标按钮与完整进度反馈。",
+      ],
+    },
+    {
+      version: "0.27.0",
+      theme: "跃迁学说",
+      changes: [
+        "每次完成深空跃迁后新增三选一航线学说：群星工约、守夜军规与远航公约，分别改变生产、战斗或远征侧重点。",
+        "所有学说同时包含收益与代价，并只持续到下一次深空跃迁；选择不可在本轮中途更换，不提供可无限叠加的永久倍率。",
+        "新增学说航行档案，永久记录三种学说被选择的次数，但档案本身不提供数值加成。",
+        "旧存档在拥有跃迁记录时会收到一次学说选择提示；奇点坍缩会清除当前学说并保留历史档案。",
+      ],
+    },
+    {
+      version: "0.26.0",
+      theme: "归航协议",
+      changes: [
+        "指挥台新增归航简报，集中显示离线时长、舰队收益、袭击结算、作业成果与当前最值得推进的目标。",
+        "新增本次值守目标：每天可在建设、边境与探索三条轻量路线中选择一条，目标会随当前解锁进度调整，完成后获得现有凭证、材料、补给与短时产量。",
+        "全部值守目标均提供直接前往按钮；未选择前不会产生进度压力，已选目标跨刷新保留，并在次日自动更新。",
+        "新增仅保存在玩家存档中的匿名体验诊断，记录首次自动化、研究、战斗、跃迁与回访天数，不记录邮箱、真实姓名或聊天内容。",
+        "回流、值守与推荐目标继续并入指挥台，不增加一级导航和新货币。",
+      ],
+    },
     {
       version: "0.25.0",
       theme: "航路共鸣",
@@ -3095,6 +3183,11 @@
     prestigeDescription: $("#prestige-description"),
     prestigeButton: $("#prestige-button"),
     prestigeGain: $("#prestige-gain"),
+    doctrineHub: $("#doctrine-hub"),
+    doctrineSummary: $("#doctrine-summary"),
+    doctrineStatus: $("#doctrine-status"),
+    doctrineOptions: $("#doctrine-options"),
+    doctrineHistory: $("#doctrine-history"),
     unitCount: $("#unit-count"),
     fleetFlavor: $("#fleet-flavor"),
     reconstructionCost: $("#reconstruction-cost"),
@@ -3120,6 +3213,22 @@
     dutyProgress: $("#duty-progress"),
     dutyClaimButton: $("#duty-claim-button"),
     focusRouteList: $("#focus-route-list"),
+    returnBriefElapsed: $("#return-brief-elapsed"),
+    returnBriefDust: $("#return-brief-dust"),
+    returnBriefOperations: $("#return-brief-operations"),
+    returnBriefRaids: $("#return-brief-raids"),
+    returnBriefRecommendation: $("#return-brief-recommendation"),
+    returnBriefAction: $("#return-brief-action"),
+    returnDutyStatus: $("#return-duty-status"),
+    returnDutyOptions: $("#return-duty-options"),
+    returnDutyProgressPanel: $("#return-duty-progress-panel"),
+    returnDutyEyebrow: $("#return-duty-eyebrow"),
+    returnDutyActiveTitle: $("#return-duty-active-title"),
+    returnDutyProgressLabel: $("#return-duty-progress-label"),
+    returnDutyProgressBar: $("#return-duty-progress-bar"),
+    returnDutyDescription: $("#return-duty-description"),
+    returnDutyGoButton: $("#return-duty-go-button"),
+    returnDutyClaimButton: $("#return-duty-claim-button"),
     journeyIcon: $("#journey-icon"),
     journeyChapterLabel: $("#journey-chapter-label"),
     journeyTitle: $("#journey-title"),
@@ -3363,6 +3472,20 @@
     missionStore: $(".mission-store"),
     expeditionSupplyBalance: $("#expedition-supply-balance"),
     expeditionFragmentBalance: $("#expedition-fragment-balance"),
+    anomalyHub: $("#anomaly-hub"),
+    anomalyWeek: $("#anomaly-week"),
+    anomalyOptions: $("#anomaly-options"),
+    anomalyActive: $("#anomaly-active"),
+    anomalyActiveIcon: $("#anomaly-active-icon"),
+    anomalyActiveSignal: $("#anomaly-active-signal"),
+    anomalyActiveName: $("#anomaly-active-name"),
+    anomalyProgressLabel: $("#anomaly-progress-label"),
+    anomalyProgressBar: $("#anomaly-progress-bar"),
+    anomalyRule: $("#anomaly-rule"),
+    anomalyGoButton: $("#anomaly-go-button"),
+    anomalyClaimButton: $("#anomaly-claim-button"),
+    anomalyArchiveCount: $("#anomaly-archive-count"),
+    anomalyArchive: $("#anomaly-archive"),
     expeditionLocked: $("#expedition-locked"),
     expeditionUnlockProgress: $("#expedition-unlock-progress"),
     expeditionUnlockLabel: $("#expedition-unlock-label"),
@@ -3616,6 +3739,46 @@
     };
   }
 
+  function freshReturnProtocolState() {
+    return {
+      dayKey: "",
+      selectedId: "",
+      metric: "",
+      goal: 0,
+      progress: 0,
+      claimed: false,
+    };
+  }
+
+  function freshExperienceState() {
+    return {
+      installedAt: Date.now(),
+      sessions: 0,
+      activeDays: [],
+      milestones: {},
+    };
+  }
+
+  function freshDoctrineState() {
+    return {
+      activeId: "",
+      pending: false,
+      history: Object.fromEntries(JUMP_DOCTRINES.map((doctrine) => [doctrine.id, 0])),
+    };
+  }
+
+  function freshAnomalyState() {
+    return {
+      weekKey: "",
+      optionIds: [],
+      activeId: "",
+      progress: 0,
+      claimed: false,
+      completedIds: [],
+      totalCompleted: 0,
+    };
+  }
+
   function freshJourneyState() {
     return {
       claimedChapters: [],
@@ -3744,6 +3907,10 @@
       operations: freshOperationsState(),
       guidance: freshGuidanceState(),
       duty: freshDutyState(),
+      returnProtocol: freshReturnProtocolState(),
+      experience: freshExperienceState(),
+      doctrine: freshDoctrineState(),
+      anomaly: freshAnomalyState(),
       journey: freshJourneyState(),
       atlas: freshAtlasState(),
       bossTrial: freshBossTrialState(),
@@ -3789,6 +3956,12 @@
   let versionCheckInFlight = false;
   let latestAvailableVersion = null;
   let updateDismissedVersion = null;
+  let latestReturnReport = {
+    elapsed: 0,
+    offlineGain: 0,
+    raidReport: { count: 0, defended: 0, breached: 0, reward: 0, loss: 0 },
+    operationReport: { actions: 0, elapsed: 0 },
+  };
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -5506,6 +5679,38 @@
     return targetState.upgrades.includes(id);
   }
 
+  function getActiveDoctrine(targetState = state) {
+    return JUMP_DOCTRINES.find(
+      (doctrine) => doctrine.id === targetState.doctrine?.activeId,
+    ) || null;
+  }
+
+  function getDoctrineFactor(key, targetState = state) {
+    const value = getActiveDoctrine(targetState)?.[key];
+    if (Number.isFinite(value)) return value;
+    return key === "expeditionChance" ? 0 : 1;
+  }
+
+  function getActiveAnomaly(targetState = state) {
+    if (
+      targetState === state &&
+      targetState.anomaly?.activeId &&
+      targetState.anomaly.weekKey !== getUtcWeeklyKey()
+    ) {
+      ensureAnomalyWeek();
+    }
+    if (!targetState.anomaly?.activeId || targetState.anomaly.claimed) return null;
+    return DEEP_SPACE_ANOMALIES.find(
+      (anomaly) => anomaly.id === targetState.anomaly.activeId,
+    ) || null;
+  }
+
+  function getAnomalyFactor(key, targetState = state) {
+    const value = getActiveAnomaly(targetState)?.[key];
+    if (Number.isFinite(value)) return value;
+    return key === "expeditionChance" ? 0 : 1;
+  }
+
   function getUpgradeRequirements(upgrade) {
     return (upgrade?.requires || [])
       .map((id) => UPGRADES.find((entry) => entry.id === id))
@@ -5572,6 +5777,8 @@
       safeMultiply(
         softCapGameNumber(multiplier, CLICK_SOFT_CAP, CLICK_LATE_POWER),
         getStarportClickMultiplier(targetState),
+        getDoctrineFactor("click", targetState),
+        getAnomalyFactor("click", targetState),
       ),
     );
   }
@@ -5625,6 +5832,11 @@
     ) {
       multiplier = safeMultiply(multiplier, 2);
     }
+    multiplier = safeMultiply(
+      multiplier,
+      getDoctrineFactor("production", targetState),
+      getAnomalyFactor("production", targetState),
+    );
     return Math.min(MAX_AUTOMATIC_PRODUCTION_MULTIPLIER, multiplier);
   }
 
@@ -6265,6 +6477,9 @@
       });
     });
     recordStarfallProgress(metric, safeAmount);
+    recordReturnProtocolProgress(metric, safeAmount);
+    recordAnomalyProgress(metric, safeAmount);
+    recordExperienceMetric(metric);
   }
 
   function getCompletedMissionCount(period) {
@@ -6472,6 +6687,282 @@
     renderFocusCenter();
     renderMissions();
     saveGame();
+  }
+
+  function getReturnDutyOptions(targetState = state) {
+    const combatUnlocked = targetState.lifetimeDust >= COMBAT_UNLOCK_DUST;
+    const expeditionUnlocked = targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST;
+    const researchUnlocked = targetState.lifetimeDust >= 60;
+    return [
+      {
+        id: "construction",
+        icon: "◎",
+        eyebrow: "建设值守",
+        title: "扩建 3 个自动化单元",
+        description: "选择任意已解锁设施扩建，不要求购买特定建筑。",
+        metric: "unitsBought",
+        goal: 3,
+        action: "fleet",
+        actionLabel: "前往舰队",
+      },
+      combatUnlocked
+        ? {
+            id: "border",
+            icon: "⬡",
+            eyebrow: "边境值守",
+            title: "赢得 2 场战斗",
+            description: "近域清剿、主动攻击或防卫成功都可推进。",
+            metric: "battlesWon",
+            goal: 2,
+            action: "combat",
+            actionLabel: "前往战斗",
+          }
+        : {
+            id: "border",
+            icon: "✦",
+            eyebrow: "信标值守",
+            title: "完成 20 次手动回收",
+            description: "战斗尚未开放，先维持航站的基础信号。",
+            metric: "manualClicks",
+            goal: 20,
+            action: "collect",
+            actionLabel: "开始回收",
+          },
+      expeditionUnlocked
+        ? {
+            id: "exploration",
+            icon: "▱",
+            eyebrow: "探索值守",
+            title: "完成 1 次星区远征",
+            description: "完整返航即可完成；临时协议不会变成永久负担。",
+            metric: "expeditionsCompleted",
+            goal: 1,
+            action: "expedition",
+            actionLabel: "前往远征",
+          }
+        : researchUnlocked
+          ? {
+              id: "exploration",
+              icon: "◒",
+              eyebrow: "研究值守",
+              title: "完成 1 项研究",
+              description: "远征尚未开放，先为下一段航线校准技术。",
+              metric: "researchCompleted",
+              goal: 1,
+              action: "research",
+              actionLabel: "前往研究",
+            }
+          : {
+              id: "exploration",
+              icon: "✦",
+              eyebrow: "巡航值守",
+              title: "完成 30 次手动回收",
+              description: "保持信标稳定，直到研究终端建立连接。",
+              metric: "manualClicks",
+              goal: 30,
+              action: "collect",
+              actionLabel: "开始回收",
+            },
+    ];
+  }
+
+  function ensureReturnProtocolDay(now = Date.now()) {
+    const dayKey = getUtcDailyKey(now);
+    if (state.returnProtocol.dayKey === dayKey) return false;
+    state.returnProtocol = freshReturnProtocolState();
+    state.returnProtocol.dayKey = dayKey;
+    return true;
+  }
+
+  function getSelectedReturnDuty() {
+    ensureReturnProtocolDay();
+    if (!state.returnProtocol.selectedId) return null;
+    const option = getReturnDutyOptions().find((entry) => entry.id === state.returnProtocol.selectedId);
+    if (!option) return null;
+    return {
+      ...option,
+      metric: state.returnProtocol.metric || option.metric,
+      goal: state.returnProtocol.goal || option.goal,
+    };
+  }
+
+  function selectReturnDuty(routeId) {
+    ensureReturnProtocolDay();
+    if (state.returnProtocol.selectedId) return;
+    const option = getReturnDutyOptions().find((entry) => entry.id === routeId);
+    if (!option) return;
+    state.returnProtocol.selectedId = option.id;
+    state.returnProtocol.metric = option.metric;
+    state.returnProtocol.goal = option.goal;
+    state.returnProtocol.progress = 0;
+    state.returnProtocol.claimed = false;
+    addLog(`本次值守已选择：${option.eyebrow}。`);
+    showToast("值守路线已确认", `${option.title} · 完成后可领取归航物资。`, option.icon);
+    renderReturnProtocol();
+    saveGame();
+  }
+
+  function recordReturnProtocolProgress(metric, amount) {
+    ensureReturnProtocolDay();
+    const route = getSelectedReturnDuty();
+    if (!route || state.returnProtocol.claimed || route.metric !== metric) return;
+    state.returnProtocol.progress = Math.min(
+      route.goal,
+      safeAdd(state.returnProtocol.progress, amount),
+    );
+  }
+
+  function claimReturnDuty() {
+    const route = getSelectedReturnDuty();
+    if (
+      !route ||
+      state.returnProtocol.claimed ||
+      state.returnProtocol.progress < route.goal
+    ) {
+      return;
+    }
+    state.returnProtocol.claimed = true;
+    const rewardDust = getMissionRewardDust(RETURN_DUTY_REWARD.minutes);
+    grantMissionTokens(RETURN_DUTY_REWARD.tokens);
+    grantMissionMaterials(RETURN_DUTY_REWARD.materials);
+    if (state.lifetimeDust >= EXPEDITION_UNLOCK_DUST) {
+      state.expedition.supplies = Math.min(
+        EXPEDITION_SUPPLY_CAP,
+        state.expedition.supplies + RETURN_DUTY_REWARD.supplies,
+      );
+    }
+    addDust(rewardDust, { trackMissions: false });
+    addLog(`${route.eyebrow}完成，归航物资已入库。`);
+    showToast(
+      "本次值守完成",
+      `星尘 +${formatNumber(rewardDust)} · 凭证 +${RETURN_DUTY_REWARD.tokens} · 每种材料 +${RETURN_DUTY_REWARD.materials}${state.lifetimeDust >= EXPEDITION_UNLOCK_DUST ? " · 补给 +1" : ""}`,
+      route.icon,
+    );
+    renderReturnProtocol();
+    updateUi();
+    saveGame();
+  }
+
+  function recordExperienceMetric(metric) {
+    const milestoneByMetric = {
+      unitsBought: "firstAutomation",
+      researchCompleted: "firstResearch",
+      battlesWon: "firstBattle",
+      prestiges: "firstJump",
+      expeditionsCompleted: "firstExpedition",
+      transcensions: "firstTranscend",
+    };
+    const milestone = milestoneByMetric[metric];
+    if (milestone && !state.experience.milestones[milestone]) {
+      state.experience.milestones[milestone] = Date.now();
+    }
+  }
+
+  function registerExperienceSession(now = Date.now()) {
+    if (!state.experience || typeof state.experience !== "object") {
+      state.experience = freshExperienceState();
+    }
+    state.experience.sessions = clampGameCount(state.experience.sessions + 1);
+    const dayKey = getUtcDailyKey(now);
+    if (!state.experience.activeDays.includes(dayKey)) {
+      state.experience.activeDays.push(dayKey);
+      state.experience.activeDays = state.experience.activeDays.slice(-32);
+    }
+  }
+
+  function isAnomalyAvailable(anomaly, targetState = state) {
+    if (!anomaly) return false;
+    if (anomaly.requires === "combat") return targetState.lifetimeDust >= COMBAT_UNLOCK_DUST;
+    if (anomaly.requires === "expedition") return targetState.lifetimeDust >= EXPEDITION_UNLOCK_DUST;
+    if (anomaly.requires === "operations") return targetState.lifetimeDust >= OPERATIONS_UNLOCK_DUST;
+    if (anomaly.requires === "companion") {
+      return (targetState.endgame?.companions?.length || 0) >
+        (targetState.endgame?.companionObservations?.length || 0);
+    }
+    return true;
+  }
+
+  function ensureAnomalyWeek(now = Date.now()) {
+    const weekKey = getUtcWeeklyKey(now);
+    if (state.anomaly.weekKey === weekKey && state.anomaly.optionIds.length === 3) {
+      return false;
+    }
+    const completedIds = [...state.anomaly.completedIds];
+    const totalCompleted = state.anomaly.totalCompleted;
+    const eligible = DEEP_SPACE_ANOMALIES.filter((anomaly) =>
+      isAnomalyAvailable(anomaly),
+    );
+    const options = seededMissionShuffle(
+      eligible,
+      `anomaly:${weekKey}:${normalizePlayerName(state.playerName) || "station"}`,
+    ).slice(0, 3);
+    state.anomaly = freshAnomalyState();
+    state.anomaly.weekKey = weekKey;
+    state.anomaly.optionIds = options.map((anomaly) => anomaly.id);
+    state.anomaly.completedIds = completedIds;
+    state.anomaly.totalCompleted = totalCompleted;
+    return true;
+  }
+
+  function selectAnomaly(anomalyId) {
+    ensureAnomalyWeek();
+    if (state.anomaly.activeId || state.anomaly.claimed) return;
+    const anomaly = DEEP_SPACE_ANOMALIES.find(
+      (entry) => entry.id === anomalyId && state.anomaly.optionIds.includes(entry.id),
+    );
+    if (!anomaly || !isAnomalyAvailable(anomaly)) return;
+    state.anomaly.activeId = anomaly.id;
+    state.anomaly.progress = 0;
+    state.anomaly.claimed = false;
+    addLog(`深空异象观测启动：${anomaly.name}。`);
+    showToast(
+      `${anomaly.name}观测启动`,
+      `${anomaly.benefit}；风险：${anomaly.risk}。本周不可更换。`,
+      anomaly.icon,
+    );
+    renderAnomalies();
+    updateUi();
+    saveGame();
+  }
+
+  function recordAnomalyProgress(metric, amount) {
+    const anomaly = getActiveAnomaly();
+    if (!anomaly || anomaly.metric !== metric) return;
+    state.anomaly.progress = Math.min(
+      anomaly.goal,
+      safeAdd(state.anomaly.progress, amount),
+    );
+  }
+
+  function claimAnomaly() {
+    const anomaly = getActiveAnomaly();
+    if (!anomaly || state.anomaly.progress < anomaly.goal) return;
+    const firstObservation = !state.anomaly.completedIds.includes(anomaly.id);
+    state.anomaly.claimed = true;
+    state.anomaly.totalCompleted = clampGameCount(state.anomaly.totalCompleted + 1);
+    if (firstObservation) state.anomaly.completedIds.push(anomaly.id);
+    grantMissionTokens(anomaly.reward.tokens);
+    grantMissionMaterials(anomaly.reward.materials);
+    state.expedition.supplies = Math.min(
+      EXPEDITION_SUPPLY_CAP,
+      state.expedition.supplies + anomaly.reward.supplies,
+    );
+    const fragments = anomaly.reward.fragments + (firstObservation ? 0 : 10);
+    state.expedition.fragments = Math.min(
+      EXPEDITION_FRAGMENT_CAP,
+      state.expedition.fragments + fragments,
+    );
+    const rewardDust = getMissionRewardDust(anomaly.reward.minutes);
+    addDust(rewardDust, { trackMissions: false });
+    addLog(`${anomaly.name}观测完成，记录已写入深空异象档案。`);
+    showToast(
+      firstObservation ? "新异象记录归档" : "重复观测完成",
+      `${anomaly.name} · 凭证 +${anomaly.reward.tokens} · 补给 +${anomaly.reward.supplies} · 残片 +${fragments} · 星尘 +${formatNumber(rewardDust)}`,
+      anomaly.icon,
+    );
+    renderAnomalies();
+    updateUi();
+    saveGame(false, { forceBackup: true });
   }
 
   function claimAllMissionRewards() {
@@ -7291,6 +7782,8 @@
       if (affix.id === "jammer") chance -= 0.1;
     });
     if (hasExpeditionEffect("predictiveNav")) chance += 0.04;
+    chance += getDoctrineFactor("expeditionChance");
+    chance += getAnomalyFactor("expeditionChance");
     return clamp(chance, 0.18, 0.94);
   }
 
@@ -7305,6 +7798,7 @@
       damage += 9;
     }
     if (hasExpeditionEffect("reactiveArmor")) damage *= 0.8;
+    damage *= getAnomalyFactor("expeditionDamage");
     return Math.max(1, Math.round(damage));
   }
 
@@ -7741,7 +8235,8 @@
   function getOperationInterval(job, targetState = state) {
     const masterySpeed = getOperationMasteryLevel(job.id, targetState) * 0.005;
     const poolSpeed = getOperationsPoolRatio(targetState) >= 0.25 ? 0.05 : 0;
-    return job.interval / (1 + masterySpeed + poolSpeed);
+    return (job.interval / (1 + masterySpeed + poolSpeed)) *
+      getAnomalyFactor("operationInterval", targetState);
   }
 
   function addOperationComponent(id, amount = 1) {
@@ -8338,6 +8833,112 @@
       merged.duty.bestStreak,
       merged.duty.streak,
     );
+    const rawReturnProtocol = raw.returnProtocol && typeof raw.returnProtocol === "object"
+      ? raw.returnProtocol
+      : {};
+    const validReturnMetrics = new Set([
+      "unitsBought",
+      "manualClicks",
+      "researchCompleted",
+      "battlesWon",
+      "operationsCompleted",
+      "expeditionsCompleted",
+    ]);
+    merged.returnProtocol = {
+      dayKey: /^\d{4}-\d{2}-\d{2}$/.test(String(rawReturnProtocol.dayKey || ""))
+        ? String(rawReturnProtocol.dayKey)
+        : "",
+      selectedId: ["construction", "border", "exploration"].includes(rawReturnProtocol.selectedId)
+        ? rawReturnProtocol.selectedId
+        : "",
+      metric: validReturnMetrics.has(rawReturnProtocol.metric)
+        ? rawReturnProtocol.metric
+        : "",
+      goal: Math.min(1000, clampGameCount(rawReturnProtocol.goal)),
+      progress: Math.min(1000, clampGameNumber(rawReturnProtocol.progress)),
+      claimed: rawReturnProtocol.claimed === true,
+    };
+    if (!merged.returnProtocol.selectedId || !merged.returnProtocol.metric || merged.returnProtocol.goal < 1) {
+      merged.returnProtocol = freshReturnProtocolState();
+    } else {
+      merged.returnProtocol.progress = Math.min(
+        merged.returnProtocol.goal,
+        merged.returnProtocol.progress,
+      );
+    }
+    const rawExperience = raw.experience && typeof raw.experience === "object"
+      ? raw.experience
+      : {};
+    const milestoneNames = new Set([
+      "firstAutomation",
+      "firstResearch",
+      "firstBattle",
+      "firstJump",
+      "firstExpedition",
+      "firstTranscend",
+    ]);
+    const milestones = {};
+    Object.entries(rawExperience.milestones || {}).forEach(([key, value]) => {
+      if (!milestoneNames.has(key)) return;
+      const timestamp = Number(value);
+      if (Number.isFinite(timestamp) && timestamp > 0) milestones[key] = timestamp;
+    });
+    merged.experience = {
+      installedAt: finiteTimestamp(rawExperience.installedAt, Date.now()),
+      sessions: clampGameCount(rawExperience.sessions),
+      activeDays: Array.isArray(rawExperience.activeDays)
+        ? [...new Set(rawExperience.activeDays.filter((key) => /^\d{4}-\d{2}-\d{2}$/.test(String(key))))].slice(-32)
+        : [],
+      milestones,
+    };
+    const validDoctrineIds = new Set(JUMP_DOCTRINES.map((doctrine) => doctrine.id));
+    const doctrineHistory = Object.fromEntries(
+      JUMP_DOCTRINES.map((doctrine) => [
+        doctrine.id,
+        clampGameCount(raw.doctrine?.history?.[doctrine.id]),
+      ]),
+    );
+    const savedDoctrineId = validDoctrineIds.has(raw.doctrine?.activeId)
+      ? raw.doctrine.activeId
+      : "";
+    merged.doctrine = {
+      activeId: savedDoctrineId,
+      pending: !savedDoctrineId && merged.rebirths > 0
+        ? raw.doctrine?.pending !== false || sourceVersion < 18
+        : false,
+      history: doctrineHistory,
+    };
+    const validAnomalyIds = new Set(DEEP_SPACE_ANOMALIES.map((anomaly) => anomaly.id));
+    const rawAnomaly = raw.anomaly && typeof raw.anomaly === "object" ? raw.anomaly : {};
+    merged.anomaly = {
+      weekKey: /^\d{4}-W\d{2}$/.test(String(rawAnomaly.weekKey || ""))
+        ? String(rawAnomaly.weekKey)
+        : "",
+      optionIds: Array.isArray(rawAnomaly.optionIds)
+        ? [...new Set(rawAnomaly.optionIds.filter((id) => validAnomalyIds.has(id)))].slice(0, 3)
+        : [],
+      activeId: validAnomalyIds.has(rawAnomaly.activeId) ? rawAnomaly.activeId : "",
+      progress: Math.min(1000, clampGameNumber(rawAnomaly.progress)),
+      claimed: rawAnomaly.claimed === true,
+      completedIds: Array.isArray(rawAnomaly.completedIds)
+        ? [...new Set(rawAnomaly.completedIds.filter((id) => validAnomalyIds.has(id)))]
+        : [],
+      totalCompleted: clampGameCount(rawAnomaly.totalCompleted),
+    };
+    if (merged.anomaly.activeId && !merged.anomaly.optionIds.includes(merged.anomaly.activeId)) {
+      merged.anomaly.activeId = "";
+      merged.anomaly.progress = 0;
+      merged.anomaly.claimed = false;
+    }
+    const activeAnomalyDefinition = DEEP_SPACE_ANOMALIES.find(
+      (anomaly) => anomaly.id === merged.anomaly.activeId,
+    );
+    if (activeAnomalyDefinition) {
+      merged.anomaly.progress = Math.min(
+        activeAnomalyDefinition.goal,
+        merged.anomaly.progress,
+      );
+    }
     const validJourneyIds = new Set(JOURNEY_CHAPTERS.map((chapter) => chapter.id));
     merged.journey = {
       claimedChapters: Array.isArray(raw.journey?.claimedChapters)
@@ -8783,7 +9384,8 @@
     state.lastSeen = returnTime;
     if (state.event?.expires < returnTime) state.event = null;
     if (state.buff?.expires < returnTime) state.buff = null;
-    return { elapsed, offlineGain, raidReport, operationReport };
+    latestReturnReport = { elapsed, offlineGain, raidReport, operationReport };
+    return latestReturnReport;
   }
 
   function loadGame() {
@@ -8798,6 +9400,9 @@
     ensureMissionPeriods();
     ensureFleetChallengePeriod();
     ensureExpeditionRunChoices();
+    ensureReturnProtocolDay();
+    ensureAnomalyWeek();
+    registerExperienceSession();
   }
 
   function buyBuilding(id) {
@@ -8971,6 +9576,59 @@
     saveGame();
   }
 
+  function chooseDoctrine(doctrineId) {
+    if (!state.doctrine.pending || state.doctrine.activeId) return;
+    const doctrine = JUMP_DOCTRINES.find((entry) => entry.id === doctrineId);
+    if (!doctrine) return;
+    state.doctrine.activeId = doctrine.id;
+    state.doctrine.pending = false;
+    state.doctrine.history[doctrine.id] = clampGameCount(
+      (state.doctrine.history[doctrine.id] || 0) + 1,
+    );
+    addLog(`跃迁学说已确立：${doctrine.name}。`);
+    showToast(
+      `${doctrine.name}已生效`,
+      `${doctrine.benefit}；代价：${doctrine.tradeoff}。下一次跃迁后可重新选择。`,
+      doctrine.icon,
+    );
+    renderDoctrine();
+    updateUi();
+    saveGame();
+  }
+
+  function renderDoctrine() {
+    const historyTotal = Object.values(state.doctrine.history).reduce(
+      (total, value) => safeAdd(total, value),
+      0,
+    );
+    const unlocked = state.rebirths > 0 || historyTotal > 0;
+    elements.doctrineHub.hidden = !unlocked;
+    if (!unlocked) return;
+    const active = getActiveDoctrine();
+    elements.doctrineStatus.textContent = active
+      ? `本轮 · ${active.name}`
+      : state.doctrine.pending
+        ? "等待选择"
+        : "下次跃迁开放";
+    elements.doctrineSummary.textContent = active
+      ? `${active.motto}。当前收益：${active.benefit}；代价：${active.tradeoff}。`
+      : state.doctrine.pending
+        ? "三项学说都只改变本轮航线规则，不会形成永久倍率负担。"
+        : "完成下一次深空跃迁后，可为新航线选择一项临时学说。";
+    elements.doctrineHistory.textContent = `航行档案 ${formatNumber(historyTotal, 0)} 次`;
+    elements.doctrineOptions.replaceChildren();
+    JUMP_DOCTRINES.forEach((doctrine) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.doctrine = doctrine.id;
+      button.disabled = !state.doctrine.pending || Boolean(active);
+      button.className = `doctrine-card${active?.id === doctrine.id ? " active" : ""}`;
+      const times = state.doctrine.history[doctrine.id] || 0;
+      button.innerHTML = `<span aria-hidden="true">${doctrine.icon}</span><small>${doctrine.motto}</small><strong>${doctrine.name}</strong><em class="doctrine-benefit">${doctrine.benefit}</em><em class="doctrine-tradeoff">代价 · ${doctrine.tradeoff}</em><b>${active?.id === doctrine.id ? "本轮生效" : state.doctrine.pending ? "选择此学说" : `档案 ${times} 次`}</b>`;
+      elements.doctrineOptions.appendChild(button);
+    });
+  }
+
   function prestige() {
     const gain = getPrestigeGain();
     if (gain < 1) return;
@@ -8998,6 +9656,8 @@
           safeAdd(state.totalCores, gain),
         );
         state.rebirths = clampGameCount(state.rebirths + 1);
+        state.doctrine.activeId = "";
+        state.doctrine.pending = true;
         recordMissionProgress("prestiges", 1);
         state.dust = 0;
         state.runDust = 0;
@@ -9012,7 +9672,10 @@
         checkAchievements();
         renderAll();
         saveGame(false, { forceBackup: true });
-        showToast("跃迁完成", `永久产量增幅提升至 ×${getCoreMultiplier().toFixed(2)}。`, "◒");
+        showToast("跃迁完成 · 请选择学说", `永久产量增幅提升至 ×${getCoreMultiplier().toFixed(2)}；本轮临时规则等待确认。`, "◒");
+        window.setTimeout(() => {
+          elements.doctrineHub.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 260);
         playAchievementTone();
       },
     });
@@ -9136,6 +9799,9 @@
         state.cores = 0;
         state.totalCores = 0;
         state.rebirths = 0;
+        const retainedDoctrineHistory = { ...state.doctrine.history };
+        state.doctrine = freshDoctrineState();
+        state.doctrine.history = retainedDoctrineHistory;
         state.upgrades = [];
         state.coreShop = freshCoreShopState();
         CORE_SHOP_ITEMS.forEach((item) => {
@@ -9245,6 +9911,8 @@
           ),
           getStarportAttackMultiplier(targetState),
           getFleetExpeditionMultiplier(targetState),
+          getDoctrineFactor("attack", targetState),
+          getAnomalyFactor("attack", targetState),
         ),
       ),
     );
@@ -9277,6 +9945,8 @@
           ),
           getStarportDefenseMultiplier(targetState),
           getFleetDefenseMultiplier(targetState),
+          getDoctrineFactor("defense", targetState),
+          getAnomalyFactor("defense", targetState),
         ),
       ),
     );
@@ -11870,8 +12540,66 @@
     });
   }
 
+  function renderAnomalies() {
+    ensureAnomalyWeek();
+    const unlocked = state.lifetimeDust >= EXPEDITION_UNLOCK_DUST || state.anomaly.totalCompleted > 0;
+    elements.anomalyHub.hidden = !unlocked;
+    if (!unlocked) return;
+    elements.anomalyWeek.textContent = `${state.anomaly.weekKey} · 完成 ${formatNumber(state.anomaly.totalCompleted, 0)} 次`;
+    const selected = DEEP_SPACE_ANOMALIES.find(
+      (anomaly) => anomaly.id === state.anomaly.activeId,
+    ) || null;
+    elements.anomalyOptions.replaceChildren();
+    state.anomaly.optionIds.forEach((anomalyId) => {
+      const anomaly = DEEP_SPACE_ANOMALIES.find((entry) => entry.id === anomalyId);
+      if (!anomaly) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.anomaly = anomaly.id;
+      button.disabled = Boolean(selected) || state.anomaly.claimed;
+      button.className = `anomaly-card${selected?.id === anomaly.id ? " active" : ""}`;
+      button.innerHTML = `<span aria-hidden="true">${anomaly.icon}</span><small>${anomaly.signal}</small><strong>${anomaly.name}</strong><em class="anomaly-benefit">${anomaly.benefit}</em><em class="anomaly-risk">风险 · ${anomaly.risk}</em><b>${selected?.id === anomaly.id ? state.anomaly.claimed ? "本周已完成" : "正在观测" : selected ? "本周不可更换" : "选择此异象"}</b>`;
+      elements.anomalyOptions.appendChild(button);
+    });
+
+    elements.anomalyActive.hidden = !selected;
+    if (selected) {
+      const completed = state.anomaly.progress >= selected.goal;
+      const actionLabels = {
+        collect: "开始回收",
+        fleet: "前往舰队",
+        combat: "前往战斗",
+        operations: "前往作业台",
+        expedition: "前往远征",
+        command: "前往指挥台",
+      };
+      elements.anomalyActiveIcon.textContent = selected.icon;
+      elements.anomalyActiveSignal.textContent = selected.signal;
+      elements.anomalyActiveName.textContent = selected.name;
+      elements.anomalyProgressLabel.textContent = `${formatNumber(state.anomaly.progress, 0)} / ${formatNumber(selected.goal, 0)}`;
+      elements.anomalyProgressBar.style.width = `${clamp(state.anomaly.progress / selected.goal, 0, 1) * 100}%`;
+      elements.anomalyRule.textContent = `当前规则：${selected.benefit}；风险：${selected.risk}。奖励：${selected.reward.tokens} 凭证、${selected.reward.supplies} 补给、${selected.reward.fragments} 残片、每种材料 +${selected.reward.materials}。`;
+      elements.anomalyGoButton.textContent = actionLabels[selected.action] || "前往目标";
+      elements.anomalyGoButton.dataset.guideAction = selected.action;
+      elements.anomalyGoButton.disabled = state.anomaly.claimed;
+      elements.anomalyClaimButton.disabled = !completed || state.anomaly.claimed;
+      elements.anomalyClaimButton.textContent = state.anomaly.claimed
+        ? "本周已领取"
+        : completed
+          ? "完成观测并归档"
+          : "完成后领取";
+    }
+
+    elements.anomalyArchiveCount.textContent = `${state.anomaly.completedIds.length} / ${DEEP_SPACE_ANOMALIES.length}`;
+    elements.anomalyArchive.innerHTML = DEEP_SPACE_ANOMALIES.map((anomaly) => {
+      const found = state.anomaly.completedIds.includes(anomaly.id);
+      return `<article class="${found ? "found" : "unknown"}"><span aria-hidden="true">${found ? anomaly.icon : "?"}</span><small>${found ? "已归档" : "尚未观测"}</small><strong>${found ? anomaly.name : "未知异象"}</strong></article>`;
+    }).join("");
+  }
+
   function renderExpedition() {
     applyExpeditionSkin();
+    renderAnomalies();
     ensureExpeditionRunChoices();
     const unlocked = state.lifetimeDust >= EXPEDITION_UNLOCK_DUST;
     const run = state.expedition.activeRun;
@@ -12897,7 +13625,61 @@
     return routes.slice(0, 3);
   }
 
+  function renderReturnProtocol() {
+    ensureReturnProtocolDay();
+    const report = latestReturnReport;
+    const guide = getCommandRecommendation();
+    elements.returnBriefElapsed.textContent = report.elapsed > 10
+      ? formatDuration(report.elapsed)
+      : "刚刚连接";
+    elements.returnBriefDust.textContent = `${formatNumber(report.offlineGain, 0)} 星尘`;
+    elements.returnBriefOperations.textContent = `${formatNumber(report.operationReport.actions, 0)} 次`;
+    elements.returnBriefRaids.textContent = report.raidReport.count > 0
+      ? `${report.raidReport.defended} 守住 · ${report.raidReport.breached} 失守`
+      : "航线安全";
+    elements.returnBriefRecommendation.textContent = `下一步：${guide.title}。${guide.description}`;
+    elements.returnBriefAction.textContent = guide.label;
+    elements.returnBriefAction.dataset.guideAction = guide.action;
+
+    const selected = getSelectedReturnDuty();
+    elements.returnDutyOptions.replaceChildren();
+    getReturnDutyOptions().forEach((option) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.returnDuty = option.id;
+      button.disabled = Boolean(selected);
+      button.className = `return-duty-option${selected?.id === option.id ? " selected" : ""}`;
+      button.innerHTML = `<span aria-hidden="true">${option.icon}</span><small>${option.eyebrow}</small><strong>${option.title}</strong><em>${selected ? selected.id === option.id ? "已选择" : "本日不可更换" : "选择路线"}</em>`;
+      elements.returnDutyOptions.appendChild(button);
+    });
+    elements.returnDutyProgressPanel.hidden = !selected;
+    elements.returnDutyStatus.textContent = !selected
+      ? "尚未选择"
+      : state.returnProtocol.claimed
+        ? "今日已完成"
+        : state.returnProtocol.progress >= selected.goal
+          ? "奖励待领取"
+          : "值守进行中";
+    if (!selected) return;
+    const completed = state.returnProtocol.progress >= selected.goal;
+    elements.returnDutyEyebrow.textContent = selected.eyebrow;
+    elements.returnDutyActiveTitle.textContent = selected.title;
+    elements.returnDutyProgressLabel.textContent = `${formatNumber(state.returnProtocol.progress, 0)} / ${formatNumber(selected.goal, 0)}`;
+    elements.returnDutyProgressBar.style.width = `${clamp(state.returnProtocol.progress / selected.goal, 0, 1) * 100}%`;
+    elements.returnDutyDescription.textContent = `${selected.description} 奖励：4 分钟产量、5 凭证、每种材料 +1${state.lifetimeDust >= EXPEDITION_UNLOCK_DUST ? "、远征补给 +1" : ""}。`;
+    elements.returnDutyGoButton.textContent = selected.actionLabel;
+    elements.returnDutyGoButton.dataset.guideAction = selected.action;
+    elements.returnDutyGoButton.disabled = state.returnProtocol.claimed;
+    elements.returnDutyClaimButton.disabled = !completed || state.returnProtocol.claimed;
+    elements.returnDutyClaimButton.textContent = state.returnProtocol.claimed
+      ? "今日已领取"
+      : completed
+        ? "领取归航物资"
+        : "完成后领取";
+  }
+
   function renderFocusCenter() {
+    renderReturnProtocol();
     const duty = getDutyStatus();
     const completedInCycle = duty.claimedToday ? duty.rewardDay : duty.rewardDay - 1;
     elements.dutyStreak.textContent = `连续值守 ${state.duty.streak} 天`;
@@ -13076,6 +13858,7 @@
         renderOperations();
         renderJourney();
         renderAtlas();
+        renderDoctrine();
         break;
       default:
         break;
@@ -13951,11 +14734,22 @@
     elements.commandGuideAction.addEventListener("click", () => {
       performGuidanceAction(elements.commandGuideAction.dataset.guideAction);
     });
+    elements.returnBriefAction.addEventListener("click", () => {
+      performGuidanceAction(elements.returnBriefAction.dataset.guideAction);
+    });
     elements.dutyClaimButton.addEventListener("click", claimDailyDuty);
     elements.focusRouteList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-focus-action]");
       if (button) performGuidanceAction(button.dataset.focusAction);
     });
+    elements.returnDutyOptions.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-return-duty]");
+      if (button) selectReturnDuty(button.dataset.returnDuty);
+    });
+    elements.returnDutyGoButton.addEventListener("click", () => {
+      performGuidanceAction(elements.returnDutyGoButton.dataset.guideAction);
+    });
+    elements.returnDutyClaimButton.addEventListener("click", claimReturnDuty);
     elements.journeyActionButton.addEventListener("click", performJourneyAction);
     elements.atlasHub.addEventListener("toggle", () => {
       if (
@@ -14050,6 +14844,10 @@
       if (button) purchaseMissionStoreItem(button.dataset.missionStore);
     });
     elements.prestigeButton.addEventListener("click", prestige);
+    elements.doctrineOptions.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-doctrine]");
+      if (button) chooseDoctrine(button.dataset.doctrine);
+    });
     elements.attackUpgradeButton.addEventListener("click", () =>
       upgradeCombat("attack"),
     );
@@ -14082,6 +14880,14 @@
       if (button) toggleExpeditionGear(button.dataset.expeditionGear);
     });
     elements.startExpeditionButton.addEventListener("click", startExpedition);
+    elements.anomalyOptions.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-anomaly]");
+      if (button) selectAnomaly(button.dataset.anomaly);
+    });
+    elements.anomalyGoButton.addEventListener("click", () => {
+      performGuidanceAction(elements.anomalyGoButton.dataset.guideAction);
+    });
+    elements.anomalyClaimButton.addEventListener("click", claimAnomaly);
     elements.expeditionBoonChoices.addEventListener("click", (event) => {
       const button = event.target.closest("[data-expedition-boon]");
       if (button) chooseExpeditionBoon(button.dataset.expeditionBoon);
@@ -14422,6 +15228,44 @@
         visiblePages: Array.from(
           document.querySelectorAll("#primary-navigation [role='tab']"),
         ).filter((tab) => !tab.hidden).map((tab) => tab.dataset.page),
+      }));
+    },
+    getReturnProtocolDiagnostics: (now = Date.now()) => {
+      ensureReturnProtocolDay(now);
+      return JSON.parse(JSON.stringify({
+        report: latestReturnReport,
+        state: state.returnProtocol,
+        selected: getSelectedReturnDuty(),
+        options: getReturnDutyOptions(),
+        experience: state.experience,
+      }));
+    },
+    getDoctrineDiagnostics: () => JSON.parse(JSON.stringify({
+      state: state.doctrine,
+      active: getActiveDoctrine(),
+      choices: JUMP_DOCTRINES,
+      productionFactor: getDoctrineFactor("production"),
+      attackFactor: getDoctrineFactor("attack"),
+      defenseFactor: getDoctrineFactor("defense"),
+      clickFactor: getDoctrineFactor("click"),
+      expeditionChance: getDoctrineFactor("expeditionChance"),
+    })),
+    getAnomalyDiagnostics: (now = Date.now()) => {
+      ensureAnomalyWeek(now);
+      return JSON.parse(JSON.stringify({
+        state: state.anomaly,
+        options: state.anomaly.optionIds.map((id) =>
+          DEEP_SPACE_ANOMALIES.find((anomaly) => anomaly.id === id),
+        ),
+        active: getActiveAnomaly(),
+        archiveTotal: DEEP_SPACE_ANOMALIES.length,
+        productionFactor: getAnomalyFactor("production"),
+        clickFactor: getAnomalyFactor("click"),
+        attackFactor: getAnomalyFactor("attack"),
+        defenseFactor: getAnomalyFactor("defense"),
+        expeditionChance: getAnomalyFactor("expeditionChance"),
+        expeditionDamage: getAnomalyFactor("expeditionDamage"),
+        operationInterval: getAnomalyFactor("operationInterval"),
       }));
     },
     getJourneyDiagnostics: () => {

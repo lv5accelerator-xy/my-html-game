@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.25.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.28.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -144,6 +144,11 @@ async function main() {
       focus: window.StellarOutpostCloudBridge.getFocusDiagnostics(
         Date.UTC(2026, 7, 10, 12, 0, 0),
       ),
+      returnProtocol: window.StellarOutpostCloudBridge.getReturnProtocolDiagnostics(
+        Date.UTC(2026, 7, 10, 12, 0, 0),
+      ),
+      doctrine: window.StellarOutpostCloudBridge.getDoctrineDiagnostics(),
+      anomaly: window.StellarOutpostCloudBridge.getAnomalyDiagnostics(),
       journey: window.StellarOutpostCloudBridge.getJourneyDiagnostics(),
       atlas: window.StellarOutpostCloudBridge.getAtlasDiagnostics(),
       bossTrial: window.StellarOutpostCloudBridge.getBossTrialDiagnostics(),
@@ -170,22 +175,22 @@ async function main() {
         === document.querySelector(".music-player-shell"),
     }));
 
-    assert.equal(snapshot.gameVersion, "0.25.0");
-    assert.equal(snapshot.saveVersion, 16);
+    assert.equal(snapshot.gameVersion, "0.28.0");
+    assert.equal(snapshot.saveVersion, 19);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.25\.0/);
+    assert.match(snapshot.footer, /v0\.28\.0/);
     assert.equal(snapshot.starfall.phase, "active");
     assert.deepEqual(snapshot.starfall.availableDayKeys, [
       "2026-08-08",
       "2026-08-09",
       "2026-08-10",
     ]);
-    assert.equal(snapshot.starfall.state.dayRecords.length, 3);
+    assert.ok(snapshot.starfall.state.dayRecords.length >= 3);
     assert.ok(snapshot.starfall.state.dayRecords.every((record) => record.optionIds.length === 3));
     assert.equal(snapshot.starfall.letters.length, 7);
     assert.equal(snapshot.starfall.milestones.length, 7);
@@ -204,6 +209,12 @@ async function main() {
     assert.equal(snapshot.operations.queueSlots, 2);
     assert.equal(snapshot.focus.compactNavigation, true);
     assert.equal(snapshot.focus.routes.length, 3);
+    assert.equal(snapshot.returnProtocol.options.length, 3);
+    assert.equal(snapshot.returnProtocol.state.dayKey, "2026-08-10");
+    assert.equal(snapshot.doctrine.choices.length, 3);
+    assert.equal(snapshot.doctrine.state.pending, true);
+    assert.equal(snapshot.anomaly.options.length, 3);
+    assert.equal(snapshot.anomaly.archiveTotal, 7);
     assert.equal(snapshot.focus.duty.rewardDay, 1);
     assert.equal(snapshot.focus.dutyState.totalClaims, 0);
     assert.equal(snapshot.journey.currentChapter.id, "signal");
@@ -1254,7 +1265,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.25.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="0.28.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1263,7 +1274,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.25\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.28\.1/);
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

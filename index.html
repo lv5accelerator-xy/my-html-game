@@ -11,15 +11,15 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="0.25.0" />
-    <meta name="stellar-release-title" content="航路共鸣" />
+    <meta name="stellar-game-version" content="0.28.0" />
+    <meta name="stellar-release-title" content="深空异象" />
     <title>星港拾荒者 · 挂机小游戏</title>
-    <link rel="stylesheet" href="styles.css?v=0.25.0" />
+    <link rel="stylesheet" href="styles.css?v=0.28.0" />
   </head>
   <body>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=0.25.0"
+      src="assets/outpost-beyond-orion.mp3?v=0.28.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -317,6 +317,23 @@
               </div>
               <span id="duty-streak">连续值守 0 天</span>
             </header>
+            <section class="return-brief" aria-labelledby="return-brief-title">
+              <header>
+                <span class="return-brief-icon" aria-hidden="true">⌁</span>
+                <div>
+                  <small>v0.26.0 · 每次回来先看这里</small>
+                  <h3 id="return-brief-title">归航简报</h3>
+                </div>
+                <button id="return-brief-action" type="button">去完成</button>
+              </header>
+              <div class="return-brief-grid">
+                <span><small>离开航站</small><strong id="return-brief-elapsed">刚刚连接</strong></span>
+                <span><small>自动回收</small><strong id="return-brief-dust">0 星尘</strong></span>
+                <span><small>离线作业</small><strong id="return-brief-operations">0 次</strong></span>
+                <span><small>边境态势</small><strong id="return-brief-raids">安全</strong></span>
+              </div>
+              <p id="return-brief-recommendation">航站正在分析当前最值得推进的目标。</p>
+            </section>
             <article class="journey-card" aria-labelledby="journey-title">
               <div class="journey-card-copy">
                 <span id="journey-icon" class="journey-icon" aria-hidden="true">✦</span>
@@ -349,6 +366,31 @@
               <button id="duty-claim-button" type="button">领取今日补给</button>
             </div>
             <div id="focus-route-list" class="focus-route-list" aria-label="今日推荐航程"></div>
+            <section class="return-duty" aria-labelledby="return-duty-title">
+              <header>
+                <div>
+                  <small>每天任选一条 · 不连续签到也不会受罚</small>
+                  <h3 id="return-duty-title">本次值守目标</h3>
+                </div>
+                <span id="return-duty-status">尚未选择</span>
+              </header>
+              <div id="return-duty-options" class="return-duty-options"></div>
+              <div id="return-duty-progress-panel" class="return-duty-progress-panel" hidden>
+                <div>
+                  <span>
+                    <small id="return-duty-eyebrow">当前值守</small>
+                    <strong id="return-duty-active-title">等待选择</strong>
+                  </span>
+                  <b id="return-duty-progress-label">0 / 1</b>
+                </div>
+                <div class="return-duty-progress" aria-hidden="true"><span id="return-duty-progress-bar"></span></div>
+                <p id="return-duty-description"></p>
+                <div class="return-duty-actions">
+                  <button id="return-duty-go-button" class="secondary-button" type="button">前往目标</button>
+                  <button id="return-duty-claim-button" type="button" disabled>完成后领取</button>
+                </div>
+              </div>
+            </section>
           </section>
 
           <div class="beacon-zone">
@@ -605,6 +647,22 @@
               <small id="prestige-gain">+0 星核</small>
             </button>
           </div>
+          <section id="doctrine-hub" class="doctrine-hub" aria-labelledby="doctrine-title" hidden>
+            <header>
+              <span class="doctrine-heading-icon" aria-hidden="true">◒</span>
+              <div>
+                <small>v0.27.0 · 当前航线临时规则</small>
+                <h2 id="doctrine-title">跃迁学说</h2>
+                <p id="doctrine-summary">完成一次深空跃迁后，为新航线选择一项有收益也有代价的学说。</p>
+              </div>
+              <strong id="doctrine-status">等待首次跃迁</strong>
+            </header>
+            <div id="doctrine-options" class="doctrine-options"></div>
+            <div class="doctrine-footer">
+              <span>当前学说只持续到下一次深空跃迁，不能中途更换。</span>
+              <span id="doctrine-history">航行档案 0 次</span>
+            </div>
+          </section>
         </section>
 
         <section
@@ -1050,6 +1108,40 @@
               <p>远征奖励不会增加永久倍率；收藏遗物、信标外观和可消耗补给是这里的主要目标。</p>
             </div>
           </div>
+
+          <section id="anomaly-hub" class="anomaly-hub" aria-labelledby="anomaly-title" hidden>
+            <header>
+              <span class="anomaly-heading-icon" aria-hidden="true">◈</span>
+              <div>
+                <small>v0.28.0 · 每周三选一异常委托</small>
+                <h3 id="anomaly-title">深空异象</h3>
+                <p>候选只来自已经解锁的玩法；本周选定后不可更换，完成领奖后异常效果立即结束。</p>
+              </div>
+              <strong id="anomaly-week">本周信号</strong>
+            </header>
+            <div id="anomaly-options" class="anomaly-options"></div>
+            <div id="anomaly-active" class="anomaly-active" hidden>
+              <div class="anomaly-active-heading">
+                <span id="anomaly-active-icon" aria-hidden="true">◇</span>
+                <span>
+                  <small id="anomaly-active-signal">异常信号</small>
+                  <strong id="anomaly-active-name">等待选择</strong>
+                </span>
+                <b id="anomaly-progress-label">0 / 1</b>
+              </div>
+              <div class="anomaly-progress" aria-hidden="true"><span id="anomaly-progress-bar"></span></div>
+              <p id="anomaly-rule">收益与风险会在这里显示。</p>
+              <div class="anomaly-actions">
+                <button id="anomaly-go-button" class="secondary-button" type="button">前往目标</button>
+                <button id="anomaly-claim-button" type="button" disabled>完成后领取</button>
+              </div>
+            </div>
+            <div class="anomaly-archive-heading">
+              <span><small>纯收藏 · 重复记录转化为额外残片</small><strong>异象观测档案</strong></span>
+              <b id="anomaly-archive-count">0 / 7</b>
+            </div>
+            <div id="anomaly-archive" class="anomaly-archive"></div>
+          </section>
 
           <section id="expedition-locked" class="expedition-locked">
             <span aria-hidden="true">⌖</span>
@@ -1765,7 +1857,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v0.25.0</span>
+        <span>航站协议 v0.28.0</span>
       </footer>
     </div>
 
@@ -1809,7 +1901,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v0.25.0</strong>
+          <strong id="patch-notes-current-version">v0.28.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2120,9 +2212,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=0.25.0"></script>
-    <script src="game.js?v=0.25.0"></script>
-    <script src="firebase-config.js?v=0.25.0"></script>
-    <script type="module" src="cloud-save.js?v=0.25.0"></script>
+    <script src="game-math.js?v=0.28.0"></script>
+    <script src="game.js?v=0.28.0"></script>
+    <script src="firebase-config.js?v=0.28.0"></script>
+    <script type="module" src="cloud-save.js?v=0.28.0"></script>
   </body>
 </html>

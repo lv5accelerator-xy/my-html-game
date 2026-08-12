@@ -7,5 +7,6 @@
 | [FIREBASE-SETUP.txt](FIREBASE-SETUP.txt) | Google 登录、Firestore、云存档和排行榜配置 |
 | [COMMUNICATIONS-GUIDE.txt](COMMUNICATIONS-GUIDE.txt) | 发布公告、查看与处理玩家反馈 |
 | [MAINTENANCE.md](MAINTENANCE.md) | 新电脑接手项目、测试、版本更新与发布流程 |
+| [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) | v1.0 正式版及后续版本的发布前检查 |
 
 累计更新记录位于 [patch-notes](../patch-notes/README.md)，历史可运行快照位于 [历史版本](../历史版本/README.md)。

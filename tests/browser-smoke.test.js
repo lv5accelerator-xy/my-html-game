@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "0.28.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.0.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -115,7 +115,7 @@ async function main() {
     );
 
     const snapshot = await page.evaluate(() => ({
-      footer: document.querySelector("footer").textContent,
+      footer: document.querySelector(".app-shell > footer").textContent,
       dust: document.querySelector("#dust-value").textContent,
       rate: document.querySelector("#rate-value").textContent,
       cores: document.querySelector("#core-value").textContent,
@@ -175,15 +175,17 @@ async function main() {
         === document.querySelector(".music-player-shell"),
     }));
 
-    assert.equal(snapshot.gameVersion, "0.28.0");
-    assert.equal(snapshot.saveVersion, 19);
+    assert.equal(snapshot.gameVersion, "1.0.0");
+    assert.equal(snapshot.saveVersion, 22);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v0\.28\.0/);
+    assert.match(snapshot.footer, /v1\.0\.0/);
+    assert.equal(await page.locator(".skip-link").count(), 1);
+    assert.equal(await page.locator("#restore-backup-button").count(), 1);
     assert.equal(snapshot.starfall.phase, "active");
     assert.deepEqual(snapshot.starfall.availableDayKeys, [
       "2026-08-08",
@@ -229,7 +231,10 @@ async function main() {
     assert.ok(snapshot.focus.visiblePages.includes("starfall"));
     assert.equal(snapshot.focus.visiblePages.includes("leaderboard"), false);
     await page.locator("#command-page-tab").click();
-    assert.equal(await page.locator("#focus-route-list .focus-route").count(), 3);
+    const focusRoutes = page.locator("#focus-route-list .focus-route");
+    assert.ok(await focusRoutes.count() >= 1 && await focusRoutes.count() <= 3);
+    assert.equal(await page.locator("#focus-route-list .focus-route-shell.main").count(), 1);
+    assert.ok(await page.locator("#focus-route-list .focus-route-meta").count() >= 1);
     assert.equal(await page.locator("#duty-progress i").count(), 7);
     assert.equal(await page.locator("#journey-chapter-dots i").count(), 8);
     assert.equal(await page.locator("#atlas-grid .atlas-entry").count(), 33);
@@ -447,14 +452,14 @@ async function main() {
       };
     });
     const fleetIndustryMultiplier = 1.0325;
-    const exactSharedMultiplier = 1.22 * 1.08 * fleetIndustryMultiplier;
+    const exactSharedMultiplier = 1.22 * 1.08 * 1.044 * fleetIndustryMultiplier;
     const coordinationMultiplier = (owned) => 2 ** Math.min(8, owned / 25);
     const baseRaw =
       5 * 0.3 * coordinationMultiplier(5)
       + 2 * 120 * coordinationMultiplier(2);
     assert.ok(
       Math.abs(
-        productionFormulaCheck.base.total - baseRaw * fleetIndustryMultiplier
+        productionFormulaCheck.base.total - baseRaw * fleetIndustryMultiplier * 1.04
       ) < 1e-9,
     );
     assert.ok(
@@ -487,7 +492,7 @@ async function main() {
           (
             96 * 0.3 * coordinationMultiplier(96)
             - 95 * 0.3 * coordinationMultiplier(95)
-          ) * fleetIndustryMultiplier
+          ) * fleetIndustryMultiplier * 1.04
       ) < 1e-6,
       "continuous coordination preview must equal the exact 95 to 96 unit delta",
     );
@@ -839,6 +844,7 @@ async function main() {
       starportSave.starport.materials.relic = 14;
       starportSave.starport.materials.prism = 0;
       starportSave.starport.materials.sensor = 0;
+      starportSave.operations.components.phaseScanner = 2;
       bridge.applySnapshot(starportSave);
       const baseline = bridge.getStarportDiagnostics();
       const boostedSave = bridge.createSnapshot();
@@ -862,6 +868,7 @@ async function main() {
         effectLabels: [...document.querySelectorAll(".starport-slot-footer > span")].map(
           (label) => label.textContent,
         ),
+        planCount: document.querySelectorAll("[data-starport-blueprint]").length,
       };
     });
     assert.equal(starportCheck.materialCount, 6);
@@ -879,7 +886,9 @@ async function main() {
       starportCheck.effectLabels.every((label) => label.includes("→")),
       "starport cards must preview the next effective bonus",
     );
-    assert.equal(starportCheck.boosted.productionMultiplier, 1.08 * 1.04);
+    assert.equal(starportCheck.planCount, 3);
+    assert.equal(starportCheck.baseline.activeBlueprintId, "industrial");
+    assert.equal(starportCheck.boosted.productionMultiplier, 1.08 * 1.04 * 1.048);
     assert.equal(starportCheck.boosted.clickMultiplier, 1.08);
     assert.equal(starportCheck.boosted.attackMultiplier, 1.08);
     assert.equal(starportCheck.boosted.defenseMultiplier, 1.08);
@@ -888,7 +897,7 @@ async function main() {
       Math.abs(
         starportCheck.boosted.automaticRate /
           starportCheck.baseline.automaticRate -
-          1.08 * 1.04,
+          (1.08 * 1.04 * 1.048) / 1.04,
       ) < 0.001,
       "production starport bonus must multiply exactly below stream overflow compression",
     );
@@ -908,6 +917,22 @@ async function main() {
       ) < 0.002,
       "defense starport bonus must apply after late-game compression",
     );
+
+    await page.locator('[data-starport-blueprint="expedition"]').click();
+    const blueprintSwitch = await page.evaluate(() => ({
+      starport: window.StellarOutpostCloudBridge.getStarportDiagnostics(),
+      operations: window.StellarOutpostCloudBridge.getOperationsDiagnostics(),
+    }));
+    assert.equal(blueprintSwitch.starport.activeBlueprintId, "expedition");
+    assert.equal(blueprintSwitch.starport.blueprintSwitches, 1);
+    assert.equal(blueprintSwitch.operations.components.phaseScanner, 1);
+    assert.ok(blueprintSwitch.starport.lootMultiplier > starportCheck.boosted.lootMultiplier);
+    await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const restore = bridge.createSnapshot();
+      restore.starport.activeBlueprintId = "industrial";
+      bridge.applySnapshot(restore);
+    });
 
     const purchaseBefore = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
@@ -1267,11 +1292,48 @@ async function main() {
       ),
     );
 
+    const borderEchoBefore = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const echoSave = bridge.createSnapshot();
+      echoSave.activePage = "combat";
+      echoSave.dust = 10000000;
+      echoSave.lifetimeDust = 1000000;
+      echoSave.combat.attackLevel = 36;
+      echoSave.fleetCommand.maintenance = 10;
+      ["alloy", "circuit", "prism"].forEach((id) => {
+        echoSave.starport.materials[id] = 10;
+      });
+      echoSave.borderEcho.weekKey = "";
+      echoSave.borderEcho.resolved = false;
+      echoSave.borderEcho.victory = false;
+      echoSave.borderEcho.attempts = 0;
+      echoSave.borderEcho.prepared = false;
+      bridge.applySnapshot(echoSave);
+      return bridge.getBorderEchoDiagnostics();
+    });
+    assert.equal(await page.locator("#border-echo").isHidden(), false);
+    assert.equal(await page.locator("[data-border-tactic]").count(), 3);
+    await page.locator("#border-echo-prepare").click();
+    const preparedEcho = await page.evaluate(() =>
+      window.StellarOutpostCloudBridge.getBorderEchoDiagnostics(),
+    );
+    assert.equal(preparedEcho.state.prepared, true);
+    assert.ok(preparedEcho.requiredPower < borderEchoBefore.requiredPower);
+    await page.locator(`[data-border-tactic="${preparedEcho.trait.counter}"]`).click();
+    const borderEchoAfter = await page.evaluate(() => ({
+      echo: window.StellarOutpostCloudBridge.getBorderEchoDiagnostics(),
+      operations: window.StellarOutpostCloudBridge.getOperationsDiagnostics(),
+    }));
+    assert.equal(borderEchoAfter.echo.state.victory, true);
+    assert.equal(borderEchoAfter.echo.state.attempts, 1);
+    assert.equal(borderEchoAfter.echo.state.cosmetics.length, 1);
+    assert.equal(borderEchoAfter.operations.components.repairKit >= 1, true);
+
     await page.route("**/index.html?check=*", (route) =>
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="0.28.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="1.0.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1280,7 +1342,12 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v0\.28\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v1\.0\.1/);
+    const saveSafety = await page.evaluate(() =>
+      window.StellarOutpostCloudBridge.getSaveSafetyDiagnostics(),
+    );
+    assert.equal(saveSafety.backupLimit, 3);
+    assert.equal(typeof saveSafety.restoreAvailable, "boolean");
     assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
     assert.equal(failedLocalRequests.length, 0, failedLocalRequests.join("\n"));
 

@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://lv5accelerator-xy.github.io/my-html-game/"><strong>▶ 在线试玩</strong></a>
   ·
-  <a href="patch-notes/星港拾荒者-v0.1.0-v0.28.0-Patch-Notes.txt">更新记录</a>
+  <a href="patch-notes/星港拾荒者-v0.1.0-v1.0.0-Patch-Notes.txt">更新记录</a>
   ·
   <a href="docs/README.md">维护文档</a>
   ·
@@ -42,14 +42,18 @@
 
 ## 当前版本
 
-当前版本为 **v0.28.0「深空异象」**。
+当前版本为 **v1.0.0「正式启航」**。
 
+- **v1.0.0**：正式版收口，新增本地备份恢复、键盘可达性、完整发布检查与稳定性回归。
+- **v0.31.0**：现有敌人新增每周机制词条，战斗页加入三战术边境回响与维护/材料回收项。
+- **v0.30.0**：新增三套星港协同蓝图，以现有作业组件切换并预览真实产量、攻防与战利品变化。
+- **v0.29.0**：将分散目标收束为一项主航程和至多两项可选航程，新增预计时间、奖励预览与稍后提醒。
 - **v0.28.0**：远征页新增每周三选一深空异象，以有限收益、明确风险和收藏档案提高重复游玩变化。
 - **v0.27.0**：新增三种跃迁学说，每次深空跃迁后选择当前航线的临时规则。
 - **v0.26.0**：新增归航简报、每日三选一值守目标和个人体验里程碑。
 - **v0.25.0**：新增八章航路、33 项图鉴、每日机制首领与全服共同航标。
 
-完整变化见 [Patch Notes](patch-notes/星港拾荒者-v0.1.0-v0.28.0-Patch-Notes.txt)。
+完整变化见 [Patch Notes](patch-notes/星港拾荒者-v0.1.0-v1.0.0-Patch-Notes.txt)。
 
 ## 开始游玩
 
@@ -121,6 +125,7 @@ node tests/mobile-performance.test.js
 - [Firebase、账号与云存档配置](docs/FIREBASE-SETUP.txt)
 - [公告发布与玩家反馈处理](docs/COMMUNICATIONS-GUIDE.txt)
 - [新电脑维护交接说明](docs/MAINTENANCE.md)
+- [v1.0 正式版发布检查清单](docs/RELEASE-CHECKLIST.md)
 - [历史版本归档规则](历史版本/README.md)
 
 ## 音乐与授权

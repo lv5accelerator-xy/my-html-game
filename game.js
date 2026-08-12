@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "0.28.0";
-  const PATCH_NOTES_VERSION = "0.28.0";
-  const SAVE_VERSION = 19;
+  const GAME_VERSION = "1.0.0";
+  const PATCH_NOTES_VERSION = "1.0.0";
+  const SAVE_VERSION = 22;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=0.28.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.0.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=0.28.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.0.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=0.28.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.0.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=0.28.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.0.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,50 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.0.0",
+      theme: "正式启航",
+      changes: [
+        "《星港拾荒者》完成正式版收口：v0.29—v0.31 的航程、蓝图与边境机制全部进入稳定主线。",
+        "设置菜单新增本地存档安全状态与手动恢复最近备份，恢复前会保留当前记录，降低误操作和存档损坏风险。",
+        "新增键盘跳转入口、统一焦点样式与更明确的读屏状态，手机端继续保持无横向滚动和单列关键操作。",
+        "首次进入、高画质默认、渐进导航、新手航路和当前航程共同构成正式版上手流程；高级系统仍按进度开放。",
+        "补齐正式版发布清单、维护交接、累计更新记录和 v1.0.0 独立历史包。",
+      ],
+    },
+    {
+      version: "0.31.0",
+      theme: "边境回响",
+      changes: [
+        "近域清剿与行星目标新增每周轮换机制词条，敌方战力与奖励只做小幅同步变化。",
+        "战斗页新增每周边境回响：从现有行星敌人中生成一名机制首领，阅读词条后在突击、干扰与固守中选择反制。",
+        "边境回响每周最多三次，正确战术与足够战力缺一不可；可消耗现有维护件和星港材料完成一次战前整备。",
+        "胜利奖励以现有凭证、远征补给、星港材料、星图残片和纯收藏舰迹为主，不提供新的永久倍率。",
+        "战斗入口费、整备和星港重构共同增加现有资源回收项，控制后期库存膨胀。",
+      ],
+    },
+    {
+      version: "0.30.0",
+      theme: "星港蓝图",
+      changes: [
+        "星港新增工业联控、堡垒阵列与远航测绘三套蓝图方案，分别强化生产、攻防或远征与战利品侧重点。",
+        "方案效果由对应附属建筑等级产生有限协同，不增加新建筑、永久倍率层或货币。",
+        "切换方案消耗一件现有航站作业组件；当前方案无需重复付费，奇点超越后回到默认工业联控。",
+        "每张方案卡会预览切换前后的真实自动产量、舰队战力、基地防御和战利品倍率。",
+        "远航测绘会小幅提高远征航段成功率，堡垒阵列和工业联控的效果统一进入所有现有计算与购买预览。",
+      ],
+    },
+    {
+      version: "0.29.0",
+      theme: "航程收束",
+      changes: [
+        "指挥台将主线建议、每日委托、值守路线和紧急事件收束为一份“当前航程”，始终只保留一项主目标和至多两项可选目标。",
+        "每项目标现在直接显示预计用时、主要奖励和前往入口，减少在多个系统之间来回确认的成本。",
+        "可选目标新增“稍后提醒”，当日隐藏后不会造成进度损失，次日会自动恢复。",
+        "紧急袭击会优先进入当前航程；普通挂机与活动目标仍使用原有资源、页面和结算规则，不增加新货币。",
+        "手机端重新排列航程卡片和操作按钮，确保单手点击时不会误触或横向溢出。",
+      ],
+    },
     {
       version: "0.28.0",
       theme: "深空异象",
@@ -1626,6 +1670,35 @@
     { id: "ammoCrate", name: "弹药箱", icon: "↟", use: "弹药 +12" },
     { id: "repairKit", name: "维修套件", icon: "✚", use: "维护件 +12" },
   ]);
+  const STARPORT_BLUEPRINTS = Object.freeze([
+    {
+      id: "industrial",
+      name: "工业联控",
+      icon: "▦",
+      role: "生产方案",
+      description: "联动精炼厂、无人机坞与物流中枢，稳定提高自动回收效率。",
+      moduleIds: ["refinery", "droneDock", "logistics"],
+      componentId: "quantumController",
+    },
+    {
+      id: "bastion",
+      name: "堡垒阵列",
+      icon: "⬡",
+      role: "战斗方案",
+      description: "同步舰炮与护盾的火控时序，同时提高舰队攻击与基地防御。",
+      moduleIds: ["battery", "shield"],
+      componentId: "hullPlate",
+    },
+    {
+      id: "expedition",
+      name: "远航测绘",
+      icon: "⌖",
+      role: "探索方案",
+      description: "让战术雷达共享远征航图，提高材料回收与航段判定稳定性。",
+      moduleIds: ["radar", "droneDock"],
+      componentId: "phaseScanner",
+    },
+  ]);
   const STARPORT_MATERIALS = [
     { id: "alloy", name: "星港合金", shortName: "合金", icon: "⬡" },
     { id: "crystal", name: "能量晶体", shortName: "晶体", icon: "◇" },
@@ -2038,6 +2111,43 @@
         Object.freeze({ signal: "坍缩波越过事件视界", hint: "此时继续追击只会扩大舰损。", counter: "brace" }),
       ]),
     }),
+  ]);
+  const BORDER_ECHO_UNLOCK_DUST = 5000;
+  const BORDER_ECHO_TRAITS = Object.freeze([
+    Object.freeze({
+      id: "prismShell",
+      name: "棱镜护壳",
+      icon: "◈",
+      description: "折射装甲会反射正面火力，先切断同步信号。",
+      counter: "disrupt",
+      powerFactor: 1.12,
+      rewardFactor: 1.06,
+    }),
+    Object.freeze({
+      id: "breachPulse",
+      name: "破阵脉冲",
+      icon: "↟",
+      description: "脉冲正在积蓄冲击，稳住阵线才能保留反击窗口。",
+      counter: "brace",
+      powerFactor: 1.09,
+      rewardFactor: 1.07,
+    }),
+    Object.freeze({
+      id: "openCore",
+      name: "暴露核心",
+      icon: "◎",
+      description: "高速过载让中央核心短暂暴露，集中火力结束战斗。",
+      counter: "strike",
+      powerFactor: 1.15,
+      rewardFactor: 1.1,
+    }),
+  ]);
+  const BORDER_ECHO_COSMETICS = Object.freeze([
+    "棱光余迹",
+    "守夜航痕",
+    "破晓尾焰",
+    "静海回波",
+    "远星弧光",
   ]);
   const CORE_SHOP_ITEMS = [
     {
@@ -3300,6 +3410,8 @@
     bgmVolume: $("#bgm-volume"),
     bgmVolumeValue: $("#bgm-volume-value"),
     bgmAudio: $("#bgm-audio"),
+    saveBackupStatus: $("#save-backup-status"),
+    restoreBackupButton: $("#restore-backup-button"),
     exportButton: $("#export-button"),
     importButton: $("#import-button"),
     importFile: $("#import-file"),
@@ -3359,6 +3471,8 @@
     operationsComponentList: $("#operations-component-list"),
     operationsReport: $("#operations-report"),
     starportMaterialList: $("#starport-material-list"),
+    starportBlueprintList: $("#starport-blueprint-list"),
+    starportBlueprintActive: $("#starport-blueprint-active"),
     combatMaterialList: $("#combat-material-list"),
     starportSlotMap: $("#starport-slot-map"),
     starportRankTotal: $("#starport-rank-total"),
@@ -3403,6 +3517,20 @@
     bossTrialStart: $("#boss-trial-start"),
     bossTrialReport: $("#boss-trial-report"),
     bossTrialRecord: $("#boss-trial-record"),
+    borderEcho: $("#border-echo"),
+    borderEchoIcon: $("#border-echo-icon"),
+    borderEchoTitle: $("#border-echo-title"),
+    borderEchoDescription: $("#border-echo-description"),
+    borderEchoStatus: $("#border-echo-status"),
+    borderEchoTrait: $("#border-echo-trait"),
+    borderEchoHint: $("#border-echo-hint"),
+    borderEchoPower: $("#border-echo-power"),
+    borderEchoCost: $("#border-echo-cost"),
+    borderEchoAttempts: $("#border-echo-attempts"),
+    borderEchoActions: $(".border-echo-actions"),
+    borderEchoReport: $("#border-echo-report"),
+    borderEchoPrepare: $("#border-echo-prepare"),
+    borderEchoCollection: $("#border-echo-collection"),
     coreShopBalance: $("#core-shop-balance"),
     totalCoresEarned: $("#total-cores-earned"),
     coreYieldMultiplier: $("#core-yield-multiplier"),
@@ -3727,6 +3855,7 @@
     return {
       compactNavigation: true,
       seenFeatures: [],
+      snoozedRoutes: {},
     };
   }
 
@@ -3814,6 +3943,21 @@
     };
   }
 
+  function freshBorderEchoState() {
+    return {
+      weekKey: "",
+      targetId: PLANET_TARGETS[0].id,
+      traitId: BORDER_ECHO_TRAITS[0].id,
+      attempts: 0,
+      prepared: false,
+      resolved: false,
+      victory: false,
+      totalVictories: 0,
+      cosmetics: [],
+      lastReport: "每周回响尚未定位。读取敌方词条，选择对应战术。",
+    };
+  }
+
   function freshCommunityBeaconState() {
     return {
       claimedMilestones: [],
@@ -3829,7 +3973,12 @@
     STARPORT_MODULES.forEach((module) => {
       modules[module.id] = 0;
     });
-    return { materials, modules };
+    return {
+      materials,
+      modules,
+      activeBlueprintId: "industrial",
+      blueprintSwitches: 0,
+    };
   }
 
   function freshCombatState() {
@@ -3914,6 +4063,7 @@
       journey: freshJourneyState(),
       atlas: freshAtlasState(),
       bossTrial: freshBossTrialState(),
+      borderEcho: freshBorderEchoState(),
       communityBeacon: freshCommunityBeaconState(),
       log: [
         {
@@ -4504,6 +4654,202 @@
         : "开始今日试炼";
     elements.bossTrialReport.textContent = trial.lastReport;
     elements.bossTrialRecord.textContent = `累计击破 ${formatNumber(trial.totalVictories, 0)} · 完美破解 ${formatNumber(trial.perfectVictories, 0)}`;
+  }
+
+  function ensureBorderEchoWeek(now = Date.now()) {
+    const weekKey = getUtcWeeklyKey(now);
+    if (state.borderEcho.weekKey === weekKey) return;
+    const eligibleTargets = PLANET_TARGETS.filter(
+      (target) => state.lifetimeDust >= target.unlock,
+    );
+    const target = seededMissionShuffle(
+      eligibleTargets.length ? eligibleTargets : [PLANET_TARGETS[0]],
+      `border-echo:${weekKey}:${normalizePlayerName(state.playerName) || "station"}`,
+    )[0];
+    const trait = seededMissionShuffle(
+      BORDER_ECHO_TRAITS,
+      `border-echo-trait:${weekKey}:${target.id}`,
+    )[0];
+    state.borderEcho.weekKey = weekKey;
+    state.borderEcho.targetId = target.id;
+    state.borderEcho.traitId = trait.id;
+    state.borderEcho.attempts = 0;
+    state.borderEcho.prepared = false;
+    state.borderEcho.resolved = false;
+    state.borderEcho.victory = false;
+    state.borderEcho.lastReport = "本周回响已定位。阅读敌方词条并选择对应战术。";
+  }
+
+  function getBorderEchoTarget() {
+    ensureBorderEchoWeek();
+    return PLANET_TARGETS.find((target) => target.id === state.borderEcho.targetId)
+      || PLANET_TARGETS[0];
+  }
+
+  function getBorderEchoTrait() {
+    ensureBorderEchoWeek();
+    return BORDER_ECHO_TRAITS.find((trait) => trait.id === state.borderEcho.traitId)
+      || BORDER_ECHO_TRAITS[0];
+  }
+
+  function getBorderEchoEntryCost() {
+    return {
+      dust: Math.round(Math.min(3000000, Math.max(25000, calculateRate(state, false) * 20))),
+      maintenance: 1,
+    };
+  }
+
+  function getBorderEchoRequiredPower() {
+    const target = getBorderEchoTarget();
+    const stats = getPlanetStats(target);
+    return Math.max(
+      50,
+      Math.round(stats.power * (state.borderEcho.prepared ? 0.8 : 0.92)),
+    );
+  }
+
+  function canPrepareBorderEcho() {
+    return !state.borderEcho.prepared &&
+      !state.borderEcho.resolved &&
+      state.fleetCommand.maintenance >= 2 &&
+      ["alloy", "circuit", "prism"].every(
+        (id) => (state.starport.materials[id] || 0) >= 2,
+      );
+  }
+
+  function prepareBorderEcho() {
+    ensureBorderEchoWeek();
+    if (!canPrepareBorderEcho()) {
+      showToast(
+        "整备物资不足",
+        "需要维护件 2、合金 2、芯片 2 与棱镜 2；整备只在本周挑战中生效。",
+        "✚",
+      );
+      return;
+    }
+    state.fleetCommand.maintenance = clampGameCount(
+      state.fleetCommand.maintenance - 2,
+    );
+    ["alloy", "circuit", "prism"].forEach((id) => {
+      state.starport.materials[id] = clampGameCount(state.starport.materials[id] - 2);
+    });
+    state.borderEcho.prepared = true;
+    state.borderEcho.lastReport = "战前整备完成：本周回响所需战力降低 12%。";
+    showToast("边境整备完成", "维护件 -2 · 合金、芯片、棱镜各 -2", "✚");
+    renderBorderEcho();
+    saveGame();
+  }
+
+  function challengeBorderEcho(tacticId) {
+    ensureBorderEchoWeek();
+    const tactic = BOSS_TRIAL_TACTICS[tacticId];
+    if (!tactic || state.borderEcho.resolved || state.borderEcho.attempts >= 3) return;
+    const cost = getBorderEchoEntryCost();
+    if (state.dust < cost.dust || state.fleetCommand.maintenance < cost.maintenance) {
+      showToast(
+        "入场维护不足",
+        `需要 ${formatNumber(cost.dust)} 星尘与 ${cost.maintenance} 维护件。`,
+        "✚",
+      );
+      return;
+    }
+    state.dust = clampGameNumber(state.dust - cost.dust);
+    state.fleetCommand.maintenance = clampGameCount(
+      state.fleetCommand.maintenance - cost.maintenance,
+    );
+    recordMissionProgress("dustSpent", cost.dust);
+    state.borderEcho.attempts += 1;
+    recordCareerBattle();
+    const target = getBorderEchoTarget();
+    const trait = getBorderEchoTrait();
+    const requiredPower = getBorderEchoRequiredPower();
+    const tacticCorrect = trait.counter === tacticId;
+    const powerReady = getCombatPower() >= requiredPower;
+    if (tacticCorrect && powerReady) {
+      state.borderEcho.resolved = true;
+      state.borderEcho.victory = true;
+      state.borderEcho.totalVictories = clampGameCount(
+        state.borderEcho.totalVictories + 1,
+      );
+      state.combat.wins = clampGameCount(state.combat.wins + 1);
+      state.combat.activeWins = clampGameCount(state.combat.activeWins + 1);
+      recordMissionProgress("battlesWon", 1);
+      const rewardText = grantExistingReward({
+        minutes: 6,
+        tokens: 6,
+        supplies: 2,
+        materials: { alloy: 3, crystal: 3, circuit: 3, prism: 2 },
+      });
+      state.expedition.fragments = Math.min(
+        EXPEDITION_FRAGMENT_CAP,
+        clampGameCount(state.expedition.fragments + 15),
+      );
+      state.operations.components.repairKit = clampGameCount(
+        state.operations.components.repairKit + 1,
+      );
+      const cosmetic = BORDER_ECHO_COSMETICS[
+        (state.borderEcho.totalVictories - 1) % BORDER_ECHO_COSMETICS.length
+      ];
+      const isNewCosmetic = !state.borderEcho.cosmetics.includes(cosmetic);
+      if (isNewCosmetic) state.borderEcho.cosmetics.push(cosmetic);
+      else {
+        state.expedition.fragments = Math.min(
+          EXPEDITION_FRAGMENT_CAP,
+          clampGameCount(state.expedition.fragments + 8),
+        );
+      }
+      state.borderEcho.lastReport = `击破${target.name}：${rewardText} · 星图残片 15 · 维修套件 1 · ${isNewCosmetic ? `收藏舰迹“${cosmetic}”` : "重复舰迹转化为残片 8"}。`;
+      addLog(state.borderEcho.lastReport);
+      showToast("边境回响已平息", isNewCosmetic ? `新收藏：${cosmetic}` : "重复收藏已转化", trait.icon);
+      playAchievementTone();
+    } else {
+      state.combat.losses = clampGameCount(state.combat.losses + 1);
+      const reason = !tacticCorrect
+        ? `${tactic.name}没有反制${trait.name}`
+        : `战力 ${formatNumber(getCombatPower())} 未达到 ${formatNumber(requiredPower)}`;
+      state.borderEcho.resolved = state.borderEcho.attempts >= 3;
+      state.borderEcho.lastReport = `${reason}。${state.borderEcho.resolved ? "本周三次链路已用完。" : `还可尝试 ${3 - state.borderEcho.attempts} 次。`}`;
+      showToast("边境回响未被破解", reason, "!");
+    }
+    renderBorderEcho();
+    renderCombatTargets();
+    updateUi();
+    saveGame();
+  }
+
+  function renderBorderEcho() {
+    ensureBorderEchoWeek();
+    const unlocked = state.lifetimeDust >= BORDER_ECHO_UNLOCK_DUST;
+    elements.borderEcho.hidden = !unlocked;
+    if (!unlocked) return;
+    const target = getBorderEchoTarget();
+    const trait = getBorderEchoTrait();
+    const cost = getBorderEchoEntryCost();
+    const requiredPower = getBorderEchoRequiredPower();
+    elements.borderEchoIcon.textContent = target.icon;
+    elements.borderEchoTitle.textContent = target.name;
+    elements.borderEchoDescription.textContent = `${target.location} · ${state.borderEcho.weekKey} · 正确战术与战力缺一不可`;
+    elements.borderEchoStatus.textContent = state.borderEcho.resolved
+      ? state.borderEcho.victory ? "本周已击破" : "本周链路关闭"
+      : state.borderEcho.prepared ? "整备完成" : "等待战术";
+    elements.borderEchoTrait.textContent = `${trait.icon} ${trait.name}`;
+    elements.borderEchoHint.textContent = trait.description;
+    elements.borderEchoPower.textContent = `${formatNumber(getCombatPower())} / ${formatNumber(requiredPower)}`;
+    elements.borderEchoCost.textContent = `${formatNumber(cost.dust)} 星尘 · 维护件 ${cost.maintenance}`;
+    elements.borderEchoAttempts.textContent = `${state.borderEcho.attempts} / 3`;
+    elements.borderEchoReport.textContent = state.borderEcho.lastReport;
+    elements.borderEchoCollection.textContent = `收藏舰迹 ${state.borderEcho.cosmetics.length} / ${BORDER_ECHO_COSMETICS.length}`;
+    elements.borderEchoPrepare.disabled = !canPrepareBorderEcho();
+    elements.borderEchoPrepare.textContent = state.borderEcho.prepared
+      ? "本周已整备"
+      : "战前整备 · 维护件 2 + 三种材料各 2";
+    const canEnter = !state.borderEcho.resolved &&
+      state.borderEcho.attempts < 3 &&
+      state.dust >= cost.dust &&
+      state.fleetCommand.maintenance >= cost.maintenance;
+    elements.borderEchoActions.querySelectorAll("[data-border-tactic]").forEach((button) => {
+      button.disabled = !canEnter;
+    });
   }
 
   function getPersonalBeaconScore(targetState = state) {
@@ -5561,17 +5907,43 @@
     );
   }
 
-  function getStarportProductionMultiplier(targetState = state) {
-    return safeMultiply(
-      safeAdd(
-        1,
-        safeMultiply(getStarportRank("refinery", targetState), 0.08),
-      ),
-      safeAdd(
-        1,
-        safeMultiply(getStarportRank("droneDock", targetState), 0.04),
-      ),
+  function getStarportBlueprint(id, targetState = state) {
+    const blueprintId = id || targetState.starport?.activeBlueprintId;
+    return STARPORT_BLUEPRINTS.find((blueprint) => blueprint.id === blueprintId)
+      || STARPORT_BLUEPRINTS[0];
+  }
+
+  function getStarportBlueprintSynergy(id, targetState = state) {
+    const blueprint = getStarportBlueprint(id, targetState);
+    const rankSum = blueprint.moduleIds.reduce(
+      (total, moduleId) => total + getStarportRank(moduleId, targetState),
+      0,
     );
+    if (blueprint.id === "industrial") return 1.04 + Math.min(0.08, rankSum * 0.004);
+    if (blueprint.id === "bastion") return 1.04 + Math.min(0.09, rankSum * 0.005);
+    return 1.05 + Math.min(0.08, rankSum * 0.005);
+  }
+
+  function getStarportBlueprintFactor(type, targetState = state) {
+    const blueprint = getStarportBlueprint(null, targetState);
+    const synergy = getStarportBlueprintSynergy(blueprint.id, targetState);
+    if (blueprint.id === "industrial" && type === "production") return synergy;
+    if (blueprint.id === "bastion" && ["attack", "defense"].includes(type)) {
+      return synergy;
+    }
+    if (blueprint.id === "expedition" && type === "loot") return synergy;
+    if (blueprint.id === "expedition" && type === "expeditionChance") {
+      return 0.025 + Math.min(0.035, (synergy - 1.05) * 0.45);
+    }
+    return type === "expeditionChance" ? 0 : 1;
+  }
+
+  function getStarportProductionMultiplier(targetState = state) {
+    const buildings = safeMultiply(
+      safeAdd(1, safeMultiply(getStarportRank("refinery", targetState), 0.08)),
+      safeAdd(1, safeMultiply(getStarportRank("droneDock", targetState), 0.04)),
+    );
+    return safeMultiply(buildings, getStarportBlueprintFactor("production", targetState));
   }
 
   function getStarportClickMultiplier(targetState = state) {
@@ -5590,23 +5962,23 @@
   }
 
   function getStarportAttackMultiplier(targetState = state) {
-    return safeAdd(
-      1,
-      safeMultiply(getStarportRank("battery", targetState), 0.08),
+    return safeMultiply(
+      safeAdd(1, safeMultiply(getStarportRank("battery", targetState), 0.08)),
+      getStarportBlueprintFactor("attack", targetState),
     );
   }
 
   function getStarportDefenseMultiplier(targetState = state) {
-    return safeAdd(
-      1,
-      safeMultiply(getStarportRank("shield", targetState), 0.08),
+    return safeMultiply(
+      safeAdd(1, safeMultiply(getStarportRank("shield", targetState), 0.08)),
+      getStarportBlueprintFactor("defense", targetState),
     );
   }
 
   function getStarportLootMultiplier(targetState = state) {
-    return safeAdd(
-      1,
-      safeMultiply(getStarportRank("radar", targetState), 0.08),
+    return safeMultiply(
+      safeAdd(1, safeMultiply(getStarportRank("radar", targetState), 0.08)),
+      getStarportBlueprintFactor("loot", targetState),
     );
   }
 
@@ -7782,6 +8154,7 @@
       if (affix.id === "jammer") chance -= 0.1;
     });
     if (hasExpeditionEffect("predictiveNav")) chance += 0.04;
+    chance += getStarportBlueprintFactor("expeditionChance");
     chance += getDoctrineFactor("expeditionChance");
     chance += getAnomalyFactor("expeditionChance");
     return clamp(chance, 0.18, 0.94);
@@ -8467,6 +8840,64 @@
     localStorage.setItem(SAVE_BACKUP_META_KEY, String(now));
   }
 
+  function getLocalBackupSummary() {
+    try {
+      const backups = SAVE_BACKUP_KEYS.flatMap((key, index) => {
+        const raw = localStorage.getItem(key);
+        const snapshot = parseSaveSnapshot(raw);
+        return snapshot ? [{ index, raw, snapshot }] : [];
+      });
+      const lastBackupAt = Number(localStorage.getItem(SAVE_BACKUP_META_KEY)) || 0;
+      return { backups, lastBackupAt };
+    } catch (error) {
+      return { backups: [], lastBackupAt: 0 };
+    }
+  }
+
+  function updateSaveSafetyStatus() {
+    if (!elements.saveBackupStatus || !elements.restoreBackupButton) return;
+    const summary = getLocalBackupSummary();
+    elements.restoreBackupButton.disabled = summary.backups.length === 0;
+    elements.saveBackupStatus.textContent = summary.backups.length
+      ? `${summary.backups.length} / ${SAVE_BACKUP_KEYS.length} 份轮换备份 · 最近 ${new Date(summary.lastBackupAt).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}`
+      : "主存档正常 · 首份轮换备份将在进度变化后生成";
+  }
+
+  function requestRestoreLatestBackup() {
+    const summary = getLocalBackupSummary();
+    const backup = summary.backups[0];
+    if (!backup) {
+      showToast("暂无可恢复备份", "继续游戏或手动保存后，系统会建立轮换备份。", "⌁");
+      return;
+    }
+    const nextState = sanitizeState(backup.snapshot);
+    showModal({
+      eyebrow: "本地存档恢复",
+      icon: "↶",
+      title: "恢复最近一份轮换备份？",
+      message: `备份包含 ${formatNumber(nextState.lifetimeDust)} 历史星尘、${formatNumber(nextState.totalCores, 0)} 历史星核和 ${formatDuration(nextState.playTime)} 航站时间。恢复前会把当前记录再保存一份。`,
+      confirmText: "恢复备份",
+      cancelText: "保留当前进度",
+      onConfirm: () => {
+        try {
+          const currentRaw = localStorage.getItem(SAVE_KEY);
+          if (currentRaw) rotateSaveBackups(currentRaw, Date.now());
+          state = nextState;
+          state.lastSeen = Date.now();
+          syncBgmState();
+          localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+          lastSave = Date.now();
+          renderAll();
+          activatePrimaryPage(state.activePage, { persist: false });
+          updateSaveSafetyStatus();
+          showToast("备份已恢复", "恢复前的当前记录仍保留在轮换备份中。", "✓");
+        } catch (error) {
+          showToast("备份恢复失败", "浏览器拒绝读取或写入本地存储。", "!");
+        }
+      },
+    });
+  }
+
   function saveGame(
     showFeedback = false,
     { forceBackup = false, skipBackup = false } = {},
@@ -8495,6 +8926,7 @@
       }
       localStorage.setItem(SAVE_KEY, serialized);
       lastSave = now;
+      updateSaveSafetyStatus();
       window.dispatchEvent(
         new CustomEvent("stellar-local-save", {
           detail: {
@@ -8818,6 +9250,19 @@
     merged.guidance = {
       compactNavigation: raw.guidance?.compactNavigation !== false,
       seenFeatures: [...new Set(seenFeatures)].slice(0, 48),
+      snoozedRoutes: Object.fromEntries(
+        Object.entries(
+          raw.guidance?.snoozedRoutes && typeof raw.guidance.snoozedRoutes === "object"
+            ? raw.guidance.snoozedRoutes
+            : {},
+        )
+          .filter(([id, dayKey]) =>
+            typeof id === "string" &&
+            id.length <= 48 &&
+            /^\d{4}-\d{2}-\d{2}$/.test(String(dayKey || "")),
+          )
+          .slice(0, 16),
+      ),
     };
     const rawDuty = raw.duty && typeof raw.duty === "object" ? raw.duty : {};
     const savedDutyKey = /^\d{4}-\d{2}-\d{2}$/.test(String(rawDuty.lastClaimKey || ""))
@@ -9003,6 +9448,32 @@
     if (merged.bossTrial.active && merged.bossTrial.attempts < 1) {
       merged.bossTrial.attempts = 1;
     }
+    const rawBorderEcho = raw.borderEcho && typeof raw.borderEcho === "object"
+      ? raw.borderEcho
+      : {};
+    const borderEchoBase = freshBorderEchoState();
+    merged.borderEcho = {
+      weekKey: /^\d{4}-W\d{2}$/.test(String(rawBorderEcho.weekKey || ""))
+        ? String(rawBorderEcho.weekKey)
+        : "",
+      targetId: PLANET_TARGETS.some((target) => target.id === rawBorderEcho.targetId)
+        ? rawBorderEcho.targetId
+        : borderEchoBase.targetId,
+      traitId: BORDER_ECHO_TRAITS.some((trait) => trait.id === rawBorderEcho.traitId)
+        ? rawBorderEcho.traitId
+        : borderEchoBase.traitId,
+      attempts: clamp(Math.floor(Number(rawBorderEcho.attempts) || 0), 0, 3),
+      prepared: rawBorderEcho.prepared === true,
+      resolved: rawBorderEcho.resolved === true,
+      victory: rawBorderEcho.victory === true,
+      totalVictories: clampGameCount(rawBorderEcho.totalVictories),
+      cosmetics: [...new Set(
+        (Array.isArray(rawBorderEcho.cosmetics) ? rawBorderEcho.cosmetics : [])
+          .filter((name) => BORDER_ECHO_COSMETICS.includes(name)),
+      )],
+      lastReport: String(rawBorderEcho.lastReport || borderEchoBase.lastReport).slice(0, 260),
+    };
+    if (merged.borderEcho.victory) merged.borderEcho.resolved = true;
     merged.lastSeen = finiteTimestamp(raw.lastSeen);
     merged.nextEventAt = finiteTimestamp(
       raw.nextEventAt,
@@ -9023,6 +9494,14 @@
         module.maxRank,
       );
     });
+    merged.starport.activeBlueprintId = STARPORT_BLUEPRINTS.some(
+      (blueprint) => blueprint.id === rawStarport.activeBlueprintId,
+    )
+      ? rawStarport.activeBlueprintId
+      : "industrial";
+    merged.starport.blueprintSwitches = clampGameCount(
+      rawStarport.blueprintSwitches,
+    );
     const combatBase = base.combat;
     const rawCombat =
       raw.combat && typeof raw.combat === "object" ? raw.combat : {};
@@ -9982,8 +10461,16 @@
     );
   }
 
+  function getWeeklyEnemyTrait(targetId, now = Date.now()) {
+    return seededMissionShuffle(
+      BORDER_ECHO_TRAITS,
+      `combat-trait:${getUtcWeeklyKey(now)}:${targetId}`,
+    )[0];
+  }
+
   function getPlanetStats(target, targetState = state) {
     const victories = targetState.combat.enemyVictories[target.id] || 0;
+    const trait = getWeeklyEnemyTrait(target.id);
     const totalCores = getHistoricalCores(targetState);
     const coreScale = safeAdd(
       1,
@@ -10008,6 +10495,7 @@
         ),
         coreScale,
         rebirthScale,
+        trait.powerFactor,
       );
     const power = Math.round(
       Math.min(
@@ -10030,17 +10518,19 @@
         ),
       ),
       getBattleRewardMultiplier(targetState),
+      trait.rewardFactor,
     );
     const chance = clamp(
       0.12 + (getCombatPower(targetState) / power) * 0.5,
       0.1,
       0.9,
     );
-    return { victories, power, reward, chance };
+    return { victories, power, reward, chance, trait };
   }
 
   function getSkirmishStats(target, targetState = state) {
     const victories = targetState.combat.enemyVictories[target.id] || 0;
+    const trait = getWeeklyEnemyTrait(target.id);
     const totalCores = getHistoricalCores(targetState);
     const coreScale = safeAdd(
       1,
@@ -10065,6 +10555,7 @@
         ),
         coreScale,
         rebirthScale,
+        trait.powerFactor,
       );
     const power = Math.round(
       Math.min(
@@ -10086,13 +10577,14 @@
           0.012,
         ),
       ),
+      trait.rewardFactor,
     );
     const chance = clamp(
       0.15 + (getCombatPower(targetState) / power) * 0.56,
       0.12,
       0.92,
     );
-    return { victories, power, reward, chance };
+    return { victories, power, reward, chance, trait };
   }
 
   function getSkirmishDrops(target, targetState = state) {
@@ -10204,6 +10696,55 @@
     );
     playAchievementTone();
     checkAchievements();
+    renderStarport();
+    updateUi();
+    saveGame();
+  }
+
+  function getStarportBlueprintPreview(blueprintId) {
+    const targetState = {
+      ...state,
+      starport: {
+        ...state.starport,
+        activeBlueprintId: blueprintId,
+      },
+    };
+    return {
+      automaticRate: calculateRate(targetState, false),
+      attackPower: getCombatPower(targetState),
+      defensePower: getDefensePower(targetState),
+      lootMultiplier: getStarportLootMultiplier(targetState),
+      expeditionChance: getStarportBlueprintFactor("expeditionChance", targetState),
+    };
+  }
+
+  function switchStarportBlueprint(blueprintId) {
+    const blueprint = STARPORT_BLUEPRINTS.find((entry) => entry.id === blueprintId);
+    if (!blueprint || state.starport.activeBlueprintId === blueprint.id) return;
+    const component = OPERATION_COMPONENTS.find(
+      (entry) => entry.id === blueprint.componentId,
+    );
+    if ((state.operations.components[blueprint.componentId] || 0) < 1) {
+      showToast(
+        "缺少蓝图切换组件",
+        `切换到${blueprint.name}需要 1 件${component?.name || "航站组件"}，可在航站作业台获取。`,
+        blueprint.icon,
+      );
+      return;
+    }
+    state.operations.components[blueprint.componentId] = clampGameCount(
+      state.operations.components[blueprint.componentId] - 1,
+    );
+    state.starport.activeBlueprintId = blueprint.id;
+    state.starport.blueprintSwitches = clampGameCount(
+      state.starport.blueprintSwitches + 1,
+    );
+    showToast(
+      `已启用${blueprint.name}`,
+      `${component?.name || "航站组件"} -1 · 新协同已进入生产、战斗与远征计算。`,
+      blueprint.icon,
+    );
+    addLog(`星港蓝图切换为${blueprint.name}。`);
     renderStarport();
     updateUi();
     saveGame();
@@ -12245,8 +12786,56 @@
     });
   }
 
+  function renderStarportBlueprints() {
+    if (!elements.starportBlueprintList) return;
+    const active = getStarportBlueprint();
+    const currentPreview = getStarportBlueprintPreview(active.id);
+    elements.starportBlueprintActive.textContent = `当前：${active.name}`;
+    elements.starportBlueprintList.replaceChildren();
+    STARPORT_BLUEPRINTS.forEach((blueprint) => {
+      const isActive = blueprint.id === active.id;
+      const synergy = getStarportBlueprintSynergy(blueprint.id);
+      const preview = getStarportBlueprintPreview(blueprint.id);
+      const component = OPERATION_COMPONENTS.find(
+        (entry) => entry.id === blueprint.componentId,
+      );
+      const componentCount = state.operations.components[blueprint.componentId] || 0;
+      const card = document.createElement("article");
+      card.className = `starport-plan-card${isActive ? " active" : ""}`;
+      const heading = document.createElement("header");
+      heading.innerHTML = `<span aria-hidden="true">${blueprint.icon}</span><div><small>${blueprint.role}</small><strong>${blueprint.name}</strong></div><b>${isActive ? "运行中" : `协同 ×${formatNumber(synergy, 2)}`}</b>`;
+      const description = document.createElement("p");
+      description.textContent = blueprint.description;
+      const effect = document.createElement("div");
+      effect.className = "starport-plan-effect";
+      effect.textContent = blueprint.id === "industrial"
+        ? `自动生产 ×${formatNumber(synergy, 2)}`
+        : blueprint.id === "bastion"
+          ? `攻击与防御 ×${formatNumber(synergy, 2)}`
+          : `战利品 ×${formatNumber(synergy, 2)} · 远征成功率 +${formatNumber(preview.expeditionChance * 100, 1)}%`;
+      const comparison = document.createElement("small");
+      comparison.className = "starport-plan-preview";
+      comparison.textContent = [
+        `产量 ${formatNumber(currentPreview.automaticRate)} → ${formatNumber(preview.automaticRate)}`,
+        `战力 ${formatNumber(currentPreview.attackPower)} → ${formatNumber(preview.attackPower)}`,
+        `防御 ${formatNumber(currentPreview.defensePower)} → ${formatNumber(preview.defensePower)}`,
+        `掉落 ×${formatNumber(currentPreview.lootMultiplier, 2)} → ×${formatNumber(preview.lootMultiplier, 2)}`,
+      ].join(" · ");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.starportBlueprint = blueprint.id;
+      button.disabled = isActive || componentCount < 1;
+      button.textContent = isActive
+        ? "当前方案"
+        : `切换 · ${component?.name || "航站组件"} 1（持有 ${formatNumber(componentCount, 0)}）`;
+      card.append(heading, description, effect, comparison, button);
+      elements.starportBlueprintList.appendChild(card);
+    });
+  }
+
   function renderStarport() {
     renderMaterialWallet(elements.starportMaterialList);
+    renderStarportBlueprints();
     if (!elements.starportSlotMap) return;
     elements.starportSlotMap.textContent = "";
     STARPORT_MODULES.forEach((module) => {
@@ -12377,7 +12966,7 @@
             ? [`${material.icon}${material.shortName} ${amount}`]
             : [];
         });
-        loot.textContent = `${target.location} · 掉落 ${lootParts.join(" · ")}`;
+        loot.textContent = `${target.location} · ${stats.trait.icon}${stats.trait.name} · 掉落 ${lootParts.join(" · ")}`;
         copy.append(title, detail, loot);
       } else {
         detail.textContent = `累计获得 ${formatNumber(target.unlock)} 星尘后解锁`;
@@ -12427,7 +13016,7 @@
         reward.textContent = `回收约 ${formatNumber(stats.reward)}`;
         detail.appendChild(reward);
         const history = document.createElement("small");
-        history.textContent = `${target.location} · 已击退 ${stats.victories} 次`;
+        history.textContent = `${target.location} · ${stats.trait.icon}${stats.trait.name} · 已击退 ${stats.victories} 次`;
         copy.append(title, detail, history);
       } else {
         detail.textContent = `累计获得 ${formatNumber(target.unlock)} 星尘后解锁`;
@@ -13566,63 +14155,128 @@
     const guide = getCommandRecommendation();
     const dailyCompleted = getCompletedMissionCount(state.missions.daily);
     const claimable = getMissionClaimableCount();
-    const routes = [
-      {
-        icon: guide.icon,
-        eyebrow: "主线推进",
-        title: guide.title,
-        status: guide.label,
-        action: guide.action,
-      },
-      {
-        icon: "☷",
-        eyebrow: "今日委托",
-        title: claimable > 0
-          ? `${claimable} 项奖励可以集中领取`
-          : `今日完成 ${Math.min(dailyCompleted, 3)} / 3`,
-        status: claimable > 0 ? "一键领取" : "查看委托",
-        action: claimable > 0 ? "claim-missions" : "missions",
-      },
-    ];
+    const routes = [{
+      id: `main-${guide.action}`,
+      kind: "main",
+      icon: guide.icon,
+      eyebrow: "主航程 · 当前最值得推进",
+      title: guide.title,
+      status: guide.label,
+      action: guide.action,
+      eta: guide.action === "collect" ? "约 1 分钟" : "约 3–8 分钟",
+      reward: "推进下一阶段解锁",
+      snoozable: false,
+    }];
+    const optionalRoutes = [{
+      id: "daily-missions",
+      kind: "optional",
+      icon: "☷",
+      eyebrow: "可选 · 今日委托",
+      title: claimable > 0
+        ? `${claimable} 项奖励可以集中领取`
+        : `今日完成 ${Math.min(dailyCompleted, 3)} / 3`,
+      status: claimable > 0 ? "一键领取" : "查看委托",
+      action: claimable > 0 ? "claim-missions" : "missions",
+      eta: claimable > 0 ? "少于 1 分钟" : "约 5–12 分钟",
+      reward: claimable > 0 ? "领取已完成委托物资" : "凭证、星尘与现有材料",
+      snoozable: true,
+    }];
     const starfallPhase = getStarfallPhase();
     if (["active", "exchange"].includes(starfallPhase)) {
-      routes.push({
+      optionalRoutes.unshift({
+        id: "starfall",
+        kind: "optional",
         icon: "☄",
-        eyebrow: starfallPhase === "active" ? "限时航程" : "活动兑换",
+        eyebrow: starfallPhase === "active" ? "可选 · 限时航程" : "可选 · 活动兑换",
         title: starfallPhase === "active"
           ? `星雨余辉 ${formatNumber(state.starfall.currency, 0)} · 继续寄航`
           : `余辉 ${formatNumber(state.starfall.currency, 0)} · 兑换即将结束`,
         status: "前往星雨",
         action: "starfall",
+        eta: starfallPhase === "active" ? "约 5–10 分钟" : "约 2 分钟",
+        reward: "活动收藏、外观与消耗材料",
+        snoozable: true,
       });
     } else if (state.combat.incomingRaid) {
-      routes.push({
+      optionalRoutes.unshift({
+        id: "incoming-raid",
+        kind: "urgent",
         icon: "⬡",
         eyebrow: "紧急信号",
         title: `${state.combat.incomingRaid.type === "major" ? "大袭击" : "边境遭遇"}正在接近基地`,
         status: "前往防卫",
         action: "combat",
+        eta: "立即处理",
+        reward: "避免资源损失",
+        snoozable: false,
       });
     } else if (state.lifetimeDust >= OPERATIONS_UNLOCK_DUST) {
-      routes.push({
+      optionalRoutes.push({
+        id: "operations",
+        kind: "optional",
         icon: "▦",
-        eyebrow: "挂机安排",
+        eyebrow: "可选 · 挂机安排",
         title: state.operations.queue.length
           ? `${state.operations.queue.length} 项作业正在自动运行`
           : "作业队列为空，安排一项连续作业",
         status: "查看作业",
         action: "operations",
+        eta: state.operations.queue.length ? "无需立即处理" : "约 2 分钟",
+        reward: "组件、维护件与远征材料",
+        snoozable: true,
       });
     } else {
-      routes.push({
+      optionalRoutes.push({
+        id: "fleet-growth",
+        kind: "optional",
         icon: "◎",
-        eyebrow: "自动生产",
+        eyebrow: "可选 · 自动生产",
         title: `${formatNumber(getTotalUnits(), 0)} 个单元正在回收星尘`,
         status: "扩建舰队",
         action: "fleet",
+        eta: "约 3–6 分钟",
+        reward: "提高持续星尘产量",
+        snoozable: true,
       });
     }
-    return routes.slice(0, 3);
+    const selectedDuty = getSelectedReturnDuty();
+    if (selectedDuty && !state.returnProtocol.claimed) {
+      optionalRoutes.push({
+        id: `return-duty-${selectedDuty.id}`,
+        kind: "optional",
+        icon: selectedDuty.icon,
+        eyebrow: "可选 · 本次值守",
+        title: `${selectedDuty.title} · ${formatNumber(state.returnProtocol.progress, 0)} / ${formatNumber(selectedDuty.goal, 0)}`,
+        status: state.returnProtocol.progress >= selectedDuty.goal ? "领取物资" : selectedDuty.actionLabel,
+        action: state.returnProtocol.progress >= selectedDuty.goal ? "claim-return-duty" : selectedDuty.action,
+        eta: state.returnProtocol.progress >= selectedDuty.goal ? "少于 1 分钟" : "约 5–10 分钟",
+        reward: "短时产量、凭证与现有材料",
+        snoozable: true,
+      });
+    }
+    const todayKey = getUtcDailyKey();
+    const seenActions = new Set([guide.action]);
+    optionalRoutes.forEach((route) => {
+      if (
+        routes.length >= 3 ||
+        seenActions.has(route.action) ||
+        (route.snoozable && state.guidance.snoozedRoutes?.[route.id] === todayKey)
+      ) return;
+      seenActions.add(route.action);
+      routes.push(route);
+    });
+    return routes;
+  }
+
+  function snoozeFocusRoute(routeId) {
+    const route = getFocusRoutes().find((entry) => entry.id === routeId);
+    if (!route?.snoozable) return;
+    state.guidance.snoozedRoutes ||= {};
+    state.guidance.snoozedRoutes[routeId] = getUtcDailyKey();
+    renderedFocusRouteSignature = null;
+    saveGame();
+    renderFocusCenter();
+    showToast("已设为稍后提醒", "该可选目标今天不再打扰，明天会自动恢复。", "⌁");
   }
 
   function renderReturnProtocol() {
@@ -13703,6 +14357,8 @@
     renderedFocusRouteSignature = signature;
     elements.focusRouteList.replaceChildren();
     routes.forEach((route, index) => {
+      const shell = document.createElement("article");
+      shell.className = `focus-route-shell ${route.kind}`;
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.focusAction = route.action;
@@ -13716,17 +14372,32 @@
       eyebrow.textContent = route.eyebrow;
       const title = document.createElement("strong");
       title.textContent = route.title;
-      copy.append(eyebrow, title);
+      const meta = document.createElement("span");
+      meta.className = "focus-route-meta";
+      meta.textContent = `${route.eta} · ${route.reward}`;
+      copy.append(eyebrow, title, meta);
       const status = document.createElement("em");
       status.textContent = route.status;
       button.append(order, icon, copy, status);
-      elements.focusRouteList.appendChild(button);
+      shell.appendChild(button);
+      if (route.snoozable) {
+        const snooze = document.createElement("button");
+        snooze.type = "button";
+        snooze.className = "focus-route-snooze";
+        snooze.dataset.focusSnooze = route.id;
+        snooze.textContent = "稍后提醒";
+        snooze.setAttribute("aria-label", `今天稍后提醒：${route.title}`);
+        shell.appendChild(snooze);
+      }
+      elements.focusRouteList.appendChild(shell);
     });
   }
 
   function performGuidanceAction(action) {
     if (action === "claim-missions") {
       claimAllMissionRewards();
+    } else if (action === "claim-return-duty") {
+      claimReturnDuty();
     } else if (action === "journey") {
       performJourneyAction();
     } else if (PRIMARY_PAGES.includes(action)) {
@@ -13837,6 +14508,7 @@
       case "combat":
         renderCombatTargets();
         renderBossTrial();
+        renderBorderEcho();
         break;
       case "expedition":
         renderExpedition();
@@ -13872,6 +14544,7 @@
     updateBuyModeButtons();
     updatePerformanceControls();
     updateNavigationVisibility();
+    updateSaveSafetyStatus();
     updateUi();
   }
 
@@ -14739,6 +15412,11 @@
     });
     elements.dutyClaimButton.addEventListener("click", claimDailyDuty);
     elements.focusRouteList.addEventListener("click", (event) => {
+      const snooze = event.target.closest("[data-focus-snooze]");
+      if (snooze) {
+        snoozeFocusRoute(snooze.dataset.focusSnooze);
+        return;
+      }
       const button = event.target.closest("[data-focus-action]");
       if (button) performGuidanceAction(button.dataset.focusAction);
     });
@@ -14858,6 +15536,10 @@
       const button = event.target.closest("[data-starport-module]");
       if (button) upgradeStarportModule(button.dataset.starportModule);
     });
+    elements.starportBlueprintList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-starport-blueprint]");
+      if (button) switchStarportBlueprint(button.dataset.starportBlueprint);
+    });
     elements.skirmishTargetList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-skirmish-id]");
       if (button) attackSkirmish(button.dataset.skirmishId);
@@ -14871,6 +15553,11 @@
       const button = event.target.closest("[data-boss-tactic]");
       if (button) chooseBossTrialTactic(button.dataset.bossTactic);
     });
+    elements.borderEchoActions.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-border-tactic]");
+      if (button) challengeBorderEcho(button.dataset.borderTactic);
+    });
+    elements.borderEchoPrepare.addEventListener("click", prepareBorderEcho);
     elements.expeditionPresetButtons.addEventListener("click", (event) => {
       const button = event.target.closest("[data-expedition-preset]");
       if (button) selectExpeditionPreset(Number(button.dataset.expeditionPreset));
@@ -15022,6 +15709,7 @@
       }
     });
     elements.exportButton.addEventListener("click", exportSave);
+    elements.restoreBackupButton.addEventListener("click", requestRestoreLatestBackup);
     elements.importButton.addEventListener("click", () => elements.importFile.click());
     elements.importFile.addEventListener("change", () => {
       const file = elements.importFile.files?.[0];
@@ -15301,6 +15989,18 @@
         state: state.bossTrial,
       }));
     },
+    getBorderEchoDiagnostics: (now = Date.now()) => {
+      ensureBorderEchoWeek(now);
+      return JSON.parse(JSON.stringify({
+        state: state.borderEcho,
+        target: getBorderEchoTarget(),
+        trait: getBorderEchoTrait(),
+        requiredPower: getBorderEchoRequiredPower(),
+        entryCost: getBorderEchoEntryCost(),
+        combatPower: getCombatPower(),
+        collectionTotal: BORDER_ECHO_COSMETICS.length,
+      }));
+    },
     getCommunityBeaconDiagnostics: () => JSON.parse(JSON.stringify({
       personal: getPersonalBeaconScore(),
       network: communityBeaconNetwork,
@@ -15362,6 +16062,15 @@
       hidden: document.hidden,
       starfield: starfieldController?.getDiagnostics() || null,
     }),
+    getSaveSafetyDiagnostics: () => {
+      const summary = getLocalBackupSummary();
+      return {
+        backupCount: summary.backups.length,
+        backupLimit: SAVE_BACKUP_KEYS.length,
+        lastBackupAt: summary.lastBackupAt,
+        restoreAvailable: summary.backups.length > 0,
+      };
+    },
     getProductionDiagnostics: () => ({
       total: calculateRate(),
       rawTotal: calculateRawRate(),
@@ -15394,6 +16103,13 @@
     getStarportDiagnostics: () => ({
       ranks: { ...state.starport.modules },
       materials: { ...state.starport.materials },
+      activeBlueprintId: state.starport.activeBlueprintId,
+      blueprintSwitches: state.starport.blueprintSwitches,
+      blueprints: STARPORT_BLUEPRINTS.map((blueprint) => ({
+        ...blueprint,
+        synergy: getStarportBlueprintSynergy(blueprint.id),
+        preview: getStarportBlueprintPreview(blueprint.id),
+      })),
       dust: state.dust,
       automaticRate: calculateRate(state, false),
       clickValue: getClickValue(),

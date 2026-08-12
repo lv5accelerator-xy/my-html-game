@@ -89,8 +89,8 @@ const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
 assert.equal(
   readConstant("SAVE_VERSION"),
-  19,
-  "return protocol, doctrines and anomalies need schema version 19",
+  22,
+  "weekly border echo state needs schema version 22",
 );
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),

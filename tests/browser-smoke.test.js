@@ -938,7 +938,13 @@ async function main() {
       window.StellarOutpostCloudBridge.getStarportDiagnostics(),
     );
     assert.equal(purchaseAfter.ranks.refinery, 1);
-    assert.equal(purchaseAfter.dust, purchaseBefore.dust - 30000);
+    const expectedDustAfterPurchase = purchaseBefore.dust - 30000;
+    assert.ok(
+      purchaseAfter.dust >= expectedDustAfterPurchase &&
+        purchaseAfter.dust <=
+          expectedDustAfterPurchase + Math.max(50, purchaseBefore.automaticRate * 2),
+      "starport purchase should deduct 30K while allowing normal background production",
+    );
     assert.equal(purchaseAfter.materials.alloy, purchaseBefore.materials.alloy - 4);
     assert.equal(purchaseAfter.materials.crystal, purchaseBefore.materials.crystal);
 

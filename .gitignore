@@ -1,0 +1,22 @@
+# Operating systems and editors
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local dependencies, reports and temporary files
+node_modules/
+coverage/
+test-results/
+playwright-report/
+*.log
+*.tmp
+*.bak
+~$*
+
+# Local-only Firebase state
+.firebase/
+firebase-debug.log

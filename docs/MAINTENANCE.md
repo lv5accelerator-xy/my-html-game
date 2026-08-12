@@ -35,7 +35,7 @@
 
    然后打开 `http://localhost:8000/`。
 
-5. 使用 Codex 继续维护时，让它先阅读本文件、`README.md`、`COMMUNICATIONS-GUIDE.txt`、`FIREBASE-SETUP.txt` 和最新 Patch Notes。
+5. 使用 Codex 继续维护时，让它先阅读本文件、`../README.md`、`COMMUNICATIONS-GUIDE.txt`、`FIREBASE-SETUP.txt` 和 `../patch-notes/` 中的最新 Patch Notes。
 
 ## 当前产品方向
 
@@ -63,6 +63,8 @@ v0.28.0 延续 v0.24.0 开始的复杂度收束，把回流、重复周目与轮
 | `cloud-save.js` | Google 登录、云存档、排行榜、公告和反馈 |
 | `firebase-config.js` | Firebase Web 配置 |
 | `firestore.rules` | 云存档、排行榜、公告和反馈权限 |
+| `docs/` | Firebase、公告反馈和换机维护文档 |
+| `patch-notes/` | 当前累计版本更新记录 |
 | `tests/` | 数值、浏览器与手机性能回归测试 |
 | `历史版本/` | 每个正式版本的独立 ZIP |
 
@@ -120,7 +122,7 @@ node tests/browser-smoke.test.js
 node tests/mobile-performance.test.js
 ```
 
-浏览器测试需要 Playwright；环境变量配置方法见 `README.md`。
+浏览器测试需要 Playwright；环境变量配置方法见 `../README.md`。
 
 v0.28.0 重点检查：
 

@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.0.1";
-  const PATCH_NOTES_VERSION = "1.0.1";
-  const SAVE_VERSION = 23;
+  const GAME_VERSION = "1.1.0";
+  const PATCH_NOTES_VERSION = "1.1.0";
+  const SAVE_VERSION = 24;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.0.1",
+      src: "assets/outpost-beyond-orion.mp3?v=1.1.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.0.1",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.1.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.0.1",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.1.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.0.1",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.1.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,19 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.1.0",
+      theme: "航站节奏重整",
+      changes: [
+        "指挥台将当前最重要的行动提升为常驻主卡片，并允许把最多三项目标追踪到导航下方，跨页面也能直接继续。",
+        "星海图鉴新增下一条缺失记录与直达按钮；新发现条目会获得清晰动画反馈，减少在 33 项记录中逐项寻找。",
+        "奇点超越新增保留内容、重置内容和恢复主要自动化所需时间的动态预览，确认前即可看清本轮代价。",
+        "委托新增一键领取全部，航站作业可继续上次选择，购买数量会立即写入存档，减少重复点击与重复设置。",
+        "指挥台新增产量、战力和软上限来源说明；购买设施时同步提示资源消耗和产量增长。",
+        "手机版新增固定底部快捷导航与当前行动入口，战斗警报会在底栏突出显示，常用页面无需反复滚动查找。",
+        "存档结构升级至第 24 版，新增的追踪目标和上次作业记录均兼容旧本地存档与云端存档。",
+      ],
+    },
     {
       version: "1.0.1",
       theme: "星图归档校正",
@@ -3317,6 +3330,8 @@
     commandRaidStatus: $("#command-raid-status"),
     commandMissionButton: $("#command-mission-button"),
     commandMissionStatus: $("#command-mission-status"),
+    statBreakdownSummary: $("#stat-breakdown-summary"),
+    statBreakdownList: $("#stat-breakdown-list"),
     starfallCommandCard: $("#starfall-command-card"),
     starfallCommandPhase: $("#starfall-command-phase"),
     starfallCommandStatus: $("#starfall-command-status"),
@@ -3365,6 +3380,12 @@
     atlasMilestones: $("#atlas-milestones"),
     atlasFilters: $("#atlas-filters"),
     atlasGrid: $("#atlas-grid"),
+    atlasNextTarget: $("#atlas-next-target"),
+    atlasNextIcon: $("#atlas-next-icon"),
+    atlasNextTitle: $("#atlas-next-title"),
+    atlasNextHint: $("#atlas-next-hint"),
+    atlasNextTrack: $("#atlas-next-track"),
+    atlasNextAction: $("#atlas-next-action"),
     commandCompanionSystem: $("#command-companion-system"),
     commandCompanionStage: $("#command-companion-stage"),
     commandCompanionCount: $("#command-companion-count"),
@@ -3410,6 +3431,11 @@
     navigationModeStatus: $("#navigation-mode-status"),
     navigationExpandButton: $("#navigation-expand-button"),
     navigationHiddenCount: $("#navigation-hidden-count"),
+    trackedGoals: $("#tracked-goals"),
+    trackedGoalList: $("#tracked-goal-list"),
+    trackedGoalsClear: $("#tracked-goals-clear"),
+    mobileQuickNav: $("#mobile-quick-nav"),
+    mobileCurrentAction: $("#mobile-current-action"),
     performanceButton: $("#performance-button"),
     performanceStatus: $("#performance-status"),
     bgmButton: $("#bgm-button"),
@@ -3471,6 +3497,7 @@
     operationsQueueSummary: $("#operations-queue-summary"),
     operationsLocked: $("#operations-locked"),
     operationsContent: $("#operations-content"),
+    operationsRepeatButton: $("#operations-repeat-button"),
     operationsStopButton: $("#operations-stop-button"),
     operationsPoolValue: $("#operations-pool-value"),
     operationsPoolCap: $("#operations-pool-cap"),
@@ -3567,6 +3594,9 @@
     sectorClaimButton: $("#sector-claim-button"),
     collapseCurrentCores: $("#collapse-current-cores"),
     collapseGain: $("#collapse-gain"),
+    collapseRetainedPreview: $("#collapse-retained-preview"),
+    collapseResetPreview: $("#collapse-reset-preview"),
+    collapseRecoveryEstimate: $("#collapse-recovery-estimate"),
     singularityCompanionIcon: $("#singularity-companion-icon"),
     singularityCompanionName: $("#singularity-companion-name"),
     singularityCompanionDescription: $("#singularity-companion-description"),
@@ -3604,6 +3634,7 @@
     dailyMissionList: $("#daily-mission-list"),
     dailyBonusProgress: $("#daily-bonus-progress"),
     dailyBonusButton: $("#daily-bonus-button"),
+    claimAllMissionsButton: $("#claim-all-missions-button"),
     weeklyResetCountdown: $("#weekly-reset-countdown"),
     weeklyMissionList: $("#weekly-mission-list"),
     weeklyMilestoneList: $("#weekly-milestone-list"),
@@ -3857,6 +3888,7 @@
       components,
       engineeringPool: 0,
       totalActions: 0,
+      lastJobId: "",
       lastReport: "作业台待命。",
     };
   }
@@ -3866,6 +3898,7 @@
       compactNavigation: true,
       seenFeatures: [],
       snoozedRoutes: {},
+      pinnedGoals: [],
     };
   }
 
@@ -4090,8 +4123,11 @@
   document.documentElement.dataset.performanceMode = performanceMode;
   let renderedCommandCompanionSignature = null;
   let renderedFocusRouteSignature = null;
+  let renderedTrackedGoalSignature = null;
   let renderedJourneySignature = null;
   let renderedAtlasSignature = null;
+  let renderedAtlasDiscoveredIds = null;
+  let renderedStatBreakdownSignature = null;
   let communityBeaconNetwork = {
     total: 0,
     participants: 0,
@@ -4520,9 +4556,35 @@
     saveGame();
   }
 
+  function getAtlasEntryAction(entry) {
+    if (!entry) return "command";
+    if (entry.id.startsWith("boss-expedition-") || entry.category === "artifact") {
+      return "expedition";
+    }
+    if (entry.category === "enemy" || entry.id.startsWith("boss-trial-")) {
+      return "combat";
+    }
+    return "atlas";
+  }
+
   function renderAtlas() {
     const entries = getAtlasEntries();
     const discovered = entries.filter((entry) => entry.discovered).length;
+    const nextEntry = entries.find((entry) => !entry.discovered) || null;
+    elements.atlasNextIcon.textContent = nextEntry?.icon || "✓";
+    elements.atlasNextTitle.textContent = nextEntry
+      ? `下一条缺失记录：${nextEntry.name}`
+      : "星海图鉴已经完整";
+    elements.atlasNextHint.textContent = nextEntry
+      ? nextEntry.hint
+      : "所有目标、遗物与伴星都已留下永久记录。";
+    elements.atlasNextAction.disabled = !nextEntry;
+    elements.atlasNextTrack.disabled = !nextEntry;
+    elements.atlasNextAction.dataset.guideAction = getAtlasEntryAction(nextEntry);
+    elements.atlasNextTrack.dataset.goalId = nextEntry ? `atlas:${nextEntry.id}` : "";
+    elements.atlasNextTrack.textContent = nextEntry && isGoalPinned(`atlas:${nextEntry.id}`)
+      ? "取消追踪"
+      : "追踪此目标";
     const nextMilestone = ATLAS_MILESTONES.find(
       (milestone) => !state.atlas.claimedMilestones.includes(milestone.count),
     );
@@ -4551,9 +4613,13 @@
     ]);
     if (signature === renderedAtlasSignature) return;
     renderedAtlasSignature = signature;
+    const previousIds = renderedAtlasDiscoveredIds;
     elements.atlasGrid.innerHTML = visibleEntries.map((entry) =>
-      `<article class="atlas-entry ${entry.discovered ? "discovered" : "locked"}"><span aria-hidden="true">${entry.discovered ? entry.icon : "?"}</span><div><small>${entry.category === "enemy" ? "敌对目标" : entry.category === "boss" ? "首领记录" : entry.category === "artifact" ? "远征遗物" : "观赏伴星"}</small><strong>${entry.discovered ? entry.name : "未知记录"}</strong><p>${entry.discovered ? entry.lore : entry.hint}</p></div></article>`,
+      `<article data-atlas-id="${entry.id}" class="atlas-entry ${entry.discovered ? "discovered" : "locked"}${entry.discovered && previousIds && !previousIds.has(entry.id) ? " newly-discovered" : ""}"><span aria-hidden="true">${entry.discovered ? entry.icon : "?"}</span><div><small>${entry.category === "enemy" ? "敌对目标" : entry.category === "boss" ? "首领记录" : entry.category === "artifact" ? "远征遗物" : "观赏伴星"}</small><strong>${entry.discovered ? entry.name : "未知记录"}</strong><p>${entry.discovered ? entry.lore : entry.hint}</p></div></article>`,
     ).join("");
+    renderedAtlasDiscoveredIds = new Set(
+      entries.filter((entry) => entry.discovered).map((entry) => entry.id),
+    );
   }
 
   function getBossTrialForDay(dayKey = getUtcDailyKey()) {
@@ -6321,6 +6387,53 @@
     return compressAutomaticRate(
       calculateRawRate(targetState, includeTemporary),
     );
+  }
+
+  function calculateBaseNetworkRate(targetState = state) {
+    return BUILDINGS.reduce((rate, building) => {
+      const owned = targetState.buildings?.[building.id] || 0;
+      return safeAdd(
+        rate,
+        safeMultiply(
+          owned,
+          building.baseRate,
+          getBuildingMultiplier(building.id, targetState),
+          getBuildingCoordinationMultiplier(building.id, targetState),
+        ),
+      );
+    }, 0);
+  }
+
+  function renderStatBreakdown() {
+    const baseRate = calculateBaseNetworkRate();
+    const rawRate = calculateRawRate();
+    const finalRate = calculateRate();
+    const productionMultiplier = getAutomaticProductionMultiplier();
+    const temporaryMultiplier = safeMultiply(
+      state.buff?.id === "surge" && state.buff.expires > Date.now() ? 2 : 1,
+      getDoctrineFactor("production"),
+      getAnomalyFactor("production"),
+    );
+    const rows = [
+      ["舰队基础网络", `${formatNumber(baseRate)} / 秒`, "单位数量、单体研究与同类协同"],
+      ["星核", `×${formatNumber(getCoreMultiplier())}`, `${formatNumber(getHistoricalCores(), 0)} 枚历史星核`],
+      ["成就", `×${formatNumber(getAchievementMultiplier())}`, `${state.achievements.length} 项永久记录`],
+      ["超越", `×${formatNumber(getEndgameProductionMultiplier())}`, `${state.endgame.transcensions} 次奇点超越`],
+      ["星港", `×${formatNumber(getStarportProductionMultiplier())}`, "生产附属建筑"],
+      ["舰队编成", `×${formatNumber(getFleetProductionMultiplier())}`, "当前启用方案"],
+      ["航线与临时增益", `×${formatNumber(temporaryMultiplier)}`, temporaryMultiplier === 1 ? "当前无临时修正" : "学说、异常或浪涌正在生效"],
+      ["自动产量软上限", `${formatNumber(rawRate)} → ${formatNumber(finalRate)}`, rawRate > finalRate ? "超大数值按递减曲线压缩" : "尚未触发压缩"],
+      ["手动回收", `${formatNumber(getClickValue())} / 次`, "研究、星核与星港点击增益"],
+      ["舰队攻击", formatNumber(getCombatPower(), 0), `军械等级 ${state.combat.attackLevel} · 星港、编成与战术共同修正`],
+      ["基地防御", formatNumber(getDefensePower(), 0), `防御等级 ${state.combat.defenseLevel} · 星港、编成与战术共同修正`],
+    ];
+    const signature = JSON.stringify(rows);
+    elements.statBreakdownSummary.textContent = `自动产量 ×${formatNumber(productionMultiplier)}`;
+    if (signature === renderedStatBreakdownSignature) return;
+    renderedStatBreakdownSignature = signature;
+    elements.statBreakdownList.innerHTML = rows.map(([label, value, note]) =>
+      `<article><span><strong>${label}</strong><small>${note}</small></span><b>${value}</b></article>`,
+    ).join("");
   }
 
   function getBuildingRateBreakdown(
@@ -8806,6 +8919,7 @@
   function queueOperation(jobId, continuous = false) {
     const job = OPERATIONS_JOBS.find((entry) => entry.id === jobId);
     if (!job || state.lifetimeDust < job.unlock) return;
+    state.operations.lastJobId = jobId;
     if (continuous) {
       state.operations.queue = [{ jobId, remaining: null }];
       state.operations.lastReport = `${job.name}已设为连续作业。`;
@@ -9298,6 +9412,11 @@
       clampGameNumber(rawOperations.engineeringPool),
     );
     merged.operations.totalActions = clampGameCount(rawOperations.totalActions);
+    merged.operations.lastJobId = OPERATIONS_JOBS.some(
+      (job) => job.id === rawOperations.lastJobId,
+    )
+      ? rawOperations.lastJobId
+      : "";
     merged.operations.lastReport = String(
       rawOperations.lastReport || merged.operations.lastReport,
     ).slice(0, 180);
@@ -9313,9 +9432,15 @@
     const seenFeatures = Array.isArray(raw.guidance?.seenFeatures)
       ? raw.guidance.seenFeatures.filter((entry) => typeof entry === "string")
       : [];
+    const pinnedGoals = Array.isArray(raw.guidance?.pinnedGoals)
+      ? raw.guidance.pinnedGoals.filter(
+          (entry) => typeof entry === "string" && /^(route|atlas):[a-z0-9-]+$/i.test(entry),
+        )
+      : [];
     merged.guidance = {
       compactNavigation: raw.guidance?.compactNavigation !== false,
       seenFeatures: [...new Set(seenFeatures)].slice(0, 48),
+      pinnedGoals: [...new Set(pinnedGoals)].slice(0, 3),
       snoozedRoutes: Object.fromEntries(
         Object.entries(
           raw.guidance?.snoozedRoutes && typeof raw.guidance.snoozedRoutes === "object"
@@ -9990,6 +10115,21 @@
     playTone(380 + BUILDINGS.indexOf(building) * 38, 0.07, "sine");
     renderBuildings();
     updateUi(nextRate);
+    const purchasedCard = elements.buildingList.querySelector(
+      `[data-building-card="${building.id}"]`,
+    );
+    const resourceMain = document.querySelector(".resource-main");
+    const rateStat = elements.rate.closest(".resource-stat");
+    [purchasedCard, resourceMain, rateStat].forEach((target, index) => {
+      if (!target) return;
+      target.classList.remove("purchase-flash", "resource-spent", "value-gain");
+      window.requestAnimationFrame(() => {
+        target.classList.add(index === 0 ? "purchase-flash" : index === 1 ? "resource-spent" : "value-gain");
+      });
+      window.setTimeout(() => {
+        target.classList.remove("purchase-flash", "resource-spent", "value-gain");
+      }, 760);
+    });
     showToast(
       "舰队产量已提升",
       `${building.name} +${purchase.amount} · ${formatProductionRate(
@@ -12367,6 +12507,7 @@
         unlocked && purchase.amount > 0 && state.dust + 1e-9 >= purchase.cost;
 
       const card = document.createElement("article");
+      card.dataset.buildingCard = building.id;
       card.className = `building-card${unlocked ? "" : " locked"}${
         affordable ? " affordable" : ""
       }`;
@@ -12777,6 +12918,34 @@
       collapseGain,
       0,
     )} ∞`;
+    const retainedProtocolRanks = ENDGAME_PROTOCOLS.reduce(
+      (sum, protocol) => sum + getEndgameProtocolRank(protocol.id),
+      0,
+    );
+    elements.collapseRetainedPreview.textContent = [
+      `${state.achievements.length} 项成就`,
+      `图鉴 ${getAtlasDiscoveredCount()} / ${getAtlasEntries().length}`,
+      `${state.endgame.companions.length} 颗伴星`,
+      `星区 ${state.endgame.sectorLevel}`,
+      `${retainedProtocolRanks} 级协议`,
+    ].join(" · ");
+    const starportRanks = Object.values(state.starport.modules || {}).reduce(
+      (sum, rank) => sum + clampGameCount(rank),
+      0,
+    );
+    elements.collapseResetPreview.textContent = [
+      `${formatNumber(getTotalUnits(), 0)} 个单位`,
+      `${state.upgrades.length} 项研究`,
+      `${formatNumber(state.cores, 0)} 枚现有星核`,
+      `${starportRanks} 级星港建筑与材料`,
+    ].join(" · ");
+    const legacyRank = getEndgameProtocolRank("legacy");
+    const recoveryMinutes = clamp(
+      Math.round(24 - state.endgame.transcensions * 1.35 - legacyRank * 1.5),
+      3,
+      24,
+    );
+    elements.collapseRecoveryEstimate.textContent = `约 ${recoveryMinutes}–${recoveryMinutes + 6} 分钟恢复主要自动化 · 从 ${formatNumber(getEndgameStartingDust(), 0)} 星尘开始`;
     const companions = getSingularityCompanions();
     const latestCompanion = companions[companions.length - 1] || null;
     const nextCompanion = getNextSingularityCompanion();
@@ -13632,12 +13801,17 @@
   function renderMissions() {
     ensureMissionPeriods();
     const now = Date.now();
+    const claimable = getMissionClaimableCount();
     const dailyCompleted = getCompletedMissionCount(state.missions.daily);
     const weeklyCompleted = getCompletedMissionCount(state.missions.weekly);
     elements.missionTokenBalance.textContent = formatNumber(
       state.missions.tokens,
       0,
     );
+    elements.claimAllMissionsButton.disabled = claimable < 1;
+    elements.claimAllMissionsButton.textContent = claimable > 0
+      ? `一键领取全部（${claimable}）`
+      : "暂无可领奖励";
     elements.dailyResetCountdown.textContent =
       `距离刷新 ${formatMissionCountdown(getNextDailyReset(now) - now)}`;
     elements.weeklyResetCountdown.textContent =
@@ -14098,6 +14272,28 @@
     document.getElementById("primary-navigation").dataset.mode = compact
       ? "focus"
       : "complete";
+    renderTrackedGoals();
+    updateMobileQuickNavigation();
+  }
+
+  function updateMobileQuickNavigation() {
+    const guide = getCommandRecommendation();
+    elements.mobileQuickNav.querySelectorAll("[data-mobile-page]").forEach((button) => {
+      const pageId = button.dataset.mobilePage;
+      const unlocked = isPrimaryPageUnlocked(pageId);
+      button.disabled = !unlocked;
+      button.classList.toggle("active", state.activePage === pageId);
+      button.title = unlocked ? `前往${button.querySelector("small")?.textContent || "该页面"}` : "尚未解锁";
+    });
+    const urgent = Boolean(state.combat.incomingRaid);
+    const action = urgent ? "combat" : guide.action;
+    elements.mobileCurrentAction.dataset.mobileAction = action;
+    elements.mobileCurrentAction.classList.toggle("urgent", urgent);
+    elements.mobileCurrentAction.title = urgent
+      ? "边境袭击正在接近"
+      : `${guide.title}：${guide.description}`;
+    elements.mobileCurrentAction.querySelector("span").textContent = urgent ? "!" : guide.icon;
+    elements.mobileCurrentAction.querySelector("small").textContent = urgent ? "警报" : "当前";
   }
 
   function getCommandRecommendation() {
@@ -14353,6 +14549,100 @@
     showToast("已设为稍后提醒", "该可选目标今天不再打扰，明天会自动恢复。", "⌁");
   }
 
+  function isGoalPinned(goalId) {
+    return Boolean(goalId && state.guidance.pinnedGoals?.includes(goalId));
+  }
+
+  function resolveTrackedGoal(goalId) {
+    if (goalId.startsWith("route:")) {
+      const routeId = goalId.slice(6);
+      const route = getFocusRoutes().find((entry) => entry.id === routeId);
+      return route
+        ? {
+            id: goalId,
+            icon: route.icon,
+            eyebrow: route.eyebrow,
+            title: route.title,
+            meta: `${route.eta} · ${route.reward}`,
+            action: route.action,
+          }
+        : null;
+    }
+    if (goalId.startsWith("atlas:")) {
+      const entryId = goalId.slice(6);
+      const entry = getAtlasEntries().find((item) => item.id === entryId);
+      return entry && !entry.discovered
+        ? {
+            id: goalId,
+            icon: entry.icon,
+            eyebrow: "星海图鉴 · 缺失记录",
+            title: entry.name,
+            meta: entry.hint,
+            action: getAtlasEntryAction(entry),
+          }
+        : null;
+    }
+    return null;
+  }
+
+  function toggleTrackedGoal(goalId) {
+    if (!goalId) return;
+    state.guidance.pinnedGoals ||= [];
+    const existingIndex = state.guidance.pinnedGoals.indexOf(goalId);
+    if (existingIndex >= 0) {
+      state.guidance.pinnedGoals.splice(existingIndex, 1);
+      showToast("已取消追踪", "目标已从航站顶部移除。", "−");
+    } else {
+      if (state.guidance.pinnedGoals.length >= 3) {
+        showToast("最多追踪三项", "先取消一项目标，再追踪新的航线。", "!");
+        return;
+      }
+      const goal = resolveTrackedGoal(goalId);
+      if (!goal) return;
+      state.guidance.pinnedGoals.push(goalId);
+      showToast("已追踪目标", goal.title, "⌖");
+    }
+    renderedTrackedGoalSignature = null;
+    renderedFocusRouteSignature = null;
+    renderedAtlasSignature = null;
+    renderTrackedGoals();
+    renderFocusCenter();
+    if (elements.atlasHub.open) renderAtlas();
+    saveGame();
+  }
+
+  function renderTrackedGoals() {
+    const savedIds = Array.isArray(state.guidance.pinnedGoals)
+      ? state.guidance.pinnedGoals.slice(0, 3)
+      : [];
+    const goals = savedIds.map(resolveTrackedGoal).filter(Boolean);
+    const validIds = goals.map((goal) => goal.id);
+    if (validIds.join("|") !== savedIds.join("|")) {
+      state.guidance.pinnedGoals = validIds;
+    }
+    const signature = JSON.stringify(goals);
+    elements.trackedGoals.hidden = goals.length === 0;
+    if (signature === renderedTrackedGoalSignature) return;
+    renderedTrackedGoalSignature = signature;
+    elements.trackedGoalList.replaceChildren();
+    goals.forEach((goal) => {
+      const shell = document.createElement("article");
+      shell.className = "tracked-goal";
+      const action = document.createElement("button");
+      action.type = "button";
+      action.dataset.trackedAction = goal.action;
+      action.innerHTML = `<span aria-hidden="true">${goal.icon}</span><small>${goal.eyebrow}</small><strong>${goal.title}</strong><em>${goal.meta}</em>`;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "tracked-goal-remove";
+      remove.dataset.trackedRemove = goal.id;
+      remove.textContent = "×";
+      remove.setAttribute("aria-label", `取消追踪：${goal.title}`);
+      shell.append(action, remove);
+      elements.trackedGoalList.appendChild(shell);
+    });
+  }
+
   function renderReturnProtocol() {
     ensureReturnProtocolDay();
     const report = latestReturnReport;
@@ -14426,7 +14716,7 @@
     ).join("");
 
     const routes = getFocusRoutes();
-    const signature = JSON.stringify(routes);
+    const signature = JSON.stringify([routes, state.guidance.pinnedGoals]);
     if (signature === renderedFocusRouteSignature) return;
     renderedFocusRouteSignature = signature;
     elements.focusRouteList.replaceChildren();
@@ -14454,6 +14744,15 @@
       status.textContent = route.status;
       button.append(order, icon, copy, status);
       shell.appendChild(button);
+      const tools = document.createElement("div");
+      tools.className = "focus-route-tools";
+      const pin = document.createElement("button");
+      pin.type = "button";
+      pin.className = "focus-route-pin";
+      pin.dataset.focusPin = `route:${route.id}`;
+      pin.textContent = isGoalPinned(`route:${route.id}`) ? "取消追踪" : "追踪";
+      pin.setAttribute("aria-label", `${pin.textContent}：${route.title}`);
+      tools.appendChild(pin);
       if (route.snoozable) {
         const snooze = document.createElement("button");
         snooze.type = "button";
@@ -14461,10 +14760,12 @@
         snooze.dataset.focusSnooze = route.id;
         snooze.textContent = "稍后提醒";
         snooze.setAttribute("aria-label", `今天稍后提醒：${route.title}`);
-        shell.appendChild(snooze);
+        tools.appendChild(snooze);
       }
+      shell.appendChild(tools);
       elements.focusRouteList.appendChild(shell);
     });
+    renderTrackedGoals();
   }
 
   function performGuidanceAction(action) {
@@ -14483,6 +14784,11 @@
       activatePrimaryPage("command", { scroll: true });
       elements.operationsHub.open = true;
       elements.operationsHub.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (action === "atlas") {
+      activatePrimaryPage("command", { scroll: true });
+      elements.atlasHub.open = true;
+      elements.atlasHub.scrollIntoView({ behavior: "smooth", block: "start" });
+      renderAtlas();
     } else if (action === "prestige") {
       activatePrimaryPage("command", { scroll: true });
       elements.prestigeButton.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -14502,6 +14808,11 @@
       ? `${state.operations.totalActions} 次作业 · 工程池 ${Math.floor(poolRatio * 100)}%`
       : `达到 ${formatNumber(OPERATIONS_UNLOCK_DUST)} 历史星尘后解锁`;
     elements.operationsQueueSummary.textContent = `队列 ${state.operations.queue.length} / ${slots}`;
+    const lastJob = OPERATIONS_JOBS.find((job) => job.id === state.operations.lastJobId);
+    elements.operationsRepeatButton.disabled = !unlocked || !lastJob;
+    elements.operationsRepeatButton.textContent = lastJob
+      ? `继续${lastJob.name}`
+      : "继续上次作业";
     if (!unlocked) return;
     elements.operationsPoolValue.textContent = formatNumber(state.operations.engineeringPool, 1);
     elements.operationsPoolCap.textContent = formatNumber(poolCap, 0);
@@ -14605,6 +14916,7 @@
         renderJourney();
         renderAtlas();
         renderDoctrine();
+        renderStatBreakdown();
         break;
       default:
         break;
@@ -14872,6 +15184,7 @@
     updateMissionSummary();
     updateStarfallSummary();
     updateNavigationVisibility();
+    renderStatBreakdown();
 
     if (state.activePage === "command") {
       renderCommandCompanions();
@@ -15400,6 +15713,15 @@
       },
       true,
     );
+    elements.mobileQuickNav.addEventListener("click", (event) => {
+      const pageButton = event.target.closest("[data-mobile-page]");
+      if (pageButton && !pageButton.disabled) {
+        activatePrimaryPage(pageButton.dataset.mobilePage, { scroll: true });
+        return;
+      }
+      const actionButton = event.target.closest("[data-mobile-action]");
+      if (actionButton) performGuidanceAction(actionButton.dataset.mobileAction);
+    });
     elements.collect.addEventListener("click", collect);
     elements.collect.addEventListener("dblclick", (event) => event.preventDefault());
     elements.buildingList.addEventListener("click", (event) => {
@@ -15441,6 +15763,7 @@
         state.buyMode = button.dataset.buyMode;
         updateBuyModeButtons();
         renderBuildings();
+        saveGame();
       });
     });
     elements.eventButton.addEventListener("click", claimEvent);
@@ -15487,6 +15810,11 @@
     });
     elements.dutyClaimButton.addEventListener("click", claimDailyDuty);
     elements.focusRouteList.addEventListener("click", (event) => {
+      const pin = event.target.closest("[data-focus-pin]");
+      if (pin) {
+        toggleTrackedGoal(pin.dataset.focusPin);
+        return;
+      }
       const snooze = event.target.closest("[data-focus-snooze]");
       if (snooze) {
         snoozeFocusRoute(snooze.dataset.focusSnooze);
@@ -15494,6 +15822,25 @@
       }
       const button = event.target.closest("[data-focus-action]");
       if (button) performGuidanceAction(button.dataset.focusAction);
+    });
+    elements.trackedGoalList.addEventListener("click", (event) => {
+      const remove = event.target.closest("[data-tracked-remove]");
+      if (remove) {
+        toggleTrackedGoal(remove.dataset.trackedRemove);
+        return;
+      }
+      const action = event.target.closest("[data-tracked-action]");
+      if (action) performGuidanceAction(action.dataset.trackedAction);
+    });
+    elements.trackedGoalsClear.addEventListener("click", () => {
+      state.guidance.pinnedGoals = [];
+      renderedTrackedGoalSignature = null;
+      renderedFocusRouteSignature = null;
+      renderedAtlasSignature = null;
+      renderTrackedGoals();
+      renderFocusCenter();
+      if (elements.atlasHub.open) renderAtlas();
+      saveGame();
     });
     elements.returnDutyOptions.addEventListener("click", (event) => {
       const button = event.target.closest("[data-return-duty]");
@@ -15534,6 +15881,12 @@
       renderAtlas();
       saveGame();
     });
+    elements.atlasNextTrack.addEventListener("click", () => {
+      toggleTrackedGoal(elements.atlasNextTrack.dataset.goalId);
+    });
+    elements.atlasNextAction.addEventListener("click", () => {
+      performGuidanceAction(elements.atlasNextAction.dataset.guideAction);
+    });
     elements.operationsHub.addEventListener("toggle", () => {
       if (
         elements.operationsHub.open &&
@@ -15570,6 +15923,9 @@
       renderOperations();
       saveGame();
     });
+    elements.operationsRepeatButton.addEventListener("click", () => {
+      if (state.operations.lastJobId) queueOperation(state.operations.lastJobId, true);
+    });
     elements.companionEventClose.addEventListener("click", closeCompanionEvent);
     elements.companionEventChoices.addEventListener("click", (event) => {
       const button = event.target.closest("[data-companion-event-choice]");
@@ -15588,6 +15944,7 @@
       });
     });
     elements.dailyBonusButton.addEventListener("click", claimDailyMissionBonus);
+    elements.claimAllMissionsButton.addEventListener("click", claimAllMissionRewards);
     elements.weeklyMilestoneList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-weekly-milestone]");
       if (button) claimWeeklyMissionMilestone(Number(button.dataset.weeklyMilestone));
@@ -15987,6 +16344,7 @@
         duty,
         dutyState: state.duty,
         routes: getFocusRoutes(),
+        pinnedGoals: state.guidance.pinnedGoals,
         claimableMissions: getMissionClaimableCount(),
         visiblePages: Array.from(
           document.querySelectorAll("#primary-navigation [role='tab']"),
@@ -16128,6 +16486,7 @@
       engineeringPoolCap: getOperationsPoolCap(),
       queueSlots: getOperationsQueueSlots(),
       totalActions: state.operations.totalActions,
+      lastJobId: state.operations.lastJobId,
     })),
     checkForGameUpdate,
     getPerformanceDiagnostics: () => ({

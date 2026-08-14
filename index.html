@@ -11,16 +11,16 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="1.0.1" />
-    <meta name="stellar-release-title" content="正式启航" />
-    <title>星港拾荒者 v1.0 · 正式版</title>
-    <link rel="stylesheet" href="styles.css?v=1.0.1" />
+    <meta name="stellar-game-version" content="1.1.0" />
+    <meta name="stellar-release-title" content="航站节奏重整" />
+    <title>星港拾荒者 v1.1 · 航站节奏重整</title>
+    <link rel="stylesheet" href="styles.css?v=1.1.0" />
   </head>
   <body>
     <a class="skip-link" href="#command-page">跳到游戏内容</a>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=1.0.1"
+      src="assets/outpost-beyond-orion.mp3?v=1.1.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -302,6 +302,18 @@
         </button>
       </nav>
 
+      <section id="tracked-goals" class="tracked-goals" aria-labelledby="tracked-goals-title" hidden>
+        <header>
+          <span aria-hidden="true">⌖</span>
+          <div>
+            <small>全页面常驻 · 最多追踪三项</small>
+            <strong id="tracked-goals-title">我的航程追踪</strong>
+          </div>
+          <button id="tracked-goals-clear" type="button">全部取消</button>
+        </header>
+        <div id="tracked-goal-list" class="tracked-goal-list"></div>
+      </section>
+
       <main class="game-grid">
         <section
           id="command-page"
@@ -489,10 +501,10 @@
             </div>
           </div>
 
-          <section id="command-guide" class="command-guide" aria-labelledby="command-guide-title" hidden>
+          <section id="command-guide" class="command-guide current-action-card" aria-labelledby="command-guide-title">
             <span id="command-guide-icon" class="command-guide-icon" aria-hidden="true">➜</span>
             <div class="command-guide-copy">
-              <small>当前建议 · 一次只做一件事</small>
+              <small>当前行动 · 现在只做这一件事</small>
               <strong id="command-guide-title">先回收 15 星尘</strong>
               <p id="command-guide-description">点击中央信标，准备部署第一架自动回收无人机。</p>
               <div class="command-guide-progress" aria-hidden="true">
@@ -554,6 +566,15 @@
             </div>
           </section>
 
+          <details id="stat-breakdown" class="stat-breakdown">
+            <summary>
+              <span aria-hidden="true">≋</span>
+              <span><small>为什么数值会变化</small><strong>产量与战力来源</strong></span>
+              <b id="stat-breakdown-summary">自动产量 ×1.00</b>
+            </summary>
+            <div id="stat-breakdown-list" class="stat-breakdown-list"></div>
+          </details>
+
           <details id="atlas-hub" class="atlas-hub">
             <summary>
               <span class="atlas-summary-icon" aria-hidden="true">◈</span>
@@ -573,6 +594,18 @@
                 </div>
                 <strong id="atlas-count">0 / 33</strong>
               </header>
+              <article id="atlas-next-target" class="atlas-next-target">
+                <span id="atlas-next-icon" aria-hidden="true">?</span>
+                <div>
+                  <small>下一项未发现记录</small>
+                  <strong id="atlas-next-title">正在扫描星海</strong>
+                  <p id="atlas-next-hint">完成战斗、远征或伴星观测后会自动记录。</p>
+                </div>
+                <div class="atlas-next-actions">
+                  <button id="atlas-next-track" class="secondary-button" type="button">追踪</button>
+                  <button id="atlas-next-action" type="button">前往</button>
+                </div>
+              </article>
               <div id="atlas-milestones" class="atlas-milestones"></div>
               <div id="atlas-filters" class="atlas-filters" role="group" aria-label="图鉴分类">
                 <button class="active" type="button" data-atlas-filter="all">全部</button>
@@ -619,7 +652,10 @@
                   <h3>选择作业，积累固定专精</h3>
                   <p>每项作业只有 30 级，无分支加点；不研究配装也不会点错。</p>
                 </div>
-                <button id="operations-stop-button" class="secondary-button" type="button">停止全部</button>
+                <div class="operations-heading-actions">
+                  <button id="operations-repeat-button" class="secondary-button" type="button">继续上次作业</button>
+                  <button id="operations-stop-button" class="secondary-button" type="button">停止全部</button>
+                </div>
               </header>
               <section class="operations-pool" aria-labelledby="operations-pool-title">
                 <div>
@@ -1454,6 +1490,20 @@
                 <p>
                   重置星尘、舰队、研究、星核、星核商店、战斗成长、星港建筑与材料，保留成就、星区和全部超越协议。
                 </p>
+                <div class="collapse-preview-grid">
+                  <article>
+                    <small>永久保留</small>
+                    <strong id="collapse-retained-preview">成就、图鉴、伴星、星区与超越协议</strong>
+                  </article>
+                  <article>
+                    <small>本轮重置</small>
+                    <strong id="collapse-reset-preview">星尘、舰队、研究、星核、战斗与星港</strong>
+                  </article>
+                  <article>
+                    <small>预计恢复</small>
+                    <strong id="collapse-recovery-estimate">计算中</strong>
+                  </article>
+                </div>
                 <div class="collapse-readout">
                   <span>
                     <small>当前历史星核</small>
@@ -1628,9 +1678,12 @@
               <p class="eyebrow">周期目标 · 轻量成长</p>
               <h2 id="missions-title">航站委托</h2>
             </div>
-            <div class="mission-token-balance">
-              <small>航站凭证</small>
-              <strong id="mission-token-balance">0</strong>
+            <div class="missions-heading-actions">
+              <button id="claim-all-missions-button" type="button" disabled>一键领取全部</button>
+              <div class="mission-token-balance">
+                <small>航站凭证</small>
+                <strong id="mission-token-balance">0</strong>
+              </div>
             </div>
           </div>
 
@@ -1914,9 +1967,17 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v1.0.1 · 正式版</span>
+        <span>航站协议 v1.1.0 · 航站节奏重整</span>
       </footer>
     </div>
+
+    <nav id="mobile-quick-nav" class="mobile-quick-nav" aria-label="手机版快捷导航">
+      <button type="button" data-mobile-page="command"><span aria-hidden="true">✦</span><small>指挥台</small></button>
+      <button type="button" data-mobile-page="fleet"><span aria-hidden="true">◎</span><small>舰队</small></button>
+      <button type="button" data-mobile-page="combat"><span aria-hidden="true">⬡</span><small>战斗</small></button>
+      <button type="button" data-mobile-page="expedition"><span aria-hidden="true">▱</span><small>远征</small></button>
+      <button id="mobile-current-action" type="button" data-mobile-action="command"><span aria-hidden="true">➜</span><small>当前</small></button>
+    </nav>
 
     <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
@@ -1958,7 +2019,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v1.0.1</strong>
+          <strong id="patch-notes-current-version">v1.1.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2269,9 +2330,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.0.1"></script>
-    <script src="game.js?v=1.0.1"></script>
-    <script src="firebase-config.js?v=1.0.1"></script>
-    <script type="module" src="cloud-save.js?v=1.0.1"></script>
+    <script src="game-math.js?v=1.1.0"></script>
+    <script src="game.js?v=1.1.0"></script>
+    <script src="firebase-config.js?v=1.1.0"></script>
+    <script type="module" src="cloud-save.js?v=1.1.0"></script>
   </body>
 </html>

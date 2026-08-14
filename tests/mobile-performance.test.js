@@ -59,7 +59,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.0.1");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.1.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
@@ -112,6 +112,9 @@ async function main() {
         musicOptions: document.querySelectorAll("#top-bgm-track option").length,
         musicRight: musicRect.right,
         soundLeft: soundRect.left,
+        mobileNavigationDisplay: getComputedStyle(document.querySelector("#mobile-quick-nav")).display,
+        mobileNavigationPosition: getComputedStyle(document.querySelector("#mobile-quick-nav")).position,
+        mobileNavigationItems: document.querySelectorAll("#mobile-quick-nav button").length,
       };
     });
     assert.equal(defaultQuality.mode, "quality", "mobile should default to high quality");
@@ -126,6 +129,9 @@ async function main() {
     assert.equal(defaultQuality.musicTitle, "猎户座外的前哨");
     assert.equal(defaultQuality.musicStatus, "音乐已暂停");
     assert.equal(defaultQuality.musicOptions, 5);
+    assert.equal(defaultQuality.mobileNavigationDisplay, "grid");
+    assert.equal(defaultQuality.mobileNavigationPosition, "fixed");
+    assert.equal(defaultQuality.mobileNavigationItems, 5);
     assert.ok(defaultQuality.musicRight <= defaultQuality.soundLeft);
     assert.ok(
       defaultQuality.pageWidth <= defaultQuality.viewportWidth,

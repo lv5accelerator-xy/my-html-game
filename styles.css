@@ -12392,3 +12392,258 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 @media (max-width: 460px) {
   .border-echo-readouts { grid-template-columns: 1fr; }
 }
+
+/* v1.1.0 · 航站节奏重整 */
+.tracked-goals {
+  margin: 10px 0 0;
+  padding: 12px;
+  border: 1px solid rgba(98, 230, 255, 0.19);
+  border-radius: 16px;
+  background:
+    linear-gradient(105deg, rgba(98, 230, 255, 0.07), transparent 52%),
+    rgba(5, 17, 32, 0.82);
+}
+
+.tracked-goals > header,
+.operations-heading-actions,
+.missions-heading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tracked-goals > header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.tracked-goals > header small,
+.tracked-goal small,
+.tracked-goal em {
+  color: #8299b8;
+  font-style: normal;
+}
+
+.tracked-goals > header strong { color: #dff8ff; }
+
+.tracked-goals > header button,
+.focus-route-tools button,
+.atlas-next-actions button,
+.missions-heading-actions > button {
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid rgba(111, 191, 228, 0.2);
+  border-radius: 9px;
+  color: #a8c7dd;
+  background: rgba(18, 45, 70, 0.58);
+}
+
+.tracked-goal-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.tracked-goal {
+  position: relative;
+  min-width: 0;
+  border: 1px solid rgba(126, 179, 231, 0.15);
+  border-radius: 13px;
+  background: rgba(12, 29, 51, 0.74);
+  overflow: hidden;
+}
+
+.tracked-goal > button:first-child {
+  width: 100%;
+  min-height: 92px;
+  padding: 11px 37px 11px 42px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  border: 0;
+  color: #edf9ff;
+  text-align: left;
+  background: transparent;
+}
+
+.tracked-goal > button:first-child:hover { background: rgba(98, 230, 255, 0.06); }
+.tracked-goal > button:first-child > span { position: absolute; left: 13px; top: 15px; color: #aa8cff; font-size: 1.1rem; }
+.tracked-goal strong,
+.tracked-goal small,
+.tracked-goal em { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tracked-goal strong { margin: 2px 0; }
+.tracked-goal em { font-size: 0.72rem; }
+.tracked-goal-remove { position: absolute; top: 8px; right: 8px; width: 25px; height: 25px; border: 0; border-radius: 8px; color: #91a9bd; background: rgba(6, 18, 33, 0.7); }
+
+.current-action-card {
+  position: relative;
+  border-color: rgba(98, 230, 255, 0.38);
+  box-shadow: 0 0 28px rgba(43, 167, 208, 0.08);
+}
+
+.current-action-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 3px 0 0 rgba(98, 230, 255, 0.72);
+}
+
+.stat-breakdown {
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(127, 157, 205, 0.16);
+  border-radius: 15px;
+  background: rgba(7, 20, 38, 0.7);
+}
+
+.stat-breakdown > summary {
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.stat-breakdown > summary > span:first-child { color: #80dff7; font-size: 1.15rem; }
+.stat-breakdown > summary > span:nth-child(2) { display: grid; gap: 1px; }
+.stat-breakdown > summary small { color: #7f94b1; }
+.stat-breakdown > summary b { color: #b9efff; white-space: nowrap; }
+.stat-breakdown-list { padding: 0 13px 13px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.stat-breakdown-list article { min-width: 0; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid rgba(128, 173, 225, 0.12); border-radius: 11px; background: rgba(13, 31, 55, 0.62); }
+.stat-breakdown-list article > span { min-width: 0; display: grid; gap: 2px; }
+.stat-breakdown-list small { color: #7d93b1; line-height: 1.35; }
+.stat-breakdown-list b { color: #bdefff; white-space: nowrap; }
+
+.atlas-next-target {
+  margin-top: 14px;
+  padding: 13px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(184, 140, 255, 0.3);
+  border-radius: 15px;
+  background: linear-gradient(120deg, rgba(127, 77, 203, 0.15), rgba(27, 91, 129, 0.1));
+}
+
+.atlas-next-target > span { width: 43px; height: 43px; display: grid; place-items: center; border-radius: 13px; color: #d1b7ff; background: rgba(121, 75, 191, 0.2); font-size: 1.25rem; }
+.atlas-next-target > div:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
+.atlas-next-target small { color: #9b83d8; }
+.atlas-next-target p { margin: 0; color: #98aecb; }
+.atlas-next-actions { display: flex; gap: 7px; }
+.atlas-next-actions button:last-child { color: #dff9ff; border-color: rgba(98, 230, 255, 0.35); background: rgba(31, 126, 155, 0.22); }
+
+.focus-route-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid rgba(127, 157, 180, 0.1); }
+.focus-route-tools button { min-height: 29px; border: 0; border-radius: 0; font-size: calc(5.8px * var(--type-scale)); }
+.focus-route-tools button:only-child { grid-column: 1 / -1; }
+.focus-route-tools button + button { border-left: 1px solid rgba(127, 157, 180, 0.1); }
+.focus-route-tools button:hover { color: var(--cyan); background: rgba(98, 230, 255, 0.06); }
+.focus-route-tools .focus-route-snooze { border-top: 0; }
+
+.operations-heading-actions { justify-content: flex-end; }
+.operations-heading-actions button { white-space: nowrap; }
+.collapse-preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0; }
+.collapse-preview-grid article { min-width: 0; padding: 11px; border: 1px solid rgba(128, 169, 222, 0.14); border-radius: 12px; background: rgba(9, 25, 46, 0.68); }
+.collapse-preview-grid small,
+.collapse-preview-grid strong { display: block; }
+.collapse-preview-grid small { margin-bottom: 4px; color: #8298b6; }
+.collapse-preview-grid strong { color: #cceef9; font-size: 0.78rem; line-height: 1.45; }
+.collapse-preview-grid article:first-child { border-color: rgba(102, 225, 178, 0.22); }
+.collapse-preview-grid article:nth-child(2) { border-color: rgba(255, 132, 153, 0.18); }
+
+.missions-heading-actions > button:not(:disabled) { color: #dffaff; border-color: rgba(98, 230, 255, 0.36); background: rgba(35, 139, 167, 0.2); }
+.missions-heading-actions > button:disabled { opacity: 0.55; }
+
+.building-card.purchase-flash { animation: purchase-card-flash 720ms ease-out; }
+.resource-main.resource-spent { animation: resource-spent-flash 700ms ease-out; }
+.resource-stat.value-gain { animation: value-gain-flash 700ms ease-out; }
+.atlas-entry.newly-discovered { animation: atlas-discovery-flash 900ms ease-out; }
+
+@keyframes purchase-card-flash {
+  0% { transform: scale(0.985); box-shadow: 0 0 0 rgba(98, 230, 255, 0); }
+  38% { transform: scale(1.012); border-color: rgba(98, 230, 255, 0.72); box-shadow: 0 0 26px rgba(98, 230, 255, 0.22); }
+  100% { transform: scale(1); }
+}
+
+@keyframes resource-spent-flash {
+  35% { color: #ffc6cf; background: rgba(255, 104, 129, 0.11); }
+}
+
+@keyframes value-gain-flash {
+  35% { color: #a8ffd9; background: rgba(84, 230, 171, 0.12); }
+}
+
+@keyframes atlas-discovery-flash {
+  0% { transform: translateY(5px); opacity: 0.35; }
+  38% { border-color: rgba(197, 159, 255, 0.8); box-shadow: 0 0 30px rgba(166, 114, 255, 0.24); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.mobile-quick-nav { display: none; }
+
+@media (max-width: 900px) {
+  .tracked-goal-list { grid-template-columns: 1fr; }
+  .collapse-preview-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .mobile-quick-nav {
+    position: fixed;
+    z-index: 260;
+    left: 8px;
+    right: 8px;
+    bottom: calc(7px + env(safe-area-inset-bottom));
+    min-height: 58px;
+    padding: 6px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+    border: 1px solid rgba(98, 230, 255, 0.23);
+    border-radius: 17px;
+    background: rgba(5, 16, 30, 0.94);
+    box-shadow: 0 12px 38px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(18px);
+  }
+  .mobile-quick-nav button { min-width: 0; min-height: 46px; display: grid; place-items: center; align-content: center; gap: 1px; border: 0; border-radius: 11px; color: #8198b5; background: transparent; }
+  .mobile-quick-nav button span { font-size: 1rem; }
+  .mobile-quick-nav button small { overflow: hidden; max-width: 100%; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-quick-nav button.active { color: #dff9ff; background: rgba(70, 177, 209, 0.16); }
+  .mobile-quick-nav button:last-child { color: #d8c2ff; background: rgba(130, 85, 203, 0.18); }
+  .mobile-quick-nav button.urgent { color: #ffd6de; background: rgba(211, 62, 91, 0.28); animation: mobile-alert-pulse 1.2s ease-in-out infinite; }
+  .mobile-quick-nav button:disabled { opacity: 0.3; }
+  .toast-region { bottom: calc(82px + env(safe-area-inset-bottom)); }
+  .tracked-goals { margin-inline: 8px; }
+  .tracked-goals > header { align-items: flex-end; }
+  .current-action-card { grid-template-columns: auto minmax(0, 1fr); }
+  .current-action-card > button { grid-column: 1 / -1; width: 100%; }
+  .stat-breakdown > summary { grid-template-columns: auto minmax(0, 1fr); }
+  .stat-breakdown > summary b { grid-column: 2; white-space: normal; }
+  .stat-breakdown-list { grid-template-columns: 1fr; }
+  .atlas-next-target { grid-template-columns: auto minmax(0, 1fr); }
+  .atlas-next-actions { grid-column: 1 / -1; }
+  .atlas-next-actions button { flex: 1; }
+  .operations-heading { align-items: flex-start; flex-direction: column; }
+  .operations-heading-actions { width: 100%; }
+  .operations-heading-actions button { flex: 1; }
+  .missions-heading { align-items: stretch; }
+  .missions-heading-actions { align-items: stretch; flex-direction: column-reverse; }
+}
+
+@keyframes mobile-alert-pulse {
+  50% { box-shadow: inset 0 0 0 1px rgba(255, 156, 173, 0.55), 0 0 18px rgba(222, 59, 91, 0.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .building-card.purchase-flash,
+  .resource-main.resource-spent,
+  .resource-stat.value-gain,
+  .atlas-entry.newly-discovered,
+  .mobile-quick-nav button.urgent { animation: none; }
+}

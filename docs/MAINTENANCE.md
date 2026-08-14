@@ -1,6 +1,6 @@
 # 《星港拾荒者》新电脑维护交接说明
 
-> 当前版本：v1.0.1「星图归档校正」
+> 当前版本：v1.1.0「航站节奏重整」
 > 更新日期：2026-08-14
 > 技术栈：纯 HTML、CSS、JavaScript；GitHub Pages + Firebase
 
@@ -39,7 +39,7 @@
 
 ## 当前产品方向
 
-v1.0.1 延续 v0.24.0 开始的复杂度收束，把回流、重复周目与轮换事件接进已有页面：
+v1.1.0 延续 v0.24.0 开始的复杂度收束，把回流、重复周目与轮换事件接进已有页面：
 
 - 默认使用“专注导航”，只显示核心、紧急和限时入口。
 - 指挥台用“当前航程”汇总一项主目标和至多两项可选目标，不要求玩家记住全部系统。
@@ -56,6 +56,7 @@ v1.0.1 延续 v0.24.0 开始的复杂度收束，把回流、重复周目与轮�
 - v0.31.0 为现有敌人增加周词条，并在战斗页加入消耗现有维护件与材料的边境回响。
 - v1.0.0 增加手动备份恢复、键盘跳转、统一焦点样式和正式发布检查，不再横向增加玩法层。
 - v1.0.1 将星海图鉴改为永久发现归档，并修复超越重置与伴星观测的旧存档兼容。
+- v1.1.0 把常用操作收束到当前行动、三项目标追踪、批量领取、上次作业与手机底栏，并补充图鉴和超越的下一步预览。
 
 ## 主要文件
 
@@ -76,16 +77,17 @@ v1.0.1 延续 v0.24.0 开始的复杂度收束，把回流、重复周目与轮�
 ## 存档与版本
 
 - 浏览器主存档键：`stellarOutpostIdleSave_v1`。
-- 当前 `SAVE_VERSION = 23`。
+- 当前 `SAVE_VERSION = 24`。
 - v0.25.0 新增 `journey`、`atlas`、`bossTrial` 与 `communityBeacon`，分别保存章节领奖、图鉴领奖/筛选、每日首领状态和合作目标领奖。
 - v0.26.0-v0.31.0 新增归航、学说、异象、当日暂缓航程、星港蓝图与 `borderEcho` 每周挑战/收藏状态。
 - v1.0.1 为 `atlas` 新增 `discoveredIds`，所有已发现条目跨超越保留；旧伴星观测按事件编号补回 `companionId`。
+- v1.1.0 为 `guidance` 新增最多三项 `pinnedGoals`，为 `operations` 新增 `lastJobId`；旧存档会自动补为空值。
 - 云存档上传完整 `snapshot`，Firestore 规则只校验稳定信封，因此上述状态不需要改变云存档规则。
 - 共同航标通过现有排行榜字段在客户端汇总，不向 `leaderboards/{uid}` 增加字段，本版本也无需更新排行榜规则。
 - 修改存档结构时递增 `SAVE_VERSION`，并在 `sanitizeState()` 中补齐和限制新字段。
 - 不要直接删除或重命名旧状态字段；先兼容读取至少一个正式版本周期。
 
-## v1.0.1 关键入口
+## v1.1.0 关键入口
 
 - `JOURNEY_CHAPTERS` / `renderJourney()`：八章目标、渐进解锁与章节奖励。
 - `getAtlasEntries()` / `archiveAtlasDiscoveries()` / `renderAtlas()`：33 项现有玩法记录、永久发现归档与四段里程碑。
@@ -100,6 +102,9 @@ v1.0.1 延续 v0.24.0 开始的复杂度收束，把回流、重复周目与轮�
 - `STARPORT_BLUEPRINTS` / `getStarportBlueprintPreview()` / `switchStarportBlueprint()`：蓝图定义、实际数值预览和组件切换成本。
 - `BORDER_ECHO_TRAITS` / `ensureBorderEchoWeek()` / `challengeBorderEcho()`：周词条、首领轮换、整备与三战术结算。
 - `getLocalBackupSummary()` / `requestRestoreLatestBackup()`：三份本地轮换备份的状态展示与安全恢复。
+- `renderTrackedGoals()` / `toggleTrackedGoal()`：跨页面三项目标追踪与旧目标自动清理。
+- `renderStatBreakdown()`：产量、战力和软上限来源说明。
+- `updateMobileQuickNavigation()`：手机底部四个常用页面与动态当前行动。
 - `RELEASE-CHECKLIST.md`：正式版发布前的版本、存档、移动端、云端、归档和线上检查。
 
 ## Firebase 管理
@@ -135,7 +140,14 @@ node tests/mobile-performance.test.js
 
 浏览器测试需要 Playwright；环境变量配置方法见 `../README.md`。
 
-v1.0.1 重点检查：
+v1.1.0 重点检查：
+
+- 旧存档载入后补齐 `guidance.pinnedGoals` 与 `operations.lastJobId`，版本升级到 24。
+- 当前行动始终可见；目标追踪最多三项，完成或失效后自动移除。
+- 图鉴显示下一条缺失记录，按钮能前往战斗、远征或图鉴区域。
+- 超越页同时展示永久保留、本轮重置与预计恢复时间。
+- 委托一键领取、继续上次作业和购买模式记忆均可正常保存。
+- 390px 手机宽度下底部快捷导航固定可见且不产生横向滚动。
 
 - 旧 v15 及更早存档载入后自动升级到 v16，原进度与旧系统入口不丢失。
 - 八章航路一次只显示当前章节，完成后可领取并进入下一章。

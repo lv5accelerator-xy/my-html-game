@@ -89,9 +89,11 @@ const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
 assert.equal(
   readConstant("SAVE_VERSION"),
-  23,
-  "permanent atlas discoveries need schema version 23",
+  24,
+  "tracked goals and repeatable operations need schema version 24",
 );
+assert.match(source, /pinnedGoals:\s*\[\]/, "fresh saves need an empty tracked-goal list");
+assert.match(source, /lastJobId:\s*""/, "fresh saves need an empty last operation id");
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),
   6,

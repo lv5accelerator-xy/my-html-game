@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.0.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.0.1");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -175,15 +175,15 @@ async function main() {
         === document.querySelector(".music-player-shell"),
     }));
 
-    assert.equal(snapshot.gameVersion, "1.0.0");
-    assert.equal(snapshot.saveVersion, 22);
+    assert.equal(snapshot.gameVersion, "1.0.1");
+    assert.equal(snapshot.saveVersion, 23);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v1\.0\.0/);
+    assert.match(snapshot.footer, /v1\.0\.1/);
     assert.equal(await page.locator(".skip-link").count(), 1);
     assert.equal(await page.locator("#restore-backup-button").count(), 1);
     assert.equal(snapshot.starfall.phase, "active");
@@ -817,6 +817,7 @@ async function main() {
     });
     assert.equal(companionRewardAfter.signals, 1);
     assert.equal(companionRewardAfter.observations.length, 1);
+    assert.equal(companionRewardAfter.observations[0].companionId, "prismJelly");
     assert.equal(companionRewardAfter.observations[0].choiceId, "archive");
     assert.equal(companionRewardAfter.tokens, companionRewardBefore.tokens + 6);
     assert.equal(companionRewardAfter.fragments, companionRewardBefore.fragments + 6);
@@ -1329,11 +1330,92 @@ async function main() {
     assert.equal(borderEchoAfter.echo.state.cosmetics.length, 1);
     assert.equal(borderEchoAfter.operations.components.repairKit >= 1, true);
 
+    const atlasMigration = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const legacySave = bridge.createSnapshot();
+      legacySave.version = 22;
+      legacySave.endgame.transcensions = 8;
+      legacySave.endgame.companions = [
+        "dustMoth",
+        "prismJelly",
+        "riftRay",
+        "orbitFox",
+        "echoWhale",
+        "voidCat",
+        "novaFinch",
+        "moonHare",
+      ];
+      legacySave.endgame.companionObservations = [
+        ["dustMothAfterglow", "follow"],
+        ["prismJellySpectrum", "calibrate"],
+        ["riftRayTide", "tow"],
+        ["orbitFoxRing", "salvage"],
+        ["echoWhaleSong", "answer"],
+        ["voidCatNap", "wait"],
+        ["novaFinchSpark", "forge"],
+        ["moonHareBlindSpot", "listen"],
+      ].map(([eventId, choiceId], index) => ({
+        eventId,
+        choiceId,
+        completedAt: Date.now() - index * 1000,
+      }));
+      legacySave.atlas = {
+        claimedMilestones: [5, 12, 20],
+        activeFilter: "all",
+      };
+      Object.keys(legacySave.combat.enemyVictories).forEach((id) => {
+        legacySave.combat.enemyVictories[id] = 0;
+      });
+      legacySave.expedition.artifacts = [];
+      Object.keys(legacySave.expedition.bossWins).forEach((id) => {
+        legacySave.expedition.bossWins[id] = 0;
+      });
+      Object.keys(legacySave.bossTrial.victoriesByBoss).forEach((id) => {
+        legacySave.bossTrial.victoriesByBoss[id] = 0;
+      });
+      bridge.applySnapshot(legacySave);
+      const restoredAtlas = bridge.getAtlasDiagnostics();
+      const migratedSave = bridge.createSnapshot();
+      Object.keys(migratedSave.combat.enemyVictories).forEach((id) => {
+        migratedSave.combat.enemyVictories[id] = 0;
+      });
+      bridge.applySnapshot(migratedSave);
+      const nextCycleAtlas = bridge.getAtlasDiagnostics();
+      return {
+        restoredAtlas,
+        nextCycleAtlas,
+        saveVersion: migratedSave.version,
+        observations: migratedSave.endgame.companionObservations,
+        archivedIds: migratedSave.atlas.discoveredIds,
+      };
+    });
+    assert.equal(atlasMigration.saveVersion, 23);
+    assert.equal(atlasMigration.restoredAtlas.total, 33);
+    assert.equal(atlasMigration.restoredAtlas.discovered, 19);
+    assert.equal(
+      atlasMigration.restoredAtlas.entries.filter(
+        (entry) => entry.category === "enemy" && entry.discovered,
+      ).length,
+      11,
+    );
+    assert.equal(
+      atlasMigration.restoredAtlas.entries.filter(
+        (entry) => entry.category === "companion" && entry.discovered,
+      ).length,
+      8,
+    );
+    assert.equal(atlasMigration.nextCycleAtlas.discovered, 19);
+    assert.equal(atlasMigration.archivedIds.length, 19);
+    assert.equal(
+      atlasMigration.observations.every((observation) => observation.companionId),
+      true,
+    );
+
     await page.route("**/index.html?check=*", (route) =>
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="1.0.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="1.0.2"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1342,7 +1424,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v1\.0\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v1\.0\.2/);
     const saveSafety = await page.evaluate(() =>
       window.StellarOutpostCloudBridge.getSaveSafetyDiagnostics(),
     );

@@ -89,8 +89,8 @@ const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
 assert.equal(
   readConstant("SAVE_VERSION"),
-  22,
-  "weekly border echo state needs schema version 22",
+  23,
+  "permanent atlas discoveries need schema version 23",
 );
 assert.equal(
   readConstant("NUMERIC_MIGRATION_VERSION"),

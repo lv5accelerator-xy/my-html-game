@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.0.0";
-  const PATCH_NOTES_VERSION = "1.0.0";
-  const SAVE_VERSION = 22;
+  const GAME_VERSION = "1.0.1";
+  const PATCH_NOTES_VERSION = "1.0.1";
+  const SAVE_VERSION = 23;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.0.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.0.1",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.0.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.0.1",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.0.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.0.1",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.0.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.0.1",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.0.1",
+      theme: "星图归档校正",
+      changes: [
+        "修复奇点超越后，本周期敌人胜场被重置并连带导致星海图鉴条目回退的问题；已发现条目现在会写入永久归档。",
+        "修复完成伴星观测后，伴星图鉴仍显示未发现的问题；新观测会保存伴星编号，旧记录也会按事件编号自动还原。",
+        "受旧版影响且已完成八项伴星观测的存档，会在载入时自动恢复被超越清空的 11 项敌对目标记录。",
+        "存档结构升级至第 23 版，图鉴归档会随本地备份与云端存档共同保存。",
+      ],
+    },
     {
       version: "1.0.0",
       theme: "正式启航",
@@ -3916,6 +3926,7 @@
 
   function freshAtlasState() {
     return {
+      discoveredIds: [],
       claimedMilestones: [],
       activeFilter: "all",
     };
@@ -4429,10 +4440,62 @@
       lore: companion.description,
       hint: "超越后唤醒并完成一次伴星观测",
       discovered: (targetState.endgame?.companionObservations || []).some(
-        (observation) => observation.companionId === companion.id,
+        (observation) => observation.companionId === companion.id
+          || getCompanionEvent(observation.eventId)?.companionId === companion.id,
       ),
     }));
+    const archivedIds = new Set(targetState.atlas?.discoveredIds || []);
+    entries.forEach((entry) => {
+      entry.discovered = Boolean(entry.discovered || archivedIds.has(entry.id));
+    });
     return entries;
+  }
+
+  function archiveAtlasDiscoveries(
+    targetState = state,
+    { recoverLegacyCombat = false } = {},
+  ) {
+    if (!targetState.atlas || typeof targetState.atlas !== "object") {
+      targetState.atlas = freshAtlasState();
+    }
+    const entries = getAtlasEntries(targetState);
+    const validIds = new Set(entries.map((entry) => entry.id));
+    const archivedIds = new Set(
+      Array.isArray(targetState.atlas.discoveredIds)
+        ? targetState.atlas.discoveredIds.filter((id) => validIds.has(id))
+        : [],
+    );
+    entries.forEach((entry) => {
+      if (entry.discovered) archivedIds.add(entry.id);
+    });
+
+    const completedCompanionObservations = new Set(
+      (targetState.endgame?.companionObservations || []).flatMap((observation) => {
+        const companionId = observation.companionId
+          || getCompanionEvent(observation.eventId)?.companionId;
+        return companionId ? [companionId] : [];
+      }),
+    ).size;
+    const reachedDeepAtlasMilestone = (
+      targetState.atlas.claimedMilestones || []
+    ).some((count) => count >= 20);
+    if (
+      recoverLegacyCombat
+      && (targetState.endgame?.transcensions || 0) > 0
+      && (
+        completedCompanionObservations >= SINGULARITY_COMPANIONS.length
+        || reachedDeepAtlasMilestone
+      )
+    ) {
+      [...SKIRMISH_TARGETS, ...PLANET_TARGETS].forEach((target) => {
+        archivedIds.add(`enemy-${target.id}`);
+      });
+    }
+
+    targetState.atlas.discoveredIds = entries
+      .map((entry) => entry.id)
+      .filter((id) => archivedIds.has(id));
+    return targetState.atlas.discoveredIds;
   }
 
   function getAtlasDiscoveredCount(targetState = state) {
@@ -5597,6 +5660,7 @@
     state.endgame.companionSignals -= 1;
     state.endgame.companionObservations.push({
       eventId: companionEvent.id,
+      companionId: companion.id,
       choiceId: choice.id,
       completedAt: Date.now(),
     });
@@ -8905,6 +8969,7 @@
     try {
       const now = Date.now();
       refreshCareerRecords();
+      archiveAtlasDiscoveries();
       state.lastSeen = now;
       const serialized = JSON.stringify(state);
       const currentRaw = localStorage.getItem(SAVE_KEY);
@@ -9101,6 +9166,7 @@
           seenCompanionEvents.add(companionEvent.id);
           return [{
             eventId: companionEvent.id,
+            companionId: companionEvent.companionId,
             choiceId: choice.id,
             completedAt: Math.max(0, Number(observation.completedAt) || 0),
           }];
@@ -9393,6 +9459,9 @@
     const validAtlasMilestones = new Set(ATLAS_MILESTONES.map((entry) => entry.count));
     const validAtlasFilters = new Set(["all", "enemy", "boss", "artifact", "companion"]);
     merged.atlas = {
+      discoveredIds: Array.isArray(raw.atlas?.discoveredIds)
+        ? [...new Set(raw.atlas.discoveredIds.filter((id) => typeof id === "string"))]
+        : [],
       claimedMilestones: Array.isArray(raw.atlas?.claimedMilestones)
         ? [...new Set(raw.atlas.claimedMilestones.map((value) => Math.floor(Number(value) || 0)))]
             .filter((value) => validAtlasMilestones.has(value))
@@ -9610,6 +9679,10 @@
     merged.achievements = Array.isArray(raw.achievements)
       ? [...new Set(raw.achievements.filter((id) => validAchievementIds.has(id)))]
       : [];
+    archiveAtlasDiscoveries(merged, {
+      recoverLegacyCombat:
+        sourceVersion < 23 && !Array.isArray(raw.atlas?.discoveredIds),
+    });
     merged.log = Array.isArray(raw.log)
       ? raw.log
           .filter((entry) => entry && typeof entry.text === "string")
@@ -10251,6 +10324,7 @@
       cancelText: "继续当前周期",
       onConfirm: () => {
         refreshCareerRecords();
+        archiveAtlasDiscoveries();
         state.endgame.shards = Math.min(
           ENDGAME_RESOURCE_CAP,
           safeAdd(state.endgame.shards, gain),
@@ -14584,6 +14658,7 @@
   }
 
   function createCloudSaveSnapshot() {
+    archiveAtlasDiscoveries();
     const snapshot = JSON.parse(JSON.stringify(state));
     snapshot.lastSeen = Date.now();
     return snapshot;
@@ -15978,6 +16053,7 @@
         discovered: entries.filter((entry) => entry.discovered).length,
         total: entries.length,
         entries,
+        discoveredIds: state.atlas.discoveredIds,
         claimedMilestones: state.atlas.claimedMilestones,
         activeFilter: state.atlas.activeFilter,
       }));

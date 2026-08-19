@@ -60,7 +60,8 @@ const companions = readArray(
   "COMPANION_OBSERVATION_SIGNAL_CAP",
 );
 const companionEvents = readArray("COMPANION_EVENTS", "COMPANION_ECHOES");
-const companionEchoes = readArray("COMPANION_ECHOES", "ENDGAME_PROTOCOLS");
+const companionEchoes = readArray("COMPANION_ECHOES", "LONG_VOYAGES");
+const longVoyages = readArray("LONG_VOYAGES", "ENDGAME_PROTOCOLS");
 const expeditionRoutes = readArray("EXPEDITION_ROUTE_TYPES", "EXPEDITION_AFFIXES");
 const expeditionAffixes = readArray("EXPEDITION_AFFIXES", "EXPEDITION_BOONS");
 const expeditionBoons = readArray("EXPEDITION_BOONS", "EXPEDITION_GEAR");
@@ -90,8 +91,8 @@ const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
 assert.equal(
   readConstant("SAVE_VERSION"),
-  26,
-  "companion echoes need schema version 26",
+  27,
+  "border long voyages need schema version 27",
 );
 assert.match(source, /pinnedGoals:\s*\[\]/, "fresh saves need an empty tracked-goal list");
 assert.match(source, /lastJobId:\s*""/, "fresh saves need an empty last operation id");
@@ -162,6 +163,8 @@ assert.ok(
 assert.equal(companions.length, 8, "singularity collection needs eight companions");
 assert.equal(companionEvents.length, 8, "each companion needs one observation event");
 assert.equal(companionEchoes.length, 8, "each companion needs one follow-up echo");
+assert.equal(longVoyages.length, 3, "long voyages need three strategic routes");
+assert.equal(longVoyages.every((route) => route.stages.length === 4), true, "each long voyage needs four stages");
 assert.ok(
   companionEvents.every(
     (companionEvent) =>

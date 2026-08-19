@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.4.0";
-  const PATCH_NOTES_VERSION = "1.4.0";
-  const SAVE_VERSION = 26;
+  const GAME_VERSION = "1.5.0";
+  const PATCH_NOTES_VERSION = "1.5.0";
+  const SAVE_VERSION = 27;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.4.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.5.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.4.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.5.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.4.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.5.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.4.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.5.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.5.0",
+      theme: "边境长航",
+      changes: [
+        "远征页新增工业、守备与测绘三条四阶段长航路线，以既有生产、舰队、作业、战斗、远征和图鉴进度推进。",
+        "同一时间只执行一条长航，每阶段完成后手动提交航报并领取现有资源，最终留下纯收藏航线记录。",
+        "路线可重复航行，但不会提供永久倍率、新货币或额外一级页面；中途也不会阻断普通远征。",
+        "存档结构升级至第 27 版，旧存档自动补齐空白长航状态。",
+      ],
+    },
     {
       version: "1.4.0",
       theme: "伴星回声",
@@ -2573,6 +2583,44 @@
       { id: "tomorrow", label: "写下“明天也出航”", outcome: "月隙兔把句号改成小小的航标，然后消失在扫描线外。", rewards: { supplies: 5, materialsEach: 3 } },
     ] },
   ];
+  const LONG_VOYAGES = [
+    {
+      id: "industrial",
+      icon: "◎",
+      name: "灯火接力线",
+      motto: "让每一座设施都看见下一座航站的光。",
+      stages: [
+        { title: "备齐近轨船队", metric: "units", goal: 20, action: "fleet", reward: { materialsEach: 2, tokens: 4 } },
+        { title: "完成工程轮值", metric: "operations", goal: 40, action: "operations", reward: { supplies: 2, fragments: 8 } },
+        { title: "积累航线产出", metric: "dust", goal: 250000, action: "command", reward: { dustMinutes: 8, tokens: 5 } },
+        { title: "建立远端补给站", metric: "units", goal: 50, action: "fleet", reward: { materialsEach: 4, supplies: 3, fragments: 12 } },
+      ],
+    },
+    {
+      id: "guard",
+      icon: "⬡",
+      name: "静默守望线",
+      motto: "长航不只为了抵达，也为了让身后的人安睡。",
+      stages: [
+        { title: "完成边境清剿", metric: "wins", goal: 4, action: "combat", reward: { tokens: 5, materialsEach: 2 } },
+        { title: "强化联合战力", metric: "power", goal: 20, action: "combat", reward: { fragments: 10, supplies: 2 } },
+        { title: "守住一次来袭", metric: "raids", goal: 1, action: "combat", reward: { tokens: 6, materialsEach: 3 } },
+        { title: "护送边境船团", metric: "wins", goal: 8, action: "combat", reward: { supplies: 4, fragments: 14, tokens: 8 } },
+      ],
+    },
+    {
+      id: "survey",
+      icon: "◇",
+      name: "群星回信线",
+      motto: "把未知写成坐标，再把坐标带回有人等待的地方。",
+      stages: [
+        { title: "完成一次远征", metric: "expeditions", goal: 1, action: "expedition", reward: { fragments: 12, supplies: 2 } },
+        { title: "补全星海记录", metric: "atlas", goal: 3, action: "command", reward: { tokens: 6, materialsEach: 2 } },
+        { title: "击破机制首领", metric: "bossWins", goal: 1, action: "expedition", reward: { fragments: 16, supplies: 3 } },
+        { title: "完成双程测绘", metric: "expeditions", goal: 2, action: "expedition", reward: { tokens: 9, materialsEach: 3, fragments: 18 } },
+      ],
+    },
+  ];
   const ENDGAME_PROTOCOLS = [
     {
       id: "production",
@@ -3716,6 +3764,19 @@
     missionStore: $(".mission-store"),
     expeditionSupplyBalance: $("#expedition-supply-balance"),
     expeditionFragmentBalance: $("#expedition-fragment-balance"),
+    longVoyage: $("#long-voyage"),
+    longVoyageRecord: $("#long-voyage-record"),
+    longVoyageRoutes: $("#long-voyage-routes"),
+    longVoyageActive: $("#long-voyage-active"),
+    longVoyageIcon: $("#long-voyage-icon"),
+    longVoyageStageLabel: $("#long-voyage-stage-label"),
+    longVoyageStageTitle: $("#long-voyage-stage-title"),
+    longVoyageProgressLabel: $("#long-voyage-progress-label"),
+    longVoyageDescription: $("#long-voyage-description"),
+    longVoyageProgressBar: $("#long-voyage-progress-bar"),
+    longVoyageReport: $("#long-voyage-report"),
+    longVoyageGo: $("#long-voyage-go"),
+    longVoyageClaim: $("#long-voyage-claim"),
     anomalyHub: $("#anomaly-hub"),
     anomalyWeek: $("#anomaly-week"),
     anomalyOptions: $("#anomaly-options"),
@@ -3978,6 +4039,17 @@
     };
   }
 
+  function freshLongVoyageState() {
+    return {
+      activeRouteId: "",
+      stageIndex: 0,
+      baseline: {},
+      completedRoutes: [],
+      totalCompleted: 0,
+      lastReport: "选择一条长航路线，把现有系统串成四段持续目标。",
+    };
+  }
+
   function freshDutyState() {
     return {
       lastClaimKey: "",
@@ -4232,6 +4304,7 @@
       starfall: freshStarfallState(),
       fleetCommand: freshFleetCommandState(),
       expedition: freshExpeditionState(),
+      longVoyage: freshLongVoyageState(),
       operations: freshOperationsState(),
       guidance: freshGuidanceState(),
       duty: freshDutyState(),
@@ -8379,6 +8452,34 @@
     return clean;
   }
 
+  function sanitizeLongVoyageState(rawLongVoyage) {
+    const clean = freshLongVoyageState();
+    if (!rawLongVoyage || typeof rawLongVoyage !== "object") return clean;
+    const route = LONG_VOYAGES.find((entry) => entry.id === rawLongVoyage.activeRouteId);
+    clean.activeRouteId = route?.id || "";
+    clean.stageIndex = route
+      ? clamp(Math.floor(Number(rawLongVoyage.stageIndex) || 0), 0, route.stages.length - 1)
+      : 0;
+    const validMetrics = new Set(["units", "operations", "dust", "wins", "power", "raids", "expeditions", "atlas", "bossWins"]);
+    clean.baseline = Object.fromEntries(
+      Object.entries(
+        rawLongVoyage.baseline && typeof rawLongVoyage.baseline === "object"
+          ? rawLongVoyage.baseline
+          : {},
+      ).flatMap(([metric, value]) =>
+        validMetrics.has(metric) ? [[metric, clampGameNumber(value)]] : [],
+      ),
+    );
+    clean.completedRoutes = Array.isArray(rawLongVoyage.completedRoutes)
+      ? LONG_VOYAGES.flatMap((voyage) =>
+          rawLongVoyage.completedRoutes.includes(voyage.id) ? [voyage.id] : [],
+        )
+      : [];
+    clean.totalCompleted = clampGameCount(rawLongVoyage.totalCompleted);
+    clean.lastReport = String(rawLongVoyage.lastReport || clean.lastReport).slice(0, 200);
+    return clean;
+  }
+
   function ensureExpeditionRunChoices() {
     const run = state.expedition.activeRun;
     if (!run) return;
@@ -9601,6 +9702,7 @@
     merged.starfall = sanitizeStarfallState(raw.starfall);
     merged.fleetCommand = sanitizeFleetCommandState(raw.fleetCommand);
     merged.expedition = sanitizeExpeditionState(raw.expedition);
+    merged.longVoyage = sanitizeLongVoyageState(raw.longVoyage);
     const rawOperations =
       raw.operations && typeof raw.operations === "object"
         ? raw.operations
@@ -13826,8 +13928,130 @@
     }).join("");
   }
 
+  function getLongVoyageMetric(metric, targetState = state) {
+    if (metric === "units") return getTotalUnits(targetState);
+    if (metric === "operations") return targetState.operations?.totalActions || 0;
+    if (metric === "dust") return targetState.runDust || 0;
+    if (metric === "wins") return targetState.combat?.wins || 0;
+    if (metric === "power") {
+      return safeAdd(targetState.combat?.attackLevel || 0, targetState.combat?.defenseLevel || 0);
+    }
+    if (metric === "raids") return targetState.combat?.raidsSurvived || 0;
+    if (metric === "expeditions") return targetState.expedition?.completedRuns || 0;
+    if (metric === "atlas") {
+      return getAtlasEntries(targetState).filter((entry) => entry.discovered).length;
+    }
+    if (metric === "bossWins") return getTotalBossWins(targetState);
+    return 0;
+  }
+
+  function createLongVoyageBaseline() {
+    return Object.fromEntries(
+      ["units", "operations", "dust", "wins", "power", "raids", "expeditions", "atlas", "bossWins"]
+        .map((metric) => [
+          metric,
+          ["atlas", "bossWins"].includes(metric) ? 0 : getLongVoyageMetric(metric),
+        ]),
+    );
+  }
+
+  function getActiveLongVoyage() {
+    return LONG_VOYAGES.find((route) => route.id === state.longVoyage.activeRouteId) || null;
+  }
+
+  function getLongVoyageStageProgress(route = getActiveLongVoyage()) {
+    const stage = route?.stages[state.longVoyage.stageIndex];
+    if (!stage) return { stage: null, current: 0, goal: 1, ready: false };
+    const baseline = Number(state.longVoyage.baseline[stage.metric]) || 0;
+    const current = Math.max(0, getLongVoyageMetric(stage.metric) - baseline);
+    return {
+      stage,
+      current: Math.min(stage.goal, current),
+      goal: stage.goal,
+      ready: current >= stage.goal,
+    };
+  }
+
+  function startLongVoyage(routeId) {
+    if (state.lifetimeDust < EXPEDITION_UNLOCK_DUST || getActiveLongVoyage()) return;
+    const route = LONG_VOYAGES.find((entry) => entry.id === routeId);
+    if (!route) return;
+    state.longVoyage.activeRouteId = route.id;
+    state.longVoyage.stageIndex = 0;
+    state.longVoyage.baseline = createLongVoyageBaseline();
+    state.longVoyage.lastReport = `${route.name}已经启航，第一份阶段目标已送达。`;
+    addLog(`边境长航启程：${route.name}。`);
+    showToast("边境长航已启程", route.motto, route.icon);
+    renderLongVoyage();
+    saveGame();
+  }
+
+  function claimLongVoyageStage() {
+    const route = getActiveLongVoyage();
+    const progress = getLongVoyageStageProgress(route);
+    if (!route || !progress.stage || !progress.ready) return;
+    grantCompanionRewards(progress.stage.reward);
+    const finalStage = state.longVoyage.stageIndex >= route.stages.length - 1;
+    if (finalStage) {
+      if (!state.longVoyage.completedRoutes.includes(route.id)) {
+        state.longVoyage.completedRoutes.push(route.id);
+      }
+      state.longVoyage.totalCompleted = clampGameCount(state.longVoyage.totalCompleted + 1);
+      state.longVoyage.lastReport = `${route.name}完成：航线已经写入边境长航档案。`;
+      addLog(`边境长航完成：${route.name}。`);
+      showToast("长航完成", `${route.name}已归档 · ${formatCompanionRewards(progress.stage.reward)}`, route.icon);
+      state.longVoyage.activeRouteId = "";
+      state.longVoyage.stageIndex = 0;
+      state.longVoyage.baseline = {};
+    } else {
+      state.longVoyage.stageIndex += 1;
+      state.longVoyage.baseline = createLongVoyageBaseline();
+      const nextStage = route.stages[state.longVoyage.stageIndex];
+      state.longVoyage.lastReport = `航报已提交，下一阶段：${nextStage.title}。`;
+      showToast("阶段航报已提交", `${formatCompanionRewards(progress.stage.reward)} · 下一阶段：${nextStage.title}`, route.icon);
+    }
+    playAchievementTone();
+    renderLongVoyage();
+    updateUi();
+    saveGame(false, { forceBackup: finalStage });
+  }
+
+  function renderLongVoyage() {
+    const unlocked = state.lifetimeDust >= EXPEDITION_UNLOCK_DUST
+      || state.longVoyage.totalCompleted > 0
+      || Boolean(getActiveLongVoyage());
+    elements.longVoyage.hidden = !unlocked;
+    if (!unlocked) return;
+    const active = getActiveLongVoyage();
+    elements.longVoyageRecord.textContent = `航线记录 ${state.longVoyage.completedRoutes.length} / ${LONG_VOYAGES.length} · 完成长航 ${formatNumber(state.longVoyage.totalCompleted, 0)} 次`;
+    elements.longVoyageRoutes.hidden = Boolean(active);
+    elements.longVoyageRoutes.innerHTML = LONG_VOYAGES.map((route) => {
+      const archived = state.longVoyage.completedRoutes.includes(route.id);
+      const finalReward = route.stages[route.stages.length - 1].reward;
+      return `<article class="long-voyage-route${archived ? " archived" : ""}"><span>${route.icon}</span><div><small>${archived ? "航线已归档 · 可再次航行" : "四阶段长航"}</small><strong>${route.name}</strong><p>${route.motto}</p><em>最终航报 · ${formatCompanionRewards(finalReward)}</em></div><button type="button" data-long-voyage-start="${route.id}" ${active ? "disabled" : ""}>${archived ? "再次启航" : "选择航线"}</button></article>`;
+    }).join("");
+    elements.longVoyageActive.hidden = !active;
+    if (!active) return;
+    const progress = getLongVoyageStageProgress(active);
+    elements.longVoyageIcon.textContent = active.icon;
+    elements.longVoyageStageLabel.textContent = `${active.name} · 航段 ${state.longVoyage.stageIndex + 1} / ${active.stages.length}`;
+    elements.longVoyageStageTitle.textContent = progress.stage.title;
+    elements.longVoyageProgressLabel.textContent = `${formatNumber(progress.current, 0)} / ${formatNumber(progress.goal, 0)}`;
+    elements.longVoyageDescription.textContent = `${active.motto} 当前阶段奖励：${formatCompanionRewards(progress.stage.reward)}。`;
+    elements.longVoyageProgressBar.style.width = `${clamp(progress.current / Math.max(1, progress.goal), 0, 1) * 100}%`;
+    elements.longVoyageReport.textContent = state.longVoyage.lastReport;
+    elements.longVoyageGo.dataset.guideAction = progress.stage.action;
+    elements.longVoyageClaim.disabled = !progress.ready;
+    elements.longVoyageClaim.textContent = progress.ready
+      ? state.longVoyage.stageIndex === active.stages.length - 1
+        ? "完成长航并归档"
+        : "提交阶段航报"
+      : "完成后提交航报";
+  }
+
   function renderExpedition() {
     applyExpeditionSkin();
+    renderLongVoyage();
     renderAnomalies();
     ensureExpeditionRunChoices();
     const unlocked = state.lifetimeDust >= EXPEDITION_UNLOCK_DUST;
@@ -16412,6 +16636,14 @@
       const button = event.target.closest("[data-expedition-gear]");
       if (button) toggleExpeditionGear(button.dataset.expeditionGear);
     });
+    elements.longVoyageRoutes.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-long-voyage-start]");
+      if (button) startLongVoyage(button.dataset.longVoyageStart);
+    });
+    elements.longVoyageGo.addEventListener("click", () => {
+      performGuidanceAction(elements.longVoyageGo.dataset.guideAction);
+    });
+    elements.longVoyageClaim.addEventListener("click", claimLongVoyageStage);
     elements.startExpeditionButton.addEventListener("click", startExpedition);
     elements.anomalyOptions.addEventListener("click", (event) => {
       const button = event.target.closest("[data-anomaly]");
@@ -16871,6 +17103,12 @@
           (observation) => observation.companionId === echo.companionId,
         ),
       })),
+    })),
+    getLongVoyageDiagnostics: () => JSON.parse(JSON.stringify({
+      state: state.longVoyage,
+      routes: LONG_VOYAGES,
+      active: getActiveLongVoyage(),
+      progress: getLongVoyageStageProgress(),
     })),
     getExpeditionDiagnostics: () => JSON.parse(JSON.stringify({
       supplies: state.expedition.supplies,

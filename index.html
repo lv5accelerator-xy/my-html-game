@@ -11,16 +11,16 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="1.4.0" />
-    <meta name="stellar-release-title" content="伴星回声" />
-    <title>星港拾荒者 v1.4 · 伴星回声</title>
-    <link rel="stylesheet" href="styles.css?v=1.4.0" />
+    <meta name="stellar-game-version" content="1.5.0" />
+    <meta name="stellar-release-title" content="边境长航" />
+    <title>星港拾荒者 v1.5 · 边境长航</title>
+    <link rel="stylesheet" href="styles.css?v=1.5.0" />
   </head>
   <body>
     <a class="skip-link" href="#command-page">跳到游戏内容</a>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=1.4.0"
+      src="assets/outpost-beyond-orion.mp3?v=1.5.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -1243,6 +1243,35 @@
             </div>
           </div>
 
+          <section id="long-voyage" class="long-voyage" aria-labelledby="long-voyage-title" hidden>
+            <header>
+              <span aria-hidden="true">⌁</span>
+              <div>
+                <small>v1.5.0 · 四阶段长期航线</small>
+                <h3 id="long-voyage-title">边境长航</h3>
+                <p>一次只执行一条路线；普通远征、轮回和其他玩法仍可照常进行。</p>
+              </div>
+              <strong id="long-voyage-record">航线记录 0 / 3</strong>
+            </header>
+            <div id="long-voyage-routes" class="long-voyage-routes"></div>
+            <article id="long-voyage-active" class="long-voyage-active" hidden>
+              <header>
+                <span id="long-voyage-icon" aria-hidden="true">◇</span>
+                <div><small id="long-voyage-stage-label">航段 1 / 4</small><strong id="long-voyage-stage-title">等待启航</strong></div>
+                <b id="long-voyage-progress-label">0 / 1</b>
+              </header>
+              <p id="long-voyage-description"></p>
+              <div class="long-voyage-progress" aria-hidden="true"><span id="long-voyage-progress-bar"></span></div>
+              <footer>
+                <span id="long-voyage-report">尚未提交航报。</span>
+                <div>
+                  <button id="long-voyage-go" class="secondary-button" type="button">前往目标</button>
+                  <button id="long-voyage-claim" type="button" disabled>完成后提交航报</button>
+                </div>
+              </footer>
+            </article>
+          </section>
+
           <section id="anomaly-hub" class="anomaly-hub" aria-labelledby="anomaly-title" hidden>
             <header>
               <span class="anomaly-heading-icon" aria-hidden="true">◈</span>
@@ -2008,7 +2037,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v1.4.0 · 伴星回声</span>
+        <span>航站协议 v1.5.0 · 边境长航</span>
       </footer>
     </div>
 
@@ -2060,7 +2089,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v1.4.0</strong>
+          <strong id="patch-notes-current-version">v1.5.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2371,9 +2400,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.4.0"></script>
-    <script src="game.js?v=1.4.0"></script>
-    <script src="firebase-config.js?v=1.4.0"></script>
-    <script type="module" src="cloud-save.js?v=1.4.0"></script>
+    <script src="game-math.js?v=1.5.0"></script>
+    <script src="game.js?v=1.5.0"></script>
+    <script src="firebase-config.js?v=1.5.0"></script>
+    <script type="module" src="cloud-save.js?v=1.5.0"></script>
   </body>
 </html>

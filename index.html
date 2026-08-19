@@ -11,16 +11,16 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="1.2.0" />
-    <meta name="stellar-release-title" content="航站减负" />
-    <title>星港拾荒者 v1.2 · 航站减负</title>
-    <link rel="stylesheet" href="styles.css?v=1.2.0" />
+    <meta name="stellar-game-version" content="1.3.0" />
+    <meta name="stellar-release-title" content="跃迁重建" />
+    <title>星港拾荒者 v1.3 · 跃迁重建</title>
+    <link rel="stylesheet" href="styles.css?v=1.3.0" />
   </head>
   <body>
     <a class="skip-link" href="#command-page">跳到游戏内容</a>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=1.2.0"
+      src="assets/outpost-beyond-orion.mp3?v=1.3.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -703,6 +703,25 @@
               <small id="prestige-gain">+0 星核</small>
             </button>
           </div>
+          <details id="rebuild-hub" class="rebuild-hub">
+            <summary>
+              <span aria-hidden="true">↻</span>
+              <div>
+                <small>v1.3.0 · 不改变费用与解锁条件</small>
+                <strong>跃迁重建方案</strong>
+                <p id="rebuild-summary">记录当前舰队与研究，下一轮按原价逐项恢复。</p>
+              </div>
+              <b id="rebuild-status">尚未记录</b>
+            </summary>
+            <div class="rebuild-content">
+              <p>每秒最多自动购买一项；星尘不足时会安静等待，不会免费生成设施或研究。</p>
+              <div id="rebuild-plan-list" class="rebuild-plan-list"></div>
+              <div class="rebuild-controls">
+                <button id="rebuild-toggle" class="secondary-button" type="button" disabled>启用自动重建</button>
+                <span id="rebuild-report">请选择一个已记录方案。</span>
+              </div>
+            </div>
+          </details>
           <section id="doctrine-hub" class="doctrine-hub" aria-labelledby="doctrine-title" hidden>
             <header>
               <span class="doctrine-heading-icon" aria-hidden="true">◒</span>
@@ -1978,7 +1997,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v1.2.0 · 航站减负</span>
+        <span>航站协议 v1.3.0 · 跃迁重建</span>
       </footer>
     </div>
 
@@ -2030,7 +2049,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v1.2.0</strong>
+          <strong id="patch-notes-current-version">v1.3.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2341,9 +2360,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.2.0"></script>
-    <script src="game.js?v=1.2.0"></script>
-    <script src="firebase-config.js?v=1.2.0"></script>
-    <script type="module" src="cloud-save.js?v=1.2.0"></script>
+    <script src="game-math.js?v=1.3.0"></script>
+    <script src="game.js?v=1.3.0"></script>
+    <script src="firebase-config.js?v=1.3.0"></script>
+    <script type="module" src="cloud-save.js?v=1.3.0"></script>
   </body>
 </html>

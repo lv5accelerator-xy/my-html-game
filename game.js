@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.2.0";
-  const PATCH_NOTES_VERSION = "1.2.0";
-  const SAVE_VERSION = 24;
+  const GAME_VERSION = "1.3.0";
+  const PATCH_NOTES_VERSION = "1.3.0";
+  const SAVE_VERSION = 25;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.2.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.3.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.2.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.3.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.2.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.3.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.2.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.3.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.3.0",
+      theme: "跃迁重建",
+      changes: [
+        "新增三套重建方案，可记录当前舰队设施数量和研究顺序，并指定下一次跃迁后自动执行。",
+        "自动重建每秒最多完成一项设施或研究购买，始终使用正常费用、解锁条件与星尘库存，不提供免费产量。",
+        "方案可随时覆盖、启用或暂停；奇点超越后仍保留方案，但不会改变星核、学说与其他轮回规则。",
+        "重建状态直接放在深空跃迁区域，不新增一级页面、货币或倍率。",
+        "存档结构升级至第 25 版，旧存档自动获得三个空白方案。",
+      ],
+    },
     {
       version: "1.2.0",
       theme: "航站减负",
@@ -3328,6 +3339,12 @@
     prestigeDescription: $("#prestige-description"),
     prestigeButton: $("#prestige-button"),
     prestigeGain: $("#prestige-gain"),
+    rebuildHub: $("#rebuild-hub"),
+    rebuildSummary: $("#rebuild-summary"),
+    rebuildStatus: $("#rebuild-status"),
+    rebuildPlanList: $("#rebuild-plan-list"),
+    rebuildToggle: $("#rebuild-toggle"),
+    rebuildReport: $("#rebuild-report"),
     doctrineHub: $("#doctrine-hub"),
     doctrineSummary: $("#doctrine-summary"),
     doctrineStatus: $("#doctrine-status"),
@@ -4020,6 +4037,65 @@
     };
   }
 
+  function freshRebuildState() {
+    return {
+      plans: [1, 2, 3].map((number) => ({
+        id: `slot-${number}`,
+        name: `方案 ${number}`,
+        buildingTargets: {},
+        upgradeOrder: [],
+        savedAt: 0,
+      })),
+      activePlanId: "",
+      autoEnabled: true,
+      rebuilding: false,
+      purchases: 0,
+      lastActionAt: 0,
+      lastReport: "记录当前舰队与研究后，可在下次跃迁自动重建。",
+    };
+  }
+
+  function sanitizeRebuildState(rawRebuild) {
+    const base = freshRebuildState();
+    const source = rawRebuild && typeof rawRebuild === "object" ? rawRebuild : {};
+    const sourcePlans = Array.isArray(source.plans) ? source.plans : [];
+    base.plans = base.plans.map((plan) => {
+      const saved = sourcePlans.find((entry) => entry?.id === plan.id) || {};
+      const buildingTargets = {};
+      BUILDINGS.forEach((building) => {
+        const amount = Math.min(5000, clampGameCount(saved.buildingTargets?.[building.id]));
+        if (amount > 0) buildingTargets[building.id] = amount;
+      });
+      const seenUpgrades = new Set();
+      const upgradeOrder = Array.isArray(saved.upgradeOrder)
+        ? saved.upgradeOrder.flatMap((id) => {
+            if (
+              typeof id !== "string"
+              || seenUpgrades.has(id)
+              || !UPGRADES.some((upgrade) => upgrade.id === id)
+            ) return [];
+            seenUpgrades.add(id);
+            return [id];
+          })
+        : [];
+      return {
+        ...plan,
+        buildingTargets,
+        upgradeOrder,
+        savedAt: Math.max(0, Number(saved.savedAt) || 0),
+      };
+    });
+    base.activePlanId = base.plans.some(
+      (plan) => plan.id === source.activePlanId && plan.savedAt > 0,
+    ) ? source.activePlanId : "";
+    base.autoEnabled = source.autoEnabled !== false;
+    base.rebuilding = source.rebuilding === true && Boolean(base.activePlanId);
+    base.purchases = clampGameCount(source.purchases);
+    base.lastActionAt = Math.max(0, Number(source.lastActionAt) || 0);
+    base.lastReport = String(source.lastReport || base.lastReport).slice(0, 180);
+    return base;
+  }
+
   function freshStarportState() {
     const materials = {};
     const modules = {};
@@ -4121,6 +4197,7 @@
       bossTrial: freshBossTrialState(),
       borderEcho: freshBorderEchoState(),
       communityBeacon: freshCommunityBeaconState(),
+      rebuild: freshRebuildState(),
       log: [
         {
           text: "拾荒单元 07 已上线。等待首条回收指令。",
@@ -9368,7 +9445,8 @@
       merged.crescentSecret.unlocked = true;
     }
     merged.rebirths = clampGameCount(raw.rebirths);
-    merged.playerName = normalizePlayerName(raw.playerName);
+    merged.rebuild = sanitizeRebuildState(raw.rebuild);
+    merged.playerName = normalizePlayerName(raw.playerName) || base.playerName;
     merged.activePage = PRIMARY_PAGES.includes(raw.activePage)
       ? raw.activePage
       : base.activePage;
@@ -10333,6 +10411,160 @@
     });
   }
 
+  function getActiveRebuildPlan() {
+    return state.rebuild.plans.find(
+      (plan) => plan.id === state.rebuild.activePlanId && plan.savedAt > 0,
+    ) || null;
+  }
+
+  function getRebuildPlanProgress(plan) {
+    if (!plan?.savedAt) return { complete: 0, total: 0, done: true };
+    const buildingEntries = Object.entries(plan.buildingTargets);
+    const completedBuildings = buildingEntries.reduce(
+      (total, [id, target]) => total + Math.min(target, state.buildings[id] || 0),
+      0,
+    );
+    const targetBuildings = buildingEntries.reduce((total, [, target]) => total + target, 0);
+    const completedUpgrades = plan.upgradeOrder.filter((id) => hasUpgrade(id)).length;
+    const total = targetBuildings + plan.upgradeOrder.length;
+    const complete = completedBuildings + completedUpgrades;
+    return { complete, total, done: complete >= total };
+  }
+
+  function captureRebuildPlan(planId) {
+    const plan = state.rebuild.plans.find((entry) => entry.id === planId);
+    if (!plan) return;
+    plan.buildingTargets = Object.fromEntries(
+      BUILDINGS.flatMap((building) => {
+        const amount = Math.min(5000, clampGameCount(state.buildings[building.id]));
+        return amount > 0 ? [[building.id, amount]] : [];
+      }),
+    );
+    plan.upgradeOrder = state.upgrades.filter((id) =>
+      UPGRADES.some((upgrade) => upgrade.id === id),
+    );
+    plan.savedAt = Date.now();
+    if (!state.rebuild.activePlanId) state.rebuild.activePlanId = plan.id;
+    state.rebuild.lastReport = `${plan.name}已记录：${formatNumber(
+      Object.values(plan.buildingTargets).reduce((total, amount) => total + amount, 0),
+      0,
+    )} 座设施、${plan.upgradeOrder.length} 项研究。`;
+    addLog(`跃迁重建已记录${plan.name}。`);
+    renderRebuild();
+    saveGame();
+  }
+
+  function activateRebuildPlan(planId) {
+    const plan = state.rebuild.plans.find(
+      (entry) => entry.id === planId && entry.savedAt > 0,
+    );
+    if (!plan) return;
+    state.rebuild.activePlanId = plan.id;
+    const progress = getRebuildPlanProgress(plan);
+    state.rebuild.rebuilding = !progress.done;
+    state.rebuild.lastReport = progress.done
+      ? `${plan.name}已达到目标；下次跃迁后会自动开始。`
+      : `${plan.name}已启用，正在等待可购买项目。`;
+    renderRebuild();
+    saveGame();
+  }
+
+  function toggleRebuildAutomation() {
+    if (!getActiveRebuildPlan()) return;
+    state.rebuild.autoEnabled = !state.rebuild.autoEnabled;
+    state.rebuild.rebuilding = state.rebuild.autoEnabled
+      && !getRebuildPlanProgress(getActiveRebuildPlan()).done;
+    state.rebuild.lastReport = state.rebuild.autoEnabled
+      ? "自动重建已启用；星尘充足时每秒处理一项。"
+      : "自动重建已暂停，方案仍会保留。";
+    renderRebuild();
+    saveGame();
+  }
+
+  function processRebuild(now = Date.now()) {
+    const plan = getActiveRebuildPlan();
+    if (
+      !plan
+      || !state.rebuild.autoEnabled
+      || !state.rebuild.rebuilding
+      || now - state.rebuild.lastActionAt < 1000
+    ) return;
+    state.rebuild.lastActionAt = now;
+
+    const building = BUILDINGS.find((entry) => {
+      const target = plan.buildingTargets[entry.id] || 0;
+      if ((state.buildings[entry.id] || 0) >= target) return false;
+      const cost = buildingCost(entry, state.buildings[entry.id] || 0, 1);
+      return state.lifetimeDust >= entry.unlock && cost <= state.dust + 1e-9;
+    });
+    if (building) {
+      const cost = buildingCost(building, state.buildings[building.id] || 0, 1);
+      state.dust = clampGameNumber(state.dust - cost);
+      state.buildings[building.id] = clampGameCount((state.buildings[building.id] || 0) + 1);
+      state.rebuild.purchases = clampGameCount(state.rebuild.purchases + 1);
+      recordMissionProgress("dustSpent", cost);
+      recordMissionProgress("unitsBought", 1);
+      state.rebuild.lastReport = `自动扩建：${building.name} ${state.buildings[building.id]} / ${plan.buildingTargets[building.id]}`;
+      if (state.activePage === "fleet") renderBuildings();
+    } else {
+      const upgrade = plan.upgradeOrder
+        .map((id) => UPGRADES.find((entry) => entry.id === id))
+        .find((entry) => entry
+          && !hasUpgrade(entry.id)
+          && isUpgradePathAvailable(entry)
+          && state.lifetimeDust >= entry.unlock
+          && state.dust >= entry.cost);
+      if (upgrade) {
+        state.dust = clampGameNumber(state.dust - upgrade.cost);
+        state.upgrades.push(upgrade.id);
+        state.rebuild.purchases = clampGameCount(state.rebuild.purchases + 1);
+        recordMissionProgress("dustSpent", upgrade.cost);
+        recordMissionProgress("researchCompleted", 1);
+        state.rebuild.lastReport = `自动研究：${upgrade.name}`;
+        if (state.activePage === "research") renderUpgrades();
+      }
+    }
+
+    const progress = getRebuildPlanProgress(plan);
+    if (progress.done) {
+      state.rebuild.rebuilding = false;
+      state.rebuild.lastReport = `${plan.name}已完成，本轮自动重建停止。`;
+      addLog(`跃迁重建完成：${plan.name}。`);
+      showToast("跃迁重建完成", `${plan.name}已恢复全部记录项目。`, "↻");
+    }
+    if (state.activePage === "command") renderRebuild();
+  }
+
+  function renderRebuild() {
+    const active = getActiveRebuildPlan();
+    elements.rebuildPlanList.innerHTML = state.rebuild.plans.map((plan) => {
+      const saved = plan.savedAt > 0;
+      const unitTotal = Object.values(plan.buildingTargets).reduce(
+        (total, amount) => total + amount,
+        0,
+      );
+      const progress = getRebuildPlanProgress(plan);
+      const isActive = active?.id === plan.id;
+      return `<article class="rebuild-plan${isActive ? " active" : ""}">
+        <div><small>${isActive ? "当前方案" : saved ? "已记录" : "空白方案"}</small><strong>${plan.name}</strong><span>${saved ? `${formatNumber(unitTotal, 0)} 座设施 · ${plan.upgradeOrder.length} 项研究` : "记录当前舰队与研究"}</span></div>
+        <em>${saved ? `${formatNumber(progress.complete, 0)} / ${formatNumber(progress.total, 0)}` : "—"}</em>
+        <button type="button" class="secondary-button" data-rebuild-save="${plan.id}">${saved ? "覆盖记录" : "记录当前"}</button>
+        <button type="button" data-rebuild-activate="${plan.id}" ${saved && !isActive ? "" : "disabled"}>${isActive ? "已启用" : "使用方案"}</button>
+      </article>`;
+    }).join("");
+    elements.rebuildToggle.disabled = !active;
+    elements.rebuildToggle.textContent = state.rebuild.autoEnabled ? "暂停自动重建" : "启用自动重建";
+    elements.rebuildStatus.textContent = !active
+      ? "尚未记录"
+      : state.rebuild.rebuilding && state.rebuild.autoEnabled
+        ? "正在重建"
+        : "方案待命";
+    elements.rebuildSummary.textContent = active
+      ? `${active.name} · ${getRebuildPlanProgress(active).complete} / ${getRebuildPlanProgress(active).total} 项`
+      : "记录当前舰队与研究，下一轮按原价逐项恢复。";
+    elements.rebuildReport.textContent = state.rebuild.lastReport;
+  }
+
   function prestige() {
     const gain = getPrestigeGain();
     if (gain < 1) return;
@@ -10369,6 +10601,10 @@
         BUILDINGS.forEach((building) => {
           state.buildings[building.id] = 0;
         });
+        state.rebuild.rebuilding = Boolean(getActiveRebuildPlan()) && state.rebuild.autoEnabled;
+        state.rebuild.lastReport = state.rebuild.rebuilding
+          ? "跃迁完成，自动重建已开始。"
+          : state.rebuild.lastReport;
         state.event = null;
         state.buff = null;
         state.nextEventAt = Date.now() + randomBetween(30000, 50000);
@@ -10518,6 +10754,10 @@
         BUILDINGS.forEach((building) => {
           state.buildings[building.id] = 0;
         });
+        state.rebuild.rebuilding = Boolean(getActiveRebuildPlan()) && state.rebuild.autoEnabled;
+        state.rebuild.lastReport = state.rebuild.rebuilding
+          ? "奇点超越完成，自动重建已开始。"
+          : state.rebuild.lastReport;
         if (state.expedition.activeRun) {
           const rescuedCargo = bankExpeditionCargo(0.5);
           state.expedition.failedRuns = clampGameCount(
@@ -14928,6 +15168,7 @@
         renderJourney();
         renderAtlas();
         renderDoctrine();
+        renderRebuild();
         renderStatBreakdown();
         break;
       default:
@@ -15966,6 +16207,13 @@
       if (button) purchaseMissionStoreItem(button.dataset.missionStore);
     });
     elements.prestigeButton.addEventListener("click", prestige);
+    elements.rebuildPlanList.addEventListener("click", (event) => {
+      const saveButton = event.target.closest("[data-rebuild-save]");
+      const activateButton = event.target.closest("[data-rebuild-activate]");
+      if (saveButton) captureRebuildPlan(saveButton.dataset.rebuildSave);
+      else if (activateButton) activateRebuildPlan(activateButton.dataset.rebuildActivate);
+    });
+    elements.rebuildToggle.addEventListener("click", toggleRebuildAutomation);
     elements.doctrineOptions.addEventListener("click", (event) => {
       const button = event.target.closest("[data-doctrine]");
       if (button) chooseDoctrine(button.dataset.doctrine);
@@ -16292,6 +16540,7 @@
     const rate = calculateRate();
     if (rate > 0) addDust(safeMultiply(rate, delta));
     if (delta > 0) processOperations(delta);
+    processRebuild(wallNow);
     state.playTime = safeAdd(state.playTime, delta);
     recordMissionProgress("playSeconds", delta);
 
@@ -16453,6 +16702,11 @@
       claimedMilestones: state.communityBeacon.claimedMilestones,
       milestones: COMMUNITY_BEACON_MILESTONES,
       target: COMMUNITY_BEACON_TARGET,
+    })),
+    getRebuildDiagnostics: () => JSON.parse(JSON.stringify({
+      state: state.rebuild,
+      activePlan: getActiveRebuildPlan(),
+      progress: getRebuildPlanProgress(getActiveRebuildPlan()),
     })),
     getExpeditionDiagnostics: () => JSON.parse(JSON.stringify({
       supplies: state.expedition.supplies,

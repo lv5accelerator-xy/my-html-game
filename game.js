@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.3.0";
-  const PATCH_NOTES_VERSION = "1.3.0";
-  const SAVE_VERSION = 25;
+  const GAME_VERSION = "1.4.0";
+  const PATCH_NOTES_VERSION = "1.4.0";
+  const SAVE_VERSION = 26;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.3.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.4.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.3.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.4.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.3.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.4.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.3.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.4.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.4.0",
+      theme: "伴星回声",
+      changes: [
+        "八只伴星各新增一段观测后的回声故事，使用回收、舰队、战斗、远征、作业与图鉴等既有进度解锁。",
+        "每段回声提供两种叙事选择与一次性现有资源奖励，选择永久写入日志但不增加数值倍率。",
+        "回声条件会直接说明下一步目标，完成普通伴星观测后才会出现，避免给新玩家增加首屏负担。",
+        "存档结构升级至第 26 版，旧存档自动补齐空白回声档案。",
+      ],
+    },
     {
       version: "1.3.0",
       theme: "跃迁重建",
@@ -2529,6 +2539,40 @@
       ],
     },
   ];
+  const COMPANION_ECHOES = [
+    { id: "dustMothTrail", companionId: "dustMoth", title: "留在手套上的微光", condition: "clicks", goal: 100, conditionText: "累计手动回收 100 次", description: "尘光蛾把一粒翅粉留在你的回收手套上。它只在你亲自靠近信标时发亮。", choices: [
+      { id: "keep", label: "保留这点微光", outcome: "你把它收进透明匣，作为第一次亲手抵达的证明。", rewards: { tokens: 6, fragments: 8 } },
+      { id: "guide", label: "让它照亮航标", outcome: "微光沿信标散开，为返航艇标出一条温柔的路径。", rewards: { supplies: 3, materialsEach: 1 } },
+    ] },
+    { id: "prismJellyArchive", companionId: "prismJelly", title: "颜色之外的坐标", condition: "atlas", goal: 12, conditionText: "星海图鉴发现 12 项", description: "棱镜水母把十二条档案折成同一道光，那里藏着一个没有名称的坐标。", choices: [
+      { id: "name", label: "为坐标命名", outcome: "档案里多了一行属于你的航路名。", rewards: { tokens: 8, fragments: 12 } },
+      { id: "open", label: "留给后来的人", outcome: "坐标保持空白，却成为所有人都能读懂的返航点。", rewards: { supplies: 3, materialsEach: 2 } },
+    ] },
+    { id: "riftRayReturn", companionId: "riftRay", title: "潮汐送回的箱子", condition: "expeditions", goal: 3, conditionText: "完成 3 次星区远征", description: "第三次远征归来时，裂隙鳐从潮汐里推回一个属于第一航次的旧货箱。", choices: [
+      { id: "open", label: "现在打开", outcome: "箱中没有奇迹，只有恰好够下一次出航的补给。", rewards: { supplies: 5, fragments: 10 } },
+      { id: "seal", label: "封存第一航次", outcome: "旧货箱成为远征档案最沉默的一页。", rewards: { tokens: 10, materialsEach: 1 } },
+    ] },
+    { id: "orbitFoxParade", companionId: "orbitFox", title: "一百道尾迹", condition: "units", goal: 100, conditionText: "拥有 100 座舰队设施", description: "环轨狐绕过整支舰队，一百道尾迹短暂拼成一座会呼吸的星港。", choices: [
+      { id: "salute", label: "让舰队鸣灯致意", outcome: "整条轨道同时亮起，又安静地回到各自岗位。", rewards: { dustMinutes: 12, tokens: 6 } },
+      { id: "sketch", label: "画下这座星港", outcome: "工程师从尾迹草图里辨认出几组可用构件。", rewards: { materialsEach: 3, fragments: 8 } },
+    ] },
+    { id: "echoWhaleHarbor", companionId: "echoWhale", title: "第三次归港的歌", condition: "rebirths", goal: 3, conditionText: "完成 3 次深空跃迁", description: "回声幼鲸唱起三段相似的旋律，每一段都记得你曾离开，也记得你回来。", choices: [
+      { id: "answer", label: "用航站钟回应", outcome: "第四段旋律由航站完成，像一封无需文字的回信。", rewards: { tokens: 9, supplies: 3 } },
+      { id: "listen", label: "听到最后", outcome: "歌声结束后，仓库收到一份跨周期补给坐标。", rewards: { fragments: 16, materialsEach: 2 } },
+    ] },
+    { id: "voidCatShift", companionId: "voidCat", title: "第一百次作业之后", condition: "operations", goal: 100, conditionText: "完成 100 次航站作业", description: "第一百次作业结束，虚空猫终于把占了很久的维护节点让出半个位置。", choices: [
+      { id: "sit", label: "坐在它旁边", outcome: "你们一起看着工具缓慢漂浮，什么也没有耽误。", rewards: { tokens: 8, dustMinutes: 10 } },
+      { id: "repair", label: "完成迟到的检修", outcome: "维护箱底还躺着一批被忘记的建材。", rewards: { materialsEach: 3, supplies: 2 } },
+    ] },
+    { id: "novaFinchFormation", companionId: "novaFinch", title: "胜利之后的低温焰火", condition: "wins", goal: 20, conditionText: "赢得 20 场战斗", description: "第二十场胜利后，新星雀没有飞向敌舰，只在归航编队上方撒下一场不会灼伤人的焰火。", choices: [
+      { id: "parade", label: "保持归航编队", outcome: "舰队第一次把胜利当作回家的理由，而不是继续出击的命令。", rewards: { tokens: 10, supplies: 3 } },
+      { id: "gather", label: "收集低温火花", outcome: "火花冷却成一批可安全使用的星港材料。", rewards: { materialsEach: 4, fragments: 8 } },
+    ] },
+    { id: "moonHareWindow", companionId: "moonHare", title: "八个窗口同时亮起", condition: "observations", goal: 8, conditionText: "完成全部 8 段伴星观测", description: "当八份观测记录同时点亮，月隙兔在窗外留下一个只够写一句话的位置。", choices: [
+      { id: "thanks", label: "写下“谢谢你们来过”", outcome: "八道轨迹在窗外停了一瞬，像是都读懂了。", rewards: { tokens: 12, fragments: 18 } },
+      { id: "tomorrow", label: "写下“明天也出航”", outcome: "月隙兔把句号改成小小的航标，然后消失在扫描线外。", rewards: { supplies: 5, materialsEach: 3 } },
+    ] },
+  ];
   const ENDGAME_PROTOCOLS = [
     {
       id: "production",
@@ -3430,6 +3474,8 @@
     companionEventClose: $("#companion-event-close"),
     companionLogCount: $("#companion-log-count"),
     companionLogGrid: $("#companion-log-grid"),
+    companionEchoCount: $("#companion-echo-count"),
+    companionEchoList: $("#companion-echo-list"),
     buildingList: $("#building-list"),
     fleetCommandDeck: $("#fleet-command-deck"),
     upgradeList: $("#upgrade-list"),
@@ -3774,6 +3820,7 @@
       companions: [],
       companionSignals: 0,
       companionObservations: [],
+      companionEchoes: [],
       activeCompanionEvent: null,
       protocols: freshEndgameProtocolState(),
     };
@@ -5834,6 +5881,85 @@
     saveGame(false, { forceBackup: true });
   }
 
+  function getCompanionEchoRecord(echoId, targetState = state) {
+    return targetState.endgame?.companionEchoes?.find(
+      (record) => record.echoId === echoId,
+    ) || null;
+  }
+
+  function getCompanionEchoProgress(echo, targetState = state) {
+    let current = 0;
+    if (echo.condition === "clicks") current = targetState.lifetimeClicks;
+    else if (echo.condition === "atlas") {
+      current = getAtlasEntries(targetState).filter((entry) => entry.discovered).length;
+    } else if (echo.condition === "expeditions") current = targetState.expedition?.completedRuns || 0;
+    else if (echo.condition === "units") current = getTotalUnits(targetState);
+    else if (echo.condition === "rebirths") current = targetState.rebirths;
+    else if (echo.condition === "operations") current = targetState.operations?.totalActions || 0;
+    else if (echo.condition === "wins") current = targetState.combat?.wins || 0;
+    else if (echo.condition === "observations") {
+      current = targetState.endgame?.companionObservations?.length || 0;
+    }
+    return {
+      current: Math.min(echo.goal, clampGameCount(current)),
+      goal: echo.goal,
+      ready: current >= echo.goal,
+    };
+  }
+
+  function resolveCompanionEcho(echoId, choiceId) {
+    const echo = COMPANION_ECHOES.find((entry) => entry.id === echoId);
+    const choice = echo?.choices.find((entry) => entry.id === choiceId);
+    const observed = echo && state.endgame.companionObservations.some(
+      (observation) => observation.companionId === echo.companionId,
+    );
+    if (!echo || !choice || !observed || getCompanionEchoRecord(echo.id)) return;
+    if (!getCompanionEchoProgress(echo).ready) return;
+    state.endgame.companionEchoes.push({
+      echoId: echo.id,
+      companionId: echo.companionId,
+      choiceId: choice.id,
+      completedAt: Date.now(),
+    });
+    grantCompanionRewards(choice.rewards);
+    const companion = SINGULARITY_COMPANIONS.find((entry) => entry.id === echo.companionId);
+    addLog(`伴星回声归档：${companion?.name || "伴星"} · ${echo.title} · ${choice.label}。`);
+    showToast("伴星回声已归档", `${choice.outcome} · ${formatCompanionRewards(choice.rewards)}`, companion?.icon || "☾");
+    playAchievementTone();
+    renderCompanionObservatory();
+    updateUi();
+    saveGame(false, { forceBackup: true });
+  }
+
+  function renderCompanionEchoes() {
+    const observedCompanionIds = new Set(
+      state.endgame.companionObservations.map((observation) => observation.companionId),
+    );
+    const visibleEchoes = COMPANION_ECHOES.filter((echo) =>
+      observedCompanionIds.has(echo.companionId),
+    );
+    elements.companionEchoCount.textContent = `${state.endgame.companionEchoes.length} / ${COMPANION_ECHOES.length}`;
+    if (!visibleEchoes.length) {
+      elements.companionEchoList.innerHTML = "<p class=\"companion-echo-empty\">先完成一段伴星观测，新的回声才会在这里出现。</p>";
+      return;
+    }
+    elements.companionEchoList.innerHTML = visibleEchoes.map((echo) => {
+      const companion = SINGULARITY_COMPANIONS.find((entry) => entry.id === echo.companionId);
+      const record = getCompanionEchoRecord(echo.id);
+      const selectedChoice = echo.choices.find((choice) => choice.id === record?.choiceId);
+      const progress = getCompanionEchoProgress(echo);
+      const choices = record
+        ? `<p class="companion-echo-outcome">${selectedChoice?.outcome || "这段回声已经写入永久日志。"}</p>`
+        : progress.ready
+          ? `<div class="companion-echo-choices">${echo.choices.map((choice) => `<button type="button" data-companion-echo="${echo.id}" data-companion-echo-choice="${choice.id}"><strong>${choice.label}</strong><small>${formatCompanionRewards(choice.rewards)}</small></button>`).join("")}</div>`
+          : `<div class="companion-echo-progress"><span style="width:${clamp(progress.current / Math.max(1, progress.goal), 0, 1) * 100}%"></span></div>`;
+      return `<article class="companion-echo-card${record ? " completed" : progress.ready ? " ready" : ""}">
+        <header><span style="color:${companion?.color || "#fff"}">${companion?.icon || "☾"}</span><div><small>${companion?.name || "伴星"}</small><strong>${echo.title}</strong></div><b>${record ? "已归档" : progress.ready ? "等待选择" : `${progress.current} / ${progress.goal}`}</b></header>
+        <p>${echo.description}</p><em>${echo.conditionText}</em>${choices}
+      </article>`;
+    }).join("");
+  }
+
   function renderCompanionObservatory(
     companions = getSingularityCompanions(),
   ) {
@@ -5914,6 +6040,7 @@
       card.append(icon, copy, status);
       elements.companionLogGrid.appendChild(card);
     });
+    renderCompanionEchoes();
   }
 
   function renderCommandCompanions(targetState = state) {
@@ -9521,6 +9648,24 @@
       : [];
     const seenFeatures = Array.isArray(raw.guidance?.seenFeatures)
       ? raw.guidance.seenFeatures.filter((entry) => typeof entry === "string")
+      : [];
+    const completedEchoIds = new Set();
+    merged.endgame.companionEchoes = Array.isArray(rawEndgame.companionEchoes)
+      ? rawEndgame.companionEchoes.flatMap((record) => {
+          const echo = COMPANION_ECHOES.find((entry) => entry.id === record?.echoId);
+          const choice = echo?.choices.find((entry) => entry.id === record?.choiceId);
+          const observed = echo && merged.endgame.companionObservations.some(
+            (observation) => observation.companionId === echo.companionId,
+          );
+          if (!echo || !choice || !observed || completedEchoIds.has(echo.id)) return [];
+          completedEchoIds.add(echo.id);
+          return [{
+            echoId: echo.id,
+            companionId: echo.companionId,
+            choiceId: choice.id,
+            completedAt: Math.max(0, Number(record.completedAt) || 0),
+          }];
+        })
       : [];
     const pinnedGoals = Array.isArray(raw.guidance?.pinnedGoals)
       ? raw.guidance.pinnedGoals.filter(
@@ -16188,6 +16333,15 @@
       const button = event.target.closest("[data-companion-log]");
       if (button) openCompanionEvent(button.dataset.companionLog);
     });
+    elements.companionEchoList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-companion-echo-choice]");
+      if (button) {
+        resolveCompanionEcho(
+          button.dataset.companionEcho,
+          button.dataset.companionEchoChoice,
+        );
+      }
+    });
     elements.dailyRerollButton.addEventListener("click", rerollDailyMission);
     [elements.dailyMissionList, elements.weeklyMissionList].forEach((list) => {
       list.addEventListener("click", (event) => {
@@ -16707,6 +16861,16 @@
       state: state.rebuild,
       activePlan: getActiveRebuildPlan(),
       progress: getRebuildPlanProgress(getActiveRebuildPlan()),
+    })),
+    getCompanionEchoDiagnostics: () => JSON.parse(JSON.stringify({
+      records: state.endgame.companionEchoes,
+      echoes: COMPANION_ECHOES.map((echo) => ({
+        ...echo,
+        progress: getCompanionEchoProgress(echo),
+        observed: state.endgame.companionObservations.some(
+          (observation) => observation.companionId === echo.companionId,
+        ),
+      })),
     })),
     getExpeditionDiagnostics: () => JSON.parse(JSON.stringify({
       supplies: state.expedition.supplies,

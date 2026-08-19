@@ -59,7 +59,8 @@ const companions = readArray(
   "SINGULARITY_COMPANIONS",
   "COMPANION_OBSERVATION_SIGNAL_CAP",
 );
-const companionEvents = readArray("COMPANION_EVENTS", "ENDGAME_PROTOCOLS");
+const companionEvents = readArray("COMPANION_EVENTS", "COMPANION_ECHOES");
+const companionEchoes = readArray("COMPANION_ECHOES", "ENDGAME_PROTOCOLS");
 const expeditionRoutes = readArray("EXPEDITION_ROUTE_TYPES", "EXPEDITION_AFFIXES");
 const expeditionAffixes = readArray("EXPEDITION_AFFIXES", "EXPEDITION_BOONS");
 const expeditionBoons = readArray("EXPEDITION_BOONS", "EXPEDITION_GEAR");
@@ -89,8 +90,8 @@ const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
 assert.equal(
   readConstant("SAVE_VERSION"),
-  25,
-  "rebuild plans need schema version 25",
+  26,
+  "companion echoes need schema version 26",
 );
 assert.match(source, /pinnedGoals:\s*\[\]/, "fresh saves need an empty tracked-goal list");
 assert.match(source, /lastJobId:\s*""/, "fresh saves need an empty last operation id");
@@ -160,6 +161,7 @@ assert.ok(
 );
 assert.equal(companions.length, 8, "singularity collection needs eight companions");
 assert.equal(companionEvents.length, 8, "each companion needs one observation event");
+assert.equal(companionEchoes.length, 8, "each companion needs one follow-up echo");
 assert.ok(
   companionEvents.every(
     (companionEvent) =>

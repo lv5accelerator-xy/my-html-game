@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.1.0";
-  const PATCH_NOTES_VERSION = "1.1.0";
+  const GAME_VERSION = "1.2.0";
+  const PATCH_NOTES_VERSION = "1.2.0";
   const SAVE_VERSION = 24;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.1.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.2.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.1.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.2.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.1.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.2.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.1.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.2.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.2.0",
+      theme: "航站减负",
+      changes: [
+        "指挥台将归航信息与新手航路保留在首屏，把值守补给、可选航程和每日路线收进一个可展开的“其他安排”。",
+        "移除与当前航程重复显示的下一航标和当前行动长卡；手机版仍可从底栏直接前往唯一主行动。",
+        "新指挥官默认以“无名拾荒者”进入，不再被强制命名窗口阻挡；名称仍可随时在设置中修改。",
+        "新手指引由八页缩减为三页，只说明回收、自动化与长期目标，后续系统在真正解锁时再给出提示。",
+        "初始手机指挥台显著减少同时出现的按钮和滚动长度，不新增货币、倍率或导航页面。",
+      ],
+    },
     {
       version: "1.1.0",
       theme: "航站节奏重整",
@@ -1562,7 +1573,7 @@
     },
   ];
 
-  const TUTORIAL_STEPS = [
+  const TUTORIAL_STEP_LIBRARY = [
     {
       eyebrow: "航站启动",
       icon: "✦",
@@ -1628,6 +1639,7 @@
       tip: "先完成一次高收益跃迁再坍缩通常能获得更多碎片；协议矩阵可自由选择下一周期的生产、星核、战斗或重建速度。",
     },
   ];
+  const TUTORIAL_STEPS = TUTORIAL_STEP_LIBRARY.slice(0, 3);
 
   const COMBAT_UNLOCK_DUST = 500;
   const OPERATIONS_UNLOCK_DUST = 1000;
@@ -4076,7 +4088,7 @@
       totalCores: 0,
       coreShop: freshCoreShopState(),
       rebirths: 0,
-      playerName: "",
+      playerName: "无名拾荒者",
       activePage: "command",
       buyMode: "1",
       sound: true,

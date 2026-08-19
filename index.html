@@ -11,16 +11,16 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="1.1.0" />
-    <meta name="stellar-release-title" content="航站节奏重整" />
-    <title>星港拾荒者 v1.1 · 航站节奏重整</title>
-    <link rel="stylesheet" href="styles.css?v=1.1.0" />
+    <meta name="stellar-game-version" content="1.2.0" />
+    <meta name="stellar-release-title" content="航站减负" />
+    <title>星港拾荒者 v1.2 · 航站减负</title>
+    <link rel="stylesheet" href="styles.css?v=1.2.0" />
   </head>
   <body>
     <a class="skip-link" href="#command-page">跳到游戏内容</a>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=1.1.0"
+      src="assets/outpost-beyond-orion.mp3?v=1.2.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -374,6 +374,15 @@
               <div id="journey-chapter-dots" class="journey-chapter-dots" aria-label="新手航路进度"></div>
               <button id="journey-action-button" type="button">开始回收</button>
             </article>
+            <details id="command-secondary-plans" class="command-secondary-plans">
+              <summary>
+                <span>
+                  <small>补给、可选航程与每日路线</small>
+                  <strong>其他安排</strong>
+                </span>
+                <b>按需展开</b>
+              </summary>
+              <div class="command-secondary-content">
             <div class="duty-supply">
               <div class="duty-supply-copy">
                 <span class="duty-supply-icon" aria-hidden="true">◈</span>
@@ -412,6 +421,8 @@
                 </div>
               </div>
             </section>
+              </div>
+            </details>
           </section>
 
           <div class="beacon-zone">
@@ -487,7 +498,7 @@
             <div id="companion-log-grid" class="companion-log-grid"></div>
           </section>
 
-          <div class="scan-card">
+          <div class="scan-card" hidden>
             <div class="scan-copy">
               <span class="scan-icon" aria-hidden="true">⌁</span>
               <span>
@@ -501,7 +512,7 @@
             </div>
           </div>
 
-          <section id="command-guide" class="command-guide current-action-card" aria-labelledby="command-guide-title">
+          <section id="command-guide" class="command-guide current-action-card" aria-labelledby="command-guide-title" hidden>
             <span id="command-guide-icon" class="command-guide-icon" aria-hidden="true">➜</span>
             <div class="command-guide-copy">
               <small>当前行动 · 现在只做这一件事</small>
@@ -1967,7 +1978,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v1.1.0 · 航站节奏重整</span>
+        <span>航站协议 v1.2.0 · 航站减负</span>
       </footer>
     </div>
 
@@ -2019,7 +2030,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v1.1.0</strong>
+          <strong id="patch-notes-current-version">v1.2.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2330,9 +2341,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.1.0"></script>
-    <script src="game.js?v=1.1.0"></script>
-    <script src="firebase-config.js?v=1.1.0"></script>
-    <script type="module" src="cloud-save.js?v=1.1.0"></script>
+    <script src="game-math.js?v=1.2.0"></script>
+    <script src="game.js?v=1.2.0"></script>
+    <script src="firebase-config.js?v=1.2.0"></script>
+    <script type="module" src="cloud-save.js?v=1.2.0"></script>
   </body>
 </html>

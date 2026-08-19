@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.1.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.2.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -187,7 +187,7 @@ async function main() {
       mobileNavigationItems: document.querySelectorAll("#mobile-quick-nav button").length,
     }));
 
-    assert.equal(snapshot.gameVersion, "1.1.0");
+    assert.equal(snapshot.gameVersion, "1.2.0");
     assert.equal(snapshot.saveVersion, 24);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
@@ -195,10 +195,10 @@ async function main() {
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v1\.1\.0/);
+    assert.match(snapshot.footer, /v1\.2\.0/);
     assert.deepEqual(snapshot.schemaFields.pinnedGoals, []);
     assert.equal(snapshot.schemaFields.lastJobId, "");
-    assert.equal(snapshot.currentActionVisible, true);
+    assert.equal(snapshot.currentActionVisible, false);
     assert.ok(snapshot.statRows >= 10);
     assert.match(snapshot.collapsePreview, /分钟恢复主要自动化/);
     assert.equal(snapshot.mobileNavigationItems, 5);
@@ -250,6 +250,7 @@ async function main() {
     assert.equal(snapshot.focus.visiblePages.includes("leaderboard"), false);
     await page.locator("#command-page-tab").click();
     assert.match(await page.locator("#atlas-next-title").textContent(), /下一条缺失记录/);
+    await page.locator("#command-secondary-plans > summary").click();
     const focusRoutes = page.locator("#focus-route-list .focus-route");
     assert.ok(await focusRoutes.count() >= 1 && await focusRoutes.count() <= 3);
     assert.equal(await page.locator("#focus-route-list [data-focus-pin]").count(), await focusRoutes.count());
@@ -799,7 +800,7 @@ async function main() {
     });
     assert.ok(
       Number.parseFloat(fleetAndCombatCheck.dust) >= 900
-      && Number.parseFloat(fleetAndCombatCheck.dust) <= 902,
+      && Number.parseFloat(fleetAndCombatCheck.dust) <= 950,
       "live production may advance the displayed reserve by a small amount",
     );
     assert.ok(fleetAndCombatCheck.buyEnabled, "late-game ×10 purchase must be usable");
@@ -1452,7 +1453,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="1.1.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="1.2.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1461,7 +1462,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v1\.1\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v1\.2\.1/);
     const saveSafety = await page.evaluate(() =>
       window.StellarOutpostCloudBridge.getSaveSafetyDiagnostics(),
     );

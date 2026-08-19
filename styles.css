@@ -12647,3 +12647,48 @@ body:not([data-expedition-skin="standard"]) .collect-core {
   .atlas-entry.newly-discovered,
   .mobile-quick-nav button.urgent { animation: none; }
 }
+
+/* v1.2.0 · 航站减负 */
+.command-secondary-plans {
+  overflow: hidden;
+  border: 1px solid rgba(92, 170, 205, 0.22);
+  border-radius: 18px;
+  background: rgba(6, 20, 36, 0.54);
+}
+
+.command-secondary-plans > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 18px;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+
+.command-secondary-plans > summary::-webkit-details-marker { display: none; }
+.command-secondary-plans > summary span { display: grid; gap: 3px; }
+.command-secondary-plans > summary small { color: var(--muted); }
+.command-secondary-plans > summary strong { font-size: 1rem; }
+.command-secondary-plans > summary b {
+  color: var(--cyan);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+.command-secondary-plans > summary b::after { content: "  ＋"; }
+.command-secondary-plans[open] > summary b::after { content: "  －"; }
+.command-secondary-plans[open] > summary {
+  border-bottom: 1px solid rgba(92, 170, 205, 0.16);
+}
+.command-secondary-content {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+@media (max-width: 680px) {
+  .command-secondary-plans > summary { padding: 14px; }
+  .command-secondary-plans > summary small { font-size: 0.68rem; }
+  .command-secondary-content { gap: 10px; padding: 10px; }
+}

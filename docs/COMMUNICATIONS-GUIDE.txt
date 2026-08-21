@@ -32,6 +32,13 @@
 
    expiresAt   时间戳     到达该时间后客户端不再显示；不填则长期保留
 
+   以下字段一起填写时，公告卡会显示实时“全服目标”：
+
+   goalMetric  字符串     battleCount、expeditionRuns、expeditionBossWins、transcensions 或 frontierSectors
+   goalTarget  数字       全服目标值，必须大于 0
+   goalLabel   字符串     目标名称；不填则使用系统默认名称
+   goalReward  字符串     达成后的奖励说明，仅作公告文字展示
+
 说明：
 
 - priority=normal：仅显示未读数量，不主动打断玩家。
@@ -39,6 +46,8 @@
 - 公告按 publishedAt 从新到旧排列。
 - 将 published 改为 false 即可撤下公告。
 - 不要把草稿设置为 published=true；客户端只允许读取已发布记录。
+- 全服目标会聚合所有排行榜文档中的对应字段；玩家需登录并确认云档后才能看到实时进度。
+- 公告目标本身不会自动发奖励；达成后请通过后续公告说明领取方式，或在新版本中加入统一发放逻辑。
 
 示例：
 

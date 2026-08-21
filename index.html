@@ -11,16 +11,16 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="1.8.0" />
-    <meta name="stellar-release-title" content="长航抉择" />
-    <title>星港拾荒者 v1.8 · 长航抉择</title>
-    <link rel="stylesheet" href="styles.css?v=1.8.0" />
+    <meta name="stellar-game-version" content="1.9.0" />
+    <meta name="stellar-release-title" content="星港生活" />
+    <title>星港拾荒者 v1.9 · 星港生活</title>
+    <link rel="stylesheet" href="styles.css?v=1.9.0" />
   </head>
   <body>
     <a class="skip-link" href="#command-page">跳到游戏内容</a>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=1.8.0"
+      src="assets/outpost-beyond-orion.mp3?v=1.9.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -360,7 +360,10 @@
                 <span><small>自动回收</small><strong id="return-brief-dust">0 星尘</strong></span>
                 <span><small>离线作业</small><strong id="return-brief-operations">0 次</strong></span>
                 <span><small>边境态势</small><strong id="return-brief-raids">安全</strong></span>
+                <span><small>待领取</small><strong id="return-brief-claims">暂无积压</strong></span>
+                <span><small>主要收藏</small><strong id="return-brief-collection">0 / 64</strong></span>
               </div>
+              <p id="return-brief-summary">航站正在整理本次归航状态。</p>
               <p id="return-brief-recommendation">航站正在分析当前最值得推进的目标。</p>
             </section>
             <div id="focus-route-list" class="focus-route-list" aria-label="今日三件事"></div>
@@ -847,6 +850,20 @@
             class="material-wallet"
             aria-label="星港建筑材料"
           ></div>
+
+          <section class="starport-life" aria-labelledby="starport-life-title">
+            <figure>
+              <img src="assets/starport-gallery.webp" width="1280" height="720" alt="星港内部的收藏陈列长廊与观景舷窗" loading="lazy" decoding="async" />
+              <figcaption><small>v1.9.0 · 收藏不是另一套数值</small><strong id="starport-life-title">星港生活与陈列廊</strong><span>把一路带回来的故事放在同一个地方，也看看伴星今天在做什么。</span></figcaption>
+            </figure>
+            <div id="starport-gallery-stats" class="starport-gallery-stats" aria-label="主要收藏进度"></div>
+            <article class="starport-life-event">
+              <span id="starport-life-event-icon" aria-hidden="true">·</span>
+              <div><small>每日一段 · 只发放少量现有资源</small><strong id="starport-life-event-title">等待第一位住客</strong><p id="starport-life-event-story"></p><em id="starport-life-event-reward"></em></div>
+              <button id="starport-life-event-claim" type="button" disabled>唤醒伴星后开放</button>
+            </article>
+            <small id="starport-life-log" class="starport-life-log">生活日志尚未写下第一行。</small>
+          </section>
 
           <section class="starport-plans" aria-labelledby="starport-plans-title">
             <header>
@@ -2069,7 +2086,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v1.8.0 · 长航抉择</span>
+        <span>航站协议 v1.9.0 · 星港生活</span>
       </footer>
     </div>
 
@@ -2121,7 +2138,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v1.8.0</strong>
+          <strong id="patch-notes-current-version">v1.9.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2432,9 +2449,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.8.0"></script>
-    <script src="game.js?v=1.8.0"></script>
-    <script src="firebase-config.js?v=1.8.0"></script>
-    <script type="module" src="cloud-save.js?v=1.8.0"></script>
+    <script src="game-math.js?v=1.9.0"></script>
+    <script src="game.js?v=1.9.0"></script>
+    <script src="firebase-config.js?v=1.9.0"></script>
+    <script type="module" src="cloud-save.js?v=1.9.0"></script>
   </body>
 </html>

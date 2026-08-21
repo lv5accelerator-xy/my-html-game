@@ -7,8 +7,9 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const game = fs.readFileSync(path.join(root, "game.js"), "utf8");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const cloud = fs.readFileSync(path.join(root, "cloud-save.js"), "utf8");
 
-assert.match(game, /const GAME_VERSION = "1\.8\.0";/);
+assert.match(game, /const GAME_VERSION = "1\.9\.0";/);
 assert.match(html, /id="resource-cycle-grid" class="resource-cycle-grid"/);
 assert.match(game, /const RESOURCE_RECLAIM_RECIPES = Object\.freeze/);
 assert.match(game, /playerName: "无名拾荒者"/);
@@ -24,6 +25,10 @@ assert.match(html, /id="long-voyage" class="long-voyage"/);
 assert.match(game, /const LONG_VOYAGES = \[/);
 assert.match(game, /const LONG_VOYAGE_CHOICES = Object\.freeze/);
 assert.match(html, /id="long-voyage-decision-choices" class="long-voyage-decision-choices"/);
+assert.match(html, /id="starport-gallery-stats" class="starport-gallery-stats"/);
+assert.match(game, /const STARPORT_LIFE_EVENTS = Object\.freeze/);
+assert.match(cloud, /async function hydrateAnnouncementGoals\(\)/);
+assert.match(cloud, /getAggregateFromServer/);
 assert.equal((html.match(/class="panel game-page/g) || []).length, 11);
 
 console.log("usability flow ok: 3-step tutorial, optional plans collapsed, 11 primary pages");

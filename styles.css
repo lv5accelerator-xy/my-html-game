@@ -5052,6 +5052,38 @@ h2 {
     rgba(4, 15, 27, 0.68);
 }
 
+/* v1.9.0 · 星港生活与陈列廊 */
+.starport-life { display: grid; gap: 12px; margin-top: 12px; padding: 13px; border: 1px solid rgba(101, 218, 228, 0.2); border-radius: 18px; background: linear-gradient(140deg, rgba(14, 59, 77, 0.4), rgba(37, 25, 70, 0.5)); }
+.starport-life > figure { position: relative; min-height: 230px; margin: 0; overflow: hidden; border-radius: 15px; background: #081628; }
+.starport-life > figure img { display: block; width: 100%; height: 230px; object-fit: cover; }
+.starport-life > figure::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4, 18, 31, 0.92), transparent 65%), linear-gradient(0deg, rgba(4, 18, 31, 0.72), transparent 50%); pointer-events: none; }
+.starport-life figcaption { position: absolute; z-index: 1; left: 17px; bottom: 15px; display: grid; max-width: 560px; gap: 3px; }
+.starport-life figcaption small { color: #88d8df; }
+.starport-life figcaption strong { color: #f3fcff; font-size: 1.04rem; }
+.starport-life figcaption span { color: #acc7d3; font-size: 0.75rem; }
+.starport-gallery-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+.starport-gallery-stats > span { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 7px; min-width: 0; padding: 9px; border: 1px solid rgba(116, 167, 197, 0.16); border-radius: 12px; background: rgba(5, 21, 34, 0.62); }
+.starport-gallery-stats i { grid-row: 1 / 3; color: #8ee1e7; font-style: normal; }
+.starport-gallery-stats small { overflow: hidden; color: #809caf; text-overflow: ellipsis; white-space: nowrap; }
+.starport-gallery-stats strong { color: #e1f7fb; }
+.starport-life-event { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 13px; border: 1px solid rgba(174, 138, 231, 0.2); border-radius: 14px; background: rgba(17, 17, 43, 0.64); }
+.starport-life-event > span { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; color: #d8c4ff; font-size: 1.2rem; background: rgba(135, 97, 199, 0.2); }
+.starport-life-event > div { display: grid; gap: 3px; }
+.starport-life-event small, .starport-life-event p, .starport-life-event em, .starport-life-log { color: #8fa9ba; font-style: normal; }
+.starport-life-event p { margin: 2px 0; line-height: 1.5; }
+.starport-life-event em { color: #a9dbd4; }
+.starport-life-log { line-height: 1.5; }
+
+@media (max-width: 760px) {
+  .starport-gallery-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .starport-life-event { grid-template-columns: auto minmax(0, 1fr); }
+  .starport-life-event > button { grid-column: 1 / -1; width: 100%; }
+}
+
+@media (max-width: 460px) {
+  .starport-life > figure, .starport-life > figure img { min-height: 190px; height: 190px; }
+}
+
 .starport-plans > header {
   display: flex;
   align-items: center;
@@ -11606,6 +11638,14 @@ body:not([data-expedition-skin="standard"]) .collect-core {
   .starfall-collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+.announcement-goal { display: grid; gap: 8px; margin-top: 12px; padding: 11px; border: 1px solid rgba(104, 222, 230, 0.2); border-radius: 12px; background: rgba(10, 39, 53, 0.7); }
+.announcement-goal > header { justify-content: space-between; padding: 0; }
+.announcement-goal > header strong { color: #dffbff; }
+.announcement-goal > header b { color: #96e6e4; font-size: 0.78rem; }
+.announcement-goal-progress { overflow: hidden; height: 7px; border-radius: 999px; background: rgba(91, 143, 171, 0.2); }
+.announcement-goal-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #66d9e8, #9d7bea); }
+.announcement-goal small { color: #81a7b5; }
+
 /* v0.26.0 · 归航协议 */
 .return-brief,
 .return-duty {
@@ -11652,7 +11692,7 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 .return-brief-grid {
   margin-top: 14px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -11668,6 +11708,7 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 .return-brief-grid small { color: #7892b6; }
 .return-brief-grid strong { overflow-wrap: anywhere; color: #e9f8ff; }
 .return-brief > p { margin: 12px 0 0; color: #9fb3d0; line-height: 1.55; }
+.return-brief > #return-brief-summary { padding: 9px 11px; border-left: 2px solid rgba(103, 221, 229, 0.48); color: #b8d8df; background: rgba(7, 28, 43, 0.48); }
 
 .return-duty-options {
   margin-top: 14px;

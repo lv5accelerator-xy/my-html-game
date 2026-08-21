@@ -15,6 +15,13 @@ const ANNOUNCEMENT_READ_KEY = "stellarOutpostAnnouncementRead_v1";
 const ANNOUNCEMENT_AUTO_SHOWN_KEY = "stellarOutpostAnnouncementAutoShown_v1";
 const FEEDBACK_LAST_SENT_KEY = "stellarOutpostFeedbackLastSent_v1";
 const FEEDBACK_COOLDOWN = 60_000;
+const ANNOUNCEMENT_GOAL_METRICS = Object.freeze({
+  battleCount: "全服战斗次数",
+  expeditionRuns: "全服远征次数",
+  expeditionBossWins: "全服首领击破",
+  transcensions: "全服奇点超越",
+  frontierSectors: "全服边境星区",
+});
 const BUILTIN_ANNOUNCEMENTS = Object.freeze([
   {
     id: "v0200-starfall-launch",
@@ -347,7 +354,30 @@ function renderAnnouncements() {
       ? new Date(announcement.publishedAt).toISOString()
       : "";
     time.textContent = formatAnnouncementTime(announcement.publishedAt);
-    card.append(header, title, body, time);
+    card.append(header, title, body);
+    if (announcement.goal) {
+      const goal = document.createElement("section");
+      goal.className = "announcement-goal";
+      const goalHeader = document.createElement("header");
+      const goalTitle = document.createElement("strong");
+      goalTitle.textContent = goal.label;
+      const goalValue = document.createElement("b");
+      goalValue.textContent = `${formatGameNumber(goal.current)} / ${formatGameNumber(goal.target)}`;
+      goalHeader.append(goalTitle, goalValue);
+      const progress = document.createElement("div");
+      progress.className = "announcement-goal-progress";
+      const progressFill = document.createElement("span");
+      progressFill.style.width = `${Math.min(100, goal.current / Math.max(1, goal.target) * 100)}%`;
+      progress.appendChild(progressFill);
+      const goalMeta = document.createElement("small");
+      const status = goal.online
+        ? `${goal.participants} 名指挥官的排行榜记录已汇总`
+        : "登录并刷新公告后读取全服进度";
+      goalMeta.textContent = `${status}${goal.reward ? ` · 达成回报：${goal.reward}` : ""}`;
+      goal.append(goalHeader, progress, goalMeta);
+      card.appendChild(goal);
+    }
+    card.appendChild(time);
     elements.announcementList.appendChild(card);
   });
   updateAnnouncementBadge();
@@ -361,6 +391,12 @@ function normalizeAnnouncement(documentSnapshot) {
   if (!title || !body) return null;
   const expiresAt = communicationTimestamp(data.expiresAt);
   if (expiresAt > 0 && expiresAt <= Date.now()) return null;
+  const goalMetric = Object.hasOwn(ANNOUNCEMENT_GOAL_METRICS, data.goalMetric)
+    ? data.goalMetric
+    : "";
+  const goalTarget = Math.max(0, Number(data.goalTarget) || 0);
+  const goalLabel = String(data.goalLabel || ANNOUNCEMENT_GOAL_METRICS[goalMetric] || "").trim().slice(0, 60);
+  const goalReward = String(data.goalReward || "").trim().slice(0, 160);
   return {
     id: documentSnapshot.id,
     title,
@@ -368,7 +404,57 @@ function normalizeAnnouncement(documentSnapshot) {
     priority: data.priority === "important" ? "important" : "normal",
     publishedAt: communicationTimestamp(data.publishedAt),
     expiresAt,
+    goal: goalMetric && goalTarget > 0
+      ? {
+          metric: goalMetric,
+          label: goalLabel,
+          target: Math.min(Number.MAX_SAFE_INTEGER, goalTarget),
+          reward: goalReward,
+          current: 0,
+          participants: 0,
+          online: false,
+        }
+      : null,
   };
+}
+
+async function hydrateAnnouncementGoals() {
+  const goalAnnouncements = announcements.filter((announcement) => announcement.goal);
+  if (
+    !goalAnnouncements.length ||
+    !currentUser ||
+    !db ||
+    !syncReady ||
+    typeof firebaseFirestoreApi?.getAggregateFromServer !== "function" ||
+    typeof firebaseFirestoreApi?.sum !== "function" ||
+    typeof firebaseFirestoreApi?.count !== "function"
+  ) return;
+  const metricResults = new Map();
+  await Promise.all([...new Set(goalAnnouncements.map((announcement) => announcement.goal.metric))].map(async (metric) => {
+    try {
+      const aggregate = await firebaseFirestoreApi.getAggregateFromServer(
+        firebaseFirestoreApi.collection(db, LEADERBOARD_COLLECTION),
+        {
+          total: firebaseFirestoreApi.sum(metric),
+          participants: firebaseFirestoreApi.count(),
+        },
+      );
+      const data = aggregate.data();
+      metricResults.set(metric, {
+        current: Math.max(0, Number(data.total) || 0),
+        participants: Math.max(0, Math.floor(Number(data.participants) || 0)),
+      });
+    } catch (error) {
+      // 公告仍可正常阅读；聚合不可用时只隐藏实时全服进度。
+    }
+  }));
+  goalAnnouncements.forEach((announcement) => {
+    const result = metricResults.get(announcement.goal.metric);
+    if (!result) return;
+    announcement.goal.current = result.current;
+    announcement.goal.participants = result.participants;
+    announcement.goal.online = true;
+  });
 }
 
 function maybeAutoOpenImportantAnnouncement() {
@@ -415,6 +501,7 @@ async function loadAnnouncements({ silent = false } = {}) {
       )
       .filter((announcement) => !announcement.expiresAt || announcement.expiresAt > Date.now())
       .sort((left, right) => right.publishedAt - left.publishedAt);
+    await hydrateAnnouncementGoals();
     renderAnnouncements();
     setCommunicationStatus(
       elements.announcementStatus,

@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.8.0";
-  const PATCH_NOTES_VERSION = "1.8.0";
-  const SAVE_VERSION = 29;
+  const GAME_VERSION = "1.9.0";
+  const PATCH_NOTES_VERSION = "1.9.0";
+  const SAVE_VERSION = 30;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.8.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.9.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.8.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.9.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.8.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.9.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.8.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.9.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,17 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.9.0",
+      theme: "星港生活",
+      changes: [
+        "星港页新增收藏陈列廊，把星海图鉴、伴星、回声、远征遗物与长航纪念集中成五组进度。",
+        "已唤醒伴星每天会带来一段星港短事件，领取少量现有资源并写入最近生活日志，不增加货币或倍率。",
+        "归航简报新增待领奖励、主要收藏和当前长航或蓝图状态，让返回航站后的信息更完整。",
+        "Firebase 公告支持全服目标字段，可实时汇总排行榜中的战斗、远征、首领、超越或边境星区总数。",
+        "新增星港陈列廊主题贴图；存档结构升级至第 30 版，保存每日片段与最近十二条生活记录。",
+      ],
+    },
     {
       version: "1.8.0",
       theme: "长航抉择",
@@ -2699,6 +2710,14 @@
     Object.freeze({ id: "echoLeviathan", title: "守门者：回声巨影", signal: "巨影会复制急促动作；保持稳态才能让回声自行消散。", idealId: "careful", souvenir: "静默回声囊", boss: true }),
     Object.freeze({ id: "flarePursuer", title: "守门者：耀斑追猎者", signal: "下一次恒星耀斑会让追猎者失去锁定，必须抢先穿越。", idealId: "bold", souvenir: "耀斑尾羽", boss: true }),
   ]);
+  const STARPORT_LIFE_EVENTS = Object.freeze([
+    Object.freeze({ id: "windowTea", icon: "☕", title: "舷窗边的热饮", story: "{companion}停在舷窗边，工程组把多余热量引进一只旧金属杯。", reward: Object.freeze({ dustMinutes: 2 }) }),
+    Object.freeze({ id: "repairRibbon", icon: "⌁", title: "维修带上的小旗", story: "{companion}把一截检修带拖过走廊，值班员索性把它系成今日的小旗。", reward: Object.freeze({ materialsEach: 1 }) }),
+    Object.freeze({ id: "chartExchange", icon: "◇", title: "地图室的交换", story: "{companion}带回一段没人认领的坐标，测绘员用旧航图换走了它。", reward: Object.freeze({ fragments: 8 }) }),
+    Object.freeze({ id: "quietOrbit", icon: "◌", title: "无声绕行", story: "{companion}绕中央环安静飞了一圈，忙碌的航站也跟着慢了半拍。", reward: Object.freeze({ tokens: 3 }) }),
+    Object.freeze({ id: "supplyTag", icon: "▱", title: "被改过名字的补给箱", story: "{companion}守着一只误投的补给箱，标签背面写着：给下一位远行者。", reward: Object.freeze({ supplies: 1 }) }),
+    Object.freeze({ id: "nightWindow", icon: "✧", title: "夜班最后一盏灯", story: "{companion}陪夜班员等到远处恒星升起，灯灭之前又完成了一轮回收。", reward: Object.freeze({ dustMinutes: 3 }) }),
+  ]);
   const ENDGAME_PROTOCOLS = [
     {
       id: "production",
@@ -3551,6 +3570,9 @@
     returnBriefDust: $("#return-brief-dust"),
     returnBriefOperations: $("#return-brief-operations"),
     returnBriefRaids: $("#return-brief-raids"),
+    returnBriefClaims: $("#return-brief-claims"),
+    returnBriefCollection: $("#return-brief-collection"),
+    returnBriefSummary: $("#return-brief-summary"),
     returnBriefRecommendation: $("#return-brief-recommendation"),
     returnBriefAction: $("#return-brief-action"),
     returnDutyStatus: $("#return-duty-status"),
@@ -3717,6 +3739,13 @@
     combatMaterialList: $("#combat-material-list"),
     starportSlotMap: $("#starport-slot-map"),
     starportRankTotal: $("#starport-rank-total"),
+    starportGalleryStats: $("#starport-gallery-stats"),
+    starportLifeEventIcon: $("#starport-life-event-icon"),
+    starportLifeEventTitle: $("#starport-life-event-title"),
+    starportLifeEventStory: $("#starport-life-event-story"),
+    starportLifeEventReward: $("#starport-life-event-reward"),
+    starportLifeEventClaim: $("#starport-life-event-claim"),
+    starportLifeLog: $("#starport-life-log"),
     starportProductionBoost: $("#starport-production-boost"),
     starportCostEfficiency: $("#starport-cost-efficiency"),
     starportAttackBoost: $("#starport-attack-boost"),
@@ -4167,6 +4196,17 @@
     };
   }
 
+  function freshStarportLifeState() {
+    return {
+      dayKey: "",
+      eventId: "",
+      companionId: "",
+      claimed: false,
+      totalEvents: 0,
+      eventLog: [],
+    };
+  }
+
   function freshExperienceState() {
     return {
       installedAt: Date.now(),
@@ -4407,6 +4447,7 @@
       guidance: freshGuidanceState(),
       duty: freshDutyState(),
       returnProtocol: freshReturnProtocolState(),
+      starportLife: freshStarportLifeState(),
       experience: freshExperienceState(),
       doctrine: freshDoctrineState(),
       anomaly: freshAnomalyState(),
@@ -10061,6 +10102,29 @@
         merged.returnProtocol.progress,
       );
     }
+    const rawStarportLife = raw.starportLife && typeof raw.starportLife === "object"
+      ? raw.starportLife
+      : {};
+    const validLifeEventIds = new Set(STARPORT_LIFE_EVENTS.map((event) => event.id));
+    const validLifeCompanionIds = new Set(SINGULARITY_COMPANIONS.map((companion) => companion.id));
+    merged.starportLife = {
+      dayKey: /^\d{4}-\d{2}-\d{2}$/.test(String(rawStarportLife.dayKey || ""))
+        ? String(rawStarportLife.dayKey)
+        : "",
+      eventId: validLifeEventIds.has(rawStarportLife.eventId) ? rawStarportLife.eventId : "",
+      companionId: validLifeCompanionIds.has(rawStarportLife.companionId) ? rawStarportLife.companionId : "",
+      claimed: rawStarportLife.claimed === true,
+      totalEvents: clampGameCount(rawStarportLife.totalEvents),
+      eventLog: Array.isArray(rawStarportLife.eventLog)
+        ? rawStarportLife.eventLog.flatMap((record) => {
+            if (!record || !validLifeEventIds.has(record.eventId)) return [];
+            const dayKey = /^\d{4}-\d{2}-\d{2}$/.test(String(record.dayKey || ""))
+              ? String(record.dayKey)
+              : "";
+            return dayKey ? [{ eventId: record.eventId, dayKey }] : [];
+          }).slice(-12)
+        : [],
+    };
     const rawExperience = raw.experience && typeof raw.experience === "object"
       ? raw.experience
       : {};
@@ -13750,6 +13814,90 @@
     });
   }
 
+  function ensureStarportLifeDay(now = Date.now()) {
+    const dayKey = getUtcDailyKey(now);
+    if (state.starportLife.dayKey !== dayKey) {
+      state.starportLife.dayKey = dayKey;
+      state.starportLife.eventId = "";
+      state.starportLife.companionId = "";
+      state.starportLife.claimed = false;
+    }
+    const availableCompanions = SINGULARITY_COMPANIONS.filter((companion) =>
+      state.endgame.companions.includes(companion.id),
+    );
+    if (!availableCompanions.length) return null;
+    if (!state.starportLife.eventId || !state.starportLife.companionId) {
+      const event = seededMissionShuffle(
+        STARPORT_LIFE_EVENTS,
+        `${dayKey}:${availableCompanions.map((companion) => companion.id).join(":")}`,
+      )[0];
+      const companion = seededMissionShuffle(
+        availableCompanions,
+        `${dayKey}:${event?.id || "life"}`,
+      )[0];
+      state.starportLife.eventId = event?.id || "";
+      state.starportLife.companionId = companion?.id || "";
+    }
+    return STARPORT_LIFE_EVENTS.find((event) => event.id === state.starportLife.eventId) || null;
+  }
+
+  function getStarportGalleryStats() {
+    const atlasCount = getAtlasEntries().filter((entry) => entry.discovered).length;
+    return [
+      { icon: "◇", label: "星海图鉴", value: atlasCount, total: getAtlasEntries().length },
+      { icon: "◌", label: "伴星", value: state.endgame.companions.length, total: SINGULARITY_COMPANIONS.length },
+      { icon: "✧", label: "伴星回声", value: state.endgame.companionEchoes.length, total: COMPANION_ECHOES.length },
+      { icon: "▱", label: "远征遗物", value: state.expedition.artifacts.length, total: EXPEDITION_ARTIFACTS.length },
+      { icon: "⌁", label: "长航纪念", value: state.longVoyage.souvenirs.length, total: LONG_VOYAGE_EVENTS.length },
+    ];
+  }
+
+  function claimStarportLifeEvent() {
+    const event = ensureStarportLifeDay();
+    if (!event || state.starportLife.claimed) return;
+    const companion = SINGULARITY_COMPANIONS.find(
+      (entry) => entry.id === state.starportLife.companionId,
+    );
+    grantCompanionRewards(event.reward);
+    state.starportLife.claimed = true;
+    state.starportLife.totalEvents = clampGameCount(state.starportLife.totalEvents + 1);
+    state.starportLife.eventLog.push({ eventId: event.id, dayKey: state.starportLife.dayKey });
+    state.starportLife.eventLog = state.starportLife.eventLog.slice(-12);
+    addLog(`星港日常：${event.title}。`);
+    showToast("今日星港片段已收藏", `${event.title} · ${formatCompanionRewards(event.reward)}`, companion?.icon || event.icon);
+    playAchievementTone();
+    renderStarport();
+    updateUi();
+    saveGame();
+  }
+
+  function renderStarportLife() {
+    const event = ensureStarportLifeDay();
+    const companion = SINGULARITY_COMPANIONS.find(
+      (entry) => entry.id === state.starportLife.companionId,
+    );
+    const stats = getStarportGalleryStats();
+    elements.starportGalleryStats.innerHTML = stats.map((entry) => `<span><i>${entry.icon}</i><small>${entry.label}</small><strong>${entry.value} / ${entry.total}</strong></span>`).join("");
+    elements.starportLifeEventIcon.textContent = companion?.icon || event?.icon || "·";
+    elements.starportLifeEventTitle.textContent = event?.title || "等待第一位住客";
+    elements.starportLifeEventStory.textContent = event
+      ? event.story.replace("{companion}", companion?.name || "一只伴星")
+      : "首次奇点超越并唤醒伴星后，这里每天会出现一段不影响倍率的星港生活。";
+    elements.starportLifeEventReward.textContent = event
+      ? `今日小礼物：${formatCompanionRewards(event.reward)}`
+      : "不会新增货币，也不会错过主线进度。";
+    elements.starportLifeEventClaim.disabled = !event || state.starportLife.claimed;
+    elements.starportLifeEventClaim.textContent = !event
+      ? "唤醒伴星后开放"
+      : state.starportLife.claimed
+        ? "今日已收藏"
+        : "收下并收藏片段";
+    const recentLogs = state.starportLife.eventLog.slice(-3).reverse();
+    elements.starportLifeLog.textContent = recentLogs.length
+      ? `最近片段：${recentLogs.map((record) => STARPORT_LIFE_EVENTS.find((entry) => entry.id === record.eventId)?.title).filter(Boolean).join(" · ")} · 累计 ${formatNumber(state.starportLife.totalEvents, 0)} 次`
+      : "生活日志尚未写下第一行。";
+  }
+
   function renderStarportBlueprints() {
     if (!elements.starportBlueprintList) return;
     const active = getStarportBlueprint();
@@ -13799,6 +13947,7 @@
 
   function renderStarport() {
     renderMaterialWallet(elements.starportMaterialList);
+    renderStarportLife();
     renderStarportBlueprints();
     if (!elements.starportSlotMap) return;
     elements.starportSlotMap.textContent = "";
@@ -15607,6 +15756,16 @@
     elements.returnBriefRaids.textContent = report.raidReport.count > 0
       ? `${report.raidReport.defended} 守住 · ${report.raidReport.breached} 失守`
       : "航线安全";
+    const claimable = getMissionClaimableCount();
+    const collectionStats = getStarportGalleryStats();
+    const collected = collectionStats.reduce((total, entry) => total + entry.value, 0);
+    const collectionTotal = collectionStats.reduce((total, entry) => total + entry.total, 0);
+    const activeVoyage = getActiveLongVoyage();
+    elements.returnBriefClaims.textContent = claimable > 0 ? `${claimable} 项奖励` : "暂无积压";
+    elements.returnBriefCollection.textContent = `${collected} / ${collectionTotal}`;
+    elements.returnBriefSummary.textContent = activeVoyage
+      ? `航站状态：${activeVoyage.name}正在执行第 ${state.longVoyage.stageIndex + 1} 航段；${claimable > 0 ? `另有 ${claimable} 项委托奖励待领取。` : "当前没有委托奖励积压。"}`
+      : `航站状态：${getStarportBlueprint().name}正在运行；已完成 ${collected} / ${collectionTotal} 项主要收藏。`;
     elements.returnBriefRecommendation.textContent = `下一步：${guide.title}。${guide.description}`;
     elements.returnBriefAction.textContent = guide.label;
     elements.returnBriefAction.dataset.guideAction = guide.action;
@@ -16979,6 +17138,7 @@
       const button = event.target.closest("[data-starport-blueprint]");
       if (button) switchStarportBlueprint(button.dataset.starportBlueprint);
     });
+    elements.starportLifeEventClaim.addEventListener("click", claimStarportLifeEvent);
     elements.skirmishTargetList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-skirmish-id]");
       if (button) attackSkirmish(button.dataset.skirmishId);

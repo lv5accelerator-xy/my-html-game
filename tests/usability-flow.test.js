@@ -9,7 +9,7 @@ const game = fs.readFileSync(path.join(root, "game.js"), "utf8");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const cloud = fs.readFileSync(path.join(root, "cloud-save.js"), "utf8");
 
-assert.match(game, /const GAME_VERSION = "1\.9\.0";/);
+assert.match(game, /const GAME_VERSION = "1\.10\.0";/);
 assert.match(html, /id="resource-cycle-grid" class="resource-cycle-grid"/);
 assert.match(game, /const RESOURCE_RECLAIM_RECIPES = Object\.freeze/);
 assert.match(game, /playerName: "无名拾荒者"/);
@@ -29,6 +29,16 @@ assert.match(html, /id="starport-gallery-stats" class="starport-gallery-stats"/)
 assert.match(game, /const STARPORT_LIFE_EVENTS = Object\.freeze/);
 assert.match(cloud, /async function hydrateAnnouncementGoals\(\)/);
 assert.match(cloud, /getAggregateFromServer/);
+for (const illustration of [
+  "fleet-hangar.webp",
+  "research-observatory.webp",
+  "orbital-defense.webp",
+  "singularity-transcend.webp",
+]) {
+  assert.match(html, new RegExp(`assets/${illustration}`));
+  assert.ok(fs.statSync(path.join(root, "assets", illustration)).size < 180_000);
+}
+assert.equal((html.match(/class="page-illustration /g) || []).length, 4);
 assert.equal((html.match(/class="panel game-page/g) || []).length, 11);
 
-console.log("usability flow ok: 3-step tutorial, optional plans collapsed, 11 primary pages");
+console.log("usability flow ok: 3-step tutorial, 4 lazy illustrations, 11 primary pages");

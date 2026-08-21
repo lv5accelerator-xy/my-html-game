@@ -11,16 +11,16 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="1.9.0" />
-    <meta name="stellar-release-title" content="星港生活" />
-    <title>星港拾荒者 v1.9 · 星港生活</title>
-    <link rel="stylesheet" href="styles.css?v=1.9.0" />
+    <meta name="stellar-game-version" content="1.10.0" />
+    <meta name="stellar-release-title" content="星港画卷" />
+    <title>星港拾荒者 v1.10 · 星港画卷</title>
+    <link rel="stylesheet" href="styles.css?v=1.10.0" />
   </head>
   <body>
     <a class="skip-link" href="#command-page">跳到游戏内容</a>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=1.9.0"
+      src="assets/outpost-beyond-orion.mp3?v=1.10.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -794,6 +794,22 @@
             </div>
           </div>
 
+          <figure class="page-illustration fleet-illustration">
+            <img
+              src="assets/fleet-hangar.webp"
+              width="1280"
+              height="720"
+              alt="深空星港机库中，多艘无人回收舰正在发光轨道上整备"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <small>轨道编队坞</small>
+              <strong>让每一座设施都成为航站继续运转的一部分</strong>
+              <span>回收舰、光帆与中继单元会在这里组成你的自动化生产线。</span>
+            </figcaption>
+          </figure>
+
           <div class="fleet-summary">
             <div>
               <span class="pulse-dot" aria-hidden="true"></span>
@@ -937,6 +953,22 @@
             <span class="research-count" id="research-count">0 / 24</span>
           </div>
 
+          <figure class="page-illustration research-illustration">
+            <img
+              src="assets/research-observatory.webp"
+              width="1280"
+              height="720"
+              alt="深空研究室正在用环形装置分析星图和发光晶体样本"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <small>深空观测室</small>
+              <strong>把未知拆成一条可以继续前进的研究链</strong>
+              <span>研究、成就与星核里程碑共同记录航站如何理解这片星海。</span>
+            </figcaption>
+          </figure>
+
           <div class="tabs" role="tablist" aria-label="研究终端页面">
             <button
               id="upgrades-tab"
@@ -1064,6 +1096,22 @@
               <span><small>失利</small><strong id="combat-losses">0</strong></span>
             </div>
           </div>
+
+          <figure class="page-illustration combat-illustration">
+            <img
+              src="assets/orbital-defense.webp"
+              width="1280"
+              height="720"
+              alt="星港防御舰队在行星轨道上展开能量护盾抵御袭击者"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <small>轨道防卫网</small>
+              <strong>舰炮负责出击，基地护盾守住离线时的航站</strong>
+              <span>在主动清剿和星港防御之间分配资源，才能让战线稳定延伸。</span>
+            </figcaption>
+          </figure>
 
           <div class="combat-salvage-bar">
             <div>
@@ -1524,6 +1572,21 @@
               </span>
             </div>
           </div>
+          <figure class="page-illustration transcend-illustration">
+            <img
+              src="assets/singularity-transcend.webp"
+              width="1280"
+              height="720"
+              alt="环形星港驶向发光的人工奇点，多枚伴星信标环绕其间"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <small>奇点航标</small>
+              <strong>超越不是终点，而是带着记录重新出发</strong>
+              <span>永久收藏、星核学说与伴星会替下一轮航线留下方向。</span>
+            </figcaption>
+          </figure>
           <button
             id="crescent-signal"
             class="crescent-signal"
@@ -2086,7 +2149,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v1.9.0 · 星港生活</span>
+        <span>航站协议 v1.10.0 · 星港画卷</span>
       </footer>
     </div>
 
@@ -2138,7 +2201,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v1.9.0</strong>
+          <strong id="patch-notes-current-version">v1.10.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2449,9 +2512,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.9.0"></script>
-    <script src="game.js?v=1.9.0"></script>
-    <script src="firebase-config.js?v=1.9.0"></script>
-    <script type="module" src="cloud-save.js?v=1.9.0"></script>
+    <script src="game-math.js?v=1.10.0"></script>
+    <script src="game.js?v=1.10.0"></script>
+    <script src="firebase-config.js?v=1.10.0"></script>
+    <script type="module" src="cloud-save.js?v=1.10.0"></script>
   </body>
 </html>

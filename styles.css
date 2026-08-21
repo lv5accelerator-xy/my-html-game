@@ -13061,3 +13061,97 @@ body:not([data-expedition-skin="standard"]) .collect-core {
   .resource-cycle-visual img { object-position: 62% center; }
   .resource-cycle-visual figcaption { width: 88%; min-height: 210px; padding: 19px; }
 }
+
+.page-illustration {
+  --illustration-accent: #73e7ff;
+  position: relative;
+  min-height: 230px;
+  margin: 0 0 18px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--illustration-accent) 28%, transparent);
+  border-radius: 20px;
+  background: #06101e;
+  box-shadow: inset 0 0 34px rgba(8, 24, 44, 0.42);
+  isolation: isolate;
+}
+
+.page-illustration::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(3, 11, 22, 0.94) 0%, rgba(3, 11, 22, 0.62) 42%, rgba(3, 11, 22, 0.08) 78%),
+    linear-gradient(0deg, rgba(3, 11, 22, 0.82), transparent 58%);
+  pointer-events: none;
+}
+
+.page-illustration img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.page-illustration figcaption {
+  display: grid;
+  align-content: end;
+  width: min(550px, 72%);
+  min-height: 230px;
+  padding: 25px;
+  gap: 6px;
+}
+
+.page-illustration figcaption small {
+  color: var(--illustration-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.page-illustration figcaption strong {
+  color: #f0fbff;
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  line-height: 1.36;
+}
+
+.page-illustration figcaption span {
+  color: #a4b9cf;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.research-illustration { --illustration-accent: #b99aff; }
+.combat-illustration { --illustration-accent: #6fd5ff; }
+.transcend-illustration { --illustration-accent: #d0a8ff; }
+
+@media (max-width: 680px) {
+  .page-illustration {
+    min-height: 188px;
+    margin-bottom: 14px;
+    border-radius: 16px;
+  }
+
+  .page-illustration::after {
+    background:
+      linear-gradient(90deg, rgba(3, 11, 22, 0.94), rgba(3, 11, 22, 0.42) 72%, rgba(3, 11, 22, 0.12)),
+      linear-gradient(0deg, rgba(3, 11, 22, 0.86), transparent 62%);
+  }
+
+  .page-illustration img { object-position: 62% center; }
+  .research-illustration img { object-position: 68% center; }
+  .combat-illustration img { object-position: 72% center; }
+
+  .page-illustration figcaption {
+    width: 91%;
+    min-height: 188px;
+    padding: 18px;
+    gap: 4px;
+  }
+
+  .page-illustration figcaption span { font-size: 0.74rem; }
+}

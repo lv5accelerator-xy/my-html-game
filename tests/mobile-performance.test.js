@@ -17,6 +17,7 @@ const mimeTypes = {
   ".json": "application/json; charset=utf-8",
   ".mp3": "audio/mpeg",
   ".png": "image/png",
+  ".webp": "image/webp",
   ".txt": "text/plain; charset=utf-8",
 };
 
@@ -59,7 +60,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.9.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.10.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {

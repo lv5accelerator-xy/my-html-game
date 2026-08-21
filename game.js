@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.9.0";
-  const PATCH_NOTES_VERSION = "1.9.0";
+  const GAME_VERSION = "1.10.0";
+  const PATCH_NOTES_VERSION = "1.10.0";
   const SAVE_VERSION = 30;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.9.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.10.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.9.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.10.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.9.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.10.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.9.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.10.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.10.0",
+      theme: "星港画卷",
+      changes: [
+        "舰队、研究、战斗与超越页面各新增一张独立叙事插图，让主要系统更容易凭画面辨认。",
+        "四张插图统一采用深蓝、青色与紫色的星港概念图风格，并配有简短场景说明，不增加新按钮或操作负担。",
+        "图片统一裁切为 16:9 WebP 并延迟加载；手机端重新设置焦点位置、遮罩与文字宽度，避免横向滚动。",
+        "本版本只扩充视觉内容，不改变存档结构、数值平衡、云端规则或现有玩法进度。",
+      ],
+    },
     {
       version: "1.9.0",
       theme: "星港生活",

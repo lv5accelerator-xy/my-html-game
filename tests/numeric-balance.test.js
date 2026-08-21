@@ -61,7 +61,7 @@ const companions = readArray(
 );
 const companionEvents = readArray("COMPANION_EVENTS", "COMPANION_ECHOES");
 const companionEchoes = readArray("COMPANION_ECHOES", "LONG_VOYAGES");
-const longVoyages = readArray("LONG_VOYAGES", "ENDGAME_PROTOCOLS");
+const longVoyages = readArray("LONG_VOYAGES", "LONG_VOYAGE_CHOICES");
 const expeditionRoutes = readArray("EXPEDITION_ROUTE_TYPES", "EXPEDITION_AFFIXES");
 const expeditionAffixes = readArray("EXPEDITION_AFFIXES", "EXPEDITION_BOONS");
 const expeditionBoons = readArray("EXPEDITION_BOONS", "EXPEDITION_GEAR");
@@ -91,8 +91,8 @@ const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
 assert.equal(
   readConstant("SAVE_VERSION"),
-  28,
-  "resource cycle needs schema version 28",
+  29,
+  "long-voyage decisions need schema version 29",
 );
 assert.match(source, /pinnedGoals:\s*\[\]/, "fresh saves need an empty tracked-goal list");
 assert.match(source, /lastJobId:\s*""/, "fresh saves need an empty last operation id");

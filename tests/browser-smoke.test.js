@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.7.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.8.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -190,15 +190,15 @@ async function main() {
       mobileNavigationItems: document.querySelectorAll("#mobile-quick-nav button").length,
     }));
 
-    assert.equal(snapshot.gameVersion, "1.7.0");
-    assert.equal(snapshot.saveVersion, 28);
+    assert.equal(snapshot.gameVersion, "1.8.0");
+    assert.equal(snapshot.saveVersion, 29);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v1\.5\.0/);
+    assert.match(snapshot.footer, /v1\.8\.0/);
     assert.deepEqual(snapshot.schemaFields.pinnedGoals, []);
     assert.equal(snapshot.schemaFields.lastJobId, "");
     assert.equal(snapshot.currentActionVisible, false);
@@ -289,6 +289,10 @@ async function main() {
     assert.ok(rememberedOperation.lastJobId);
     assert.equal(rememberedOperation.queue[0].jobId, rememberedOperation.lastJobId);
     assert.equal(await page.locator("#operations-repeat-button").isEnabled(), true);
+    await page.waitForTimeout(160);
+    if (await page.locator("#modal-confirm").isVisible()) {
+      await page.locator("#modal-confirm").click();
+    }
     await page.locator("#operations-stop-button").click();
     await page.locator("#operations-repeat-button").click();
     assert.equal(
@@ -1464,7 +1468,7 @@ async function main() {
         archivedIds: migratedSave.atlas.discoveredIds,
       };
     });
-    assert.equal(atlasMigration.saveVersion, 28);
+    assert.equal(atlasMigration.saveVersion, 29);
     assert.equal(atlasMigration.restoredAtlas.total, 33);
     assert.equal(atlasMigration.restoredAtlas.discovered, 19);
     assert.equal(
@@ -1490,7 +1494,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="1.5.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="1.8.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1499,7 +1503,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v1\.5\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v1\.8\.1/);
     const saveSafety = await page.evaluate(() =>
       window.StellarOutpostCloudBridge.getSaveSafetyDiagnostics(),
     );

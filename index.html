@@ -11,16 +11,16 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="1.7.0" />
-    <meta name="stellar-release-title" content="资源循环" />
-    <title>星港拾荒者 v1.7 · 资源循环</title>
-    <link rel="stylesheet" href="styles.css?v=1.7.0" />
+    <meta name="stellar-game-version" content="1.8.0" />
+    <meta name="stellar-release-title" content="长航抉择" />
+    <title>星港拾荒者 v1.8 · 长航抉择</title>
+    <link rel="stylesheet" href="styles.css?v=1.8.0" />
   </head>
   <body>
     <a class="skip-link" href="#command-page">跳到游戏内容</a>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=1.7.0"
+      src="assets/outpost-beyond-orion.mp3?v=1.8.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -1268,12 +1268,16 @@
             <header>
               <span aria-hidden="true">⌁</span>
               <div>
-                <small>v1.5.0 · 四阶段长期航线</small>
+                <small>v1.8.0 · 决策式长期航线</small>
                 <h3 id="long-voyage-title">边境长航</h3>
                 <p>一次只执行一条路线；普通远征、轮回和其他玩法仍可照常进行。</p>
               </div>
               <strong id="long-voyage-record">航线记录 0 / 3</strong>
             </header>
+            <figure class="long-voyage-visual">
+              <img src="assets/voyage-crossroads.webp" alt="三条航路在遥远星门前分岔的边境长航航图" loading="lazy" decoding="async">
+              <figcaption><strong>每段航程都要做出选择</strong><span>阅读信号，选择稳态、穿越或回收；判断机制比堆倍率更重要。</span></figcaption>
+            </figure>
             <div id="long-voyage-routes" class="long-voyage-routes"></div>
             <article id="long-voyage-active" class="long-voyage-active" hidden>
               <header>
@@ -1282,11 +1286,18 @@
                 <b id="long-voyage-progress-label">0 / 1</b>
               </header>
               <p id="long-voyage-description"></p>
+              <section id="long-voyage-decision" class="long-voyage-decision">
+                <header><small>本航段信号</small><strong id="long-voyage-decision-title">等待信号</strong></header>
+                <p id="long-voyage-decision-signal"></p>
+                <div id="long-voyage-decision-choices" class="long-voyage-decision-choices"></div>
+              </section>
               <div class="long-voyage-progress" aria-hidden="true"><span id="long-voyage-progress-bar"></span></div>
+              <small id="long-voyage-souvenirs" class="long-voyage-souvenirs">航柜纪念品：尚未发现。</small>
               <footer>
                 <span id="long-voyage-report">尚未提交航报。</span>
                 <div>
                   <button id="long-voyage-go" class="secondary-button" type="button">前往目标</button>
+                  <button id="long-voyage-quick" class="secondary-button" type="button" hidden>快速结算 · 2 补给 + 12 残片</button>
                   <button id="long-voyage-claim" type="button" disabled>完成后提交航报</button>
                 </div>
               </footer>
@@ -2058,7 +2069,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v1.7.0 · 资源循环</span>
+        <span>航站协议 v1.8.0 · 长航抉择</span>
       </footer>
     </div>
 
@@ -2110,7 +2121,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v1.7.0</strong>
+          <strong id="patch-notes-current-version">v1.8.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2421,9 +2432,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.7.0"></script>
-    <script src="game.js?v=1.7.0"></script>
-    <script src="firebase-config.js?v=1.7.0"></script>
-    <script type="module" src="cloud-save.js?v=1.7.0"></script>
+    <script src="game-math.js?v=1.8.0"></script>
+    <script src="game.js?v=1.8.0"></script>
+    <script src="firebase-config.js?v=1.8.0"></script>
+    <script type="module" src="cloud-save.js?v=1.8.0"></script>
   </body>
 </html>

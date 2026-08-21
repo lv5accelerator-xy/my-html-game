@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.7.0";
-  const PATCH_NOTES_VERSION = "1.7.0";
-  const SAVE_VERSION = 28;
+  const GAME_VERSION = "1.8.0";
+  const PATCH_NOTES_VERSION = "1.8.0";
+  const SAVE_VERSION = 29;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.7.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.8.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.7.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.8.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.7.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.8.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.7.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.8.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.8.0",
+      theme: "长航抉择",
+      changes: [
+        "边境长航的每个航段新增三选一临时决策，稳态、强行与回收路线会改变本段目标和一次性奖励。",
+        "第四航段改为机制型守门者信号；正确判断会缩短目标并带回额外现有资源，选择不会形成永久倍率。",
+        "完成航段会收录纯收藏航迹纪念物；已归档路线可消耗补给和残片快速略过普通航段，但略过不发奖励。",
+        "新增分岔航线主题贴图；存档结构升级至第 29 版，保存当前决策、纪念物与快速结算次数。",
+      ],
+    },
     {
       version: "1.7.0",
       theme: "资源循环",
@@ -2675,6 +2685,20 @@
       ],
     },
   ];
+  const LONG_VOYAGE_CHOICES = Object.freeze([
+    Object.freeze({ id: "careful", icon: "◈", label: "稳态航行", description: "降低阶段目标，额外战利品较少。", goalFactor: 0.9, reward: Object.freeze({}) }),
+    Object.freeze({ id: "bold", icon: "↟", label: "强行穿越", description: "阶段目标稍高，完成后获得额外凭证。", goalFactor: 1.1, reward: Object.freeze({ tokens: 4 }) }),
+    Object.freeze({ id: "salvage", icon: "⌁", label: "放慢回收", description: "阶段目标最高，完成后获得材料与残片。", goalFactor: 1.2, reward: Object.freeze({ materialsEach: 1, fragments: 10 }) }),
+  ]);
+  const LONG_VOYAGE_EVENTS = Object.freeze([
+    Object.freeze({ id: "ionRain", title: "离子雨带", signal: "细密电弧正沿舰壳扩散，稳定推进比速度更重要。", idealId: "careful", souvenir: "离子雨瓶", boss: false }),
+    Object.freeze({ id: "derelictGarden", title: "漂流船坞花园", signal: "废弃船坞被晶体覆盖，慢下来才能带走完整样本。", idealId: "salvage", souvenir: "晶枝压片", boss: false }),
+    Object.freeze({ id: "narrowGate", title: "坍缩窄门", signal: "窄门即将闭合，持续加速是唯一稳定窗口。", idealId: "bold", souvenir: "窄门刻度", boss: false }),
+    Object.freeze({ id: "lostBeacon", title: "失温航标", signal: "旧航标仍在发送回家坐标，护送它比拆解更有价值。", idealId: "careful", souvenir: "失温灯芯", boss: false }),
+    Object.freeze({ id: "clockworkWarden", title: "守门者：发条星环", signal: "装甲会随攻击闭合；回收外圈构件可暴露核心。", idealId: "salvage", souvenir: "发条星环齿", boss: true }),
+    Object.freeze({ id: "echoLeviathan", title: "守门者：回声巨影", signal: "巨影会复制急促动作；保持稳态才能让回声自行消散。", idealId: "careful", souvenir: "静默回声囊", boss: true }),
+    Object.freeze({ id: "flarePursuer", title: "守门者：耀斑追猎者", signal: "下一次恒星耀斑会让追猎者失去锁定，必须抢先穿越。", idealId: "bold", souvenir: "耀斑尾羽", boss: true }),
+  ]);
   const ENDGAME_PROTOCOLS = [
     {
       id: "production",
@@ -3832,7 +3856,13 @@
     longVoyageDescription: $("#long-voyage-description"),
     longVoyageProgressBar: $("#long-voyage-progress-bar"),
     longVoyageReport: $("#long-voyage-report"),
+    longVoyageDecision: $("#long-voyage-decision"),
+    longVoyageDecisionTitle: $("#long-voyage-decision-title"),
+    longVoyageDecisionSignal: $("#long-voyage-decision-signal"),
+    longVoyageDecisionChoices: $("#long-voyage-decision-choices"),
+    longVoyageSouvenirs: $("#long-voyage-souvenirs"),
     longVoyageGo: $("#long-voyage-go"),
+    longVoyageQuick: $("#long-voyage-quick"),
     longVoyageClaim: $("#long-voyage-claim"),
     anomalyHub: $("#anomaly-hub"),
     anomalyWeek: $("#anomaly-week"),
@@ -4110,6 +4140,9 @@
       baseline: {},
       completedRoutes: [],
       totalCompleted: 0,
+      currentDecision: null,
+      souvenirs: [],
+      quickSettles: 0,
       lastReport: "选择一条长航路线，把现有系统串成四段持续目标。",
     };
   }
@@ -8541,6 +8574,21 @@
         )
       : [];
     clean.totalCompleted = clampGameCount(rawLongVoyage.totalCompleted);
+    const decisionEvent = LONG_VOYAGE_EVENTS.find(
+      (entry) => entry.id === rawLongVoyage.currentDecision?.eventId,
+    );
+    const decisionChoice = LONG_VOYAGE_CHOICES.find(
+      (entry) => entry.id === rawLongVoyage.currentDecision?.choiceId,
+    );
+    clean.currentDecision = route && decisionEvent
+      ? { eventId: decisionEvent.id, choiceId: decisionChoice?.id || "" }
+      : null;
+    clean.souvenirs = Array.isArray(rawLongVoyage.souvenirs)
+      ? LONG_VOYAGE_EVENTS.flatMap((event) =>
+          rawLongVoyage.souvenirs.includes(event.id) ? [event.id] : [],
+        )
+      : [];
+    clean.quickSettles = clampGameCount(rawLongVoyage.quickSettles);
     clean.lastReport = String(rawLongVoyage.lastReport || clean.lastReport).slice(0, 200);
     return clean;
   }
@@ -14133,16 +14181,68 @@
     return LONG_VOYAGES.find((route) => route.id === state.longVoyage.activeRouteId) || null;
   }
 
+  function getLongVoyageDecisionEvent(route, stageIndex = state.longVoyage.stageIndex) {
+    if (!route) return null;
+    const finalStage = stageIndex >= route.stages.length - 1;
+    const pool = LONG_VOYAGE_EVENTS.filter((event) => event.boss === finalStage);
+    return seededMissionShuffle(
+      pool,
+      `${route.id}:${stageIndex}:${state.longVoyage.totalCompleted}`,
+    )[0] || null;
+  }
+
+  function prepareLongVoyageDecision(route = getActiveLongVoyage()) {
+    const event = getLongVoyageDecisionEvent(route);
+    state.longVoyage.currentDecision = event
+      ? { eventId: event.id, choiceId: "" }
+      : null;
+  }
+
+  function getLongVoyageDecision(route = getActiveLongVoyage()) {
+    if (!route) return { event: null, choice: null };
+    let event = LONG_VOYAGE_EVENTS.find(
+      (entry) => entry.id === state.longVoyage.currentDecision?.eventId,
+    );
+    if (!event || event.boss !== (state.longVoyage.stageIndex >= route.stages.length - 1)) {
+      prepareLongVoyageDecision(route);
+      event = LONG_VOYAGE_EVENTS.find(
+        (entry) => entry.id === state.longVoyage.currentDecision?.eventId,
+      );
+    }
+    const choice = LONG_VOYAGE_CHOICES.find(
+      (entry) => entry.id === state.longVoyage.currentDecision?.choiceId,
+    ) || null;
+    return { event: event || null, choice };
+  }
+
+  function chooseLongVoyageDecision(choiceId) {
+    const route = getActiveLongVoyage();
+    const choice = LONG_VOYAGE_CHOICES.find((entry) => entry.id === choiceId);
+    if (!route || !choice || !state.longVoyage.currentDecision) return;
+    state.longVoyage.currentDecision.choiceId = choice.id;
+    state.longVoyage.baseline = createLongVoyageBaseline();
+    state.longVoyage.lastReport = `${choice.label}方案已确认；阶段计数从现在开始。`;
+    playClickSound();
+    renderLongVoyage();
+    saveGame();
+  }
+
   function getLongVoyageStageProgress(route = getActiveLongVoyage()) {
     const stage = route?.stages[state.longVoyage.stageIndex];
     if (!stage) return { stage: null, current: 0, goal: 1, ready: false };
+    const { event, choice } = getLongVoyageDecision(route);
+    const ideal = Boolean(event && choice && event.idealId === choice.id);
+    const goal = Math.max(1, Math.ceil(stage.goal * (choice?.goalFactor || 1) * (ideal ? 0.8 : 1)));
     const baseline = Number(state.longVoyage.baseline[stage.metric]) || 0;
-    const current = Math.max(0, getLongVoyageMetric(stage.metric) - baseline);
+    const current = choice ? Math.max(0, getLongVoyageMetric(stage.metric) - baseline) : 0;
     return {
       stage,
-      current: Math.min(stage.goal, current),
-      goal: stage.goal,
-      ready: current >= stage.goal,
+      current: Math.min(goal, current),
+      goal,
+      ready: Boolean(choice) && current >= goal,
+      event,
+      choice,
+      ideal,
     };
   }
 
@@ -14153,6 +14253,7 @@
     state.longVoyage.activeRouteId = route.id;
     state.longVoyage.stageIndex = 0;
     state.longVoyage.baseline = createLongVoyageBaseline();
+    prepareLongVoyageDecision(route);
     state.longVoyage.lastReport = `${route.name}已经启航，第一份阶段目标已送达。`;
     addLog(`边境长航启程：${route.name}。`);
     showToast("边境长航已启程", route.motto, route.icon);
@@ -14165,29 +14266,67 @@
     const progress = getLongVoyageStageProgress(route);
     if (!route || !progress.stage || !progress.ready) return;
     grantCompanionRewards(progress.stage.reward);
+    grantCompanionRewards(progress.choice?.reward);
+    if (progress.ideal) grantCompanionRewards({ supplies: 2, fragments: 8 });
+    if (progress.event && !state.longVoyage.souvenirs.includes(progress.event.id)) {
+      state.longVoyage.souvenirs.push(progress.event.id);
+    }
+    const rewardSummary = [
+      formatCompanionRewards(progress.stage.reward),
+      formatCompanionRewards(progress.choice?.reward),
+      progress.ideal ? "机制判断正确：远征补给 +2 · 星图残片 +8" : "",
+      progress.event ? `纪念品：${progress.event.souvenir}` : "",
+    ].filter(Boolean).join(" · ");
     const finalStage = state.longVoyage.stageIndex >= route.stages.length - 1;
     if (finalStage) {
       if (!state.longVoyage.completedRoutes.includes(route.id)) {
         state.longVoyage.completedRoutes.push(route.id);
       }
       state.longVoyage.totalCompleted = clampGameCount(state.longVoyage.totalCompleted + 1);
-      state.longVoyage.lastReport = `${route.name}完成：航线已经写入边境长航档案。`;
+      state.longVoyage.lastReport = `${route.name}完成：航线与${progress.event?.souvenir || "终点纪念物"}已经写入边境长航档案。`;
       addLog(`边境长航完成：${route.name}。`);
-      showToast("长航完成", `${route.name}已归档 · ${formatCompanionRewards(progress.stage.reward)}`, route.icon);
+      showToast("长航完成", `${route.name}已归档 · ${rewardSummary}`, route.icon);
       state.longVoyage.activeRouteId = "";
       state.longVoyage.stageIndex = 0;
       state.longVoyage.baseline = {};
+      state.longVoyage.currentDecision = null;
     } else {
       state.longVoyage.stageIndex += 1;
       state.longVoyage.baseline = createLongVoyageBaseline();
+      prepareLongVoyageDecision(route);
       const nextStage = route.stages[state.longVoyage.stageIndex];
-      state.longVoyage.lastReport = `航报已提交，下一阶段：${nextStage.title}。`;
-      showToast("阶段航报已提交", `${formatCompanionRewards(progress.stage.reward)} · 下一阶段：${nextStage.title}`, route.icon);
+      state.longVoyage.lastReport = `${progress.event?.souvenir || "航段纪念物"}已入柜；下一阶段：${nextStage.title}。`;
+      showToast("阶段航报已提交", `${rewardSummary} · 下一阶段：${nextStage.title}`, route.icon);
     }
     playAchievementTone();
     renderLongVoyage();
     updateUi();
     saveGame(false, { forceBackup: finalStage });
+  }
+
+  function quickSettleLongVoyageStage() {
+    const route = getActiveLongVoyage();
+    const finalStage = route && state.longVoyage.stageIndex >= route.stages.length - 1;
+    const archived = route && state.longVoyage.completedRoutes.includes(route.id);
+    const suppliesCost = 2;
+    const fragmentsCost = 12;
+    if (!route || finalStage || !archived) return;
+    if (state.expedition.supplies < suppliesCost || state.expedition.fragments < fragmentsCost) {
+      showToast("快速结算物资不足", `需要 ${suppliesCost} 补给与 ${fragmentsCost} 星图残片。`, "⌁");
+      return;
+    }
+    state.expedition.supplies -= suppliesCost;
+    state.expedition.fragments -= fragmentsCost;
+    state.longVoyage.quickSettles = clampGameCount(state.longVoyage.quickSettles + 1);
+    state.longVoyage.stageIndex += 1;
+    state.longVoyage.baseline = createLongVoyageBaseline();
+    prepareLongVoyageDecision(route);
+    const nextStage = route.stages[state.longVoyage.stageIndex];
+    state.longVoyage.lastReport = `已消耗 ${suppliesCost} 补给与 ${fragmentsCost} 残片快速结算；本航段没有奖励。下一阶段：${nextStage.title}。`;
+    playPurchaseTone();
+    renderLongVoyage();
+    updateUi();
+    saveGame();
   }
 
   function renderLongVoyage() {
@@ -14197,7 +14336,7 @@
     elements.longVoyage.hidden = !unlocked;
     if (!unlocked) return;
     const active = getActiveLongVoyage();
-    elements.longVoyageRecord.textContent = `航线记录 ${state.longVoyage.completedRoutes.length} / ${LONG_VOYAGES.length} · 完成长航 ${formatNumber(state.longVoyage.totalCompleted, 0)} 次`;
+    elements.longVoyageRecord.textContent = `航线记录 ${state.longVoyage.completedRoutes.length} / ${LONG_VOYAGES.length} · 长航 ${formatNumber(state.longVoyage.totalCompleted, 0)} 次 · 纪念品 ${state.longVoyage.souvenirs.length} / ${LONG_VOYAGE_EVENTS.length}`;
     elements.longVoyageRoutes.hidden = Boolean(active);
     elements.longVoyageRoutes.innerHTML = LONG_VOYAGES.map((route) => {
       const archived = state.longVoyage.completedRoutes.includes(route.id);
@@ -14207,14 +14346,26 @@
     elements.longVoyageActive.hidden = !active;
     if (!active) return;
     const progress = getLongVoyageStageProgress(active);
+    const archived = state.longVoyage.completedRoutes.includes(active.id);
+    const finalStage = state.longVoyage.stageIndex >= active.stages.length - 1;
     elements.longVoyageIcon.textContent = active.icon;
     elements.longVoyageStageLabel.textContent = `${active.name} · 航段 ${state.longVoyage.stageIndex + 1} / ${active.stages.length}`;
     elements.longVoyageStageTitle.textContent = progress.stage.title;
     elements.longVoyageProgressLabel.textContent = `${formatNumber(progress.current, 0)} / ${formatNumber(progress.goal, 0)}`;
-    elements.longVoyageDescription.textContent = `${active.motto} 当前阶段奖励：${formatCompanionRewards(progress.stage.reward)}。`;
+    elements.longVoyageDescription.textContent = `${active.motto} 当前阶段奖励：${formatCompanionRewards(progress.stage.reward)}${progress.choice ? `；方案追加：${formatCompanionRewards(progress.choice.reward) || "目标缩减"}${progress.ideal ? "，机制判断正确并追加远征物资" : ""}` : "；请先选择应对方案"}。`;
     elements.longVoyageProgressBar.style.width = `${clamp(progress.current / Math.max(1, progress.goal), 0, 1) * 100}%`;
     elements.longVoyageReport.textContent = state.longVoyage.lastReport;
+    elements.longVoyageDecision.hidden = !progress.event;
+    elements.longVoyageDecisionTitle.textContent = progress.event?.title || "等待信号";
+    elements.longVoyageDecisionSignal.textContent = progress.event?.signal || "";
+    elements.longVoyageDecisionChoices.innerHTML = LONG_VOYAGE_CHOICES.map((choice) => `<button type="button" class="${progress.choice?.id === choice.id ? "selected" : ""}" data-long-voyage-choice="${choice.id}" ${progress.choice ? "disabled" : ""}><span>${choice.icon}</span><strong>${choice.label}</strong><small>${choice.description}</small></button>`).join("");
+    elements.longVoyageSouvenirs.textContent = state.longVoyage.souvenirs.length
+      ? `航柜纪念品：${state.longVoyage.souvenirs.map((id) => LONG_VOYAGE_EVENTS.find((event) => event.id === id)?.souvenir).filter(Boolean).join(" · ")}`
+      : "航柜纪念品：完成航段后保存首次发现的纪念物。";
     elements.longVoyageGo.dataset.guideAction = progress.stage.action;
+    elements.longVoyageGo.disabled = !progress.choice;
+    elements.longVoyageQuick.hidden = !archived || finalStage;
+    elements.longVoyageQuick.disabled = state.expedition.supplies < 2 || state.expedition.fragments < 12;
     elements.longVoyageClaim.disabled = !progress.ready;
     elements.longVoyageClaim.textContent = progress.ready
       ? state.longVoyage.stageIndex === active.stages.length - 1
@@ -16862,6 +17013,11 @@
       performGuidanceAction(elements.longVoyageGo.dataset.guideAction);
     });
     elements.longVoyageClaim.addEventListener("click", claimLongVoyageStage);
+    elements.longVoyageDecisionChoices.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-long-voyage-choice]");
+      if (button) chooseLongVoyageDecision(button.dataset.longVoyageChoice);
+    });
+    elements.longVoyageQuick.addEventListener("click", quickSettleLongVoyageStage);
     elements.startExpeditionButton.addEventListener("click", startExpedition);
     elements.anomalyOptions.addEventListener("click", (event) => {
       const button = event.target.closest("[data-anomaly]");

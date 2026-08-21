@@ -12846,6 +12846,11 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 .long-voyage-active p,
 .long-voyage-active footer > span { color: var(--muted); }
 .long-voyage > header strong { color: #9de9e4; font-size: 0.78rem; }
+.long-voyage-visual { position: relative; min-height: 210px; margin: 0; overflow: hidden; border: 1px solid rgba(102, 195, 221, 0.25); border-radius: 19px; background: #071222; }
+.long-voyage-visual img { display: block; width: 100%; height: 100%; min-height: 210px; object-fit: cover; }
+.long-voyage-visual::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(3, 14, 27, 0.88), transparent 62%), linear-gradient(0deg, rgba(3, 14, 27, 0.72), transparent 48%); pointer-events: none; }
+.long-voyage-visual figcaption { position: absolute; z-index: 1; left: 18px; bottom: 16px; display: grid; max-width: 540px; gap: 4px; color: #e9fbff; }
+.long-voyage-visual figcaption span { color: #a8c8d5; font-size: 0.76rem; }
 .long-voyage-routes { display: grid; gap: 10px; }
 .long-voyage-route {
   display: grid;
@@ -12867,6 +12872,15 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 .long-voyage-active > header > div { display: grid; gap: 2px; }
 .long-voyage-active > header small { color: #9eaec4; }
 .long-voyage-active > header b { color: #d2c0ff; }
+.long-voyage-decision { display: grid; gap: 10px; padding: 14px; border: 1px solid rgba(91, 204, 222, 0.22); border-radius: 15px; background: rgba(3, 24, 39, 0.66); }
+.long-voyage-decision > header { display: grid; gap: 2px; }
+.long-voyage-decision > header small { color: #79cdd8; }
+.long-voyage-decision-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.long-voyage-decision-choices button { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px; padding: 11px; text-align: left; background: rgba(13, 39, 57, 0.8); }
+.long-voyage-decision-choices button > span { grid-row: 1 / 3; color: #80e0e9; font-size: 1.05rem; }
+.long-voyage-decision-choices button small { color: #92a8bb; line-height: 1.4; }
+.long-voyage-decision-choices button.selected { border-color: #9b80e4; background: rgba(107, 73, 166, 0.26); box-shadow: inset 0 0 0 1px rgba(188, 160, 255, 0.18); }
+.long-voyage-souvenirs { color: #a8c7d5; line-height: 1.6; }
 .long-voyage-progress { overflow: hidden; height: 7px; border-radius: 999px; background: rgba(82, 112, 150, 0.22); }
 .long-voyage-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #54cbd2, #a783ed); }
 .long-voyage-active footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -12875,12 +12889,14 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 
 @media (max-width: 680px) {
   .long-voyage { padding: 14px; }
+  .long-voyage-visual, .long-voyage-visual img { min-height: 180px; }
   .long-voyage > header { grid-template-columns: auto minmax(0, 1fr); }
   .long-voyage > header > strong { grid-column: 2; }
   .long-voyage-route { grid-template-columns: auto minmax(0, 1fr); }
   .long-voyage-route > button { grid-column: 1 / -1; width: 100%; }
   .long-voyage-active > header { grid-template-columns: auto minmax(0, 1fr); }
   .long-voyage-active > header b { grid-column: 2; }
+  .long-voyage-decision-choices { grid-template-columns: 1fr; }
   .long-voyage-active footer { align-items: stretch; flex-direction: column; }
   .long-voyage-active footer > div { display: grid; grid-template-columns: 1fr; }
 }

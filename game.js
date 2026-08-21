@@ -31,9 +31,9 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.6.0";
-  const PATCH_NOTES_VERSION = "1.6.0";
-  const SAVE_VERSION = 27;
+  const GAME_VERSION = "1.7.0";
+  const PATCH_NOTES_VERSION = "1.7.0";
+  const SAVE_VERSION = 28;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.6.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.7.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.6.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.7.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.6.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.7.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.6.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.7.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.7.0",
+      theme: "资源循环",
+      changes: [
+        "航站作业台新增资源再生炉，让星港材料、工程组件、远征补给与星图残片在四套配方间循环，不增加新货币。",
+        "再生配方提供单次、五次和最多十次批量处理；库存不足、接近容量与本次获得内容都会明确显示。",
+        "大量闲置材料可转化为限额星尘与凭证，组件可转为舰队整备资源，远征库存也可回流到建设与作业。",
+        "新增资源再生炉主题贴图；存档结构升级至第 28 版，只保存累计处理次数与最近报告。",
+      ],
+    },
     {
       version: "1.6.0",
       theme: "航站总览",
@@ -1745,6 +1755,40 @@
     { id: "phaseScanner", name: "相位扫描器", icon: "⌖", use: "星图碎片 +10" },
     { id: "ammoCrate", name: "弹药箱", icon: "↟", use: "弹药 +12" },
     { id: "repairKit", name: "维修套件", icon: "✚", use: "维护件 +12" },
+  ]);
+  const RESOURCE_RECLAIM_RECIPES = Object.freeze([
+    Object.freeze({
+      id: "materialReserve",
+      icon: "✦",
+      name: "建材储备再生",
+      description: "回收六类过量建材，换成限额星尘与航站凭证。",
+      cost: Object.freeze({ materialsEach: 5 }),
+      reward: Object.freeze({ dustMinutes: 3, tokens: 2 }),
+    }),
+    Object.freeze({
+      id: "componentRefit",
+      icon: "⬡",
+      name: "组件整备转换",
+      description: "拆解六类闲置组件，直接补充舰队弹药、维护件与指挥数据。",
+      cost: Object.freeze({ componentsEach: 2 }),
+      reward: Object.freeze({ ammo: 8, maintenance: 8, commandData: 2 }),
+    }),
+    Object.freeze({
+      id: "surveyRecovery",
+      icon: "⌖",
+      name: "远征库存回流",
+      description: "消耗补给与星图残片，回收六类星港材料和两种常用组件。",
+      cost: Object.freeze({ supplies: 4, fragments: 40 }),
+      reward: Object.freeze({ materialsEach: 4, components: Object.freeze({ phaseScanner: 1, repairKit: 1 }) }),
+    }),
+    Object.freeze({
+      id: "stationOverhaul",
+      icon: "▦",
+      name: "全站维护循环",
+      description: "同时回收建材、组件与远征库存，完成一次高价值综合整备。",
+      cost: Object.freeze({ materialsEach: 3, components: Object.freeze({ hullPlate: 2, repairKit: 1 }), supplies: 2, fragments: 20 }),
+      reward: Object.freeze({ dustMinutes: 6, ammo: 5, maintenance: 10, commandData: 1, tokens: 3 }),
+    }),
   ]);
   const STARPORT_BLUEPRINTS = Object.freeze([
     {
@@ -3640,6 +3684,9 @@
     operationsJobList: $("#operations-job-list"),
     operationsComponentList: $("#operations-component-list"),
     operationsReport: $("#operations-report"),
+    resourceCycleStatus: $("#resource-cycle-status"),
+    resourceCycleGrid: $("#resource-cycle-grid"),
+    resourceCycleReport: $("#resource-cycle-report"),
     starportMaterialList: $("#starport-material-list"),
     starportBlueprintList: $("#starport-blueprint-list"),
     starportBlueprintActive: $("#starport-blueprint-active"),
@@ -4049,6 +4096,13 @@
     };
   }
 
+  function freshResourceCycleState() {
+    return {
+      totalCycles: 0,
+      lastReport: "再生炉待命。库存明显过量时再处理，不会影响正常生产。",
+    };
+  }
+
   function freshLongVoyageState() {
     return {
       activeRouteId: "",
@@ -4316,6 +4370,7 @@
       expedition: freshExpeditionState(),
       longVoyage: freshLongVoyageState(),
       operations: freshOperationsState(),
+      resourceCycle: freshResourceCycleState(),
       guidance: freshGuidanceState(),
       duty: freshDutyState(),
       returnProtocol: freshReturnProtocolState(),
@@ -9314,6 +9369,108 @@
     saveGame();
   }
 
+  function getResourceReclaimCapacity(recipe, targetState = state) {
+    if (!recipe) return 0;
+    const limits = [];
+    if (recipe.cost.materialsEach) {
+      STARPORT_MATERIALS.forEach((material) => {
+        limits.push(Math.floor((targetState.starport.materials[material.id] || 0) / recipe.cost.materialsEach));
+      });
+    }
+    if (recipe.cost.componentsEach) {
+      OPERATION_COMPONENTS.forEach((component) => {
+        limits.push(Math.floor((targetState.operations.components[component.id] || 0) / recipe.cost.componentsEach));
+      });
+    }
+    Object.entries(recipe.cost.components || {}).forEach(([id, amount]) => {
+      limits.push(Math.floor((targetState.operations.components[id] || 0) / amount));
+    });
+    if (recipe.cost.supplies) limits.push(Math.floor(targetState.expedition.supplies / recipe.cost.supplies));
+    if (recipe.cost.fragments) limits.push(Math.floor(targetState.expedition.fragments / recipe.cost.fragments));
+    return Math.max(0, Math.min(10, ...limits));
+  }
+
+  function formatResourceReclaimCost(recipe) {
+    const parts = [];
+    if (recipe.cost.materialsEach) parts.push(`六类材料各 ${recipe.cost.materialsEach}`);
+    if (recipe.cost.componentsEach) parts.push(`六类组件各 ${recipe.cost.componentsEach}`);
+    Object.entries(recipe.cost.components || {}).forEach(([id, amount]) => {
+      const component = OPERATION_COMPONENTS.find((entry) => entry.id === id);
+      parts.push(`${component?.name || id} ${amount}`);
+    });
+    if (recipe.cost.supplies) parts.push(`补给 ${recipe.cost.supplies}`);
+    if (recipe.cost.fragments) parts.push(`残片 ${recipe.cost.fragments}`);
+    return parts.join(" · ");
+  }
+
+  function formatResourceReclaimReward(recipe) {
+    const parts = [];
+    if (recipe.reward.dustMinutes) parts.push(`${recipe.reward.dustMinutes} 分钟产量`);
+    if (recipe.reward.tokens) parts.push(`凭证 ${recipe.reward.tokens}`);
+    if (recipe.reward.ammo) parts.push(`弹药 ${recipe.reward.ammo}`);
+    if (recipe.reward.maintenance) parts.push(`维护件 ${recipe.reward.maintenance}`);
+    if (recipe.reward.commandData) parts.push(`指挥数据 ${recipe.reward.commandData}`);
+    if (recipe.reward.materialsEach) parts.push(`六类材料各 ${recipe.reward.materialsEach}`);
+    Object.entries(recipe.reward.components || {}).forEach(([id, amount]) => {
+      const component = OPERATION_COMPONENTS.find((entry) => entry.id === id);
+      parts.push(`${component?.name || id} ${amount}`);
+    });
+    return parts.join(" · ");
+  }
+
+  function reclaimResources(recipeId, requestedCycles = 1) {
+    const recipe = RESOURCE_RECLAIM_RECIPES.find((entry) => entry.id === recipeId);
+    const capacity = getResourceReclaimCapacity(recipe);
+    const requested = requestedCycles === "max"
+      ? capacity
+      : Math.max(1, Math.floor(Number(requestedCycles) || 1));
+    const cycles = Math.min(capacity, requested, 10);
+    if (!recipe || cycles < 1) {
+      showToast("再生库存不足", recipe ? `每轮需要：${formatResourceReclaimCost(recipe)}。` : "未找到该配方。", "▦");
+      return;
+    }
+    if (recipe.cost.materialsEach) {
+      STARPORT_MATERIALS.forEach((material) => {
+        state.starport.materials[material.id] -= recipe.cost.materialsEach * cycles;
+      });
+    }
+    if (recipe.cost.componentsEach) {
+      OPERATION_COMPONENTS.forEach((component) => {
+        state.operations.components[component.id] -= recipe.cost.componentsEach * cycles;
+      });
+    }
+    Object.entries(recipe.cost.components || {}).forEach(([id, amount]) => {
+      state.operations.components[id] -= amount * cycles;
+    });
+    state.expedition.supplies = Math.max(0, state.expedition.supplies - (recipe.cost.supplies || 0) * cycles);
+    state.expedition.fragments = Math.max(0, state.expedition.fragments - (recipe.cost.fragments || 0) * cycles);
+    if (recipe.reward.dustMinutes) {
+      addDust(getMissionRewardDust(recipe.reward.dustMinutes * cycles), { trackMissions: false });
+    }
+    if (recipe.reward.tokens) grantMissionTokens(recipe.reward.tokens * cycles);
+    ["ammo", "maintenance", "commandData"].forEach((field) => {
+      if (!recipe.reward[field]) return;
+      state.fleetCommand[field] = Math.min(
+        FLEET_COMMAND_RESOURCE_CAP,
+        state.fleetCommand[field] + recipe.reward[field] * cycles,
+      );
+    });
+    if (recipe.reward.materialsEach) grantMissionMaterials(recipe.reward.materialsEach * cycles);
+    Object.entries(recipe.reward.components || {}).forEach(([id, amount]) => {
+      state.operations.components[id] = Math.min(
+        999000,
+        (state.operations.components[id] || 0) + amount * cycles,
+      );
+    });
+    state.resourceCycle.totalCycles = clampGameCount(state.resourceCycle.totalCycles + cycles);
+    state.resourceCycle.lastReport = `${recipe.name}完成 ${cycles} 轮：${formatResourceReclaimReward(recipe)} ×${cycles}。`;
+    addLog(`资源再生：${recipe.name} ×${cycles}。`);
+    showToast("资源循环完成", state.resourceCycle.lastReport, recipe.icon);
+    renderOperations();
+    updateUi();
+    saveGame();
+  }
+
   function addLog(text) {
     state.log.unshift({ text, time: Date.now() });
     state.log = state.log.slice(0, 14);
@@ -9758,6 +9915,13 @@
           return remaining === 0 ? [] : [{ jobId: order.jobId, remaining }];
         })
       : [];
+    const rawResourceCycle = raw.resourceCycle && typeof raw.resourceCycle === "object"
+      ? raw.resourceCycle
+      : {};
+    merged.resourceCycle = {
+      totalCycles: clampGameCount(rawResourceCycle.totalCycles),
+      lastReport: String(rawResourceCycle.lastReport || base.resourceCycle.lastReport).slice(0, 220),
+    };
     const seenFeatures = Array.isArray(raw.guidance?.seenFeatures)
       ? raw.guidance.seenFeatures.filter((entry) => typeof entry === "string")
       : [];
@@ -15502,6 +15666,35 @@
       const amount = state.operations.components[component.id] || 0;
       return `<article><span>${component.icon}</span><div><strong>${component.name}</strong><small>${component.use}</small></div><b>×${formatNumber(amount, 0)}</b><button type="button" data-operation-component="${component.id}" ${amount > 0 ? "" : "disabled"}>投入</button></article>`;
     }).join("");
+    const materialPeak = Math.max(...STARPORT_MATERIALS.map(
+      (material) => state.starport.materials[material.id] || 0,
+    ));
+    const componentPeak = Math.max(...OPERATION_COMPONENTS.map(
+      (component) => state.operations.components[component.id] || 0,
+    ));
+    const stockWarnings = [
+      materialPeak >= 500 ? "星港材料偏多" : "",
+      componentPeak >= 120 ? "工程组件偏多" : "",
+      state.expedition.supplies >= 160 ? "远征补给偏多" : "",
+      state.expedition.fragments >= 2400 ? "星图残片偏多" : "",
+    ].filter(Boolean);
+    elements.resourceCycleStatus.textContent = stockWarnings.length
+      ? `建议处理：${stockWarnings.join(" · ")}`
+      : "库存健康 · 无需强制处理";
+    elements.resourceCycleGrid.innerHTML = RESOURCE_RECLAIM_RECIPES.map((recipe) => {
+      const capacity = getResourceReclaimCapacity(recipe);
+      return `<article class="resource-cycle-card">
+        <header><span>${recipe.icon}</span><div><strong>${recipe.name}</strong><small>当前最多 ${capacity} 轮</small></div></header>
+        <p>${recipe.description}</p>
+        <dl><div><dt>投入</dt><dd>${formatResourceReclaimCost(recipe)}</dd></div><div><dt>获得</dt><dd>${formatResourceReclaimReward(recipe)}</dd></div></dl>
+        <div class="resource-cycle-actions">
+          <button type="button" data-resource-reclaim="${recipe.id}" data-resource-reclaim-count="1" ${capacity >= 1 ? "" : "disabled"}>处理 1 次</button>
+          <button type="button" data-resource-reclaim="${recipe.id}" data-resource-reclaim-count="5" ${capacity >= 5 ? "" : "disabled"}>处理 5 次</button>
+          <button type="button" data-resource-reclaim="${recipe.id}" data-resource-reclaim-count="max" ${capacity >= 1 ? "" : "disabled"}>最多 ${capacity}</button>
+        </div>
+      </article>`;
+    }).join("");
+    elements.resourceCycleReport.textContent = `${state.resourceCycle.lastReport} · 累计处理 ${formatNumber(state.resourceCycle.totalCycles, 0)} 轮。`;
     elements.operationsReport.textContent = state.operations.lastReport;
     elements.operationsStopButton.disabled = state.operations.queue.length === 0;
   }
@@ -16554,6 +16747,15 @@
     elements.operationsComponentList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-operation-component]");
       if (button) useOperationComponent(button.dataset.operationComponent);
+    });
+    elements.resourceCycleGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-resource-reclaim]");
+      if (button) {
+        reclaimResources(
+          button.dataset.resourceReclaim,
+          button.dataset.resourceReclaimCount,
+        );
+      }
     });
     elements.operationsStopButton.addEventListener("click", () => {
       state.operations.queue = [];

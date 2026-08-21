@@ -91,8 +91,8 @@ const ecoStarfieldFps = readConstant("ECO_STARFIELD_FPS");
 
 assert.equal(
   readConstant("SAVE_VERSION"),
-  27,
-  "border long voyages need schema version 27",
+  28,
+  "resource cycle needs schema version 28",
 );
 assert.match(source, /pinnedGoals:\s*\[\]/, "fresh saves need an empty tracked-goal list");
 assert.match(source, /lastJobId:\s*""/, "fresh saves need an empty last operation id");

@@ -11,16 +11,16 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="1.6.0" />
-    <meta name="stellar-release-title" content="航站总览" />
-    <title>星港拾荒者 v1.6 · 航站总览</title>
-    <link rel="stylesheet" href="styles.css?v=1.6.0" />
+    <meta name="stellar-game-version" content="1.7.0" />
+    <meta name="stellar-release-title" content="资源循环" />
+    <title>星港拾荒者 v1.7 · 资源循环</title>
+    <link rel="stylesheet" href="styles.css?v=1.7.0" />
   </head>
   <body>
     <a class="skip-link" href="#command-page">跳到游戏内容</a>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=1.6.0"
+      src="assets/outpost-beyond-orion.mp3?v=1.7.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -697,6 +697,19 @@
                   <span id="operations-pool-progress"></span>
                   <i style="--checkpoint:25%"></i><i style="--checkpoint:50%"></i><i style="--checkpoint:75%"></i><i style="--checkpoint:95%"></i>
                 </div>
+              </section>
+              <section class="resource-cycle" aria-labelledby="resource-cycle-title">
+                <figure class="resource-cycle-visual">
+                  <img src="assets/resource-reclaimer.webp" width="1280" height="720" alt="星港机械臂正在把回收材料送入发光的资源再生炉" loading="lazy" />
+                  <figcaption>
+                    <small>v1.7.0 · 只使用现有库存</small>
+                    <h3 id="resource-cycle-title">资源再生炉</h3>
+                    <p>把长期闲置的建材、组件、补给与残片重新送回生产循环。</p>
+                    <strong id="resource-cycle-status">库存健康 · 无需强制处理</strong>
+                  </figcaption>
+                </figure>
+                <div id="resource-cycle-grid" class="resource-cycle-grid"></div>
+                <p id="resource-cycle-report" class="resource-cycle-report">再生炉待命。</p>
               </section>
               <div id="operations-queue" class="operations-queue"></div>
               <div id="operations-job-list" class="operations-job-list"></div>
@@ -2045,7 +2058,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v1.6.0 · 航站总览</span>
+        <span>航站协议 v1.7.0 · 资源循环</span>
       </footer>
     </div>
 
@@ -2097,7 +2110,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v1.6.0</strong>
+          <strong id="patch-notes-current-version">v1.7.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2408,9 +2421,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.6.0"></script>
-    <script src="game.js?v=1.6.0"></script>
-    <script src="firebase-config.js?v=1.6.0"></script>
-    <script type="module" src="cloud-save.js?v=1.6.0"></script>
+    <script src="game-math.js?v=1.7.0"></script>
+    <script src="game.js?v=1.7.0"></script>
+    <script src="firebase-config.js?v=1.7.0"></script>
+    <script type="module" src="cloud-save.js?v=1.7.0"></script>
   </body>
 </html>

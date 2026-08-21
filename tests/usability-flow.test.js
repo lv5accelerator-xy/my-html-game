@@ -8,7 +8,9 @@ const root = path.resolve(__dirname, "..");
 const game = fs.readFileSync(path.join(root, "game.js"), "utf8");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 
-assert.match(game, /const GAME_VERSION = "1\.6\.0";/);
+assert.match(game, /const GAME_VERSION = "1\.7\.0";/);
+assert.match(html, /id="resource-cycle-grid" class="resource-cycle-grid"/);
+assert.match(game, /const RESOURCE_RECLAIM_RECIPES = Object\.freeze/);
 assert.match(game, /playerName: "无名拾荒者"/);
 assert.match(game, /const TUTORIAL_STEPS = TUTORIAL_STEP_LIBRARY\.slice\(0, 3\);/);
 assert.match(html, /id="command-secondary-plans" class="command-secondary-plans"/);

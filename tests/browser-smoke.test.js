@@ -68,7 +68,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.6.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.7.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -190,8 +190,8 @@ async function main() {
       mobileNavigationItems: document.querySelectorAll("#mobile-quick-nav button").length,
     }));
 
-    assert.equal(snapshot.gameVersion, "1.6.0");
-    assert.equal(snapshot.saveVersion, 27);
+    assert.equal(snapshot.gameVersion, "1.7.0");
+    assert.equal(snapshot.saveVersion, 28);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
@@ -1464,7 +1464,7 @@ async function main() {
         archivedIds: migratedSave.atlas.discoveredIds,
       };
     });
-    assert.equal(atlasMigration.saveVersion, 27);
+    assert.equal(atlasMigration.saveVersion, 28);
     assert.equal(atlasMigration.restoredAtlas.total, 33);
     assert.equal(atlasMigration.restoredAtlas.discovered, 19);
     assert.equal(

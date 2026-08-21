@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://lv5accelerator-xy.github.io/my-html-game/"><strong>▶ 在线试玩</strong></a>
   ·
-  <a href="patch-notes/星港拾荒者-v0.1.0-v1.5.0-Patch-Notes.txt">更新记录</a>
+  <a href="patch-notes/星港拾荒者-v0.1.0-v1.6.0-Patch-Notes.txt">更新记录</a>
   ·
   <a href="docs/README.md">维护文档</a>
   ·
@@ -42,8 +42,9 @@
 
 ## 当前版本
 
-当前版本为 **v1.5.0「边境长航」**。
+当前版本为 **v1.6.0「航站总览」**。
 
+- **v1.6.0**：新增航站全景总览，将一项主目标和至多两项可选目标放回首屏，并补充推荐理由、预计用时与直达入口。
 - **v1.5.0**：远征页新增三条四阶段边境长航，用生产、守备与测绘目标串联已有系统并留下航线收藏。
 - **v1.4.0**：八只伴星新增观测后续故事，以既有玩法进度解锁两种叙事选择和一次性资源奖励。
 - **v1.3.0**：新增三套跃迁重建方案，按正常费用与解锁条件逐项恢复舰队设施和研究，减少重复周目点击。
@@ -59,7 +60,7 @@
 - **v0.26.0**：新增归航简报、每日三选一值守目标和个人体验里程碑。
 - **v0.25.0**：新增八章航路、33 项图鉴、每日机制首领与全服共同航标。
 
-完整变化见 [Patch Notes](patch-notes/星港拾荒者-v0.1.0-v1.5.0-Patch-Notes.txt)。
+完整变化见 [Patch Notes](patch-notes/星港拾荒者-v0.1.0-v1.6.0-Patch-Notes.txt)。
 
 ## 开始游玩
 
@@ -95,7 +96,7 @@ my-html-game/
 ├─ cloud-save.js              # 登录、云存档、排行榜、公告与反馈
 ├─ firebase-config.js         # Firebase Web 公共配置
 ├─ firestore.rules            # Firestore 安全规则
-├─ assets/                    # 星港图片与原创背景音乐
+├─ assets/                    # 压缩后的游戏贴图与原创背景音乐
 ├─ docs/                      # 云端、运营和换机维护文档
 ├─ patch-notes/               # 累计版本更新记录
 ├─ tests/                     # 数值、浏览器和移动端回归测试

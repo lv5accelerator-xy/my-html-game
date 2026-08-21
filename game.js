@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.5.0";
-  const PATCH_NOTES_VERSION = "1.5.0";
+  const GAME_VERSION = "1.6.0";
+  const PATCH_NOTES_VERSION = "1.6.0";
   const SAVE_VERSION = 27;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
@@ -98,28 +98,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.5.0",
+      src: "assets/outpost-beyond-orion.mp3?v=1.6.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.5.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=1.6.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.5.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=1.6.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.5.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.6.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -345,6 +345,16 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "1.6.0",
+      theme: "航站总览",
+      changes: [
+        "指挥台新增航站全景总览，并把一项主目标与至多两项可选目标直接放回首屏；玩家无需展开其他安排即可知道现在该做什么。",
+        "三项目标统一显示推荐理由、预计用时、主要回报与直达按钮；紧急袭击和可领取奖励仍会自动提高优先级。",
+        "新手航路、七日补给与每日值守移入按需展开区域，减少主目标与章节目标重复占用首屏。",
+        "新增首张航站主题贴图并使用 WebP 压缩；手机端按宽屏裁切、文字覆盖与单列行动卡重新适配。",
+      ],
+    },
     {
       version: "1.5.0",
       theme: "边境长航",
@@ -15056,6 +15066,7 @@
       action: guide.action,
       eta: guide.action === "collect" ? "约 1 分钟" : "约 3–8 分钟",
       reward: "推进下一阶段解锁",
+      reason: guide.description,
       snoozable: false,
     }];
     const optionalRoutes = [{
@@ -15070,6 +15081,7 @@
       action: claimable > 0 ? "claim-missions" : "missions",
       eta: claimable > 0 ? "少于 1 分钟" : "约 5–12 分钟",
       reward: claimable > 0 ? "领取已完成委托物资" : "凭证、星尘与现有材料",
+      reason: claimable > 0 ? "奖励已经就绪，领取不会中断当前挂机。" : "完成任意三项即可拿到当日总奖励。",
       snoozable: true,
     }];
     const starfallPhase = getStarfallPhase();
@@ -15086,6 +15098,7 @@
         action: "starfall",
         eta: starfallPhase === "active" ? "约 5–10 分钟" : "约 2 分钟",
         reward: "活动收藏、外观与消耗材料",
+        reason: "限时航程不会影响主线进度，可按自己的节奏参与。",
         snoozable: true,
       });
     } else if (state.combat.incomingRaid) {
@@ -15099,6 +15112,7 @@
         action: "combat",
         eta: "立即处理",
         reward: "避免资源损失",
+        reason: "基地正受到威胁，防卫优先于普通建设。",
         snoozable: false,
       });
     } else if (state.lifetimeDust >= OPERATIONS_UNLOCK_DUST) {
@@ -15114,6 +15128,7 @@
         action: "operations",
         eta: state.operations.queue.length ? "无需立即处理" : "约 2 分钟",
         reward: "组件、维护件与远征材料",
+        reason: state.operations.queue.length ? "作业已经稳定运行，无需立刻处理。" : "空置队列不会产生作业组件。",
         snoozable: true,
       });
     } else {
@@ -15127,6 +15142,7 @@
         action: "fleet",
         eta: "约 3–6 分钟",
         reward: "提高持续星尘产量",
+        reason: "第一批自动化单元会显著降低手动点击压力。",
         snoozable: true,
       });
     }
@@ -15359,7 +15375,7 @@
       title.textContent = route.title;
       const meta = document.createElement("span");
       meta.className = "focus-route-meta";
-      meta.textContent = `${route.eta} · ${route.reward}`;
+      meta.textContent = `${route.reason || "根据当前航站状态推荐"} · ${route.eta} · ${route.reward}`;
       copy.append(eyebrow, title, meta);
       const status = document.createElement("em");
       status.textContent = route.status;

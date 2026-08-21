@@ -11,16 +11,16 @@
       content="《星港拾荒者》是一款可离线游玩的纯 HTML/CSS/JavaScript 挂机小游戏。"
     />
     <meta name="theme-color" content="#07111f" />
-    <meta name="stellar-game-version" content="1.5.0" />
-    <meta name="stellar-release-title" content="边境长航" />
-    <title>星港拾荒者 v1.5 · 边境长航</title>
-    <link rel="stylesheet" href="styles.css?v=1.5.0" />
+    <meta name="stellar-game-version" content="1.6.0" />
+    <meta name="stellar-release-title" content="航站总览" />
+    <title>星港拾荒者 v1.6 · 航站总览</title>
+    <link rel="stylesheet" href="styles.css?v=1.6.0" />
   </head>
   <body>
     <a class="skip-link" href="#command-page">跳到游戏内容</a>
     <audio
       id="bgm-audio"
-      src="assets/outpost-beyond-orion.mp3?v=1.5.0"
+      src="assets/outpost-beyond-orion.mp3?v=1.6.0"
       data-track-id="outpost-beyond-orion"
       data-track-title="猎户座外的前哨"
       data-loop-start-seconds="0.2"
@@ -333,11 +333,19 @@
           <section class="focus-center" aria-labelledby="focus-center-title">
             <header class="focus-center-heading">
               <div>
-                <small>v0.29.0 · 一项主目标，至多两项可选目标</small>
-                <h2 id="focus-center-title">当前航程</h2>
+                <small>v1.6.0 · 一项主目标，至多两项可选目标</small>
+                <h2 id="focus-center-title">今日三件事</h2>
               </div>
               <span id="duty-streak">连续值守 0 天</span>
             </header>
+            <figure class="station-overview-visual">
+              <img src="assets/station-overview.webp" width="1280" height="720" alt="环形星港的指挥、回收、研究与整备区域" fetchpriority="high" />
+              <figcaption>
+                <small>航站总览</small>
+                <strong>先完成最重要的一件，其他系统可以稍后再看</strong>
+                <span>推荐会根据资源、解锁、袭击和可领取奖励自动变化。</span>
+              </figcaption>
+            </figure>
             <section class="return-brief" aria-labelledby="return-brief-title">
               <header>
                 <span class="return-brief-icon" aria-hidden="true">⌁</span>
@@ -355,6 +363,16 @@
               </div>
               <p id="return-brief-recommendation">航站正在分析当前最值得推进的目标。</p>
             </section>
+            <div id="focus-route-list" class="focus-route-list" aria-label="今日三件事"></div>
+            <details id="command-secondary-plans" class="command-secondary-plans">
+              <summary>
+                <span>
+                  <small>新手航路、补给与每日值守</small>
+                  <strong>其他安排</strong>
+                </span>
+                <b>按需展开</b>
+              </summary>
+              <div class="command-secondary-content">
             <article class="journey-card" aria-labelledby="journey-title">
               <div class="journey-card-copy">
                 <span id="journey-icon" class="journey-icon" aria-hidden="true">✦</span>
@@ -374,15 +392,6 @@
               <div id="journey-chapter-dots" class="journey-chapter-dots" aria-label="新手航路进度"></div>
               <button id="journey-action-button" type="button">开始回收</button>
             </article>
-            <details id="command-secondary-plans" class="command-secondary-plans">
-              <summary>
-                <span>
-                  <small>补给、可选航程与每日路线</small>
-                  <strong>其他安排</strong>
-                </span>
-                <b>按需展开</b>
-              </summary>
-              <div class="command-secondary-content">
             <div class="duty-supply">
               <div class="duty-supply-copy">
                 <span class="duty-supply-icon" aria-hidden="true">◈</span>
@@ -395,7 +404,6 @@
               <div id="duty-progress" class="duty-progress" aria-label="七日值守进度"></div>
               <button id="duty-claim-button" type="button">领取今日补给</button>
             </div>
-            <div id="focus-route-list" class="focus-route-list" aria-label="当前航程目标"></div>
             <section class="return-duty" aria-labelledby="return-duty-title">
               <header>
                 <div>
@@ -2037,7 +2045,7 @@
 
       <footer>
         <span>本地离线运行 · 自动保存</span>
-        <span>航站协议 v1.5.0 · 边境长航</span>
+        <span>航站协议 v1.6.0 · 航站总览</span>
       </footer>
     </div>
 
@@ -2089,7 +2097,7 @@
         </header>
         <div class="patch-notes-current">
           <span>当前航站协议</span>
-          <strong id="patch-notes-current-version">v1.5.0</strong>
+          <strong id="patch-notes-current-version">v1.6.0</strong>
           <small>本版本首次进入时自动显示一次</small>
         </div>
         <div id="patch-notes-list" class="patch-notes-list"></div>
@@ -2400,9 +2408,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.5.0"></script>
-    <script src="game.js?v=1.5.0"></script>
-    <script src="firebase-config.js?v=1.5.0"></script>
-    <script type="module" src="cloud-save.js?v=1.5.0"></script>
+    <script src="game-math.js?v=1.6.0"></script>
+    <script src="game.js?v=1.6.0"></script>
+    <script src="firebase-config.js?v=1.6.0"></script>
+    <script type="module" src="cloud-save.js?v=1.6.0"></script>
   </body>
 </html>

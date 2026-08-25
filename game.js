@@ -4492,6 +4492,7 @@
     total: 0,
     participants: 0,
     online: false,
+    aggregateMode: "active",
   };
   let lastWallClock = Date.now();
   let lastUi = 0;
@@ -5381,16 +5382,18 @@
     elements.communityPersonalScore.textContent = formatNumber(personal, 0);
     elements.communityBeaconParticipants.textContent = communityBeaconNetwork.online
       ? `${communityBeaconNetwork.participants} 座航站已接入`
-      : "登录后连接全服";
+      : "登录后连接排行榜";
     elements.communityBeaconDescription.textContent = communityBeaconNetwork.online
-      ? "全服进度已经同步；满足个人贡献要求后即可领取已点亮阶段的奖励。"
-      : "当前显示你的本地贡献预览。登录并打开排行榜后即可汇入全服航标。";
+      ? communityBeaconNetwork.aggregateMode === "server"
+        ? "服务端已安全累计全部参与者；满足个人贡献要求后即可领取已点亮阶段的奖励。"
+        : "当前为排行榜活跃玩家汇总，并非全服真实进度；服务端聚合部署后会自动切换。"
+      : "当前显示你的本地贡献预览。登录并打开排行榜后即可汇入活跃玩家航标。";
     elements.communityBeaconMilestones.innerHTML = COMMUNITY_BEACON_MILESTONES.map((milestone) => {
       const claimed = state.communityBeacon.claimedMilestones.includes(milestone.score);
       const globalReady = communityBeaconNetwork.online && total >= milestone.score;
       const personalReady = personal >= milestone.personal;
       const ready = globalReady && personalReady;
-      return `<article class="${claimed ? "claimed" : ready ? "ready" : ""}"><span>${formatNumber(milestone.score, 0)}</span><div><strong>${milestone.label}</strong><small>个人贡献 ${formatNumber(personal, 0)} / ${milestone.personal} · ${formatExistingReward(milestone.reward)}</small></div><button type="button" data-community-milestone="${milestone.score}" ${claimed || !ready ? "disabled" : ""}>${claimed ? "已领取" : !communityBeaconNetwork.online ? "等待连接" : !globalReady ? "全服建设中" : !personalReady ? "贡献不足" : "领取"}</button></article>`;
+      return `<article class="${claimed ? "claimed" : ready ? "ready" : ""}"><span>${formatNumber(milestone.score, 0)}</span><div><strong>${milestone.label}</strong><small>个人贡献 ${formatNumber(personal, 0)} / ${milestone.personal} · ${formatExistingReward(milestone.reward)}</small></div><button type="button" data-community-milestone="${milestone.score}" ${claimed || !ready ? "disabled" : ""}>${claimed ? "已领取" : !communityBeaconNetwork.online ? "等待连接" : !globalReady ? "活跃航站建设中" : !personalReady ? "贡献不足" : "领取"}</button></article>`;
     }).join("");
   }
 
@@ -16173,6 +16176,12 @@
 
   function getLeaderboardEntry() {
     refreshCareerRecords();
+    V2_SYSTEMS?.ensureSeason?.(state.v2, Date.now());
+    const groupId = (state.endgame?.transcensions || 0) > 0
+      ? "transcend"
+      : (state.totalCores || 0) >= 12 || (state.rebirths || 0) >= 3
+        ? "advanced"
+        : "beginner";
     return {
       playerName: normalizePlayerName(state.playerName) || "未命名指挥官",
       highestRate: clampGameNumber(state.highestAutomaticRate),
@@ -16190,6 +16199,9 @@
       expeditionRuns: clampGameCount(state.expedition?.completedRuns),
       expeditionBossWins: clampGameCount(getTotalBossWins()),
       frontierSectors: clampGameCount(state.endgame?.sectorLevel),
+      groupId,
+      seasonId: String(state.v2?.season?.id || "").slice(0, 80),
+      seasonScore: clampGameCount(state.v2?.season?.score),
     };
   }
 
@@ -17317,6 +17329,7 @@
         total: clampGameCount(detail.total),
         participants: clampGameCount(detail.participants),
         online: detail.online === true,
+        aggregateMode: detail.aggregateMode === "server" ? "server" : "active",
       };
       if (state.activePage === "leaderboard") renderCommunityBeacon();
     });

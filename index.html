@@ -2021,11 +2021,34 @@
             </button>
           </div>
 
+          <section id="v2-season-card" class="v2-season-card" aria-labelledby="v2-season-title">
+            <header>
+              <span aria-hidden="true">✧</span>
+              <div><small id="v2-season-phase">14 天边境赛季</small><h3 id="v2-season-title">归航者的灯海</h3><p id="v2-season-theme">正在读取本期边境航线。</p></div>
+              <strong id="v2-season-countdown">本地赛季可用</strong>
+            </header>
+            <div id="v2-season-rules" class="v2-season-rules"></div>
+            <blockquote id="v2-season-story">散落在边境的微光正在等待回应。</blockquote>
+            <div class="v2-season-progress-grid">
+              <article>
+                <small>个人航迹</small><strong><b id="v2-season-personal">0</b> / <span id="v2-season-personal-target">140</span></strong>
+                <i><b id="v2-season-personal-bar"></b></i>
+                <button id="v2-season-personal-claim" type="button" disabled>完成个人目标后领取</button>
+              </article>
+              <article>
+                <small id="v2-season-beacon-label">排行榜活跃玩家汇总</small><strong><b id="v2-season-beacon">0</b> / <span id="v2-season-beacon-target">24K</span></strong>
+                <i><b id="v2-season-beacon-bar"></b></i>
+                <button id="v2-season-beacon-claim" type="button" disabled>等待共同航标</button>
+              </article>
+            </div>
+            <footer><span id="v2-season-ranking">个人最佳与排名将在连接排行榜后显示。</span><span id="v2-season-archive">赛季收藏 0 期</span></footer>
+          </section>
+
           <section class="community-beacon" aria-labelledby="community-beacon-title">
             <header>
               <span class="community-beacon-icon" aria-hidden="true">✧</span>
               <div>
-                <small>全服合作目标 · 使用现有长期记录</small>
+                <small>排行榜活跃玩家汇总 · 服务端聚合部署后自动切换</small>
                 <h3 id="community-beacon-title">共同航标 · 点亮远方</h3>
                 <p id="community-beacon-description">登录后汇总活跃指挥官的战斗、远征与边境记录，共同完成四段建设。</p>
               </div>
@@ -2113,6 +2136,13 @@
           </section>
 
           <div class="leaderboard-toolbar">
+            <div class="leaderboard-categories leaderboard-groups" role="group" aria-label="排行榜分组">
+              <button class="active" type="button" data-leaderboard-group="all">永久总榜</button>
+              <button type="button" data-leaderboard-group="beginner">新手组</button>
+              <button type="button" data-leaderboard-group="advanced">进阶组</button>
+              <button type="button" data-leaderboard-group="transcend">超越组</button>
+              <button type="button" data-leaderboard-group="season">当前赛季榜</button>
+            </div>
             <div class="leaderboard-categories" role="group" aria-label="排行榜分类">
               <button class="active" type="button" data-leaderboard-category="highestRate">
                 最高产量

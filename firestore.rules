@@ -47,6 +47,9 @@ service cloud.firestore {
           "expeditionBossWins",
           "transcensions",
           "frontierSectors",
+          "groupId",
+          "seasonId",
+          "seasonScore",
           "updatedAt"
         ])
         && request.resource.data.keys().hasOnly([
@@ -61,6 +64,9 @@ service cloud.firestore {
           "expeditionBossWins",
           "transcensions",
           "frontierSectors",
+          "groupId",
+          "seasonId",
+          "seasonScore",
           "updatedAt"
         ])
         && request.resource.data.gameVersion is string
@@ -94,6 +100,15 @@ service cloud.firestore {
         && request.resource.data.frontierSectors is int
         && request.resource.data.frontierSectors >= 0
         && request.resource.data.frontierSectors <= 9007199254740991
+        && (!request.resource.data.keys().hasAll(["groupId"])
+          || request.resource.data.groupId in ["beginner", "advanced", "transcend"])
+        && (!request.resource.data.keys().hasAll(["seasonId"])
+          || (request.resource.data.seasonId is string
+            && request.resource.data.seasonId.size() <= 80))
+        && (!request.resource.data.keys().hasAll(["seasonScore"])
+          || (request.resource.data.seasonScore is int
+            && request.resource.data.seasonScore >= 0
+            && request.resource.data.seasonScore <= 1000000000))
         && request.resource.data.updatedAt is timestamp
         && request.resource.data.updatedAt == request.time;
       }
@@ -116,7 +131,10 @@ service cloud.firestore {
           && (!resource.data.keys().hasAll(["transcensions"])
             || request.resource.data.transcensions >= resource.data.transcensions)
           && (!resource.data.keys().hasAll(["frontierSectors"])
-            || request.resource.data.frontierSectors >= resource.data.frontierSectors);
+            || request.resource.data.frontierSectors >= resource.data.frontierSectors)
+          && (!resource.data.keys().hasAll(["seasonId", "seasonScore"])
+            || request.resource.data.seasonId != resource.data.seasonId
+            || request.resource.data.seasonScore >= resource.data.seasonScore);
       }
 
       allow read: if request.auth != null;
@@ -184,6 +202,45 @@ service cloud.firestore {
 
     // 公告由开发者在 Firebase 控制台发布。客户端只可读取 published=true 的记录。
     match /announcements/{announcementId} {
+      allow read: if resource.data.published == true;
+      allow write: if false;
+    }
+
+    // 赛季内容由开发者在控制台替换；本地默认赛季在此集合不可用时仍可运行。
+    match /seasonConfigs/{configId} {
+      allow read: if resource.data.published == true;
+      allow write: if false;
+    }
+
+    // 每名玩家每期只有一个单调递增的贡献文档，服务端按增量聚合可避免重复累计。
+    match /seasonContributions/{seasonId}/players/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function hasValidContribution() {
+        return request.resource.data.keys().hasAll(["userId", "seasonId", "score", "updatedAt"])
+          && request.resource.data.keys().hasOnly(["userId", "seasonId", "score", "updatedAt"])
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.seasonId == seasonId
+          && request.resource.data.seasonId is string
+          && request.resource.data.seasonId.size() <= 80
+          && request.resource.data.score is int
+          && request.resource.data.score >= 0
+          && request.resource.data.score <= 1000000000
+          && request.resource.data.updatedAt is timestamp
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      allow read: if isOwner();
+      allow create: if isOwner() && hasValidContribution();
+      allow update: if isOwner() && hasValidContribution()
+        && request.resource.data.score >= resource.data.score;
+      allow delete: if false;
+    }
+
+    // 只能由 Admin SDK / Cloud Function 写入，客户端只读取已发布的可信聚合。
+    match /communityTotals/{totalId} {
       allow read: if resource.data.published == true;
       allow write: if false;
     }

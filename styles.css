@@ -13084,10 +13084,35 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 .v2-run-archive article { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid rgba(130, 172, 214, .12); }
 .v2-run-archive article div { display: grid; gap: 2px; }
 .v2-run-archive article em, .v2-run-archive article small { color: #8198b5; font-style: normal; }
+.v2-season-card { margin: 18px 0; padding: 20px; overflow: hidden; border: 1px solid rgba(141, 115, 255, .24); border-radius: 22px; background: radial-gradient(circle at 85% 0, rgba(127, 87, 226, .18), transparent 32%), linear-gradient(145deg, rgba(9, 31, 50, .96), rgba(23, 19, 54, .92)); }
+.v2-season-card > header { display: flex; align-items: flex-start; gap: 13px; }
+.v2-season-card > header > span { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 50%; color: #dac6ff; background: rgba(152, 111, 255, .18); box-shadow: 0 0 24px rgba(118, 178, 255, .16); }
+.v2-season-card > header > div { min-width: 0; flex: 1; }
+.v2-season-card h3, .v2-season-card p { margin: 0; }
+.v2-season-card header small, .v2-season-card header p { color: #90a7c7; }
+.v2-season-card header > strong { padding: 7px 10px; border-radius: 999px; color: #c6e8ff; background: rgba(72, 163, 211, .13); white-space: nowrap; }
+.v2-season-rules { display: flex; gap: 7px; flex-wrap: wrap; margin: 15px 0 10px; }
+.v2-season-rules span { padding: 7px 10px; border: 1px solid rgba(132, 176, 223, .16); border-radius: 999px; color: #9db4d2; background: rgba(5, 17, 33, .45); }
+.v2-season-rules span.active { color: #e2d6ff; border-color: rgba(180, 145, 255, .46); background: rgba(112, 72, 186, .16); }
+.v2-season-card blockquote { margin: 10px 0 15px; padding: 10px 13px; border-left: 2px solid #8fcfff; color: #bed0e7; background: rgba(4, 16, 29, .38); }
+.v2-season-progress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.v2-season-progress-grid article { display: grid; gap: 8px; padding: 13px; border-radius: 15px; background: rgba(5, 18, 34, .64); }
+.v2-season-progress-grid small { color: #829bbd; }
+.v2-season-progress-grid article > i { height: 6px; overflow: hidden; border-radius: 99px; background: rgba(111, 149, 190, .15); }
+.v2-season-progress-grid article > i > b { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #66ddff, #b38cff); transition: width .3s ease; }
+.v2-season-card > footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 13px; color: #849bb8; }
+.leaderboard-groups { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(129, 170, 214, .12); }
+.leaderboard-groups button { border-color: rgba(159, 119, 255, .2); }
+.leaderboard-groups button.active { color: #e5d8ff; border-color: rgba(178, 142, 255, .56); background: rgba(119, 79, 194, .2); }
 @media (max-width: 760px) {
   .v2-run-variation, .v2-run-protocols { grid-template-columns: 1fr; }
   .v2-run-protocols button { min-height: 0; }
   .v2-run-build > header { align-items: flex-start; flex-direction: column; }
+  .v2-season-card { padding: 15px; }
+  .v2-season-card > header { flex-wrap: wrap; }
+  .v2-season-card header > strong { margin-left: 57px; }
+  .v2-season-progress-grid { grid-template-columns: 1fr; }
+  .v2-season-card > footer { flex-direction: column; }
 }
 
 .page-illustration {

@@ -55,6 +55,27 @@
     resources: Object.freeze(["工程组件", "战斗材料", "远征补给", "航站凭证", "星尘储备", "收藏线索"]),
   });
 
+  const DEFAULT_SEASON_CONFIG = Object.freeze({
+    revision: 1,
+    title: "归航者的灯海",
+    theme: "把散落在边境的微光，送回同一条归航线。",
+    activeDays: 14,
+    exchangeDays: 7,
+    rotations: Object.freeze([
+      "潮汐回收 · 作业与扩建贡献提高",
+      "守夜回声 · 战斗与首领贡献提高",
+      "远星来信 · 远征与伴星贡献提高",
+    ]),
+    story: Object.freeze([
+      "第一幕：边境信标逐一熄灭，航站收到一段来自旧归航舰队的坐标。",
+      "第二幕：坐标并不指向某颗星，而是指向所有仍愿意回应的人。",
+      "终幕：当灯海重新连成航线，每一位参与者都成为了他人的归途。",
+    ]),
+    personalTarget: 140,
+    beaconTarget: 24000,
+    rewardIds: Object.freeze(["title_homebound", "decor_lampsea", "collection_return_signal"]),
+  });
+
   const RETENTION_EVENTS = new Set([
     "game_start", "tutorial_step", "first_automation", "first_research",
     "first_battle", "first_jump", "first_expedition", "first_transcend",
@@ -106,7 +127,11 @@
         variation: { anomaly: "", weakness: "", resource: "" }, startedAt: 0,
         startSnapshot: {}, reports: [],
       },
-      season: null,
+      season: {
+        id: "", title: "", score: 0, participated: false,
+        personalClaimed: false, beaconClaimed: false, lastMetricAt: 0,
+        unlockedRewards: [], archive: [],
+      },
       companionStories: null,
       feedback: null,
     };
@@ -188,7 +213,21 @@
         }];
       }).slice(-12),
     };
-    base.season = source.season && typeof source.season === "object" ? source.season : null;
+    const season = source.season && typeof source.season === "object" ? source.season : {};
+    base.season = {
+      id: String(season.id || "").slice(0, 80),
+      title: String(season.title || "").slice(0, 80),
+      score: safeCount(season.score, 1000000000),
+      participated: season.participated === true,
+      personalClaimed: season.personalClaimed === true,
+      beaconClaimed: season.beaconClaimed === true,
+      lastMetricAt: safeTime(season.lastMetricAt),
+      unlockedRewards: uniqueStrings(season.unlockedRewards, new Set(DEFAULT_SEASON_CONFIG.rewardIds), 12),
+      archive: (Array.isArray(season.archive) ? season.archive : []).flatMap((entry) => {
+        if (!entry || typeof entry.id !== "string") return [];
+        return [{ id: entry.id.slice(0, 80), title: String(entry.title || "").slice(0, 80), score: safeCount(entry.score, 1000000000), rewards: uniqueStrings(entry.rewards, new Set(DEFAULT_SEASON_CONFIG.rewardIds), 12) }];
+      }).slice(-12),
+    };
     base.companionStories = source.companionStories && typeof source.companionStories === "object" ? source.companionStories : null;
     base.feedback = source.feedback && typeof source.feedback === "object" ? source.feedback : null;
     return base;
@@ -254,6 +293,7 @@
 
   function recordMetric(v2, metric, amount, gameState, now = Date.now()) {
     ensureDaily(v2, gameState, now);
+    recordSeasonMetric(v2, metric, amount, now);
     if (!v2.dailyRoute.routeId || v2.dailyRoute.claimed) return;
     const safeAmount = Math.max(0, Number(amount) || 0);
     v2.dailyRoute.tasks.forEach((task) => {
@@ -281,6 +321,7 @@
     v2.dailyRoute.claimed = true;
     v2.dailyRoute.lastCompletedAt = now;
     record(v2, "daily_route_completed", { route: v2.dailyRoute.routeId }, now);
+    recordSeasonMetric(v2, "dailyRouteCompleted", 1, now);
     return completion;
   }
 
@@ -398,6 +439,140 @@
     ].join("\n");
   }
 
+  function normalizeSeasonConfig(raw) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const rotations = (Array.isArray(source.rotations) ? source.rotations : DEFAULT_SEASON_CONFIG.rotations)
+      .filter((value) => typeof value === "string" && value.trim())
+      .map((value) => value.trim().slice(0, 120)).slice(0, 3);
+    const story = (Array.isArray(source.story) ? source.story : DEFAULT_SEASON_CONFIG.story)
+      .filter((value) => typeof value === "string" && value.trim())
+      .map((value) => value.trim().slice(0, 240)).slice(0, 3);
+    return {
+      revision: Math.max(1, safeCount(source.revision, 1000000)),
+      id: String(source.id || "").slice(0, 80),
+      title: String(source.title || DEFAULT_SEASON_CONFIG.title).slice(0, 80),
+      theme: String(source.theme || DEFAULT_SEASON_CONFIG.theme).slice(0, 180),
+      activeDays: Math.min(30, Math.max(7, safeCount(source.activeDays || DEFAULT_SEASON_CONFIG.activeDays))),
+      exchangeDays: Math.min(30, Math.max(7, safeCount(source.exchangeDays || DEFAULT_SEASON_CONFIG.exchangeDays))),
+      startAt: safeTime(source.startAt),
+      rotations: rotations.length === 3 ? rotations : [...DEFAULT_SEASON_CONFIG.rotations],
+      story: story.length === 3 ? story : [...DEFAULT_SEASON_CONFIG.story],
+      personalTarget: Math.min(1000000, Math.max(20, safeCount(source.personalTarget || DEFAULT_SEASON_CONFIG.personalTarget))),
+      beaconTarget: Math.min(1000000000, Math.max(100, safeCount(source.beaconTarget || DEFAULT_SEASON_CONFIG.beaconTarget))),
+      rewardIds: uniqueStrings(source.rewardIds, new Set(DEFAULT_SEASON_CONFIG.rewardIds), 3).length
+        ? uniqueStrings(source.rewardIds, new Set(DEFAULT_SEASON_CONFIG.rewardIds), 3)
+        : [...DEFAULT_SEASON_CONFIG.rewardIds],
+    };
+  }
+
+  let seasonConfig = normalizeSeasonConfig(DEFAULT_SEASON_CONFIG);
+  let seasonNetwork = { online: false, aggregateMode: "active", total: 0, participants: 0, rank: 0, percentile: 0, nextGap: 0 };
+
+  function getSeasonWindow(config = seasonConfig, now = Date.now()) {
+    const activeMs = config.activeDays * 86400000;
+    const exchangeMs = config.exchangeDays * 86400000;
+    let startAt = config.startAt;
+    let id = config.id;
+    if (!startAt) {
+      const cycleMs = activeMs + exchangeMs;
+      const sequence = Math.floor(now / cycleMs);
+      startAt = sequence * cycleMs;
+      id = id || `lampsea-${sequence}`;
+    }
+    const activeEndAt = startAt + activeMs;
+    const exchangeEndAt = activeEndAt + exchangeMs;
+    const phase = now < startAt ? "preview" : now < activeEndAt ? "active" : now < exchangeEndAt ? "exchange" : "ended";
+    const elapsedDays = Math.max(0, Math.floor((now - startAt) / 86400000));
+    const rotationIndex = Math.min(2, Math.floor(Math.min(config.activeDays - 1, elapsedDays) / Math.max(1, config.activeDays / 3)));
+    return { id: id || `season-${startAt}`, startAt, activeEndAt, exchangeEndAt, phase, elapsedDays, rotationIndex };
+  }
+
+  function ensureSeason(v2, now = Date.now()) {
+    if (!v2?.season) return null;
+    const windowState = getSeasonWindow(seasonConfig, now);
+    if (v2.season.id !== windowState.id) {
+      if (v2.season.id) {
+        if (v2.season.participated && seasonConfig.rewardIds[2] && !v2.season.unlockedRewards.includes(seasonConfig.rewardIds[2])) {
+          v2.season.unlockedRewards.push(seasonConfig.rewardIds[2]);
+        }
+        v2.season.archive.push({ id: v2.season.id, title: v2.season.title, score: v2.season.score, rewards: [...v2.season.unlockedRewards] });
+        v2.season.archive = v2.season.archive.slice(-12);
+      }
+      v2.season.id = windowState.id;
+      v2.season.title = seasonConfig.title;
+      v2.season.score = 0;
+      v2.season.participated = false;
+      v2.season.personalClaimed = false;
+      v2.season.beaconClaimed = false;
+      v2.season.lastMetricAt = 0;
+      v2.season.unlockedRewards = [];
+    }
+    return windowState;
+  }
+
+  const SEASON_METRIC_POINTS = Object.freeze({
+    unitsBought: 2, operationsCompleted: 7, starportUpgrades: 10,
+    battlesWon: 5, materialsCollected: 1, combatUpgrades: 9,
+    expeditionRoutes: 12, eventsClaimed: 5, companionObservations: 8,
+    bossVictories: 18, raidsDefended: 12, dailyRouteCompleted: 14,
+  });
+
+  function recordSeasonMetric(v2, metric, amount = 1, now = Date.now()) {
+    const windowState = ensureSeason(v2, now);
+    const unitPoints = SEASON_METRIC_POINTS[metric];
+    if (!windowState || windowState.phase !== "active" || !unitPoints) return 0;
+    const rawPoints = Math.min(40, Math.max(0, Number(amount) || 0)) * unitPoints;
+    const expected = seasonConfig.personalTarget * Math.min(1, (windowState.elapsedDays + 1) / seasonConfig.activeDays);
+    const catchup = windowState.elapsedDays >= 6 && v2.season.score < expected * 0.65 ? 1.5 : 1;
+    const gained = Math.max(1, Math.floor(rawPoints * catchup));
+    v2.season.score = safeCount(v2.season.score + gained, 1000000000);
+    v2.season.lastMetricAt = now;
+    if (!v2.season.participated) {
+      v2.season.participated = true;
+      record(v2, "season_participation", { value: 1 }, now);
+    }
+    return gained;
+  }
+
+  function claimSeasonPersonal(v2, now = Date.now()) {
+    const windowState = ensureSeason(v2, now);
+    if (!windowState || !["active", "exchange"].includes(windowState.phase) || v2.season.personalClaimed || v2.season.score < seasonConfig.personalTarget) return false;
+    v2.season.personalClaimed = true;
+    const rewardId = seasonConfig.rewardIds[0];
+    if (rewardId && !v2.season.unlockedRewards.includes(rewardId)) v2.season.unlockedRewards.push(rewardId);
+    return { tokens: 26, supplies: 3, rewardId };
+  }
+
+  function claimSeasonBeacon(v2, now = Date.now()) {
+    const windowState = ensureSeason(v2, now);
+    if (!windowState || !["active", "exchange"].includes(windowState.phase) || v2.season.beaconClaimed || !seasonNetwork.online || seasonNetwork.total < seasonConfig.beaconTarget || v2.season.score < Math.ceil(seasonConfig.personalTarget * 0.35)) return false;
+    v2.season.beaconClaimed = true;
+    const rewardId = seasonConfig.rewardIds[1];
+    if (rewardId && !v2.season.unlockedRewards.includes(rewardId)) v2.season.unlockedRewards.push(rewardId);
+    return { tokens: 18, materials: 2, rewardId };
+  }
+
+  function setSeasonConfig(raw, now = Date.now()) {
+    seasonConfig = normalizeSeasonConfig(raw);
+    if (host) {
+      ensureSeason(host.getState().v2, now);
+      renderSeason();
+    }
+    return seasonConfig;
+  }
+
+  function setSeasonNetwork(raw) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    seasonNetwork = {
+      online: source.online === true,
+      aggregateMode: source.aggregateMode === "server" ? "server" : "active",
+      total: safeCount(source.total, 1000000000), participants: safeCount(source.participants, 1000000),
+      rank: safeCount(source.rank, 1000000), percentile: Math.min(100, Math.max(0, Number(source.percentile) || 0)),
+      nextGap: safeCount(source.nextGap, 1000000000),
+    };
+    if (host) renderSeason();
+  }
+
   function formatEta(seconds, formatter = null) {
     if (!Number.isFinite(seconds) || seconds < 0) return "暂时无法可靠估算";
     if (seconds <= 1) return "现在即可完成";
@@ -503,10 +678,50 @@
     exportButton.disabled = recent.length < 1;
   }
 
+  function renderSeason() {
+    if (!host) return;
+    const gameState = host.getState();
+    const v2 = gameState.v2;
+    const windowState = ensureSeason(v2, host.now());
+    const root = document.querySelector("#v2-season-card");
+    if (!root || !windowState) return;
+    const phaseLabels = { preview: "赛季预告", active: "14 天边境赛季", exchange: "至少 7 天兑换期", ended: "赛季已结束" };
+    const deadline = windowState.phase === "preview" ? windowState.startAt : windowState.phase === "active" ? windowState.activeEndAt : windowState.exchangeEndAt;
+    const remaining = Math.max(0, deadline - host.now());
+    const days = Math.floor(remaining / 86400000);
+    const hours = Math.ceil((remaining % 86400000) / 3600000);
+    root.querySelector("#v2-season-phase").textContent = phaseLabels[windowState.phase];
+    root.querySelector("#v2-season-title").textContent = seasonConfig.title;
+    root.querySelector("#v2-season-theme").textContent = seasonConfig.theme;
+    root.querySelector("#v2-season-countdown").textContent = windowState.phase === "ended" ? "等待下一期配置" : `${days} 天 ${hours} 小时`;
+    root.querySelector("#v2-season-rules").innerHTML = seasonConfig.rotations.map((rule, index) => `<span class="${index === windowState.rotationIndex && windowState.phase === "active" ? "active" : ""}">${index + 1} · ${rule}</span>`).join("");
+    const storyIndex = Math.min(2, Math.max(windowState.rotationIndex, Math.floor((v2.season.score / seasonConfig.personalTarget) * 3)));
+    root.querySelector("#v2-season-story").textContent = seasonConfig.story[storyIndex];
+    root.querySelector("#v2-season-personal").textContent = String(v2.season.score);
+    root.querySelector("#v2-season-personal-target").textContent = String(seasonConfig.personalTarget);
+    root.querySelector("#v2-season-personal-bar").style.width = `${Math.min(100, v2.season.score / seasonConfig.personalTarget * 100)}%`;
+    const personalClaim = root.querySelector("#v2-season-personal-claim");
+    personalClaim.disabled = v2.season.personalClaimed || v2.season.score < seasonConfig.personalTarget || !["active", "exchange"].includes(windowState.phase);
+    personalClaim.textContent = v2.season.personalClaimed ? "称号与收藏已领取" : v2.season.score >= seasonConfig.personalTarget ? "领取个人收藏奖励" : "完成个人目标后领取";
+    root.querySelector("#v2-season-beacon").textContent = String(seasonNetwork.total);
+    root.querySelector("#v2-season-beacon-target").textContent = seasonConfig.beaconTarget >= 1000 ? `${Math.round(seasonConfig.beaconTarget / 1000)}K` : String(seasonConfig.beaconTarget);
+    root.querySelector("#v2-season-beacon-bar").style.width = `${Math.min(100, seasonNetwork.total / seasonConfig.beaconTarget * 100)}%`;
+    root.querySelector("#v2-season-beacon-label").textContent = seasonNetwork.aggregateMode === "server" ? "服务端安全累计 · 全部参与者" : "排行榜活跃玩家汇总";
+    const beaconClaim = root.querySelector("#v2-season-beacon-claim");
+    const beaconReady = seasonNetwork.online && seasonNetwork.total >= seasonConfig.beaconTarget && v2.season.score >= Math.ceil(seasonConfig.personalTarget * 0.35);
+    beaconClaim.disabled = v2.season.beaconClaimed || !beaconReady || !["active", "exchange"].includes(windowState.phase);
+    beaconClaim.textContent = v2.season.beaconClaimed ? "星港装饰已领取" : beaconReady ? "领取共同航标装饰" : seasonNetwork.online ? "共同航标建设中" : "等待排行榜连接";
+    root.querySelector("#v2-season-ranking").textContent = seasonNetwork.rank
+      ? `当前 #${seasonNetwork.rank} · 大致前 ${Math.max(1, Math.ceil(seasonNetwork.percentile))}% · 距上一名 ${seasonNetwork.nextGap}`
+      : `个人最佳 ${Math.max(v2.season.score, seasonNetwork.total ? v2.season.score : 0)} · 连接排行榜后显示百分位与差距`;
+    root.querySelector("#v2-season-archive").textContent = `赛季收藏 ${v2.season.archive.length} 期 · 本期奖励 ${v2.season.unlockedRewards.length}/3`;
+  }
+
   function render() {
     renderDailyRoute();
     renderRetention();
     renderRunBuild();
+    renderSeason();
   }
 
   function attach(nextHost) {
@@ -550,6 +765,22 @@
           window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
         }
       }
+      if (event.target.closest("#v2-season-personal-claim")) {
+        const reward = claimSeasonPersonal(host.getState().v2, host.now());
+        if (reward) {
+          host.grantReward({ tokens: reward.tokens, supplies: reward.supplies });
+          host.notify("个人航迹已归档", "获得限定称号“群星归航者”与赛季收藏。", "✧");
+          host.save(); host.render();
+        }
+      }
+      if (event.target.closest("#v2-season-beacon-claim")) {
+        const reward = claimSeasonBeacon(host.getState().v2, host.now());
+        if (reward) {
+          host.grantReward({ tokens: reward.tokens, materials: reward.materials });
+          host.notify("共同航标已点亮", "获得星港装饰“灯海航标”。", "◇");
+          host.save(); host.render();
+        }
+      }
     });
     document.querySelector("#v2-analytics-toggle")?.addEventListener("change", (event) => {
       const retention = host.getState().v2.retention;
@@ -557,6 +788,8 @@
       retention.consentAt = event.target.checked ? host.now() : 0;
       host.save(); renderRetention();
     });
+    window.addEventListener("stellar-season-config", (event) => setSeasonConfig(event.detail, host.now()));
+    window.addEventListener("stellar-season-ranking-update", (event) => setSeasonNetwork(event.detail));
     render();
   }
 
@@ -564,6 +797,9 @@
     ROUTES, RUN_PROTOCOLS, RUN_VARIATIONS, RETENTION_EVENTS, freshState, sanitize, record, ensureDaily,
     getEligibleRoutes, selectDaily, rerollDaily, recordMetric, dailyComplete,
     claimDaily, getDailyCompletion, beginRun, selectRunProtocol, getRunProtocol,
-    getRunFactor, completeRun, formatRunReport, resourceEta, formatEta, dayKey, attach, render,
+    getRunFactor, completeRun, formatRunReport, DEFAULT_SEASON_CONFIG,
+    normalizeSeasonConfig, getSeasonWindow, ensureSeason, recordSeasonMetric,
+    claimSeasonPersonal, claimSeasonBeacon, setSeasonConfig, setSeasonNetwork,
+    resourceEta, formatEta, dayKey, attach, render,
   });
 })();

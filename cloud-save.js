@@ -5,6 +5,9 @@ const CLOUD_COLLECTION = "saves";
 const LEADERBOARD_COLLECTION = "leaderboards";
 const ANNOUNCEMENT_COLLECTION = "announcements";
 const FEEDBACK_COLLECTION = "feedback";
+const SEASON_CONFIG_COLLECTION = "seasonConfigs";
+const SEASON_CONTRIBUTION_COLLECTION = "seasonContributions";
+const COMMUNITY_TOTAL_COLLECTION = "communityTotals";
 const AUTO_SYNC_DELAY = 30_000;
 const AUTO_SYNC_RETRY_DELAY = 45_000;
 const LEADERBOARD_SYNC_DELAY = 60_000;
@@ -103,6 +106,9 @@ const elements = {
   leaderboardCategories: Array.from(
     document.querySelectorAll("[data-leaderboard-category]"),
   ),
+  leaderboardGroups: Array.from(
+    document.querySelectorAll("[data-leaderboard-group]"),
+  ),
 };
 
 let bridge = null;
@@ -127,6 +133,7 @@ let busy = false;
 let serviceConfigured = false;
 let serviceReady = false;
 let leaderboardCategory = "highestRate";
+let leaderboardGroup = "all";
 let leaderboardTimer = null;
 let leaderboardBusy = false;
 let announcements = [...BUILTIN_ANNOUNCEMENTS];
@@ -798,6 +805,11 @@ function normalizeLeaderboardEntry(snapshot) {
       0,
       Math.floor(Number(data.frontierSectors) || 0),
     ),
+    groupId: ["beginner", "advanced", "transcend"].includes(data.groupId)
+      ? data.groupId
+      : "beginner",
+    seasonId: String(data.seasonId || "").slice(0, 80),
+    seasonScore: Math.max(0, Math.floor(Number(data.seasonScore) || 0)),
     updatedAt: leaderboardTimestamp(data.updatedAt),
   };
 }
@@ -815,17 +827,84 @@ function getCommunityBeaconContribution(entry) {
   );
 }
 
-function dispatchCommunityBeacon(entries = [], online = false) {
+function dispatchCommunityBeacon(entries = [], online = false, aggregateMode = "active", serverTotal = null, serverParticipants = null) {
   window.dispatchEvent(new CustomEvent("stellar-community-beacon-update", {
     detail: {
-      total: entries.reduce(
+      total: Number.isFinite(serverTotal) ? serverTotal : entries.reduce(
         (total, entry) => total + getCommunityBeaconContribution(entry),
         0,
       ),
-      participants: entries.length,
+      participants: Number.isFinite(serverParticipants) ? serverParticipants : entries.length,
       online,
+      aggregateMode,
     },
   }));
+}
+
+async function loadSeasonConfig() {
+  if (!db || !serviceReady) return false;
+  try {
+    const snapshot = await firebaseFirestoreApi.getDoc(
+      firebaseFirestoreApi.doc(db, SEASON_CONFIG_COLLECTION, "current"),
+    );
+    if (!snapshot.exists()) return false;
+    const data = snapshot.data();
+    const timestamp = data.startAt?.toMillis?.() || Number(data.startAt) || 0;
+    window.dispatchEvent(new CustomEvent("stellar-season-config", {
+      detail: { ...data, startAt: timestamp },
+    }));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function loadSeasonRanking() {
+  const localEntry = getLocalLeaderboardEntry();
+  if (!currentUser || !db || !serviceReady || !syncReady || !localEntry?.seasonId) {
+    window.dispatchEvent(new CustomEvent("stellar-season-ranking-update", { detail: { online: false } }));
+    return;
+  }
+  try {
+    const rankingQuery = firebaseFirestoreApi.query(
+      firebaseFirestoreApi.collection(db, LEADERBOARD_COLLECTION),
+      firebaseFirestoreApi.orderBy("seasonScore", "desc"),
+      firebaseFirestoreApi.limit(LEADERBOARD_LIMIT),
+    );
+    const snapshot = await firebaseFirestoreApi.getDocs(rankingQuery);
+    const entries = snapshot.docs.map(normalizeLeaderboardEntry).filter((entry) => entry && entry.seasonId === localEntry.seasonId);
+    const ownIndex = entries.findIndex((entry) => entry.id === currentUser.uid);
+    const previous = ownIndex > 0 ? entries[ownIndex - 1].seasonScore : localEntry.seasonScore;
+    let aggregateMode = "active";
+    let total = entries.reduce((sum, entry) => sum + entry.seasonScore, 0);
+    let participants = entries.length;
+    try {
+      const totalSnapshot = await firebaseFirestoreApi.getDoc(
+        firebaseFirestoreApi.doc(db, COMMUNITY_TOTAL_COLLECTION, localEntry.seasonId),
+      );
+      if (totalSnapshot.exists()) {
+        const data = totalSnapshot.data();
+        total = Math.max(0, Number(data.total) || 0);
+        participants = Math.max(0, Math.floor(Number(data.participants) || 0));
+        aggregateMode = "server";
+      }
+    } catch (error) {
+      // Until the optional server aggregator is deployed, the active ranking remains usable.
+    }
+    window.dispatchEvent(new CustomEvent("stellar-season-ranking-update", {
+      detail: {
+        online: true,
+        aggregateMode,
+        total,
+        participants,
+        rank: ownIndex >= 0 ? ownIndex + 1 : 0,
+        percentile: ownIndex >= 0 && entries.length ? ((ownIndex + 1) / entries.length) * 100 : 0,
+        nextGap: ownIndex > 0 ? Math.max(0, previous - localEntry.seasonScore) : 0,
+      },
+    }));
+  } catch (error) {
+    window.dispatchEvent(new CustomEvent("stellar-season-ranking-update", { detail: { online: false } }));
+  }
 }
 
 async function loadCommunityBeacon() {
@@ -834,6 +913,18 @@ async function loadCommunityBeacon() {
     return;
   }
   try {
+    try {
+      const serverSnapshot = await firebaseFirestoreApi.getDoc(
+        firebaseFirestoreApi.doc(db, COMMUNITY_TOTAL_COLLECTION, "current"),
+      );
+      if (serverSnapshot.exists()) {
+        const data = serverSnapshot.data();
+        dispatchCommunityBeacon([], true, "server", Math.max(0, Number(data.total) || 0), Math.max(0, Math.floor(Number(data.participants) || 0)));
+        return;
+      }
+    } catch (error) {
+      // Fall back to a clearly labelled active leaderboard sample.
+    }
     const beaconQuery = firebaseFirestoreApi.query(
       firebaseFirestoreApi.collection(db, LEADERBOARD_COLLECTION),
       firebaseFirestoreApi.orderBy("battleCount", "desc"),
@@ -843,6 +934,7 @@ async function loadCommunityBeacon() {
     dispatchCommunityBeacon(
       snapshot.docs.map(normalizeLeaderboardEntry).filter(Boolean),
       true,
+      "active",
     );
   } catch (error) {
     dispatchCommunityBeacon([], false);
@@ -852,7 +944,9 @@ async function loadCommunityBeacon() {
 function renderLeaderboardRows(entries) {
   if (!elements.leaderboardList) return;
   elements.leaderboardList.textContent = "";
-  const category = LEADERBOARD_CATEGORIES[leaderboardCategory];
+  const category = leaderboardGroup === "season"
+    ? { field: "seasonScore", label: "当前赛季贡献", context: "frontier" }
+    : LEADERBOARD_CATEGORIES[leaderboardCategory];
   if (!entries.length) {
     renderLeaderboardEmpty("这个分类还没有指挥官留下记录。");
     return;
@@ -1082,6 +1176,14 @@ function getLocalLeaderboardEntry() {
       Number.MAX_SAFE_INTEGER,
       Math.max(0, Math.floor(Number(entry.frontierSectors) || 0)),
     ),
+    groupId: ["beginner", "advanced", "transcend"].includes(entry.groupId)
+      ? entry.groupId
+      : "beginner",
+    seasonId: String(entry.seasonId || "").slice(0, 80),
+    seasonScore: Math.min(
+      1_000_000_000,
+      Math.max(0, Math.floor(Number(entry.seasonScore) || 0)),
+    ),
   };
 }
 
@@ -1090,6 +1192,28 @@ function clearLeaderboardTimer() {
     window.clearTimeout(leaderboardTimer);
     leaderboardTimer = null;
   }
+}
+
+async function publishSeasonContribution(localEntry) {
+  if (!currentUser || !db || !localEntry?.seasonId || localEntry.seasonScore < 1) return false;
+  const reference = firebaseFirestoreApi.doc(
+    db,
+    SEASON_CONTRIBUTION_COLLECTION,
+    localEntry.seasonId,
+    "players",
+    currentUser.uid,
+  );
+  await firebaseFirestoreApi.runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(reference);
+    const previous = snapshot.exists() ? Math.max(0, Number(snapshot.data().score) || 0) : 0;
+    transaction.set(reference, {
+      userId: currentUser.uid,
+      seasonId: localEntry.seasonId,
+      score: Math.max(previous, localEntry.seasonScore),
+      updatedAt: firebaseFirestoreApi.serverTimestamp(),
+    });
+  });
+  return true;
 }
 
 function scheduleLeaderboardPublish(delay = LEADERBOARD_SYNC_DELAY) {
@@ -1168,10 +1292,16 @@ async function publishLeaderboardEntry({ silent = false } = {}) {
             localEntry.frontierSectors,
             Math.floor(Number(remote.frontierSectors) || 0),
           ),
+          groupId: localEntry.groupId,
+          seasonId: localEntry.seasonId,
+          seasonScore: remote.seasonId === localEntry.seasonId
+            ? Math.max(localEntry.seasonScore, Math.floor(Number(remote.seasonScore) || 0))
+            : localEntry.seasonScore,
           updatedAt: firebaseFirestoreApi.serverTimestamp(),
         });
       },
     );
+    await publishSeasonContribution(localEntry);
     setLeaderboardStatus(
       "online",
       silent ? "成绩已同步" : "成绩已上传",
@@ -1204,27 +1334,35 @@ async function loadLeaderboard() {
     return;
   }
   const category = LEADERBOARD_CATEGORIES[leaderboardCategory];
+  const localEntry = getLocalLeaderboardEntry();
+  const rankingField = leaderboardGroup === "season" ? "seasonScore" : category.field;
   leaderboardBusy = true;
   setLeaderboardStatus("loading", "正在读取排名");
   updateLeaderboardAccessState();
   try {
     const rankingQuery = firebaseFirestoreApi.query(
       firebaseFirestoreApi.collection(db, LEADERBOARD_COLLECTION),
-      firebaseFirestoreApi.orderBy(category.field, "desc"),
+      firebaseFirestoreApi.orderBy(rankingField, "desc"),
       firebaseFirestoreApi.limit(LEADERBOARD_LIMIT),
     );
     const snapshot = await firebaseFirestoreApi.getDocs(rankingQuery);
-    const entries = snapshot.docs
+    let entries = snapshot.docs
       .map(normalizeLeaderboardEntry)
       .filter(Boolean);
+    if (leaderboardGroup === "season") {
+      entries = entries.filter((entry) => entry.seasonId && entry.seasonId === localEntry?.seasonId);
+    } else if (["beginner", "advanced", "transcend"].includes(leaderboardGroup)) {
+      entries = entries.filter((entry) => entry.groupId === leaderboardGroup);
+    }
     renderLeaderboardRows(entries);
     setLeaderboardStatus("online", "排行榜在线");
     elements.leaderboardUpdatedAt.textContent =
-      `前 ${LEADERBOARD_LIMIT} 名 · 更新于 ${formatSaveTime(Date.now())}`;
+      `${leaderboardGroup === "all" ? "永久总榜" : leaderboardGroup === "season" ? "当前赛季" : "当前分组"} · 前 ${LEADERBOARD_LIMIT} 名 · 更新于 ${formatSaveTime(Date.now())}`;
     setLeaderboardNote("排行榜已连接", "当前成绩会定时更新。", {
       hidden: true,
     });
     await loadCommunityBeacon();
+    await loadSeasonRanking();
   } catch (error) {
     setLeaderboardStatus("error", "读取失败");
     renderLeaderboardEmpty("排行榜暂时无法读取，请稍后重试。");
@@ -1742,6 +1880,17 @@ function bindUi() {
       loadLeaderboard();
     });
   });
+  elements.leaderboardGroups.forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextGroup = button.dataset.leaderboardGroup;
+      if (!["all", "beginner", "advanced", "transcend", "season"].includes(nextGroup)) return;
+      leaderboardGroup = nextGroup;
+      elements.leaderboardGroups.forEach((entry) => {
+        entry.classList.toggle("active", entry.dataset.leaderboardGroup === leaderboardGroup);
+      });
+      loadLeaderboard();
+    });
+  });
   window.addEventListener("stellar-leaderboard-open", () => {
     if (currentUser && syncReady) {
       refreshLeaderboard();
@@ -1867,6 +2016,9 @@ async function initializeCloudService() {
     updateFeedbackAccessState();
     loadAnnouncements().catch(() => {
       // The communications panel exposes a retry button and the precise error.
+    });
+    loadSeasonConfig().catch(() => {
+      // The recurring local season remains available when remote configuration is absent.
     });
     firebaseAuthApi.onAuthStateChanged(auth, (user) => {
       if (user) {

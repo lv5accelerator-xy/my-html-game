@@ -141,7 +141,7 @@ node tests/save-migration-v200.test.js
 
 ## 部署
 
-推送到 `main` 后，[Deploy clean GitHub Pages site](.github/workflows/deploy-pages.yml) 会只发布当前游戏运行文件。历史 ZIP、测试和维护文档不会进入公开网页产物。
+推送到 `main` 后，[Deploy clean GitHub Pages site](.github/workflows/deploy-pages.yml) 会先补齐缺失的当前版本历史 ZIP，并在全量测试通过后只发布游戏运行文件。历史 ZIP、测试和维护文档不会进入公开网页产物；由 `GITHUB_TOKEN` 写入的归档提交不会再次触发工作流。
 
 ## 相关文档
 

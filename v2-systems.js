@@ -31,6 +31,30 @@
     }),
   });
 
+  const RUN_PROTOCOLS = Object.freeze({
+    industry: Object.freeze([
+      Object.freeze({ id: "closedLoop", icon: "⟳", name: "闭环精炼", benefit: "生产 +7%，作业回收更稳定", tradeoff: "防御 -6%", production: 1.07, defense: 0.94 }),
+      Object.freeze({ id: "massFrame", icon: "▦", name: "批量骨架", benefit: "生产 +4%，舰炮 +5%", tradeoff: "手动回收 -10%", production: 1.04, attack: 1.05, click: 0.9 }),
+      Object.freeze({ id: "quietShift", icon: "◷", name: "静默轮班", benefit: "生产 +9%", tradeoff: "舰炮 -7%", production: 1.09, attack: 0.93 }),
+    ]),
+    sentinel: Object.freeze([
+      Object.freeze({ id: "overload", icon: "ϟ", name: "过载炮列", benefit: "舰炮 +11%", tradeoff: "防御 -8%", attack: 1.11, defense: 0.92 }),
+      Object.freeze({ id: "shieldLattice", icon: "◇", name: "盾网互锁", benefit: "防御 +13%", tradeoff: "生产 -6%", defense: 1.13, production: 0.94 }),
+      Object.freeze({ id: "salvagePatrol", icon: "⌬", name: "回收巡逻", benefit: "攻防各 +6%", tradeoff: "手动回收 -8%", attack: 1.06, defense: 1.06, click: 0.92 }),
+    ]),
+    pathfinder: Object.freeze([
+      Object.freeze({ id: "twinProbe", icon: "∴", name: "双探针", benefit: "远征成功率 +5%", tradeoff: "生产 -5%", expeditionChance: 0.05, production: 0.95 }),
+      Object.freeze({ id: "echoChart", icon: "⌁", name: "回声星图", benefit: "远征成功率 +3%，生产 +3%", tradeoff: "防御 -5%", expeditionChance: 0.03, production: 1.03, defense: 0.95 }),
+      Object.freeze({ id: "deepRelay", icon: "☾", name: "深空接力", benefit: "远征成功率 +4%，舰炮 +4%", tradeoff: "生产 -5%", expeditionChance: 0.04, attack: 1.04, production: 0.95 }),
+    ]),
+  });
+
+  const RUN_VARIATIONS = Object.freeze({
+    anomalies: Object.freeze(["引力潮汐", "静电星云", "镜面航道", "漂流残骸", "脉冲盲区", "低温尘带"]),
+    weaknesses: Object.freeze(["护盾换相", "引擎过热", "装甲接缝", "指挥中继", "火控延迟", "补给节点"]),
+    resources: Object.freeze(["工程组件", "战斗材料", "远征补给", "航站凭证", "星尘储备", "收藏线索"]),
+  });
+
   const RETENTION_EVENTS = new Set([
     "game_start", "tutorial_step", "first_automation", "first_research",
     "first_battle", "first_jump", "first_expedition", "first_transcend",
@@ -77,7 +101,11 @@
         targetDelta: 0,
         nextReturnAt: 0,
       },
-      runBuild: null,
+      runBuild: {
+        routeId: "", seed: "", offeredProtocolIds: [], selectedProtocolId: "",
+        variation: { anomaly: "", weakness: "", resource: "" }, startedAt: 0,
+        startSnapshot: {}, reports: [],
+      },
       season: null,
       companionStories: null,
       feedback: null,
@@ -129,7 +157,37 @@
       operations: safeCount(lastReturn.operations), raids: safeCount(lastReturn.raids), targetDelta: safeCount(lastReturn.targetDelta),
       nextReturnAt: safeTime(lastReturn.nextReturnAt),
     };
-    base.runBuild = source.runBuild && typeof source.runBuild === "object" ? source.runBuild : null;
+    const runBuild = source.runBuild && typeof source.runBuild === "object" ? source.runBuild : {};
+    const runRoute = ROUTES[runBuild.routeId]?.id || "";
+    const allowedProtocols = new Set((RUN_PROTOCOLS[runRoute] || []).map((entry) => entry.id));
+    base.runBuild = {
+      routeId: runRoute,
+      seed: String(runBuild.seed || "").slice(0, 96),
+      offeredProtocolIds: uniqueStrings(runBuild.offeredProtocolIds, allowedProtocols, 3),
+      selectedProtocolId: allowedProtocols.has(runBuild.selectedProtocolId) ? runBuild.selectedProtocolId : "",
+      variation: {
+        anomaly: RUN_VARIATIONS.anomalies.includes(runBuild.variation?.anomaly) ? runBuild.variation.anomaly : "",
+        weakness: RUN_VARIATIONS.weaknesses.includes(runBuild.variation?.weakness) ? runBuild.variation.weakness : "",
+        resource: RUN_VARIATIONS.resources.includes(runBuild.variation?.resource) ? runBuild.variation.resource : "",
+      },
+      startedAt: safeTime(runBuild.startedAt),
+      startSnapshot: {
+        dust: Math.max(0, Number(runBuild.startSnapshot?.dust) || 0),
+        battles: safeCount(runBuild.startSnapshot?.battles),
+        expeditions: safeCount(runBuild.startSnapshot?.expeditions),
+      },
+      reports: (Array.isArray(runBuild.reports) ? runBuild.reports : []).flatMap((report) => {
+        if (!report || !ROUTES[report.routeId]) return [];
+        return [{
+          id: String(report.id || "").slice(0, 96), routeId: report.routeId,
+          protocolId: String(report.protocolId || "").slice(0, 40), seed: String(report.seed || "").slice(0, 96),
+          startedAt: safeTime(report.startedAt), endedAt: safeTime(report.endedAt),
+          gainedCores: safeCount(report.gainedCores, 1000000000),
+          dust: Math.max(0, Number(report.dust) || 0), battles: safeCount(report.battles), expeditions: safeCount(report.expeditions),
+          anomaly: String(report.anomaly || "").slice(0, 40), weakness: String(report.weakness || "").slice(0, 40), resource: String(report.resource || "").slice(0, 40),
+        }];
+      }).slice(-12),
+    };
     base.season = source.season && typeof source.season === "object" ? source.season : null;
     base.companionStories = source.companionStories && typeof source.companionStories === "object" ? source.companionStories : null;
     base.feedback = source.feedback && typeof source.feedback === "object" ? source.feedback : null;
@@ -226,6 +284,120 @@
     return completion;
   }
 
+  function seedNumber(seed) {
+    let value = 2166136261;
+    for (let index = 0; index < String(seed).length; index += 1) {
+      value ^= String(seed).charCodeAt(index);
+      value = Math.imul(value, 16777619);
+    }
+    return value >>> 0;
+  }
+
+  function seededOrder(items, seed) {
+    const result = [...items];
+    let value = seedNumber(seed) || 1;
+    for (let index = result.length - 1; index > 0; index -= 1) {
+      value = (Math.imul(value, 1664525) + 1013904223) >>> 0;
+      const swap = value % (index + 1);
+      [result[index], result[swap]] = [result[swap], result[index]];
+    }
+    return result;
+  }
+
+  function snapshotRun(gameState) {
+    return {
+      dust: Math.max(0, Number(gameState?.lifetimeDust) || 0),
+      battles: safeCount(gameState?.combat?.activeWins),
+      expeditions: safeCount(gameState?.expedition?.completed),
+    };
+  }
+
+  function beginRun(v2, routeId, gameState, now = Date.now()) {
+    const route = ROUTES[routeId];
+    if (!route || !v2?.runBuild) return false;
+    const seed = `${String(gameState?.experience?.installedAt || "station")}:${safeCount(gameState?.rebirths)}:${routeId}`;
+    const protocols = seededOrder(RUN_PROTOCOLS[routeId], `${seed}:protocol`);
+    const anomalies = seededOrder(RUN_VARIATIONS.anomalies, `${seed}:anomaly`);
+    const weaknesses = seededOrder(RUN_VARIATIONS.weaknesses, `${seed}:weakness`);
+    const resources = seededOrder(RUN_VARIATIONS.resources, `${seed}:resource`);
+    v2.runBuild.routeId = routeId;
+    v2.runBuild.seed = seed;
+    v2.runBuild.offeredProtocolIds = protocols.map((entry) => entry.id);
+    v2.runBuild.selectedProtocolId = "";
+    v2.runBuild.variation = { anomaly: anomalies[0], weakness: weaknesses[0], resource: resources[0] };
+    v2.runBuild.startedAt = now;
+    v2.runBuild.startSnapshot = snapshotRun(gameState);
+    return true;
+  }
+
+  function getRunProtocol(v2) {
+    const routeId = v2?.runBuild?.routeId;
+    return (RUN_PROTOCOLS[routeId] || []).find((entry) => entry.id === v2?.runBuild?.selectedProtocolId) || null;
+  }
+
+  function selectRunProtocol(v2, protocolId, now = Date.now()) {
+    if (!v2?.runBuild?.routeId || v2.runBuild.selectedProtocolId) return false;
+    const protocol = (RUN_PROTOCOLS[v2.runBuild.routeId] || []).find((entry) =>
+      entry.id === protocolId && v2.runBuild.offeredProtocolIds.includes(entry.id),
+    );
+    if (!protocol) return false;
+    v2.runBuild.selectedProtocolId = protocol.id;
+    record(v2, "doctrine_selected", { route: v2.runBuild.routeId }, now);
+    return true;
+  }
+
+  function getRunFactor(v2, key) {
+    const protocol = getRunProtocol(v2);
+    const value = protocol?.[key];
+    if (Number.isFinite(value)) return value;
+    return ["expeditionChance"].includes(key) ? 0 : 1;
+  }
+
+  function completeRun(v2, gameState, gainedCores = 0, now = Date.now()) {
+    if (!v2?.runBuild?.routeId || !v2.runBuild.startedAt) return null;
+    const current = snapshotRun(gameState);
+    const start = v2.runBuild.startSnapshot || {};
+    const report = {
+      id: `${v2.runBuild.seed}:${now}`,
+      routeId: v2.runBuild.routeId,
+      protocolId: v2.runBuild.selectedProtocolId,
+      seed: v2.runBuild.seed,
+      startedAt: v2.runBuild.startedAt,
+      endedAt: now,
+      gainedCores: safeCount(gainedCores, 1000000000),
+      dust: Math.max(0, current.dust - (Number(start.dust) || 0)),
+      battles: Math.max(0, current.battles - (Number(start.battles) || 0)),
+      expeditions: Math.max(0, current.expeditions - (Number(start.expeditions) || 0)),
+      ...v2.runBuild.variation,
+    };
+    v2.runBuild.reports.push(report);
+    v2.runBuild.reports = v2.runBuild.reports.slice(-12);
+    v2.runBuild.routeId = "";
+    v2.runBuild.seed = "";
+    v2.runBuild.offeredProtocolIds = [];
+    v2.runBuild.selectedProtocolId = "";
+    v2.runBuild.variation = { anomaly: "", weakness: "", resource: "" };
+    v2.runBuild.startedAt = 0;
+    v2.runBuild.startSnapshot = {};
+    return report;
+  }
+
+  function formatRunReport(report) {
+    const route = ROUTES[report?.routeId];
+    const protocol = (RUN_PROTOCOLS[report?.routeId] || []).find((entry) => entry.id === report?.protocolId);
+    return [
+      `《星港拾荒者》v2.0.0 航线报告`,
+      `路线：${route?.name || "未记录"}`,
+      `协议：${protocol?.name || "未选择"}`,
+      `异象：${report?.anomaly || "无"} / 敌方弱点：${report?.weakness || "无"}`,
+      `资源偏向：${report?.resource || "无"}`,
+      `本轮星尘：${Math.floor(Number(report?.dust) || 0)}`,
+      `战斗胜利：${safeCount(report?.battles)} / 远征完成：${safeCount(report?.expeditions)}`,
+      `获得星核：${safeCount(report?.gainedCores)}`,
+      `种子：${report?.seed || "—"}`,
+    ].join("\n");
+  }
+
   function formatEta(seconds, formatter = null) {
     if (!Number.isFinite(seconds) || seconds < 0) return "暂时无法可靠估算";
     if (seconds <= 1) return "现在即可完成";
@@ -294,9 +466,47 @@
       : "统计默认关闭。开启后只记录匿名事件名、日期、耗时与路线，不发送姓名、邮箱或完整存档。";
   }
 
+  function renderRunBuild() {
+    if (!host) return;
+    const gameState = host.getState();
+    const run = gameState.v2.runBuild;
+    if (!run.routeId && gameState.doctrine?.activeId) {
+      beginRun(gameState.v2, gameState.doctrine.activeId, gameState, host.now());
+    }
+    const panel = document.querySelector("#v2-run-build");
+    const variation = document.querySelector("#v2-run-variation");
+    const protocols = document.querySelector("#v2-run-protocols");
+    const status = document.querySelector("#v2-run-status");
+    const reports = document.querySelector("#v2-run-reports");
+    const exportButton = document.querySelector("#v2-run-export");
+    if (!panel || !variation || !protocols || !status || !reports || !exportButton) return;
+    panel.hidden = !run?.routeId;
+    if (!run?.routeId) return;
+    const route = ROUTES[run.routeId];
+    const selected = getRunProtocol(gameState.v2);
+    variation.innerHTML = `<span><small>本轮异象</small><strong>${run.variation.anomaly}</strong></span><span><small>敌方弱点</small><strong>${run.variation.weakness}</strong></span><span><small>资源偏向</small><strong>${run.variation.resource}</strong></span>`;
+    protocols.innerHTML = run.offeredProtocolIds.map((id) => {
+      const protocol = (RUN_PROTOCOLS[run.routeId] || []).find((entry) => entry.id === id);
+      if (!protocol) return "";
+      const active = selected?.id === protocol.id;
+      return `<button type="button" data-v2-protocol="${protocol.id}" class="${active ? "active" : ""}" ${selected ? "disabled" : ""}><span>${protocol.icon}</span><small>${route.name}</small><strong>${protocol.name}</strong><em>${protocol.benefit}</em><b>代价 · ${protocol.tradeoff}</b><i>${active ? "本轮生效" : "选择协议"}</i></button>`;
+    }).join("");
+    status.textContent = selected
+      ? `${selected.name}已锁定到下一次跃迁；收益与代价已经计入本轮规则。`
+      : "从三个协议中选择一个完成 Build。协议只持续本轮，不产生永久倍率。";
+    const recent = [...run.reports].reverse().slice(0, 3);
+    reports.innerHTML = recent.length ? recent.map((report) => {
+      const reportRoute = ROUTES[report.routeId];
+      const protocol = (RUN_PROTOCOLS[report.routeId] || []).find((entry) => entry.id === report.protocolId);
+      return `<article><span>${reportRoute?.icon || "◒"}</span><div><small>${new Date(report.endedAt).toLocaleDateString("zh-CN")}</small><strong>${reportRoute?.name || "旧航线"} · ${protocol?.name || "未选协议"}</strong><em>星尘 ${Math.floor(report.dust)} · 战斗 ${report.battles} · 远征 ${report.expeditions} · 星核 ${report.gainedCores}</em></div></article>`;
+    }).join("") : '<p class="v2-empty">完成下一次跃迁后，这里会保存本轮航线报告。</p>';
+    exportButton.disabled = recent.length < 1;
+  }
+
   function render() {
     renderDailyRoute();
     renderRetention();
+    renderRunBuild();
   }
 
   function attach(nextHost) {
@@ -324,6 +534,22 @@
           host.save(); host.render();
         }
       }
+      const protocolButton = event.target.closest("[data-v2-protocol]");
+      if (protocolButton && selectRunProtocol(host.getState().v2, protocolButton.dataset.v2Protocol, host.now())) {
+        const protocol = getRunProtocol(host.getState().v2);
+        host.notify("本轮协议已锁定", `${protocol.name}：${protocol.benefit}；代价：${protocol.tradeoff}。`, protocol.icon);
+        host.save(); host.render();
+      }
+      if (event.target.closest("#v2-run-export")) {
+        const report = host.getState().v2.runBuild.reports.at(-1);
+        if (report) {
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(new Blob([formatRunReport(report)], { type: "text/plain;charset=utf-8" }));
+          link.download = `星港拾荒者-航线报告-${report.routeId}.txt`;
+          link.click();
+          window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        }
+      }
     });
     document.querySelector("#v2-analytics-toggle")?.addEventListener("change", (event) => {
       const retention = host.getState().v2.retention;
@@ -335,8 +561,9 @@
   }
 
   globalThis.StellarV2Systems = Object.freeze({
-    ROUTES, RETENTION_EVENTS, freshState, sanitize, record, ensureDaily,
+    ROUTES, RUN_PROTOCOLS, RUN_VARIATIONS, RETENTION_EVENTS, freshState, sanitize, record, ensureDaily,
     getEligibleRoutes, selectDaily, rerollDaily, recordMetric, dailyComplete,
-    claimDaily, getDailyCompletion, resourceEta, formatEta, dayKey, attach, render,
+    claimDaily, getDailyCompletion, beginRun, selectRunProtocol, getRunProtocol,
+    getRunFactor, completeRun, formatRunReport, resourceEta, formatEta, dayKey, attach, render,
   });
 })();

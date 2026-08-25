@@ -6629,8 +6629,14 @@
 
   function getDoctrineFactor(key, targetState = state) {
     const value = getActiveDoctrine(targetState)?.[key];
-    if (Number.isFinite(value)) return value;
-    return key === "expeditionChance" ? 0 : 1;
+    const doctrineValue = Number.isFinite(value)
+      ? value
+      : key === "expeditionChance" ? 0 : 1;
+    const runValue = V2_SYSTEMS?.getRunFactor?.(targetState.v2, key)
+      ?? (key === "expeditionChance" ? 0 : 1);
+    return key === "expeditionChance"
+      ? doctrineValue + runValue
+      : doctrineValue * runValue;
   }
 
   function getActiveAnomaly(targetState = state) {
@@ -10942,6 +10948,7 @@
     state.doctrine.history[doctrine.id] = clampGameCount(
       (state.doctrine.history[doctrine.id] || 0) + 1,
     );
+    V2_SYSTEMS?.beginRun?.(state.v2, doctrine.id, state, Date.now());
     addLog(`跃迁学说已确立：${doctrine.name}。`);
     showToast(
       `${doctrine.name}已生效`,
@@ -10949,6 +10956,7 @@
       doctrine.icon,
     );
     renderDoctrine();
+    V2_SYSTEMS?.render?.();
     updateUi();
     saveGame();
   }
@@ -11158,6 +11166,12 @@
       cancelText: "暂不跃迁",
       onConfirm: () => {
         refreshCareerRecords();
+        const completedRun = V2_SYSTEMS?.completeRun?.(
+          state.v2,
+          state,
+          gain,
+          Date.now(),
+        );
         state.cores = Math.min(
           CORE_RESERVE_CAP,
           safeAdd(state.cores, gain),
@@ -11183,7 +11197,11 @@
         state.event = null;
         state.buff = null;
         state.nextEventAt = Date.now() + randomBetween(30000, 50000);
-        addLog(`跃迁成功，航站获得 ${formatNumber(gain, 0)} 枚星核。`);
+        addLog(
+          `跃迁成功，航站获得 ${formatNumber(gain, 0)} 枚星核。${
+            completedRun ? " 本轮航线报告已归档。" : ""
+          }`,
+        );
         checkAchievements();
         renderAll();
         saveGame(false, { forceBackup: true });

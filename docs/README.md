@@ -6,6 +6,7 @@
 | --- | --- |
 | [FIREBASE-SETUP.txt](FIREBASE-SETUP.txt) | Google 登录、Firestore、云存档和排行榜配置 |
 | [COMMUNICATIONS-GUIDE.txt](COMMUNICATIONS-GUIDE.txt) | 发布公告、查看与处理玩家反馈 |
+| [FIREBASE-SEASONS-ANALYTICS.md](FIREBASE-SEASONS-ANALYTICS.md) | v2 远程赛季、匿名 Analytics 与服务端安全聚合 |
 | [MAINTENANCE.md](MAINTENANCE.md) | 新电脑接手项目、测试、版本更新与发布流程 |
 | [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md) | v1.0 正式版及后续版本的发布前检查 |
 

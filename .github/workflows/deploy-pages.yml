@@ -17,7 +17,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install browser test runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run syntax, system and browser checks
+        env:
+          CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
+        run: |
+          node --check game.js
+          node --check cloud-save.js
+          node --check v2-systems.js
+          node tests/numeric-balance.test.js
+          node tests/usability-flow.test.js
+          node tests/retention-flow.test.js
+          node tests/daily-route.test.js
+          node tests/doctrine-build.test.js
+          node tests/season.test.js
+          node tests/companion-story.test.js
+          node tests/save-migration-v200.test.js
+          node tests/browser-smoke.test.js
+          node tests/mobile-performance.test.js
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -28,7 +63,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site/assets
-          cp index.html styles.css game.js game-math.js _site/
+          cp index.html styles.css game.js game-math.js v2-systems.js _site/
           cp -R assets/. _site/assets/
 
           for optional_file in firebase-config.js cloud-save.js; do

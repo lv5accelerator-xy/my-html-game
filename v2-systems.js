@@ -175,7 +175,7 @@
       runBuild: {
         routeId: "", seed: "", offeredProtocolIds: [], selectedProtocolId: "",
         variation: { anomaly: "", weakness: "", resource: "" }, startedAt: 0,
-        startSnapshot: {}, reports: [],
+        startSnapshot: {}, peakRate: 0, peakPower: 0, reports: [],
       },
       season: {
         id: "", title: "", score: 0, participated: false,
@@ -254,7 +254,10 @@
         dust: Math.max(0, Number(runBuild.startSnapshot?.dust) || 0),
         battles: safeCount(runBuild.startSnapshot?.battles),
         expeditions: safeCount(runBuild.startSnapshot?.expeditions),
+        collections: safeCount(runBuild.startSnapshot?.collections, 1000),
       },
+      peakRate: Math.max(0, Number(runBuild.peakRate) || 0),
+      peakPower: Math.max(0, Number(runBuild.peakPower) || 0),
       reports: (Array.isArray(runBuild.reports) ? runBuild.reports : []).flatMap((report) => {
         if (!report || !ROUTES[report.routeId]) return [];
         return [{
@@ -262,7 +265,12 @@
           protocolId: String(report.protocolId || "").slice(0, 40), seed: String(report.seed || "").slice(0, 96),
           startedAt: safeTime(report.startedAt), endedAt: safeTime(report.endedAt),
           gainedCores: safeCount(report.gainedCores, 1000000000),
-          dust: Math.max(0, Number(report.dust) || 0), battles: safeCount(report.battles), expeditions: safeCount(report.expeditions),
+          duration: safeTime(report.duration), dust: Math.max(0, Number(report.dust) || 0),
+          highestRate: Math.max(0, Number(report.highestRate) || 0), highestPower: Math.max(0, Number(report.highestPower) || 0),
+          battles: safeCount(report.battles), expeditions: safeCount(report.expeditions),
+          comparison: Math.max(-100, Math.min(1000000, Number(report.comparison) || 0)),
+          keyEvents: uniqueStrings(report.keyEvents, null, 8), collections: uniqueStrings(report.collections, null, 8),
+          nextSuggestion: String(report.nextSuggestion || "").slice(0, 160),
           anomaly: String(report.anomaly || "").slice(0, 40), weakness: String(report.weakness || "").slice(0, 40), resource: String(report.resource || "").slice(0, 40),
         }];
       }).slice(-12),
@@ -438,7 +446,9 @@
     return {
       dust: Math.max(0, Number(gameState?.lifetimeDust) || 0),
       battles: safeCount(gameState?.combat?.activeWins),
-      expeditions: safeCount(gameState?.expedition?.completed),
+      expeditions: safeCount(gameState?.expedition?.completedRuns ?? gameState?.expedition?.completed),
+      collections: Object.values(gameState?.v2?.companionStories?.records || {}).filter((entry) => entry.stage >= 3).length
+        + safeCount(gameState?.v2?.season?.unlockedRewards?.length, 100),
     };
   }
 
@@ -457,6 +467,8 @@
     v2.runBuild.variation = { anomaly: anomalies[0], weakness: weaknesses[0], resource: resources[0] };
     v2.runBuild.startedAt = now;
     v2.runBuild.startSnapshot = snapshotRun(gameState);
+    v2.runBuild.peakRate = 0;
+    v2.runBuild.peakPower = 0;
     return true;
   }
 
@@ -483,10 +495,24 @@
     return ["expeditionChance"].includes(key) ? 0 : 1;
   }
 
+  function recordRunPeak(v2, rate, power) {
+    if (!v2?.runBuild?.routeId) return;
+    v2.runBuild.peakRate = Math.max(v2.runBuild.peakRate || 0, Math.max(0, Number(rate) || 0));
+    v2.runBuild.peakPower = Math.max(v2.runBuild.peakPower || 0, Math.max(0, Number(power) || 0));
+  }
+
   function completeRun(v2, gameState, gainedCores = 0, now = Date.now()) {
     if (!v2?.runBuild?.routeId || !v2.runBuild.startedAt) return null;
     const current = snapshotRun(gameState);
     const start = v2.runBuild.startSnapshot || {};
+    const previous = v2.runBuild.reports.at(-1);
+    const currentDust = Math.max(0, current.dust - (Number(start.dust) || 0));
+    const collectionCount = Math.max(0, current.collections - (Number(start.collections) || 0));
+    const routeSuggestions = {
+      industry: "下一轮可尝试守备路线，用反击和材料回收替代生产链。",
+      sentinel: "下一轮可尝试探索路线，利用航线预览与远征成功率。",
+      pathfinder: "下一轮可尝试工业路线，把远征库存送入自动作业循环。",
+    };
     const report = {
       id: `${v2.runBuild.seed}:${now}`,
       routeId: v2.runBuild.routeId,
@@ -494,10 +520,21 @@
       seed: v2.runBuild.seed,
       startedAt: v2.runBuild.startedAt,
       endedAt: now,
+      duration: Math.max(0, now - v2.runBuild.startedAt),
       gainedCores: safeCount(gainedCores, 1000000000),
-      dust: Math.max(0, current.dust - (Number(start.dust) || 0)),
+      dust: currentDust,
+      highestRate: Math.max(0, Number(v2.runBuild.peakRate) || 0),
+      highestPower: Math.max(0, Number(v2.runBuild.peakPower) || 0),
       battles: Math.max(0, current.battles - (Number(start.battles) || 0)),
       expeditions: Math.max(0, current.expeditions - (Number(start.expeditions) || 0)),
+      comparison: previous?.dust > 0 ? ((currentDust - previous.dust) / previous.dust) * 100 : 0,
+      keyEvents: [
+        current.battles - (Number(start.battles) || 0) > 0 ? "完成主动战斗" : "",
+        current.expeditions - (Number(start.expeditions) || 0) > 0 ? "完成远征" : "",
+        `遭遇${v2.runBuild.variation.anomaly}`,
+      ].filter(Boolean),
+      collections: collectionCount > 0 ? [`新增 ${collectionCount} 项剧情或赛季收藏`] : [],
+      nextSuggestion: routeSuggestions[v2.runBuild.routeId],
       ...v2.runBuild.variation,
     };
     v2.runBuild.reports.push(report);
@@ -509,6 +546,8 @@
     v2.runBuild.variation = { anomaly: "", weakness: "", resource: "" };
     v2.runBuild.startedAt = 0;
     v2.runBuild.startSnapshot = {};
+    v2.runBuild.peakRate = 0;
+    v2.runBuild.peakPower = 0;
     return report;
   }
 
@@ -522,8 +561,15 @@
       `异象：${report?.anomaly || "无"} / 敌方弱点：${report?.weakness || "无"}`,
       `资源偏向：${report?.resource || "无"}`,
       `本轮星尘：${Math.floor(Number(report?.dust) || 0)}`,
+      `本轮用时：${formatEta((Number(report?.duration) || 0) / 1000).replace(/^预计 /, "")}`,
+      `最高产量：${Math.floor(Number(report?.highestRate) || 0)} / 秒`,
+      `最高战力：${Math.floor(Number(report?.highestPower) || 0)}`,
       `战斗胜利：${safeCount(report?.battles)} / 远征完成：${safeCount(report?.expeditions)}`,
       `获得星核：${safeCount(report?.gainedCores)}`,
+      `与上一轮星尘相比：${Number(report?.comparison) >= 0 ? "+" : ""}${(Number(report?.comparison) || 0).toFixed(1)}%`,
+      `关键事件：${(report?.keyEvents || []).join("、") || "无"}`,
+      `本轮收藏：${(report?.collections || []).join("、") || "无"}`,
+      `下轮建议：${report?.nextSuggestion || "尝试不同路线与协议。"}`,
       `种子：${report?.seed || "—"}`,
     ].join("\n");
   }
@@ -833,6 +879,7 @@
     if (!run.routeId && gameState.doctrine?.activeId) {
       beginRun(gameState.v2, gameState.doctrine.activeId, gameState, host.now());
     }
+    recordRunPeak(gameState.v2, host.getRate?.(), host.getPower?.());
     const panel = document.querySelector("#v2-run-build");
     const variation = document.querySelector("#v2-run-variation");
     const protocols = document.querySelector("#v2-run-protocols");
@@ -858,7 +905,7 @@
     reports.innerHTML = recent.length ? recent.map((report) => {
       const reportRoute = ROUTES[report.routeId];
       const protocol = (RUN_PROTOCOLS[report.routeId] || []).find((entry) => entry.id === report.protocolId);
-      return `<article><span>${reportRoute?.icon || "◒"}</span><div><small>${new Date(report.endedAt).toLocaleDateString("zh-CN")}</small><strong>${reportRoute?.name || "旧航线"} · ${protocol?.name || "未选协议"}</strong><em>星尘 ${Math.floor(report.dust)} · 战斗 ${report.battles} · 远征 ${report.expeditions} · 星核 ${report.gainedCores}</em></div></article>`;
+      return `<article><span>${reportRoute?.icon || "◒"}</span><div><small>${new Date(report.endedAt).toLocaleDateString("zh-CN")} · ${formatEta(report.duration / 1000).replace(/^预计 /, "")}</small><strong>${reportRoute?.name || "旧航线"} · ${protocol?.name || "未选协议"}</strong><em>峰值 ${Math.floor(report.highestRate)} / 秒 · 战力 ${Math.floor(report.highestPower)} · 远征 ${report.expeditions} · 星核 ${report.gainedCores}</em></div></article>`;
     }).join("") : '<p class="v2-empty">完成下一次跃迁后，这里会保存本轮航线报告。</p>';
     exportButton.disabled = recent.length < 1;
   }
@@ -1078,7 +1125,7 @@
     RETENTION_EVENTS, freshState, sanitize, record, ensureDaily,
     getEligibleRoutes, selectDaily, rerollDaily, recordMetric, dailyComplete,
     claimDaily, getDailyCompletion, beginRun, selectRunProtocol, getRunProtocol,
-    getRunFactor, completeRun, formatRunReport, DEFAULT_SEASON_CONFIG,
+    getRunFactor, recordRunPeak, completeRun, formatRunReport, DEFAULT_SEASON_CONFIG,
     normalizeSeasonConfig, getSeasonWindow, ensureSeason, recordSeasonMetric,
     claimSeasonPersonal, claimSeasonBeacon, setSeasonConfig, setSeasonNetwork,
     getCompanionRecord, getCompanionCondition, getDominantRoute, advanceCompanionStory,

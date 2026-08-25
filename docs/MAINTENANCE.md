@@ -1,7 +1,7 @@
 # 《星港拾荒者》新电脑维护交接说明
 
-> 当前版本：v1.10.0「星港画卷」
-> 更新日期：2026-08-21
+> 当前版本：v2.0.0「群星归航」
+> 更新日期：2026-08-25
 > 技术栈：纯 HTML、CSS、JavaScript；GitHub Pages + Firebase
 
 ## 项目地址
@@ -39,7 +39,7 @@
 
 ## 当前产品方向
 
-v1.10.0 延续 v0.24.0 开始的复杂度收束，以插图强化已有页面的功能辨识，不增加玩法层：
+v2.0.0 继续收束复杂度，把既有系统组织成“看见当前航程 → 做出少量选择 → 获得总结与下轮建议”的闭环：
 
 - 默认使用“专注导航”，只显示核心、紧急和限时入口。
 - 指挥台用“当前航程”汇总一项主目标和至多两项可选目标，不要求玩家记住全部系统。
@@ -66,6 +66,10 @@ v1.10.0 延续 v0.24.0 开始的复杂度收束，以插图强化已有页面的
 - v1.8.0 为边境长航加入阶段信号、三种应对、机制型终点、纪念品和归档航线快速结算。
 - v1.9.0 集中展示五组已有收藏，加入伴星每日短事件，并让公告承载实时排行榜聚合目标。
 - v1.10.0 为舰队、研究、战斗和超越补充独立叙事插图，保持同一视觉语言并以懒加载控制手机端开销。
+- v2.0.0 用真实预计时间统一当前航程；每日只选一条工业/守备/探索航线，保留一个主目标与两个可选目标。
+- 每轮跃迁可选路线与三选一协议，研究分岔在本轮互斥；奖励仍使用已有资源、外观和收藏。
+- 常驻赛季默认为 14 天活动加至少 7 天兑换，远程配置与服务端汇总均可缺省，不影响离线核心玩法。
+- 八只伴星各有三阶段记忆故事；四个微反馈只出现一次、可关闭，匿名统计默认关闭且需玩家主动同意。
 
 ## 主要文件
 
@@ -75,9 +79,11 @@ v1.10.0 延续 v0.24.0 开始的复杂度收束，以插图强化已有页面的
 | `styles.css` | 全部视觉效果、响应式和手机适配 |
 | `game.js` | 状态、数值、玩法、存档、渲染和事件 |
 | `game-math.js` | 安全数值、软上限、成本与格式化 |
+| `v2-systems.js` | 今日航线、单轮 Build、循环赛季、伴星故事、反馈和匿名统计适配层 |
 | `cloud-save.js` | Google 登录、云存档、排行榜、公告和反馈 |
 | `firebase-config.js` | Firebase Web 配置 |
 | `firestore.rules` | 云存档、排行榜、公告和反馈权限 |
+| `firebase/functions/` | 可选的赛季贡献与长期共同航标增量聚合 |
 | `docs/` | Firebase、公告反馈和换机维护文档 |
 | `patch-notes/` | 当前累计版本更新记录 |
 | `tests/` | 数值、浏览器与手机性能回归测试 |
@@ -86,7 +92,7 @@ v1.10.0 延续 v0.24.0 开始的复杂度收束，以插图强化已有页面的
 ## 存档与版本
 
 - 浏览器主存档键：`stellarOutpostIdleSave_v1`。
-- 当前 `SAVE_VERSION = 30`。
+- 当前 `SAVE_VERSION = 31`。
 - v0.25.0 新增 `journey`、`atlas`、`bossTrial` 与 `communityBeacon`，分别保存章节领奖、图鉴领奖/筛选、每日首领状态和合作目标领奖。
 - v0.26.0-v0.31.0 新增归航、学说、异象、当日暂缓航程、星港蓝图与 `borderEcho` 每周挑战/收藏状态。
 - v1.0.1 为 `atlas` 新增 `discoveredIds`，所有已发现条目跨超越保留；旧伴星观测按事件编号补回 `companionId`。
@@ -99,10 +105,21 @@ v1.10.0 延续 v0.24.0 开始的复杂度收束，以插图强化已有页面的
 - v1.8.0 为 `longVoyage` 新增当前决策、纪念品与快速结算次数；旧档进入航段时自动生成对应信号。
 - v1.9.0 新增 `starportLife`，保存当日伴星片段、累计次数和最近十二条日志。
 - v1.10.0 不改变存档结构，仍使用 `SAVE_VERSION = 30`。
+- v2.0.0 新增 `v2` 根状态，包含 retention、dailyRoute、runBuild、season、companionStories 与 feedback；v1.10.0 及更早存档加载时保留原资源和进度并自动补齐安全默认值。
 - 云存档上传完整 `snapshot`，Firestore 规则只校验稳定信封，因此上述状态不需要改变云存档规则。
-- 共同航标通过现有排行榜字段在客户端汇总，不向 `leaderboards/{uid}` 增加字段，本版本也无需更新排行榜规则。
+- v1.9.0 的共同航标最初只读取客户端排行榜样本；v2.0.0 为排行榜增加 groupId、seasonId、seasonScore 与 contributions，并同步更新 `cloud-save.js`、`firestore.rules` 和可选 Cloud Functions。只有函数汇总可用时才能标记为“全部参与者”。
 - 修改存档结构时递增 `SAVE_VERSION`，并在 `sanitizeState()` 中补齐和限制新字段。
 - 不要直接删除或重命名旧状态字段；先兼容读取至少一个正式版本周期。
+
+## v2.0.0 关键入口
+
+- `v2-systems.js` / `window.StellarV2Systems`：可独立单元测试的 v2 状态、规则、渲染与事件绑定。
+- `getFocusRoutes()` 与 `#v2-daily-route`：统一当前航程和工业/守备/探索三条今日航线。
+- `#v2-run-build` / `completeRun()` / `formatRunReport()`：种子、路线协议、峰值记录和可导出航线报告。
+- `seasonConfigs/current` / `#v2-season-card`：14+7 循环默认赛季、远程替换、追赶和赛季陈列奖励。
+- `#v2-companion-stories` / `advanceCompanionStory()`：八只伴星三阶段行为故事与专属结局。
+- `firebase/functions/index.js`：仅在部署后启用的可信差值聚合；未部署时客户端明确标注排行榜样本。
+- `tests/save-migration-v200.test.js`：浏览器内把 v1.10 快照迁移到结构 31，并核对资源、设施、研究、伴星、远征与任务凭证不丢失。
 
 ## v1.10.0 关键入口
 
@@ -164,6 +181,10 @@ v1.10.0 延续 v0.24.0 开始的复杂度收束，以插图强化已有页面的
 - Firestore `leaderboards/{uid}`：长期排行榜。
 - Firestore `announcements/{id}`：开发者公告。
 - Firestore `feedback/{id}`：玩家反馈。
+- Firestore `seasonConfigs/current`：可选远程赛季定义。
+- Firestore `seasonContributions/{seasonId}/players/{uid}`：本人只可提高的赛季贡献。
+- Firestore `quickFeedback/{id}`：可选的题目编号与 1—5 分匿名微反馈。
+- Firestore `communityTotals/{id}`：Cloud Functions 写入、客户端只读的可信共同航标汇总。
 - 公告与反馈的字段、创建和处理步骤见 `COMMUNICATIONS-GUIDE.txt`。
 - 如修改排行榜字段，必须同步更新 `cloud-save.js` 与 `firestore.rules`，并先发布安全规则再发布网页。
 
@@ -183,7 +204,15 @@ v1.10.0 延续 v0.24.0 开始的复杂度收束，以插图强化已有页面的
 ```bash
 node --check game.js
 node --check cloud-save.js
+node --check v2-systems.js
 node tests/numeric-balance.test.js
+node tests/usability-flow.test.js
+node tests/retention-flow.test.js
+node tests/daily-route.test.js
+node tests/doctrine-build.test.js
+node tests/season.test.js
+node tests/companion-story.test.js
+node tests/save-migration-v200.test.js
 node tests/browser-smoke.test.js
 node tests/mobile-performance.test.js
 ```

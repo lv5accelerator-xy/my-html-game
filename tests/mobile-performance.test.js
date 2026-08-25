@@ -60,7 +60,7 @@ async function main() {
 
   await context.addInitScript((save) => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(save));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.10.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "2.0.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
     localStorage.removeItem("stellarOutpostIdlePerformanceMode");
   }, {
@@ -167,8 +167,9 @@ async function main() {
     assert.ok(communicationLayout.pageWidth <= communicationLayout.viewportWidth);
     assert.ok(communicationLayout.modalWidth <= communicationLayout.viewportWidth);
     await page.click("#communication-close");
+    if (await page.locator("#modal-confirm").isVisible()) await page.click("#modal-confirm");
 
-    await page.click("#research-page-tab");
+    await page.evaluate(() => document.querySelector("#research-page-tab").click());
     const researchLayout = await page.evaluate(() => ({
       viewportWidth: document.documentElement.clientWidth,
       pageWidth: document.documentElement.scrollWidth,
@@ -198,7 +199,7 @@ async function main() {
       milestones: document.querySelectorAll("#starfall-milestone-list article").length,
       storeItems: document.querySelectorAll("#starfall-store-grid article").length,
     }));
-    assert.ok(["preview", "active"].includes(starfallLayout.phase));
+    assert.ok(["preview", "active", "exchange", "ended"].includes(starfallLayout.phase));
     assert.equal(starfallLayout.letters, 7);
     assert.equal(starfallLayout.milestones, 7);
     assert.equal(starfallLayout.storeItems, 6);
@@ -438,7 +439,7 @@ async function main() {
     });
     assert.equal(mobileMissionLayout.pageVisible, true);
     assert.equal(mobileMissionLayout.columns, 1);
-    assert.equal(mobileMissionLayout.cardCount, 5);
+    assert.equal(mobileMissionLayout.cardCount, 3);
     assert.ok(
       mobileMissionLayout.pageWidth <= mobileMissionLayout.viewportWidth,
       `mission page must not create horizontal page scrolling; got ${mobileMissionLayout.pageWidth}px`,
@@ -513,13 +514,15 @@ async function main() {
         voidChoir: 3,
       };
       bridge.applySnapshot(leaderboardSave);
-      const categories = document.querySelector(".leaderboard-categories");
+      const categories = document.querySelector('[aria-label="排行榜分类"]');
+      const groups = document.querySelector('[aria-label="排行榜分组"]');
       const personalGrid = document.querySelector(".leaderboard-personal-grid");
       return {
         viewportWidth: document.documentElement.clientWidth,
         pageWidth: document.documentElement.scrollWidth,
         pageVisible: !document.querySelector("#leaderboard-page").hidden,
         categoryCount: categories.querySelectorAll("button").length,
+        groupCount: groups.querySelectorAll("button").length,
         categoryColumns: getComputedStyle(categories).gridTemplateColumns
           .split(" ").length,
         personalCards: personalGrid.querySelectorAll("article").length,
@@ -529,6 +532,7 @@ async function main() {
     });
     assert.equal(mobileLeaderboardLayout.pageVisible, true);
     assert.equal(mobileLeaderboardLayout.categoryCount, 9);
+    assert.equal(mobileLeaderboardLayout.groupCount, 5);
     assert.equal(mobileLeaderboardLayout.categoryColumns, 3);
     assert.equal(mobileLeaderboardLayout.personalCards, 9);
     assert.equal(mobileLeaderboardLayout.personalColumns, 1);

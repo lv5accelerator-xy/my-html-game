@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://lv5accelerator-xy.github.io/my-html-game/"><strong>▶ 在线试玩</strong></a>
   ·
-  <a href="patch-notes/星港拾荒者-v0.1.0-v1.10.0-Patch-Notes.txt">更新记录</a>
+  <a href="patch-notes/星港拾荒者-v0.1.0-v2.0.0-Patch-Notes.txt">更新记录</a>
   ·
   <a href="docs/README.md">维护文档</a>
   ·
@@ -39,11 +39,13 @@
 - **轮回成长**：通过深空跃迁、奇点超越、伴星观测和循环星区形成多层长期目标。
 - **任务与收藏**：每日/每周委托、航路章节、星海图鉴和限时活动提供明确短期目标。
 - **动态规则**：归航值守、跃迁学说和每周深空异象改变当前航线策略，但不无限堆叠倍率。
+- **群星归航**：统一当前航程、三选一今日航线、带取舍的跃迁 Build、循环赛季与伴星记忆故事，把既有系统收束为可读的回流闭环。
 
 ## 当前版本
 
-当前版本为 **v1.10.0「星港画卷」**。
+当前版本为 **v2.0.0「群星归航」**。
 
+- **v2.0.0**：重做回流与每日目标，新增带种子的路线/协议 Build、单轮互斥研究、可导出航线报告、常驻循环赛季、分组榜、八条伴星记忆线和隐私友好反馈；旧档自动升级到存档结构 31。
 - **v1.10.0**：舰队、研究、战斗与超越页面新增四张独立场景插图，并完成 WebP 压缩、懒加载与手机端裁切适配。
 - **v1.9.0**：新增星港收藏陈列廊、伴星每日短事件、扩展归航简报，以及可由公告发布的实时全服目标。
 - **v1.8.0**：边境长航加入逐段信号判断、三种应对方案、机制型终点、航柜纪念品与归档航线资源结算。
@@ -64,7 +66,7 @@
 - **v0.26.0**：新增归航简报、每日三选一值守目标和个人体验里程碑。
 - **v0.25.0**：新增八章航路、33 项图鉴、每日机制首领与全服共同航标。
 
-完整变化见 [Patch Notes](patch-notes/星港拾荒者-v0.1.0-v1.10.0-Patch-Notes.txt)。
+完整变化见 [Patch Notes](patch-notes/星港拾荒者-v0.1.0-v2.0.0-Patch-Notes.txt)。
 
 ## 开始游玩
 
@@ -97,9 +99,11 @@ my-html-game/
 ├─ styles.css                 # 界面、动画和响应式布局
 ├─ game.js                    # 游戏状态、玩法、存档与渲染
 ├─ game-math.js               # 数值安全、软上限与格式化
+├─ v2-systems.js              # v2 每日航线、Build、赛季、伴星故事与留存适配层
 ├─ cloud-save.js              # 登录、云存档、排行榜、公告与反馈
 ├─ firebase-config.js         # Firebase Web 公共配置
 ├─ firestore.rules            # Firestore 安全规则
+├─ firebase/functions/        # 可选的赛季与长期共同航标服务端增量聚合
 ├─ assets/                    # 压缩后的游戏贴图与原创背景音乐
 ├─ docs/                      # 云端、运营和换机维护文档
 ├─ patch-notes/               # 累计版本更新记录
@@ -114,7 +118,15 @@ my-html-game/
 
 ```bash
 node --check game.js
+node --check cloud-save.js
+node --check v2-systems.js
 node tests/numeric-balance.test.js
+node tests/usability-flow.test.js
+node tests/retention-flow.test.js
+node tests/daily-route.test.js
+node tests/doctrine-build.test.js
+node tests/season.test.js
+node tests/companion-story.test.js
 ```
 
 浏览器测试需要 Playwright，并可通过 `CODEX_PLAYWRIGHT_PATH` 与 `CODEX_CHROMIUM_PATH` 指定本机模块和浏览器：
@@ -122,9 +134,10 @@ node tests/numeric-balance.test.js
 ```bash
 node tests/browser-smoke.test.js
 node tests/mobile-performance.test.js
+node tests/save-migration-v200.test.js
 ```
 
-测试覆盖旧档迁移、后台收益、数值上限、任务与远征、云端序列化、手机布局、省电模式和版本检测。
+测试覆盖 v1.10 旧档迁移、后台收益、数值上限、今日航线、单轮 Build、循环赛季、伴星故事、任务与远征、云端序列化、手机布局、省电模式和版本检测。
 
 ## 部署
 
@@ -135,6 +148,7 @@ node tests/mobile-performance.test.js
 - [文档索引](docs/README.md)
 - [Firebase、账号与云存档配置](docs/FIREBASE-SETUP.txt)
 - [公告发布与玩家反馈处理](docs/COMMUNICATIONS-GUIDE.txt)
+- [v2 赛季、Analytics 与安全聚合](docs/FIREBASE-SEASONS-ANALYTICS.md)
 - [新电脑维护交接说明](docs/MAINTENANCE.md)
 - [v1.0 正式版发布检查清单](docs/RELEASE-CHECKLIST.md)
 - [历史版本归档规则](历史版本/README.md)

@@ -69,7 +69,7 @@ async function main() {
     if (!localStorage.getItem("stellarOutpostIdleSave_v1")) {
       localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify(legacySave));
     }
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "1.10.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "2.0.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   }, {
     version: 5,
@@ -106,14 +106,10 @@ async function main() {
   });
 
   try {
-    const response = await page.goto(origin, { waitUntil: "domcontentloaded" });
+    const response = await page.goto(origin, { waitUntil: "commit" });
     assert.equal(response.status(), 200);
+    await page.waitForFunction(() => Boolean(window.StellarOutpostCloudBridge), null, { timeout: 30_000 });
     await page.waitForTimeout(800);
-    assert.equal(
-      await page.evaluate(() => Boolean(window.StellarOutpostCloudBridge)),
-      true,
-      `game bridge should initialize: ${pageErrors.join(" | ")}`,
-    );
 
     const snapshot = await page.evaluate(() => ({
       footer: document.querySelector(".app-shell > footer").textContent,
@@ -192,15 +188,15 @@ async function main() {
       mobileNavigationItems: document.querySelectorAll("#mobile-quick-nav button").length,
     }));
 
-    assert.equal(snapshot.gameVersion, "1.10.0");
-    assert.equal(snapshot.saveVersion, 30);
+    assert.equal(snapshot.gameVersion, "2.0.0");
+    assert.equal(snapshot.saveVersion, 31);
     assert.equal(snapshot.performance.mode, "quality");
     assert.equal(snapshot.performance.gameTickInterval, 100);
     assert.equal(snapshot.performance.starfield.targetFps, 60);
     assert.equal(snapshot.cloudTransport.hasNestedPreset, true);
     assert.ok(snapshot.cloudTransport.bytes < 700_000);
     assert.equal(snapshot.cloudTransport.restoredPresets, 3);
-    assert.match(snapshot.footer, /v1\.10\.0/);
+    assert.match(snapshot.footer, /v2\.0\.0/);
     assert.deepEqual(snapshot.schemaFields.pinnedGoals, []);
     assert.equal(snapshot.schemaFields.lastJobId, "");
     assert.deepEqual(snapshot.schemaFields.starportLife.eventLog, []);
@@ -285,7 +281,10 @@ async function main() {
     }
     const firstContinuousOperation = page.locator("[data-operation-continuous]:not([disabled])").first();
     await firstContinuousOperation.waitFor({ state: "visible" });
-    await firstContinuousOperation.evaluate((button) => button.click());
+    await page.evaluate(() => {
+      document.querySelector("[data-operation-continuous]:not([disabled])")
+        .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
     const rememberedOperation = await page.evaluate(() => {
       const save = window.StellarOutpostCloudBridge.createSnapshot();
       return { lastJobId: save.operations.lastJobId, queue: save.operations.queue };
@@ -1069,6 +1068,11 @@ async function main() {
       expeditionSave.expedition.unlockedSkins = ["standard"];
       expeditionSave.expedition.activeSkin = "standard";
       expeditionSave.expedition.activeRun = null;
+      expeditionSave.longVoyage = {
+        activeRouteId: "", stageIndex: 0, baseline: {}, completedRoutes: [],
+        totalCompleted: 0, currentDecision: null, souvenirs: [], quickSettles: 0,
+        lastReport: "",
+      };
       Object.keys(expeditionSave.starport.materials).forEach((id) => {
         expeditionSave.starport.materials[id] = 10;
       });
@@ -1078,6 +1082,7 @@ async function main() {
       const snapshot = bridge.createSnapshot();
       return {
         diagnostics: bridge.getExpeditionDiagnostics(),
+        longVoyage: bridge.getLongVoyageDiagnostics(),
         materialTotal: Object.values(snapshot.starport.materials).reduce(
           (sum, value) => sum + value,
           0,
@@ -1091,7 +1096,12 @@ async function main() {
     assert.equal(await page.locator("[data-expedition-gear]").count(), 12);
     assert.equal(await page.locator("[data-expedition-gear].selected").count(), 3);
     assert.equal(await page.locator("[data-long-voyage-start]").count(), 3);
-    await page.locator("[data-long-voyage-start='industrial']").evaluate((button) => button.click());
+    assert.equal(expeditionBefore.longVoyage.active, null);
+    assert.equal(await page.locator("[data-long-voyage-start='industrial']").isEnabled(), true);
+    await page.evaluate(() => {
+      document.querySelector("[data-long-voyage-start='industrial']")
+        .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
     const startedLongVoyage = await page.evaluate(() =>
       window.StellarOutpostCloudBridge.getLongVoyageDiagnostics(),
     );
@@ -1169,12 +1179,23 @@ async function main() {
     assert.ok(expeditionCompleted.diagnostics.unlockedGear.includes("shieldCapacitor"));
     assert.equal(expeditionCompleted.diagnostics.artifacts.length, 1);
     assert.equal(expeditionCompleted.artifactCards, 1);
+    if (await page.locator("#v2-feedback-backdrop").isVisible()) {
+      assert.ok((await page.locator("#v2-feedback-title").textContent()).trim());
+      await page.click("#v2-feedback-close");
+      assert.equal(await page.locator("#v2-feedback-backdrop").isHidden(), true);
+    }
 
     const skinPowerBefore = await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
       const skinSave = bridge.createSnapshot();
       skinSave.activePage = "expedition";
       skinSave.expedition.fragments = 100;
+      skinSave.v2.feedback.pendingId = "";
+      skinSave.v2.feedback.dismissed = [...new Set([
+        ...skinSave.v2.feedback.dismissed,
+        "first_jump",
+        "first_expedition",
+      ])];
       bridge.applySnapshot(skinSave);
       return bridge.getStarportDiagnostics().attackPower;
     });
@@ -1202,7 +1223,7 @@ async function main() {
       missionSave.missions.tokens = 0;
       missionSave.missions.daily.items = [
         {
-          templateId: "manualClicks",
+          templateId: "dustEarned",
           target: 2,
           progress: 1,
           claimed: false,
@@ -1472,7 +1493,7 @@ async function main() {
         archivedIds: migratedSave.atlas.discoveredIds,
       };
     });
-    assert.equal(atlasMigration.saveVersion, 30);
+    assert.equal(atlasMigration.saveVersion, 31);
     assert.equal(atlasMigration.restoredAtlas.total, 33);
     assert.equal(atlasMigration.restoredAtlas.discovered, 19);
     assert.equal(
@@ -1498,7 +1519,7 @@ async function main() {
       route.fulfill({
         status: 200,
         contentType: "text/html; charset=utf-8",
-        body: '<!doctype html><meta name="stellar-game-version" content="1.10.1"><meta name="stellar-release-title" content="更新检测测试">',
+        body: '<!doctype html><meta name="stellar-game-version" content="2.0.1"><meta name="stellar-release-title" content="更新检测测试">',
       }),
     );
     await page.evaluate(() =>
@@ -1507,7 +1528,7 @@ async function main() {
     await page.waitForFunction(
       () => !document.querySelector("#update-banner").hidden,
     );
-    assert.match(await page.locator("#update-banner-title").textContent(), /v1\.10\.1/);
+    assert.match(await page.locator("#update-banner-title").textContent(), /v2\.0\.1/);
     const saveSafety = await page.evaluate(() =>
       window.StellarOutpostCloudBridge.getSaveSafetyDiagnostics(),
     );

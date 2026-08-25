@@ -1,5 +1,5 @@
 《星港拾荒者》账号与云端存档配置说明
-适用版本：v0.19.1 及以上
+适用版本：v2.0.0 及以上
 
 ============================================================
 
@@ -12,7 +12,11 @@
 - Firestore 区域：northamerica-northeast2 (Toronto)
 - 航站公告集合：announcements（公开读取 published=true，控制台发布）
 - 玩家反馈集合：feedback（登录玩家仅可创建，控制台查看）
-- Firestore 规则：包含云存档所有者隔离、对象/JSON 双格式存档信封校验与登录用户排行榜读取规则
+- 快速反馈集合：quickFeedback（只包含题目编号、1—5 分、版本与 UID）
+- 赛季配置：seasonConfigs/current（公开读取 published=true）
+- 赛季贡献：seasonContributions/{seasonId}/players/{uid}（本人只可单调提高）
+- 服务端汇总：communityTotals/{id}（客户端只读）
+- Firestore 规则：包含云存档所有者隔离、对象/JSON 双格式存档信封校验、分组/赛季排行榜和 v2 集合权限
 
 ============================================================
 
@@ -21,7 +25,7 @@
 1. 打开 https://console.firebase.google.com/
 2. 选择“创建 Firebase 项目”。
 3. 项目名称建议使用：stellar-outpost-idle
-4. 本游戏不依赖 Google Analytics，可暂不启用。
+4. 本游戏不依赖 Google Analytics，可暂不启用；如需验证留存漏斗，按 FIREBASE-SEASONS-ANALYTICS.md 配置 measurementId，玩家仍需手动同意。
 5. 项目创建完成后，在项目概览中选择“Web 应用”图标。
 6. 应用昵称建议使用：星港拾荒者-Web
 7. 不需要启用 Firebase Hosting；游戏继续由 GitHub Pages 托管。
@@ -40,6 +44,7 @@ globalThis.STELLAR_FIREBASE_CONFIG = Object.freeze({
   authDomain: "控制台中的 authDomain",
   projectId: "控制台中的 projectId",
   appId: "控制台中的 appId",
+  measurementId: "可选的 G-XXXXXXXXXX",
 });
 
 Firebase Web 配置用于识别项目，可以随网站前端发布。
@@ -92,9 +97,10 @@ Firebase Web 配置用于识别项目，可以随网站前端发布。
 - 每个账号只能读取和修改与自己 UID 相同的存档文档。
 - 云存档必须包含有效的 revision 与 snapshot 信封；snapshot 同时兼容旧对象格式和新版 JSON 字符串格式，JSON 正文上限为 700,000 字符。
 - 每个账号只能写入、更新或删除与自己 UID 相同的排行榜文档。
-- 排行榜只允许登录用户读取，并且只公开游戏玩家名、累计星尘、最高综合战力、战斗次数、超越次数、完整远征、首领击破、远征遗物及更新时间；不会公开邮箱。
+- 排行榜只允许登录用户读取，并且只公开游戏玩家名、累计星尘、最高综合战力、战斗次数、超越次数、远征记录、赛季分组与更新时间；不会公开邮箱。
 - 排行榜累计记录不允许通过普通更新降低；“重置全部进度”会先删除该账号的排行榜记录，再以新进度重新加入。
 - 未登录用户不能读取、写入或删除任何云存档或排行榜记录。
+- 赛季配置和已发布服务端汇总允许公开读取；浏览器不能伪造 communityTotals。
 
 ============================================================
 
@@ -111,6 +117,7 @@ Firebase Web 配置用于识别项目，可以随网站前端发布。
 8. 进入游戏“排行榜”，确认可以切换“累计星尘 / 最高战力 / 战斗次数 / 完整远征 / 首领击破 / 远征遗物”，并在 Firestore 中看到：
    leaderboards / Firebase用户UID
 9. 排行榜由客户端提交，用于玩家间友好比较；如果需要竞赛级防作弊，应改由可信服务器或 Cloud Functions 验证战斗与资源流水。
+10. v2 赛季、Analytics 和 Cloud Functions 的详细部署见 FIREBASE-SEASONS-ANALYTICS.md；未部署函数时界面会明确标记为“排行榜活跃玩家汇总”。
 
 ============================================================
 

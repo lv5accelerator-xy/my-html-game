@@ -99,28 +99,28 @@
     Object.freeze({
       id: "outpost-beyond-orion",
       title: "猎户座外的前哨",
-      src: "assets/outpost-beyond-orion.mp3?v=1.10.0",
+      src: "assets/outpost-beyond-orion.mp3?v=2.0.0",
       loopStartSeconds: 0.2,
       loopEndTrimSeconds: 3.7,
     }),
     Object.freeze({
       id: "outpost-beyond-orion-2",
       title: "猎户座外·静默航线",
-      src: "assets/outpost-beyond-orion-2.mp3?v=1.10.0",
+      src: "assets/outpost-beyond-orion-2.mp3?v=2.0.0",
       loopStartSeconds: 0.1,
       loopEndTrimSeconds: 2.6,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine",
       title: "红隼九号信号",
-      src: "assets/signal-at-kestrel-nine.mp3?v=1.10.0",
+      src: "assets/signal-at-kestrel-nine.mp3?v=2.0.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 0,
     }),
     Object.freeze({
       id: "signal-at-kestrel-nine-2",
       title: "红隼九号·深空回声",
-      src: "assets/signal-at-kestrel-nine-2.mp3?v=1.10.0",
+      src: "assets/signal-at-kestrel-nine-2.mp3?v=2.0.0",
       loopStartSeconds: 0.7,
       loopEndTrimSeconds: 2,
     }),
@@ -346,6 +346,18 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    {
+      version: "2.0.0",
+      theme: "群星归航",
+      changes: [
+        "“当前航程”按袭击、待领奖励、进行中玩法、追踪目标与即将解锁内容统一排序，并用当前资源、产量和进度计算真实预计时间。",
+        "每日事项合并为工业、守备、探索三条今日航线：一个主目标、两个可选目标、一次重签与一个集中领取按钮，不再要求挂机时长或重复点击。",
+        "每次跃迁新增可保存种子的单局 Build：选择主要路线与三选一协议，研究分岔在本轮互斥，并生成可导出的航线报告。",
+        "新增可由 Firestore 替换的 14 天边境赛季、至少 7 天兑换期、追赶、分组与赛季榜；服务端聚合未部署前明确标记为排行榜活跃玩家汇总。",
+        "八只伴星各新增三阶段记忆故事、行为分歧、专属结局与陈列纪念；加入四种只出现一次、可随时关闭的一键反馈。",
+        "新增默认关闭的隐私友好统计适配层；存档结构升级至第 31 版，v1.10.0 旧档会保留原有资源与进度并自动补齐新字段。",
+      ],
+    },
     {
       version: "1.10.0",
       theme: "星港画卷",
@@ -6668,10 +6680,34 @@
       .filter(Boolean);
   }
 
-  function isUpgradePathAvailable(upgrade, targetState = state) {
-    return getUpgradeRequirements(upgrade).every((requirement) =>
-      hasUpgrade(requirement.id, targetState),
+  function getRunResearchRival(upgrade, targetState = state) {
+    if (!targetState.v2?.runBuild?.routeId || !["left", "right"].includes(upgrade?.lane)) return null;
+    return UPGRADES.find((entry) =>
+      entry.branch === upgrade.branch
+      && entry.tier === upgrade.tier
+      && entry.lane !== upgrade.lane
+      && ["left", "right"].includes(entry.lane),
+    ) || null;
+  }
+
+  function requiresManualRunResearchChoice(upgrade, targetState = state) {
+    if (!targetState.v2?.runBuild?.routeId || upgrade?.tier !== 2 || !["left", "right"].includes(upgrade?.lane)) return false;
+    return !UPGRADES.some((entry) =>
+      entry.branch === upgrade.branch
+      && entry.tier === 2
+      && ["left", "right"].includes(entry.lane)
+      && hasUpgrade(entry.id, targetState),
     );
+  }
+
+  function isUpgradePathAvailable(upgrade, targetState = state) {
+    const rival = getRunResearchRival(upgrade, targetState);
+    if (rival && hasUpgrade(rival.id, targetState)) return false;
+    const requirements = getUpgradeRequirements(upgrade);
+    if (targetState.v2?.runBuild?.routeId && upgrade?.lane === "full" && upgrade?.tier === 4) {
+      return requirements.some((requirement) => hasUpgrade(requirement.id, targetState));
+    }
+    return requirements.every((requirement) => hasUpgrade(requirement.id, targetState));
   }
 
   function getUpgradeImpact(upgrade, targetState = state) {
@@ -11100,6 +11136,7 @@
         .find((entry) => entry
           && !hasUpgrade(entry.id)
           && isUpgradePathAvailable(entry)
+          && !requiresManualRunResearchChoice(entry)
           && state.lifetimeDust >= entry.unlock
           && state.dust >= entry.cost);
       if (upgrade) {
@@ -13481,6 +13518,8 @@
         const bought = hasUpgrade(upgrade.id);
         const discovered = state.lifetimeDust >= upgrade.unlock;
         const pathAvailable = isUpgradePathAvailable(upgrade);
+        const runRival = getRunResearchRival(upgrade);
+        const runLocked = runRival && hasUpgrade(runRival.id);
         const affordable = state.dust >= upgrade.cost;
         const requirements = getUpgradeRequirements(upgrade);
         const card = document.createElement("article");
@@ -13517,7 +13556,9 @@
         prerequisite.className = `upgrade-prerequisite${
           pathAvailable ? " ready" : ""
         }`;
-        prerequisite.textContent = requirements.length
+        prerequisite.textContent = runLocked
+          ? `本轮互斥：已选择 ${runRival.name}`
+          : requirements.length
           ? `前置：${requirements.map((entry) => entry.name).join("、")}`
           : "分支起点";
         const impact = document.createElement("small");
@@ -13550,7 +13591,7 @@
           : !discovered
             ? "待解密"
             : !pathAvailable
-              ? "需前置"
+              ? runLocked ? "本轮已锁定" : "需前置"
               : `✦ ${formatNumber(upgrade.cost)}`;
 
         card.append(icon, copy, button);
@@ -17588,6 +17629,8 @@
   V2_SYSTEMS.attach({
     getState: () => state,
     now: () => Date.now(),
+    getRate: () => calculateRate(),
+    getPower: () => getCombinedPower(),
     save: () => saveGame(),
     render: () => renderAll(),
     navigate: (action) => performGuidanceAction(action),

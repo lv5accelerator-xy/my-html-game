@@ -9,7 +9,11 @@ const game = fs.readFileSync(path.join(root, "game.js"), "utf8");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const cloud = fs.readFileSync(path.join(root, "cloud-save.js"), "utf8");
 
-assert.match(game, /const GAME_VERSION = "1\.10\.0";/);
+assert.match(game, /const GAME_VERSION = "2\.0\.0";/);
+assert.match(html, /id="v2-daily-route"/);
+assert.match(html, /id="v2-run-build"/);
+assert.match(html, /id="v2-season-card"/);
+assert.match(html, /id="v2-companion-stories"/);
 assert.match(html, /id="resource-cycle-grid" class="resource-cycle-grid"/);
 assert.match(game, /const RESOURCE_RECLAIM_RECIPES = Object\.freeze/);
 assert.match(game, /playerName: "无名拾荒者"/);

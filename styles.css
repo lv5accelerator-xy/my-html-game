@@ -13104,6 +13104,34 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 .leaderboard-groups { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(129, 170, 214, .12); }
 .leaderboard-groups button { border-color: rgba(159, 119, 255, .2); }
 .leaderboard-groups button.active { color: #e5d8ff; border-color: rgba(178, 142, 255, .56); background: rgba(119, 79, 194, .2); }
+.v2-companion-stories { margin-top: 18px; padding: 18px; border: 1px solid rgba(154, 123, 255, .2); border-radius: 20px; background: linear-gradient(150deg, rgba(12, 28, 48, .8), rgba(34, 22, 55, .75)); }
+.v2-companion-stories > header { display: flex; justify-content: space-between; gap: 12px; }
+.v2-companion-stories h3, .v2-companion-stories p { margin: 0; }
+.v2-companion-stories header small, .v2-companion-stories header p { color: #8fa5c3; }
+.v2-companion-stories header > strong { color: #cdb9ff; white-space: nowrap; }
+.v2-companion-tabs { display: grid; grid-template-columns: repeat(8, minmax(54px, 1fr)); gap: 7px; margin: 14px 0; }
+.v2-companion-tabs button { display: grid; place-items: center; gap: 3px; min-height: 66px; padding: 8px 4px; border: 1px solid rgba(129, 171, 218, .15); border-radius: 12px; background: rgba(5, 17, 31, .55); color: #a8bdd8; }
+.v2-companion-tabs button > span { font-size: 1.25rem; }
+.v2-companion-tabs button.active { border-color: #ab8bff; color: #e2d8ff; background: rgba(116, 78, 188, .2); }
+.v2-companion-tabs button:disabled { opacity: .45; }
+.v2-companion-scene { min-height: 180px; display: grid; align-content: start; gap: 10px; padding: 16px; border-radius: 16px; background: rgba(4, 17, 32, .62); }
+.v2-companion-scene header { display: flex; justify-content: space-between; gap: 12px; }
+.v2-companion-scene h4, .v2-companion-scene p { margin: 0; }
+.v2-companion-scene small, .v2-companion-scene em { color: #849dbd; font-style: normal; }
+.v2-companion-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.v2-companion-choices button { padding: 10px 12px; }
+.v2-companion-gallery { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.v2-companion-gallery span { padding: 7px 10px; border: 1px solid rgba(155, 120, 255, .2); border-radius: 999px; color: #b9a8dd; background: rgba(76, 49, 119, .13); }
+.v2-feedback-backdrop { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 18px; background: rgba(1, 8, 15, .76); backdrop-filter: blur(10px); }
+.v2-feedback-backdrop[hidden] { display: none; }
+.v2-feedback-backdrop > section { position: relative; width: min(520px, 100%); display: grid; gap: 10px; padding: 24px; border: 1px solid rgba(111, 211, 255, .28); border-radius: 22px; background: linear-gradient(145deg, #0b2234, #161b39); box-shadow: 0 24px 80px rgba(0,0,0,.5); }
+.v2-feedback-backdrop h2, .v2-feedback-backdrop p { margin: 0; }
+.v2-feedback-backdrop section > span { color: #82e0ff; font-size: 1.5rem; }
+.v2-feedback-backdrop section > small, .v2-feedback-backdrop section > p, .v2-feedback-backdrop section > em { color: #8ea6c5; font-style: normal; }
+#v2-feedback-close { position: absolute; top: 12px; right: 12px; width: 38px; height: 38px; padding: 0; border-radius: 50%; }
+#v2-feedback-options { display: grid; gap: 7px; margin-top: 4px; }
+#v2-feedback-options button { display: flex; gap: 10px; align-items: center; text-align: left; padding: 10px 12px; }
+#v2-feedback-options button b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: #8ee5ff; background: rgba(82, 186, 224, .12); }
 @media (max-width: 760px) {
   .v2-run-variation, .v2-run-protocols { grid-template-columns: 1fr; }
   .v2-run-protocols button { min-height: 0; }
@@ -13113,6 +13141,11 @@ body:not([data-expedition-skin="standard"]) .collect-core {
   .v2-season-card header > strong { margin-left: 57px; }
   .v2-season-progress-grid { grid-template-columns: 1fr; }
   .v2-season-card > footer { flex-direction: column; }
+  .v2-companion-stories { padding: 14px; }
+  .v2-companion-stories > header { flex-direction: column; }
+  .v2-companion-tabs { grid-template-columns: repeat(4, 1fr); }
+  .v2-companion-choices { grid-template-columns: 1fr; }
+  .v2-feedback-backdrop > section { padding: 20px; }
 }
 
 .page-illustration {

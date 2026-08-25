@@ -76,6 +76,56 @@
     rewardIds: Object.freeze(["title_homebound", "decor_lampsea", "collection_return_signal"]),
   });
 
+  const COMPANION_STORIES = Object.freeze({
+    dustMoth: Object.freeze({ name: "尘光蛾", icon: "✧", theme: "微光与归途", scenes: [
+      Object.freeze({ title: "暗处显形的路", text: "尘光蛾绕着一段熄灭的航标飞行，像在询问你愿不愿意相信一条看不见的路。", choices: Object.freeze([{ id: "follow", label: "熄灯跟随" }, { id: "relight", label: "逐盏点亮" }]) }),
+      Object.freeze({ title: "它记得你的光", text: "它带回了第一夜的航迹：安静的那条更短，明亮的那条让更多人找到了方向。", choices: Object.freeze([{ id: "keep", label: "把航迹留在星港" }, { id: "share", label: "把坐标交给归航者" }]) }),
+      Object.freeze({ title: "万灯归航", text: "最后一圈翅粉落在航站穹顶，组成一条只为迷路者亮起的路。" }),
+    ], reward: "decor_moth_lantern" }),
+    prismJelly: Object.freeze({ name: "棱镜水母", icon: "◈", theme: "真相与多种答案", scenes: [
+      Object.freeze({ title: "会游泳的黎明", text: "数百种颜色同时指向远方，每一种都声称自己是唯一正确的航路。", choices: Object.freeze([{ id: "calibrate", label: "校准最稳定的光" }, { id: "archive", label: "保留全部色谱" }]) }),
+      Object.freeze({ title: "折射误差", text: "一次远征把色谱分成捷径和长路。它等待你决定效率是否总比完整更重要。", choices: Object.freeze([{ id: "precise", label: "选择精确" }, { id: "wonder", label: "选择惊奇" }]) }),
+      Object.freeze({ title: "光有很多名字", text: "棱镜水母把你的选择折成一面星窗；从不同角度看，答案仍然成立。" }),
+    ], reward: "skin_prism_window" }),
+    riftRay: Object.freeze({ name: "裂隙鳐", icon: "⌁", theme: "风险与信任", scenes: [
+      Object.freeze({ title: "裂隙像海", text: "裂隙鳐停在最不稳定的浪尖，邀请舰队进入一条没有保险的航道。", choices: Object.freeze([{ id: "dive", label: "随它潜入" }, { id: "anchor", label: "先投下锚标" }]) }),
+      Object.freeze({ title: "失败留下的潮纹", text: "它没有嘲笑受损的船体，只把每次退航的位置连成新的安全线。", choices: Object.freeze([{ id: "retry", label: "沿旧浪重试" }, { id: "detour", label: "为后来者改道" }]) }),
+      Object.freeze({ title: "海在星间", text: "你们最终穿过裂隙；它把最危险的一道浪命名为你的谨慎或勇气。" }),
+    ], reward: "title_rift_sailor" }),
+    orbitFox: Object.freeze({ name: "环轨狐", icon: "◇", theme: "好奇与选择", scenes: [
+      Object.freeze({ title: "第三条尾迹", text: "环轨狐故意越过工业、守备和探索三块路牌，回头等你先选。", choices: Object.freeze([{ id: "chase", label: "追上它" }, { id: "wait", label: "等它绕回来" }]) }),
+      Object.freeze({ title: "它偷走了一张日程", text: "你常走的航线被尾巴圈起，没走过的那条却被画了一颗星。", choices: Object.freeze([{ id: "familiar", label: "守住熟悉航线" }, { id: "new", label: "试一次陌生航线" }]) }),
+      Object.freeze({ title: "轨道之外", text: "环轨狐没有要求你永远冒险，只在星港地板上留下了一扇通往偶然的门。" }),
+    ], reward: "decor_fox_gate" }),
+    echoWhale: Object.freeze({ name: "回声幼鲸", icon: "◒", theme: "记忆与告别", scenes: [
+      Object.freeze({ title: "上一周期的歌", text: "幼鲸唱出的每个音符，都比当前星图晚一个时代。", choices: Object.freeze([{ id: "answer", label: "用现在回应" }, { id: "listen", label: "先听完整首歌" }]) }),
+      Object.freeze({ title: "长航尽头的和声", text: "你的航行记录补上了歌曲缺失的一段，但最后一个音仍属于过去。", choices: Object.freeze([{ id: "complete", label: "替它补完" }, { id: "leave", label: "保留那处空白" }]) }),
+      Object.freeze({ title: "歌向未来", text: "它第一次唱出尚未发生的旋律，并把你的航站写进了副歌。" }),
+    ], reward: "log_future_song" }),
+    voidCat: Object.freeze({ name: "虚空猫", icon: "◉", theme: "停留与休息", scenes: [
+      Object.freeze({ title: "没有引力的午后", text: "虚空猫占据了离线仓库最温暖的角落，拒绝把休息解释成浪费。", choices: Object.freeze([{ id: "rest", label: "一起停一会儿" }, { id: "work", label: "轻轻挪开它" }]) }),
+      Object.freeze({ title: "归航时它仍在", text: "几次离线归来后，它把没有发生任何事的时间也收进了记忆。", choices: Object.freeze([{ id: "home", label: "称这里为家" }, { id: "port", label: "称这里只是港口" }]) }),
+      Object.freeze({ title: "安静也是航程", text: "它在控制台旁留下一个永不闪烁的休息指示灯。" }),
+    ], reward: "decor_quiet_corner" }),
+    novaFinch: Object.freeze({ name: "新星雀", icon: "✦", theme: "勇气与克制", scenes: [
+      Object.freeze({ title: "不灼人的火", text: "新星雀把火花放在舰炮准星上，迫不及待想看一场胜利。", choices: Object.freeze([{ id: "charge", label: "带它出击" }, { id: "train", label: "先练习熄火" }]) }),
+      Object.freeze({ title: "胜利之后", text: "战场残骸仍在发热。它第一次问，勇敢是否也包括及时停手。", choices: Object.freeze([{ id: "salvage", label: "回收并救援" }, { id: "pursue", label: "追击最后信号" }]) }),
+      Object.freeze({ title: "掌心新星", text: "它学会把最大的火留给黑暗，把最小的火留给归来的人。" }),
+    ], reward: "title_gentle_nova" }),
+    moonHare: Object.freeze({ name: "月隙兔", icon: "☾", theme: "陪伴与共同航标", scenes: [
+      Object.freeze({ title: "雷达移开之后", text: "月隙兔只在无人注视时修补共同航标，仿佛害怕被记住。", choices: Object.freeze([{ id: "help", label: "背对着递工具" }, { id: "watch", label: "安静看它完成" }]) }),
+      Object.freeze({ title: "一封没有署名的信", text: "共同航标收到许多微小贡献，其中一份与你们第一次相遇的节奏相同。", choices: Object.freeze([{ id: "sign", label: "写下彼此名字" }, { id: "anonymous", label: "继续不署名" }]) }),
+      Object.freeze({ title: "月背来信", text: "它终于在你看向雷达时没有躲开，只把一封写着“谢谢你也在这里”的信放进陈列廊。" }),
+    ], reward: "collection_moon_letter" }),
+  });
+
+  const FEEDBACK_PROMPTS = Object.freeze({
+    first_jump: Object.freeze({ title: "这一轮容易理解吗？", hint: "第一次跃迁后的一键反馈", labels: Object.freeze(["完全看不懂", "有点迷惑", "还可以", "比较清楚", "非常清楚"]) }),
+    first_expedition: Object.freeze({ title: "远征里的选择有趣吗？", hint: "第一次完整远征后", labels: Object.freeze(["没有选择感", "偏单调", "一般", "有变化", "很想再玩"])}),
+    active_day_7: Object.freeze({ title: "目前最困惑的是哪一部分？", hint: "第 7 个活跃日", labels: Object.freeze(["生产研究", "战斗舰队", "远征航线", "跃迁超越", "目前不困惑"]) }),
+    repeated_failure: Object.freeze({ title: "连续失败后，你更希望得到什么？", hint: "只询问一次，可随时关闭", labels: Object.freeze(["明确弱点", "推荐强化", "降低门槛", "练习模式", "保持挑战"]) }),
+  });
+
   const RETENTION_EVENTS = new Set([
     "game_start", "tutorial_step", "first_automation", "first_research",
     "first_battle", "first_jump", "first_expedition", "first_transcend",
@@ -132,8 +182,12 @@
         personalClaimed: false, beaconClaimed: false, lastMetricAt: 0,
         unlockedRewards: [], archive: [],
       },
-      companionStories: null,
-      feedback: null,
+      companionStories: {
+        activeId: "", records: {}, titles: [], decorations: [], skins: [], logs: [],
+      },
+      feedback: {
+        answered: [], dismissed: [], pendingId: "", responses: [], failures: 0, lastPromptAt: 0,
+      },
     };
   }
 
@@ -228,8 +282,43 @@
         return [{ id: entry.id.slice(0, 80), title: String(entry.title || "").slice(0, 80), score: safeCount(entry.score, 1000000000), rewards: uniqueStrings(entry.rewards, new Set(DEFAULT_SEASON_CONFIG.rewardIds), 12) }];
       }).slice(-12),
     };
-    base.companionStories = source.companionStories && typeof source.companionStories === "object" ? source.companionStories : null;
-    base.feedback = source.feedback && typeof source.feedback === "object" ? source.feedback : null;
+    const stories = source.companionStories && typeof source.companionStories === "object" ? source.companionStories : {};
+    const companionIds = new Set(Object.keys(COMPANION_STORIES));
+    const allRewards = new Set(Object.values(COMPANION_STORIES).map((story) => story.reward));
+    base.companionStories = {
+      activeId: companionIds.has(stories.activeId) ? stories.activeId : "",
+      records: {},
+      titles: uniqueStrings(stories.titles, allRewards, 16),
+      decorations: uniqueStrings(stories.decorations, allRewards, 16),
+      skins: uniqueStrings(stories.skins, allRewards, 16),
+      logs: uniqueStrings(stories.logs, allRewards, 16),
+    };
+    Object.entries(stories.records || {}).slice(0, 8).forEach(([companionId, record]) => {
+      const story = COMPANION_STORIES[companionId];
+      if (!story || !record || typeof record !== "object") return;
+      const allowedChoices = new Set(story.scenes.flatMap((scene) => (scene.choices || []).map((choice) => choice.id)));
+      const choices = uniqueStrings(record.choices, allowedChoices, 2);
+      base.companionStories.records[companionId] = {
+        stage: Math.min(3, safeCount(record.stage, 3)),
+        choices,
+        ending: [`${companionId}:quiet`, `${companionId}:bold`].includes(record.ending) ? record.ending : "",
+        memories: uniqueStrings(record.memories, new Set(["scene-0", "scene-1", "scene-2"]), 3),
+        lastAdvancedAt: safeTime(record.lastAdvancedAt),
+      };
+    });
+    const feedback = source.feedback && typeof source.feedback === "object" ? source.feedback : {};
+    const promptIds = new Set(Object.keys(FEEDBACK_PROMPTS));
+    base.feedback = {
+      answered: uniqueStrings(feedback.answered, promptIds, 8),
+      dismissed: uniqueStrings(feedback.dismissed, promptIds, 8),
+      pendingId: promptIds.has(feedback.pendingId) ? feedback.pendingId : "",
+      responses: (Array.isArray(feedback.responses) ? feedback.responses : []).flatMap((response) => {
+        if (!response || !promptIds.has(response.id)) return [];
+        return [{ id: response.id, value: Math.min(5, Math.max(1, safeCount(response.value, 5))), at: safeTime(response.at) }];
+      }).slice(-8),
+      failures: Math.min(20, safeCount(feedback.failures, 20)),
+      lastPromptAt: safeTime(feedback.lastPromptAt),
+    };
     return base;
   }
 
@@ -573,6 +662,102 @@
     if (host) renderSeason();
   }
 
+  function freshCompanionRecord() {
+    return { stage: 0, choices: [], ending: "", memories: [], lastAdvancedAt: 0 };
+  }
+
+  function getCompanionRecord(v2, companionId) {
+    if (!v2?.companionStories || !COMPANION_STORIES[companionId]) return null;
+    if (!v2.companionStories.records[companionId]) v2.companionStories.records[companionId] = freshCompanionRecord();
+    return v2.companionStories.records[companionId];
+  }
+
+  function getDominantRoute(gameState) {
+    const counts = { industry: 0, sentinel: 0, pathfinder: 0 };
+    (gameState?.v2?.dailyRoute?.history || []).forEach((entry) => {
+      if (counts[entry.routeId] !== undefined) counts[entry.routeId] += 1;
+    });
+    Object.entries(gameState?.doctrine?.history || {}).forEach(([routeId, value]) => {
+      if (counts[routeId] !== undefined) counts[routeId] += safeCount(value);
+    });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "industry";
+  }
+
+  function getCompanionCondition(companionId, gameState) {
+    const histories = gameState?.v2?.dailyRoute?.history || [];
+    const uniqueRoutes = new Set(histories.map((entry) => entry.routeId).filter((id) => ROUTES[id])).size;
+    const values = {
+      dustMoth: { current: histories.filter((entry) => entry.completed).length, goal: 1, label: "归档 1 条今日航线" },
+      prismJelly: { current: safeCount(gameState?.expedition?.completedRuns), goal: 1, label: "完成 1 次完整远征" },
+      riftRay: { current: safeCount(gameState?.expedition?.failedRuns) + safeCount(gameState?.expedition?.completedRuns), goal: 2, label: "经历 2 次远征结果" },
+      orbitFox: { current: uniqueRoutes, goal: 2, label: "尝试 2 种今日航线" },
+      echoWhale: { current: safeCount(gameState?.longVoyage?.completed) + safeCount(gameState?.experience?.milestones?.firstExpedition), goal: 1, label: "完成一次长航或远征" },
+      voidCat: { current: (gameState?.v2?.retention?.returnDays || []).length, goal: 2, label: "完成 2 次离线归航" },
+      novaFinch: { current: safeCount(gameState?.careerBattles), goal: 5, label: "赢得 5 场战斗" },
+      moonHare: { current: safeCount(gameState?.v2?.season?.score), goal: 20, label: "为赛季或航标贡献 20 点" },
+    };
+    const condition = values[companionId] || { current: 0, goal: 1, label: "继续航行" };
+    return { ...condition, ready: condition.current >= condition.goal };
+  }
+
+  function advanceCompanionStory(v2, companionId, choiceId, gameState, now = Date.now()) {
+    const story = COMPANION_STORIES[companionId];
+    if (!story || !gameState?.endgame?.companions?.includes(companionId)) return false;
+    const progressRecord = getCompanionRecord(v2, companionId);
+    if (progressRecord.stage >= 3) return false;
+    const scene = story.scenes[progressRecord.stage];
+    if (progressRecord.stage === 1 && !getCompanionCondition(companionId, gameState).ready) return false;
+    if (progressRecord.stage < 2) {
+      const choice = scene.choices.find((entry) => entry.id === choiceId);
+      if (!choice) return false;
+      progressRecord.choices.push(choice.id);
+    } else {
+      const dominantRoute = getDominantRoute(gameState);
+      const boldSignals = new Set(["relight", "calibrate", "dive", "chase", "answer", "work", "charge", "sign", "share", "precise", "retry", "new", "complete", "port", "pursue", "help"]);
+      const bold = progressRecord.choices.some((id) => boldSignals.has(id)) || dominantRoute === "sentinel";
+      progressRecord.ending = `${companionId}:${bold ? "bold" : "quiet"}`;
+      const reward = story.reward;
+      const bucket = reward.startsWith("title_") ? "titles" : reward.startsWith("skin_") ? "skins" : reward.startsWith("decor_") ? "decorations" : "logs";
+      if (!v2.companionStories[bucket].includes(reward)) v2.companionStories[bucket].push(reward);
+    }
+    progressRecord.memories.push(`scene-${progressRecord.stage}`);
+    progressRecord.memories = [...new Set(progressRecord.memories)].slice(-3);
+    progressRecord.stage += 1;
+    progressRecord.lastAdvancedAt = now;
+    record(v2, "companion_choice", { route: getDominantRoute(gameState) }, now);
+    return { stage: progressRecord.stage, ending: progressRecord.ending, reward: progressRecord.stage === 3 ? story.reward : "" };
+  }
+
+  function queueFeedback(v2, promptId, now = Date.now()) {
+    if (!v2?.feedback || !FEEDBACK_PROMPTS[promptId]) return false;
+    if (v2.feedback.answered.includes(promptId) || v2.feedback.dismissed.includes(promptId) || v2.feedback.pendingId) return false;
+    if (v2.feedback.lastPromptAt && now - v2.feedback.lastPromptAt < 12 * 3600000) return false;
+    v2.feedback.pendingId = promptId;
+    v2.feedback.lastPromptAt = now;
+    return true;
+  }
+
+  function answerFeedback(v2, value, now = Date.now()) {
+    const promptId = v2?.feedback?.pendingId;
+    if (!FEEDBACK_PROMPTS[promptId]) return false;
+    const safeValue = Math.min(5, Math.max(1, safeCount(value, 5)));
+    v2.feedback.responses.push({ id: promptId, value: safeValue, at: now });
+    v2.feedback.responses = v2.feedback.responses.slice(-8);
+    v2.feedback.answered.push(promptId);
+    v2.feedback.pendingId = "";
+    record(v2, "micro_feedback", { value: safeValue }, now);
+    window.dispatchEvent(new CustomEvent("stellar-quick-feedback", { detail: { promptId, value: safeValue, at: now } }));
+    return true;
+  }
+
+  function dismissFeedback(v2) {
+    const promptId = v2?.feedback?.pendingId;
+    if (!FEEDBACK_PROMPTS[promptId]) return false;
+    v2.feedback.dismissed.push(promptId);
+    v2.feedback.pendingId = "";
+    return true;
+  }
+
   function formatEta(seconds, formatter = null) {
     if (!Number.isFinite(seconds) || seconds < 0) return "暂时无法可靠估算";
     if (seconds <= 1) return "现在即可完成";
@@ -717,11 +902,83 @@
     root.querySelector("#v2-season-archive").textContent = `赛季收藏 ${v2.season.archive.length} 期 · 本期奖励 ${v2.season.unlockedRewards.length}/3`;
   }
 
+  function renderCompanionStories() {
+    if (!host) return;
+    const gameState = host.getState();
+    const v2 = gameState.v2;
+    const root = document.querySelector("#v2-companion-stories");
+    if (!root) return;
+    const unlockedIds = Object.keys(COMPANION_STORIES).filter((id) => gameState.endgame?.companions?.includes(id));
+    if (!v2.companionStories.activeId || !unlockedIds.includes(v2.companionStories.activeId)) {
+      v2.companionStories.activeId = unlockedIds[0] || "";
+    }
+    const completed = Object.values(v2.companionStories.records).filter((entry) => entry.stage >= 3).length;
+    root.querySelector("#v2-companion-progress").textContent = `${completed} / 8 结局`;
+    root.querySelector("#v2-companion-tabs").innerHTML = Object.entries(COMPANION_STORIES).map(([id, story]) => {
+      const unlocked = unlockedIds.includes(id);
+      const progress = v2.companionStories.records[id]?.stage || 0;
+      return `<button type="button" data-v2-companion="${id}" class="${v2.companionStories.activeId === id ? "active" : ""}" ${unlocked ? "" : "disabled"}><span>${unlocked ? story.icon : "?"}</span><small>${unlocked ? story.name : "未唤醒"}</small><b>${progress}/3</b></button>`;
+    }).join("");
+    const sceneRoot = root.querySelector("#v2-companion-scene");
+    const companionId = v2.companionStories.activeId;
+    if (!companionId) {
+      sceneRoot.innerHTML = "<p>首次奇点坍缩唤醒伴星后，这里会出现三阶段的长期故事。</p>";
+    } else {
+      const story = COMPANION_STORIES[companionId];
+      const progress = getCompanionRecord(v2, companionId);
+      const stage = Math.min(2, progress.stage);
+      const scene = story.scenes[stage];
+      const condition = getCompanionCondition(companionId, gameState);
+      let actions = "";
+      if (progress.stage >= 3) {
+        actions = `<p class="v2-story-ending">${progress.ending.endsWith(":bold") ? "它记住了你更愿意主动改变航线。" : "它记住了你更愿意倾听并保留余地。"} 结局收藏已进入星港陈列廊。</p>`;
+      } else if (progress.stage === 1 && !condition.ready) {
+        actions = `<em>${condition.label} · ${Math.min(condition.current, condition.goal)} / ${condition.goal}</em>`;
+      } else if (progress.stage < 2) {
+        actions = `<div class="v2-companion-choices">${scene.choices.map((choice) => `<button type="button" data-v2-story-choice="${choice.id}">${choice.label}</button>`).join("")}</div>`;
+      } else {
+        actions = '<button type="button" data-v2-story-choice="finish">阅读结局并收藏纪念</button>';
+      }
+      sceneRoot.innerHTML = `<header><div><small>${story.name} · ${story.theme}</small><h4>${scene.title}</h4></div><b>阶段 ${Math.min(3, progress.stage + 1)} / 3</b></header><p>${scene.text}</p>${actions}`;
+    }
+    const rewardLabels = {
+      decor_moth_lantern: "微光归航灯", skin_prism_window: "棱镜星窗",
+      title_rift_sailor: "称号·裂隙航手", decor_fox_gate: "偶然之门",
+      log_future_song: "纪念日志·未来之歌", decor_quiet_corner: "无重力休息角",
+      title_gentle_nova: "称号·温柔新星", collection_moon_letter: "收藏·月背来信",
+    };
+    const rewards = [
+      ...v2.companionStories.titles, ...v2.companionStories.decorations,
+      ...v2.companionStories.skins, ...v2.companionStories.logs,
+    ];
+    root.querySelector("#v2-companion-gallery").innerHTML = rewards.length
+      ? rewards.map((id) => `<span>✧ ${rewardLabels[id] || id}</span>`).join("")
+      : "<span>完成任一伴星结局后，陈列廊会出现第一件纪念物。</span>";
+  }
+
+  function renderFeedback() {
+    if (!host) return;
+    const gameState = host.getState();
+    const v2 = gameState.v2;
+    if ((gameState.experience?.activeDays || []).length >= 7) queueFeedback(v2, "active_day_7", host.now());
+    if ((gameState.expedition?.failedRuns || 0) >= 3) queueFeedback(v2, "repeated_failure", host.now());
+    const root = document.querySelector("#v2-feedback-backdrop");
+    if (!root) return;
+    const prompt = FEEDBACK_PROMPTS[v2.feedback.pendingId];
+    root.hidden = !prompt;
+    if (!prompt) return;
+    root.querySelector("#v2-feedback-title").textContent = prompt.title;
+    root.querySelector("#v2-feedback-hint").textContent = prompt.hint;
+    root.querySelector("#v2-feedback-options").innerHTML = prompt.labels.map((label, index) => `<button type="button" data-v2-feedback-value="${index + 1}"><b>${index + 1}</b><span>${label}</span></button>`).join("");
+  }
+
   function render() {
     renderDailyRoute();
     renderRetention();
     renderRunBuild();
     renderSeason();
+    renderCompanionStories();
+    renderFeedback();
   }
 
   function attach(nextHost) {
@@ -781,6 +1038,29 @@
           host.save(); host.render();
         }
       }
+      const companionButton = event.target.closest("[data-v2-companion]");
+      if (companionButton) {
+        host.getState().v2.companionStories.activeId = companionButton.dataset.v2Companion;
+        host.save(); renderCompanionStories();
+      }
+      const storyChoice = event.target.closest("[data-v2-story-choice]");
+      if (storyChoice) {
+        const companionId = host.getState().v2.companionStories.activeId;
+        const result = advanceCompanionStory(host.getState().v2, companionId, storyChoice.dataset.v2StoryChoice, host.getState(), host.now());
+        if (result) {
+          const story = COMPANION_STORIES[companionId];
+          host.notify(result.stage >= 3 ? `${story.name}的结局已收藏` : `${story.name}记住了这次选择`, result.reward ? "专属纪念物已进入星港陈列廊。" : "新的共同记忆已经写入存档。", story.icon);
+          host.save(); host.render();
+        }
+      }
+      const feedbackValue = event.target.closest("[data-v2-feedback-value]");
+      if (feedbackValue && answerFeedback(host.getState().v2, Number(feedbackValue.dataset.v2FeedbackValue), host.now())) {
+        host.notify("谢谢你的反馈", "这项回答已记在本地，不会再次询问同一个问题。", "✓");
+        host.save(); renderFeedback();
+      }
+      if (event.target.closest("#v2-feedback-close") && dismissFeedback(host.getState().v2)) {
+        host.save(); renderFeedback();
+      }
     });
     document.querySelector("#v2-analytics-toggle")?.addEventListener("change", (event) => {
       const retention = host.getState().v2.retention;
@@ -794,12 +1074,15 @@
   }
 
   globalThis.StellarV2Systems = Object.freeze({
-    ROUTES, RUN_PROTOCOLS, RUN_VARIATIONS, RETENTION_EVENTS, freshState, sanitize, record, ensureDaily,
+    ROUTES, RUN_PROTOCOLS, RUN_VARIATIONS, COMPANION_STORIES, FEEDBACK_PROMPTS,
+    RETENTION_EVENTS, freshState, sanitize, record, ensureDaily,
     getEligibleRoutes, selectDaily, rerollDaily, recordMetric, dailyComplete,
     claimDaily, getDailyCompletion, beginRun, selectRunProtocol, getRunProtocol,
     getRunFactor, completeRun, formatRunReport, DEFAULT_SEASON_CONFIG,
     normalizeSeasonConfig, getSeasonWindow, ensureSeason, recordSeasonMetric,
     claimSeasonPersonal, claimSeasonBeacon, setSeasonConfig, setSeasonNetwork,
+    getCompanionRecord, getCompanionCondition, getDominantRoute, advanceCompanionStory,
+    queueFeedback, answerFeedback, dismissFeedback,
     resourceEta, formatEta, dayKey, attach, render,
   });
 })();

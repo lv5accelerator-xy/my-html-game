@@ -7864,6 +7864,8 @@
         firstTranscend: "first_transcend",
       }[milestone];
       if (retentionType) V2_SYSTEMS.record(state.v2, retentionType, { value: Date.now() - state.experience.installedAt });
+      if (milestone === "firstJump") V2_SYSTEMS?.queueFeedback?.(state.v2, "first_jump", Date.now());
+      if (milestone === "firstExpedition") V2_SYSTEMS?.queueFeedback?.(state.v2, "first_expedition", Date.now());
     }
   }
 
@@ -12769,6 +12771,9 @@
   }
 
   function moveTutorial(direction) {
+    if (direction > 0) {
+      V2_SYSTEMS?.record?.(state.v2, "tutorial_step", { value: tutorialIndex + 1 }, Date.now());
+    }
     const nextIndex = tutorialIndex + direction;
     if (nextIndex >= TUTORIAL_STEPS.length) {
       closeTutorial(true);

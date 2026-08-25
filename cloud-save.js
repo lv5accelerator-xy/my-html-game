@@ -8,6 +8,7 @@ const FEEDBACK_COLLECTION = "feedback";
 const SEASON_CONFIG_COLLECTION = "seasonConfigs";
 const SEASON_CONTRIBUTION_COLLECTION = "seasonContributions";
 const COMMUNITY_TOTAL_COLLECTION = "communityTotals";
+const QUICK_FEEDBACK_COLLECTION = "quickFeedback";
 const AUTO_SYNC_DELAY = 30_000;
 const AUTO_SYNC_RETRY_DELAY = 45_000;
 const LEADERBOARD_SYNC_DELAY = 60_000;
@@ -2074,6 +2075,26 @@ window.addEventListener("stellar-privacy-analytics", (event) => {
     event_day: String(detail.day || "").slice(0, 10),
     route: ["industry", "sentinel", "pathfinder"].includes(detail.route) ? detail.route : "none",
     value: Math.min(1000000, Math.max(0, Math.floor(Number(detail.value) || 0))),
+  });
+});
+
+window.addEventListener("stellar-quick-feedback", (event) => {
+  const detail = event.detail || {};
+  const allowedPrompts = ["first_jump", "first_expedition", "active_day_7", "repeated_failure"];
+  const promptId = allowedPrompts.includes(detail.promptId) ? detail.promptId : "";
+  const value = Math.min(5, Math.max(1, Math.floor(Number(detail.value) || 0)));
+  if (!promptId || !currentUser || !db || !serviceReady || !firebaseFirestoreApi) return;
+  firebaseFirestoreApi.addDoc(
+    firebaseFirestoreApi.collection(db, QUICK_FEEDBACK_COLLECTION),
+    {
+      userId: currentUser.uid,
+      promptId,
+      value,
+      gameVersion: String(bridge?.gameVersion || "").slice(0, 20),
+      createdAt: firebaseFirestoreApi.serverTimestamp(),
+    },
+  ).catch(() => {
+    // Local response is already saved; optional cloud delivery may be retried in a future session.
   });
 });
 

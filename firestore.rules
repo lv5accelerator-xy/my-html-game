@@ -244,5 +244,22 @@ service cloud.firestore {
       allow read: if resource.data.published == true;
       allow write: if false;
     }
+
+    // 一键反馈无需填写文本；未登录玩家仍会在本地保存回答。
+    match /quickFeedback/{feedbackId} {
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(["userId", "promptId", "value", "gameVersion", "createdAt"])
+        && request.resource.data.keys().hasOnly(["userId", "promptId", "value", "gameVersion", "createdAt"])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.promptId in ["first_jump", "first_expedition", "active_day_7", "repeated_failure"]
+        && request.resource.data.value is int
+        && request.resource.data.value >= 1
+        && request.resource.data.value <= 5
+        && request.resource.data.gameVersion is string
+        && request.resource.data.gameVersion.size() <= 20
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
+    }
   }
 }

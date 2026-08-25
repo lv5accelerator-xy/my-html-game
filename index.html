@@ -542,6 +542,12 @@
               <p>完成伴星观测后，再通过已有玩法留下新的共同记忆；奖励只使用现有资源。</p>
               <div id="companion-echo-list" class="companion-echo-list"></div>
             </section>
+            <section id="v2-companion-stories" class="v2-companion-stories" aria-labelledby="v2-companion-title">
+              <header><div><small>v2.0.0 · 8 位伴星各 3 阶段</small><h3 id="v2-companion-title">伴星长篇记忆</h3><p>相遇、分歧与结局会读取你的航线习惯并被永久记住。</p></div><strong id="v2-companion-progress">0 / 8 结局</strong></header>
+              <div id="v2-companion-tabs" class="v2-companion-tabs"></div>
+              <article id="v2-companion-scene" class="v2-companion-scene"><p>唤醒伴星后即可开始长期故事。</p></article>
+              <div id="v2-companion-gallery" class="v2-companion-gallery"></div>
+            </section>
           </section>
 
           <div class="scan-card" hidden>
@@ -2574,6 +2580,18 @@
         <button id="update-now-button" type="button">保存并更新</button>
       </div>
     </aside>
+
+    <div id="v2-feedback-backdrop" class="v2-feedback-backdrop" hidden>
+      <section role="dialog" aria-modal="true" aria-labelledby="v2-feedback-title">
+        <button id="v2-feedback-close" type="button" aria-label="关闭本次反馈">×</button>
+        <span aria-hidden="true">⌁</span>
+        <small id="v2-feedback-hint">一键反馈 · 无需登录</small>
+        <h2 id="v2-feedback-title">这一段体验如何？</h2>
+        <p>选择最接近的一项即可。回答只保存在本地；已登录时会额外匿名发送题目编号和选项，不包含姓名或存档。</p>
+        <div id="v2-feedback-options"></div>
+        <em>同一问题只出现一次，关闭后不会再次打扰。</em>
+      </section>
+    </div>
 
     <noscript>
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>

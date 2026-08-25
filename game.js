@@ -31,9 +31,10 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "1.10.0";
-  const PATCH_NOTES_VERSION = "1.10.0";
-  const SAVE_VERSION = 30;
+  const GAME_VERSION = "2.0.0";
+  const PATCH_NOTES_VERSION = "2.0.0";
+  const SAVE_VERSION = 31;
+  const V2_SYSTEMS = globalThis.StellarV2Systems;
   const NUMERIC_MIGRATION_VERSION = 6;
   const BACKUP_INTERVAL = 5 * 60 * 1000;
   const BASE_MAX_OFFLINE_SECONDS = 8 * 60 * 60;
@@ -3147,7 +3148,7 @@
       format: "count",
       dailyTarget: () => 40,
       weeklyTarget: () => 260,
-      eligible: () => true,
+      eligible: () => false,
     },
     {
       id: "playSeconds",
@@ -3157,7 +3158,7 @@
       format: "duration",
       dailyTarget: () => 15 * 60,
       weeklyTarget: () => 2 * 60 * 60,
-      eligible: () => true,
+      eligible: () => false,
     },
     {
       id: "eventsClaimed",
@@ -4467,6 +4468,7 @@
       borderEcho: freshBorderEchoState(),
       communityBeacon: freshCommunityBeaconState(),
       rebuild: freshRebuildState(),
+      v2: V2_SYSTEMS.freshState(),
       log: [
         {
           text: "拾荒单元 07 已上线。等待首条回收指令。",
@@ -7061,7 +7063,7 @@
     const period = freshMissionPeriod(kind);
     period.key = key;
     period.items = selected
-      .slice(0, 5)
+      .slice(0, kind === "daily" ? 3 : 5)
       .map((template) => createMissionAssignment(template, kind, targetState));
     return period;
   }
@@ -7076,11 +7078,12 @@
           .filter((item) => {
             const template = getMissionTemplate(item?.templateId);
             if (!template || seen.has(template.id)) return false;
+            if (["manualClicks", "playSeconds"].includes(template.id)) return false;
             if (kind === "daily" && template.weeklyOnly) return false;
             seen.add(template.id);
             return true;
           })
-          .slice(0, 5)
+          .slice(0, kind === "daily" ? 3 : 5)
           .map((item) => {
             const target = Math.max(1, clampGameNumber(item.target));
             return {
@@ -7467,6 +7470,7 @@
     recordReturnProtocolProgress(metric, safeAmount);
     recordAnomalyProgress(metric, safeAmount);
     recordExperienceMetric(metric);
+    V2_SYSTEMS.recordMetric(state.v2, metric, safeAmount, state);
   }
 
   function getCompletedMissionCount(period) {
@@ -7842,6 +7846,15 @@
     const milestone = milestoneByMetric[metric];
     if (milestone && !state.experience.milestones[milestone]) {
       state.experience.milestones[milestone] = Date.now();
+      const retentionType = {
+        firstAutomation: "first_automation",
+        firstResearch: "first_research",
+        firstBattle: "first_battle",
+        firstJump: "first_jump",
+        firstExpedition: "first_expedition",
+        firstTranscend: "first_transcend",
+      }[milestone];
+      if (retentionType) V2_SYSTEMS.record(state.v2, retentionType, { value: Date.now() - state.experience.installedAt });
     }
   }
 
@@ -7855,6 +7868,7 @@
       state.experience.activeDays.push(dayKey);
       state.experience.activeDays = state.experience.activeDays.slice(-32);
     }
+    V2_SYSTEMS.record(state.v2, "game_start", { value: state.experience.sessions }, now);
   }
 
   function isAnomalyAvailable(anomaly, targetState = state) {
@@ -9756,6 +9770,7 @@
       );
     const merged = { ...base, ...raw };
     merged.version = SAVE_VERSION;
+    merged.v2 = V2_SYSTEMS.sanitize(raw.v2);
     merged.dust = sanitizeDustNumber(raw.dust);
     merged.runDust = sanitizeDustNumber(raw.runDust);
     merged.lifetimeDust = Math.max(
@@ -10695,6 +10710,23 @@
     if (state.event?.expires < returnTime) state.event = null;
     if (state.buff?.expires < returnTime) state.buff = null;
     latestReturnReport = { elapsed, offlineGain, raidReport, operationReport };
+    state.v2.lastReturn = {
+      at: returnTime,
+      elapsed,
+      dust: offlineGain,
+      operations: operationReport.actions,
+      raids: raidReport.count,
+      targetDelta: 0,
+      nextReturnAt: returnTime + Math.min(offlineLimit, 4 * 60 * 60) * 1000,
+    };
+    if (elapsed > 10) {
+      V2_SYSTEMS.record(state.v2, "offline_return", { value: Math.floor(elapsed) }, returnTime);
+      const returnDay = V2_SYSTEMS.dayKey(returnTime);
+      if (!state.v2.retention.returnDays.includes(returnDay)) {
+        state.v2.retention.returnDays.push(returnDay);
+        state.v2.retention.returnDays = state.v2.retention.returnDays.slice(-60);
+      }
+    }
     return latestReturnReport;
   }
 
@@ -15527,9 +15559,34 @@
 
   function getFocusRoutes() {
     ensureMissionPeriods();
-    const guide = getCommandRecommendation();
-    const dailyCompleted = getCompletedMissionCount(state.missions.daily);
     const claimable = getMissionClaimableCount();
+    const guide = state.combat.incomingRaid
+      ? {
+          icon: "!", title: `${state.combat.incomingRaid.type === "major" ? "大袭击" : "边境袭击"}正在接近基地`,
+          description: "紧急防卫优先于所有普通建设，及时处理可避免资源损失。", action: "combat", label: "立即防卫",
+        }
+      : claimable > 0
+        ? { icon: "☷", title: `${claimable} 项奖励已经完成`, description: "先集中领取，不需要额外等待或中断挂机。", action: "claim-missions", label: "集中领取" }
+        : getCommandRecommendation();
+    const dailyCompleted = getCompletedMissionCount(state.missions.daily);
+    const getEta = (action) => {
+      if (["claim-missions", "claim-return-duty", "journey"].includes(action)) return "现在即可完成";
+      if (action === "combat" && state.combat.incomingRaid) {
+        return V2_SYSTEMS.formatEta(Math.max(0, (state.combat.incomingRaid.arrivesAt - Date.now()) / 1000), formatDuration);
+      }
+      if (action === "fleet") {
+        const building = BUILDINGS.find((entry) => state.lifetimeDust >= entry.unlock && selectedPurchase(entry).amount > 0)
+          || BUILDINGS.find((entry) => state.lifetimeDust >= entry.unlock);
+        const target = building ? selectedPurchase(building).cost : 15;
+        return V2_SYSTEMS.resourceEta(state.dust, target, calculateRate(state, false), formatDuration);
+      }
+      if (action === "prestige") return getPrestigeGain() > 0 ? "现在即可跃迁" : "尚未达到跃迁条件";
+      if (action === "operations") {
+        const timed = state.operations.queue.find((order) => Number.isFinite(order.remaining));
+        return timed ? V2_SYSTEMS.formatEta(timed.remaining, formatDuration) : state.operations.queue.length ? "连续作业正在运行" : "队列为空，无法估算";
+      }
+      return "按行动次数推进";
+    };
     const routes = [{
       id: `main-${guide.action}`,
       kind: "main",
@@ -15538,7 +15595,7 @@
       title: guide.title,
       status: guide.label,
       action: guide.action,
-      eta: guide.action === "collect" ? "约 1 分钟" : "约 3–8 分钟",
+      eta: getEta(guide.action),
       reward: "推进下一阶段解锁",
       reason: guide.description,
       snoozable: false,
@@ -15559,6 +15616,13 @@
       snoozable: true,
     }];
     const starfallPhase = getStarfallPhase();
+    if (state.combat.incomingRaid && guide.action !== "combat") {
+      optionalRoutes.unshift({
+        id: "incoming-raid", kind: "urgent", icon: "⬡", eyebrow: "紧急信号",
+        title: "袭击正在接近基地", status: "前往防卫", action: "combat",
+        eta: getEta("combat"), reward: "避免资源损失", reason: "紧急袭击拥有最高处理优先级。", snoozable: false,
+      });
+    }
     if (["active", "exchange"].includes(starfallPhase)) {
       optionalRoutes.unshift({
         id: "starfall",
@@ -15575,21 +15639,8 @@
         reason: "限时航程不会影响主线进度，可按自己的节奏参与。",
         snoozable: true,
       });
-    } else if (state.combat.incomingRaid) {
-      optionalRoutes.unshift({
-        id: "incoming-raid",
-        kind: "urgent",
-        icon: "⬡",
-        eyebrow: "紧急信号",
-        title: `${state.combat.incomingRaid.type === "major" ? "大袭击" : "边境遭遇"}正在接近基地`,
-        status: "前往防卫",
-        action: "combat",
-        eta: "立即处理",
-        reward: "避免资源损失",
-        reason: "基地正受到威胁，防卫优先于普通建设。",
-        snoozable: false,
-      });
-    } else if (state.lifetimeDust >= OPERATIONS_UNLOCK_DUST) {
+    }
+    if (state.lifetimeDust >= OPERATIONS_UNLOCK_DUST) {
       optionalRoutes.push({
         id: "operations",
         kind: "optional",
@@ -15600,7 +15651,7 @@
           : "作业队列为空，安排一项连续作业",
         status: "查看作业",
         action: "operations",
-        eta: state.operations.queue.length ? "无需立即处理" : "约 2 分钟",
+        eta: getEta("operations"),
         reward: "组件、维护件与远征材料",
         reason: state.operations.queue.length ? "作业已经稳定运行，无需立刻处理。" : "空置队列不会产生作业组件。",
         snoozable: true,
@@ -15614,7 +15665,7 @@
         title: `${formatNumber(getTotalUnits(), 0)} 个单元正在回收星尘`,
         status: "扩建舰队",
         action: "fleet",
-        eta: "约 3–6 分钟",
+        eta: getEta("fleet"),
         reward: "提高持续星尘产量",
         reason: "第一批自动化单元会显著降低手动点击压力。",
         snoozable: true,
@@ -15630,7 +15681,7 @@
         title: `${selectedDuty.title} · ${formatNumber(state.returnProtocol.progress, 0)} / ${formatNumber(selectedDuty.goal, 0)}`,
         status: state.returnProtocol.progress >= selectedDuty.goal ? "领取物资" : selectedDuty.actionLabel,
         action: state.returnProtocol.progress >= selectedDuty.goal ? "claim-return-duty" : selectedDuty.action,
-        eta: state.returnProtocol.progress >= selectedDuty.goal ? "少于 1 分钟" : "约 5–10 分钟",
+        eta: state.returnProtocol.progress >= selectedDuty.goal ? "现在即可完成" : `还需 ${formatNumber(selectedDuty.goal - state.returnProtocol.progress, 0)} 次有效行动`,
         reward: "短时产量、凭证与现有材料",
         snoozable: true,
       });
@@ -15777,6 +15828,9 @@
       ? `航站状态：${activeVoyage.name}正在执行第 ${state.longVoyage.stageIndex + 1} 航段；${claimable > 0 ? `另有 ${claimable} 项委托奖励待领取。` : "当前没有委托奖励积压。"}`
       : `航站状态：${getStarportBlueprint().name}正在运行；已完成 ${collected} / ${collectionTotal} 项主要收藏。`;
     elements.returnBriefRecommendation.textContent = `下一步：${guide.title}。${guide.description}`;
+    if (state.v2.lastReturn.nextReturnAt > Date.now()) {
+      elements.returnBriefRecommendation.textContent += ` 建议在 ${new Date(state.v2.lastReturn.nextReturnAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })} 左右再次返回；此前离线收益仍在上限内。`;
+    }
     elements.returnBriefAction.textContent = guide.label;
     elements.returnBriefAction.dataset.guideAction = guide.action;
 
@@ -16083,6 +16137,7 @@
     updateNavigationVisibility();
     updateSaveSafetyStatus();
     updateUi();
+    V2_SYSTEMS.render();
   }
 
   function getCloudSaveMetadata(targetState = state) {
@@ -17494,6 +17549,15 @@
   setupTabs();
   setupStarfield();
   bindEvents();
+  V2_SYSTEMS.attach({
+    getState: () => state,
+    now: () => Date.now(),
+    save: () => saveGame(),
+    render: () => renderAll(),
+    navigate: (action) => performGuidanceAction(action),
+    grantReward: (reward) => grantExistingReward(reward),
+    notify: (title, message, icon) => showToast(title, message, icon),
+  });
   installVersionChecks();
   syncBgmState();
   renderAll();

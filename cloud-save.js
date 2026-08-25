@@ -109,8 +109,10 @@ let bridge = null;
 let firebaseAppApi = null;
 let firebaseAuthApi = null;
 let firebaseFirestoreApi = null;
+let firebaseAnalyticsApi = null;
 let auth = null;
 let db = null;
+let analytics = null;
 let currentUser = null;
 let knownRevision = null;
 let remoteRecord = null;
@@ -1848,6 +1850,14 @@ async function initializeCloudService() {
     const app = firebaseAppApi.initializeApp(config);
     auth = firebaseAuthApi.getAuth(app);
     db = firebaseFirestoreApi.getFirestore(app);
+    if (typeof config.measurementId === "string" && config.measurementId.trim()) {
+      try {
+        firebaseAnalyticsApi = await import(`${FIREBASE_SDK_ROOT}/firebase-analytics.js`);
+        if (await firebaseAnalyticsApi.isSupported()) analytics = firebaseAnalyticsApi.getAnalytics(app);
+      } catch (error) {
+        analytics = null;
+      }
+    }
     await firebaseAuthApi.setPersistence(
       auth,
       firebaseAuthApi.browserLocalPersistence,
@@ -1895,6 +1905,24 @@ globalThis.StellarCommunicationsBridge = Object.freeze({
     unreadCount: getUnreadAnnouncementIds().length,
     feedbackBusy,
   }),
+});
+
+window.addEventListener("stellar-privacy-analytics", (event) => {
+  const detail = event.detail || {};
+  if (!analytics || !firebaseAnalyticsApi || typeof detail.type !== "string") return;
+  const allowed = [
+    "game_start", "tutorial_step", "first_automation", "first_research",
+    "first_battle", "first_jump", "first_expedition", "first_transcend",
+    "daily_route_selected", "daily_route_completed", "offline_return",
+    "doctrine_selected", "season_participation", "companion_choice",
+    "daily_route_rerolled", "micro_feedback",
+  ];
+  if (!allowed.includes(detail.type)) return;
+  firebaseAnalyticsApi.logEvent(analytics, detail.type, {
+    event_day: String(detail.day || "").slice(0, 10),
+    route: ["industry", "sentinel", "pathfinder"].includes(detail.route) ? detail.route : "none",
+    value: Math.min(1000000, Math.max(0, Math.floor(Number(detail.value) || 0))),
+  });
 });
 
 initializeCloudService();

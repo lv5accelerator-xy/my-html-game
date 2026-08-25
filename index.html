@@ -333,8 +333,8 @@
           <section class="focus-center" aria-labelledby="focus-center-title">
             <header class="focus-center-heading">
               <div>
-                <small>v1.6.0 · 一项主目标，至多两项可选目标</small>
-                <h2 id="focus-center-title">今日三件事</h2>
+                <small>v2.0.0 · 统一优先级与真实预计时间</small>
+                <h2 id="focus-center-title">当前航程</h2>
               </div>
               <span id="duty-streak">连续值守 0 天</span>
             </header>
@@ -366,6 +366,22 @@
               <p id="return-brief-summary">航站正在整理本次归航状态。</p>
               <p id="return-brief-recommendation">航站正在分析当前最值得推进的目标。</p>
             </section>
+            <section id="v2-daily-route" class="v2-daily-route" aria-labelledby="v2-daily-route-title">
+              <header>
+                <div>
+                  <small>每天一条主航线 · 1 项主要目标 + 2 项可选目标</small>
+                  <h3 id="v2-daily-route-title">今日航线</h3>
+                  <p id="v2-daily-route-status">正在根据航站进度整理可选路线。</p>
+                </div>
+                <button id="v2-daily-route-reroll" type="button" disabled>免费重签一次</button>
+              </header>
+              <div id="v2-daily-route-choices" class="v2-daily-route-choices"></div>
+              <div id="v2-daily-route-tasks" class="v2-daily-route-tasks"></div>
+              <footer>
+                <span>错过不会永久损失；签到的一天宽限机制继续保留。</span>
+                <button id="v2-daily-route-claim" type="button" disabled>完成主目标后领取</button>
+              </footer>
+            </section>
             <div id="focus-route-list" class="focus-route-list" aria-label="今日三件事"></div>
             <details id="command-secondary-plans" class="command-secondary-plans">
               <summary>
@@ -376,6 +392,14 @@
                 <b>按需展开</b>
               </summary>
               <div class="command-secondary-content">
+            <details class="v2-analytics-settings">
+              <summary><span><small>隐私友好 · 默认关闭</small><strong>匿名体验统计</strong></span><b>查看设置</b></summary>
+              <div>
+                <label><input id="v2-analytics-toggle" type="checkbox" /> 允许发送匿名玩法事件</label>
+                <p id="v2-analytics-status">不会发送玩家姓名、邮箱或完整存档。</p>
+                <small>用于分析 D1、D3、D7、D14 回访、关键节点转化、每日目标完成率、重签率和路线选择比例。你可以随时关闭。</small>
+              </div>
+            </details>
             <article class="journey-card" aria-labelledby="journey-title">
               <div class="journey-card-copy">
                 <span id="journey-icon" class="journey-icon" aria-hidden="true">✦</span>
@@ -1873,15 +1897,15 @@
             <span aria-hidden="true">☷</span>
             <div>
               <strong>完成正在游玩的内容，不要求每天清空所有任务</strong>
-              <p>每日完成任意 3 项即可领取总奖励；任务只会从已经解锁或即将可完成的玩法中生成。</p>
+              <p>补充委托不会要求挂机时长或重复点击；它们用于顺路获得额外资源，不影响“今日航线”的集中领取。</p>
             </div>
           </div>
 
           <section class="mission-cycle" aria-labelledby="daily-missions-title">
             <header class="mission-cycle-heading">
               <div>
-                <small>今日航线</small>
-                <h3 id="daily-missions-title">每日委托</h3>
+                <small>可选补充</small>
+                <h3 id="daily-missions-title">补充委托</h3>
               </div>
               <div class="mission-cycle-actions">
                 <span id="daily-reset-countdown">距离刷新 --:--:--</span>
@@ -2512,8 +2536,9 @@
       <div class="noscript-message">本游戏需要启用 JavaScript 才能运行。</div>
     </noscript>
 
-    <script src="game-math.js?v=1.10.0"></script>
-    <script src="game.js?v=1.10.0"></script>
+    <script src="game-math.js?v=2.0.0"></script>
+    <script src="v2-systems.js?v=2.0.0"></script>
+    <script src="game.js?v=2.0.0"></script>
     <script src="firebase-config.js?v=1.10.0"></script>
     <script type="module" src="cloud-save.js?v=1.10.0"></script>
   </body>

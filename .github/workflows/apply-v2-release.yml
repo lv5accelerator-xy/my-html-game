@@ -1,0 +1,86 @@
+name: Apply v2 release bundle
+
+on:
+  push:
+    branches:
+      - release-bootstrap-v2
+    paths:
+      - v2-source.bundle
+      - .github/workflows/apply-v2-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out bootstrap branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify and publish v2.0.0
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          repository="lv5accelerator-xy/my-html-game"
+          expected_base="27b131392f4526af9a7169725517877448c992b1"
+          bundle="v2-source.bundle"
+          bundle_ref="refs/heads/transfer/v2-source"
+          release_ref="refs/heads/release/v2.0.0-galactic-homecoming"
+
+          remote_main="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          if [[ "$remote_main" != "$expected_base" ]]; then
+            echo "Remote main changed: expected $expected_base, found $remote_main" >&2
+            exit 1
+          fi
+
+          git bundle verify "$bundle"
+          target="$(git bundle list-heads "$bundle" | awk -v ref="$bundle_ref" '$2 == ref {print $1}')"
+          if [[ -z "$target" ]]; then
+            echo "Release target was not found in $bundle" >&2
+            exit 1
+          fi
+
+          git fetch "$bundle" "$bundle_ref"
+          if [[ "$(git rev-parse FETCH_HEAD)" != "$target" ]]; then
+            echo "Fetched release target does not match bundle metadata" >&2
+            exit 1
+          fi
+          git merge-base --is-ancestor "$expected_base" "$target"
+
+          git push --atomic origin \
+            "${target}:${release_ref}" \
+            "${target}:refs/heads/main"
+
+          git checkout --detach "$target"
+          version="$(sed -n 's/.*stellar-game-version" content="\([^"]*\)".*/\1/p' index.html | head -n 1)"
+          if [[ "$version" != "2.0.0" ]]; then
+            echo "Unexpected release version: $version" >&2
+            exit 1
+          fi
+
+          archive="历史版本/星港拾荒者-v${version}.zip"
+          if [[ ! -f "$archive" ]]; then
+            mkdir -p "历史版本"
+            git archive --format=zip --output="$RUNNER_TEMP/release.zip" HEAD -- . ':(exclude)历史版本'
+            mv "$RUNNER_TEMP/release.zip" "$archive"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add "$archive"
+            git commit -m "archive: add v${version} release snapshot"
+          fi
+
+          final="$(git rev-parse HEAD)"
+          git push --atomic origin \
+            "${final}:refs/heads/main" \
+            "${final}:${release_ref}"
+
+          gh workflow run deploy-pages.yml --repo "$repository" --ref main
+          echo "Published v${version}: $final"

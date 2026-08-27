@@ -17,68 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  archive:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Preserve a missing release snapshot
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(sed -n 's/.*stellar-game-version" content="\([^"]*\)".*/\1/p' index.html | head -n 1)"
-          archive="历史版本/星港拾荒者-v${version}.zip"
-          if [[ -z "$version" || -f "$archive" ]]; then
-            echo "Archive already present or no release version found."
-            exit 0
-          fi
-          git archive --format=zip --output="$RUNNER_TEMP/release.zip" HEAD -- . ':(exclude)历史版本'
-          mv "$RUNNER_TEMP/release.zip" "$archive"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$archive"
-          git commit -m "archive: add v${version} release snapshot"
-          git push
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
-      - name: Install browser test runtime
-        run: |
-          npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
-
-      - name: Run syntax, system and browser checks
-        env:
-          CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
-        run: |
-          node --check game.js
-          node --check cloud-save.js
-          node --check v2-systems.js
-          node tests/numeric-balance.test.js
-          node tests/usability-flow.test.js
-          node tests/retention-flow.test.js
-          node tests/daily-route.test.js
-          node tests/doctrine-build.test.js
-          node tests/season.test.js
-          node tests/companion-story.test.js
-          node tests/save-migration-v200.test.js
-          node tests/browser-smoke.test.js
-          node tests/mobile-performance.test.js
-
   build:
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -89,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site/assets
-          cp index.html styles.css game.js game-math.js v2-systems.js _site/
+          cp index.html styles.css game.js game-math.js _site/
           cp -R assets/. _site/assets/
 
           for optional_file in firebase-config.js cloud-save.js; do

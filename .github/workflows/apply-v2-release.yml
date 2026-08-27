@@ -11,7 +11,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   release:
@@ -24,8 +23,6 @@ jobs:
 
       - name: Verify and publish v2.0.0
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
@@ -55,11 +52,21 @@ jobs:
           fi
           git merge-base --is-ancestor "$expected_base" "$target"
 
-          git push --atomic origin \
-            "${target}:${release_ref}" \
-            "${target}:refs/heads/main"
-
           git checkout --detach "$target"
+          # GitHub Actions tokens cannot create or update workflow files. Keep
+          # the currently published workflow here; the verified v2 workflow is
+          # committed through the signed-in repository UI after this job.
+          git checkout "$expected_base" -- .github/workflows/deploy-pages.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/deploy-pages.yml
+          git commit -m "chore(v2): defer workflow rollout"
+          publish_target="$(git rev-parse HEAD)"
+
+          git push --atomic origin \
+            "${publish_target}:${release_ref}" \
+            "${publish_target}:refs/heads/main"
+
           version="$(sed -n 's/.*stellar-game-version" content="\([^"]*\)".*/\1/p' index.html | head -n 1)"
           if [[ "$version" != "2.0.0" ]]; then
             echo "Unexpected release version: $version" >&2
@@ -71,8 +78,6 @@ jobs:
             mkdir -p "历史版本"
             git archive --format=zip --output="$RUNNER_TEMP/release.zip" HEAD -- . ':(exclude)历史版本'
             mv "$RUNNER_TEMP/release.zip" "$archive"
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add "$archive"
             git commit -m "archive: add v${version} release snapshot"
           fi
@@ -82,5 +87,4 @@ jobs:
             "${final}:refs/heads/main" \
             "${final}:${release_ref}"
 
-          gh workflow run deploy-pages.yml --repo "$repository" --ref main
           echo "Published v${version}: $final"

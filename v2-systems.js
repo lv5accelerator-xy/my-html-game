@@ -144,8 +144,8 @@
   )].slice(0, limit);
 
   const ROUTE_ORDERS = Object.freeze({
-    industry: [{ id: "expand", name: "扩建生产线", metric: "unitsBought", goal: 5, action: "fleet", reward: { materials: 3 } }, { id: "process", name: "循环加工", metric: "operationsCompleted", goal: 2, action: "command", reward: { tokens: 8 } }],
-    sentinel: [{ id: "patrol", name: "主动巡逻", metric: "battlesWon", goal: 3, action: "combat", reward: { supplies: 2 } }, { id: "hold", name: "守住航标", metric: "raidsDefended", goal: 1, action: "combat", reward: { materials: 4 } }],
+    industry: [{ id: "expand", name: "扩建生产线", metric: "unitsBought", goal: 5, action: "fleet", reward: { materials: { alloy: 3 } } }, { id: "process", name: "循环加工", metric: "operationsCompleted", goal: 2, action: "operations", reward: { tokens: 8 } }],
+    sentinel: [{ id: "patrol", name: "主动巡逻", metric: "battlesWon", goal: 3, action: "combat", reward: { supplies: 2 } }, { id: "hold", name: "守住航标", metric: "raidsDefended", goal: 1, action: "combat", reward: { materials: { crystal: 4 } } }],
     pathfinder: [{ id: "scout", name: "近域探路", metric: "expeditionRoutes", goal: 2, action: "expedition", reward: { supplies: 2 } }, { id: "deep", name: "完整长航", metric: "expeditionsCompleted", goal: 1, action: "expedition", reward: { tokens: 12 } }],
   });
 
@@ -170,6 +170,7 @@
 
   function freshState(now = Date.now()) {
     return {
+      returnPlan: { id: "", startedAt: 0, readyAt: 0, claimed: false, day: "", completed: 0 },
       echo: { stage: 0, completed: 0, archive: [] },
       order: { day: "", route: "", id: "", progress: 0, claimed: false },
       retention: {
@@ -355,6 +356,9 @@
       lastPromptAt: safeTime(feedback.lastPromptAt),
     };
     const order = source.order || {};
+    const plan = source.returnPlan || {};
+    const definition = RETURN_PLANS.find((entry) => entry.id === plan.id);
+    base.returnPlan = { id: definition?.id || "", startedAt: safeTime(plan.startedAt), readyAt: definition ? safeTime(plan.startedAt) + definition.hours * 3600000 : 0, claimed: plan.claimed === true, day: /^\d{4}-\d{2}-\d{2}$/.test(plan.day) ? plan.day : "", completed: safeCount(plan.completed, 1000000) };
     base.echo = { stage: safeCount(source.echo?.stage, 3), completed: safeCount(source.echo?.completed, 8), archive: uniqueStrings(source.echo?.archive, new Set(Array.from({ length: 8 }, (_, i) => `echo-${i}`)), 8) };
     base.echo.completed = base.echo.archive.length;
     if (ROUTE_ORDERS[order.route]?.some((entry) => entry.id === order.id)) {
@@ -1076,6 +1080,11 @@
     return { tokens: 10, supplies: 2 };
   }
 
+  function describeLinkedReward(reward) {
+    const names = { alloy: "合金", crystal: "晶体", circuit: "芯片" };
+    return [...Object.entries(reward.materials || {}).map(([id, amount]) => `${names[id] || id} ×${amount}`), reward.tokens ? `凭证 ×${reward.tokens}` : "", reward.supplies ? `补给 ×${reward.supplies}` : ""].filter(Boolean).join("、");
+  }
+
   function renderLinkedJourney() {
     if (!host) return;
     let root = document.querySelector("#linked-journey");
@@ -1088,8 +1097,9 @@
     }
     const v2 = host.getState().v2;
     const order = getOrder(v2);
+    root.hidden = (host.getState().lifetimeDust || 0) < 1000 && !order;
     const available = v2.order.day !== dayKey(host.now());
-    root.querySelector("div").innerHTML = `<p>每天选择一项行动委托，不提高永久倍率。旧委托可跨日完成；选择新委托会放弃旧进度。</p>${available ? (ROUTE_ORDERS[v2.dailyRoute.routeId] || []).map((entry) => `<button type="button" data-route-order="${entry.id}">${entry.name} · ${entry.goal} 次 · ${entry.reward.materials ? entry.reward.materials + " 材料" : entry.reward.supplies ? entry.reward.supplies + " 补给" : entry.reward.tokens + " 凭证"}</button>`).join("") || "先选择今日主航线。" : "今日委托已锁定，不需要反复切换。"}${order ? `<p>${order.name}：${v2.order.progress}/${order.goal}</p><button type="button" data-v2-action="${order.action}">前往行动</button><button id="route-order-claim" type="button" ${v2.order.claimed || v2.order.progress < order.goal ? "disabled" : ""}>${v2.order.claimed ? "已领取" : "领取委托奖励"}</button>` : ""}`;
+    root.querySelector("div").innerHTML = `<p>每天选择一项行动委托，不提高永久倍率。旧委托可跨日完成；选择新委托会放弃旧进度。</p>${available ? (ROUTE_ORDERS[v2.dailyRoute.routeId] || []).map((entry) => `<button type="button" data-route-order="${entry.id}">${entry.name} · ${entry.goal} 次 · ${describeLinkedReward(entry.reward)}</button>`).join("") || "先选择今日主航线。" : "今日委托已锁定，不需要反复切换。"}${order ? `<p>${order.name}：${v2.order.progress}/${order.goal}</p><button type="button" data-v2-action="${order.action}">前往行动</button><button id="route-order-claim" type="button" ${v2.order.claimed || v2.order.progress < order.goal ? "disabled" : ""}>${v2.order.claimed ? "已领取" : "领取委托奖励"}</button>` : ""}`;
   }
 
   function renderEcho() {
@@ -1103,13 +1113,57 @@
       document.querySelector("#linked-journey")?.after(root);
     }
     const echo = host.getState().v2.echo;
+    root.hidden = (host.getState().lifetimeDust || 0) < 50000 && echo.stage === 0 && echo.completed === 0;
     const labels = ["完成一个远征航段，带回信号", "邀请已解锁的伴星解读信号", "完成一次航站作业，将信号制成纪念物", "回响已加工，可以归档"];
-    root.querySelector("div").innerHTML = `<p>收藏 ${echo.completed}/8 · 奖励每篇凭证 ×10、补给 ×2。不会增加倍率，也不会因跃迁消失。</p><p>${echo.completed === 8 ? "八束回响已全部收藏。" : labels[echo.stage]}</p>${echo.completed < 8 ? `<button type="button" ${echo.stage === 1 ? 'id="echo-interpret"' : echo.stage === 3 ? 'id="echo-claim"' : `data-v2-action="${echo.stage === 0 ? "expedition" : "command"}"`}>${["前往远征", "伴星解读", "前往作业", "收藏回响"][echo.stage]}</button>` : ""}${echo.archive.map((_, i) => `<p>✧ ${ECHO_STORIES[i]}</p>`).join("")}`;
+    root.querySelector("div").innerHTML = `<p>收藏 ${echo.completed}/8 · 奖励每篇凭证 ×10、补给 ×2。不会增加倍率，也不会因跃迁消失。</p><p>${echo.completed === 8 ? "八束回响已全部收藏。" : labels[echo.stage]}</p>${echo.completed < 8 ? `<button type="button" ${echo.stage === 1 ? 'id="echo-interpret"' : echo.stage === 3 ? 'id="echo-claim"' : `data-v2-action="${echo.stage === 0 ? "expedition" : "operations"}"`}>${["前往远征", "伴星解读", "前往作业", "收藏回响"][echo.stage]}</button>` : ""}${echo.archive.map((_, i) => `<p>✧ ${ECHO_STORIES[i]}</p>`).join("")}`;
+  }
+
+  const RETURN_PLANS = Object.freeze([
+    { id: "short", name: "一小时巡灯", hours: 1, cost: 1, reward: { materials: { alloy: 2 } }, story: "巡逻艇归来时，为你带回了航标旁的第一缕星尘。" },
+    { id: "shift", name: "四小时护航", hours: 4, cost: 2, reward: { tokens: 8, materials: { alloy: 3, circuit: 1 } }, story: "一艘陌生货船在日志里留下了感谢：今晚的航路很亮。" },
+    { id: "night", name: "八小时长夜", hours: 8, cost: 3, reward: { tokens: 12, materials: { alloy: 4, circuit: 2 } }, story: "星港替你守完长夜，晨光落在没有熄灭的窗上。" },
+  ]);
+
+  function startReturnPlan(v2, gameState, id, now = Date.now()) {
+    const plan = RETURN_PLANS.find((entry) => entry.id === id);
+    if (!plan || v2.returnPlan.day === dayKey(now) || (v2.returnPlan.id && !v2.returnPlan.claimed) || !(gameState.expedition?.supplies >= plan.cost)) return false;
+    gameState.expedition.supplies -= plan.cost;
+    v2.returnPlan = { id, startedAt: now, readyAt: now + plan.hours * 3600000, day: dayKey(now), claimed: false, completed: v2.returnPlan.completed };
+    return true;
+  }
+
+  function claimReturnPlan(v2, now = Date.now()) {
+    const plan = RETURN_PLANS.find((entry) => entry.id === v2.returnPlan.id);
+    if (!plan || v2.returnPlan.claimed || now < v2.returnPlan.readyAt) return null;
+    v2.returnPlan.claimed = true;
+    v2.returnPlan.completed = safeCount(v2.returnPlan.completed + 1, 1000000);
+    return { ...plan.reward };
+  }
+
+  function renderReturnPlan() {
+    if (!host) return;
+    let root = document.querySelector("#return-plan");
+    if (!root) {
+      root = document.createElement("details");
+      root.id = "return-plan";
+      root.className = "linked-journey";
+      root.innerHTML = '<summary>归航之约 · 离开前安排一次</summary><div></div>';
+      document.querySelector("#echo-chain")?.after(root);
+    }
+    const state = host.getState();
+    const saved = state.v2.returnPlan;
+    root.hidden = (state.lifetimeDust || 0) < 50000 && !saved.id;
+    const plan = RETURN_PLANS.find((entry) => entry.id === saved.id);
+    const pending = plan && !saved.claimed;
+    const ready = pending && host.now() >= saved.readyAt;
+    root.querySelector("summary").textContent = ready ? "归航之约 · 已完成，领取报告" : "归航之约 · 离开前安排一次";
+    root.querySelector("div").innerHTML = `<p>消耗现有远征补给，每天安排一次；在线或离线均推进。到期不作废、不需准点返回，也不改变正常离线收益。</p>${pending ? `<p>${plan.name} · ${ready ? plan.story : "预计完成：" + new Date(saved.readyAt).toLocaleString()}</p><button id="return-plan-claim" type="button" ${ready ? "" : "disabled"}>领取归航报告</button>` : saved.day === dayKey(host.now()) ? `<p>今日已完成。${plan?.story || ""}</p>` : RETURN_PLANS.map((entry) => `<button type="button" data-return-plan="${entry.id}" ${state.expedition?.supplies >= entry.cost ? "" : "disabled"}>${entry.name} · 消耗 ${entry.cost} 补给 → ${describeLinkedReward(entry.reward)}</button>`).join("")}<p>累计完成 ${saved.completed} 次归航安排。</p><button type="button" data-v2-action="expedition">获取远征补给</button>`;
   }
 
   function render() {
     renderLinkedJourney();
     renderEcho();
+    renderReturnPlan();
     renderDailyRoute();
     renderRetention();
     renderRunBuild();
@@ -1122,6 +1176,12 @@
     if (host) return;
     host = nextHost;
     document.addEventListener("click", (event) => {
+      const planButton = event.target.closest("[data-return-plan]");
+      if (planButton && startReturnPlan(host.getState().v2, host.getState(), planButton.dataset.returnPlan, host.now())) { host.save(); host.render(); }
+      if (event.target.closest("#return-plan-claim")) {
+        const reward = claimReturnPlan(host.getState().v2, host.now());
+        if (reward) { host.grantReward(reward); host.save(); host.render(); }
+      }
       if (event.target.closest("#echo-interpret")) {
         if (!interpretEcho(host.getState().v2, host.getState())) host.notify("等待伴星", "需要先通过超越解锁至少一位伴星。", "✧");
         host.save(); host.render();
@@ -1225,6 +1285,7 @@
   }
 
   globalThis.StellarV2Systems = Object.freeze({
+    RETURN_PLANS, startReturnPlan, claimReturnPlan,
     interpretEcho, claimEcho, ECHO_STORIES,
     ROUTE_ORDERS, chooseOrder, getOrder, claimOrder,
     ROUTES, RUN_PROTOCOLS, RUN_VARIATIONS, COMPANION_STORIES, FEEDBACK_PROMPTS,

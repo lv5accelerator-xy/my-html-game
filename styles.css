@@ -13277,3 +13277,14 @@ body:not([data-expedition-skin="standard"]) .collect-core {
   .v2-daily-route-tasks article { grid-template-columns: auto minmax(0, 1fr); }
   .v2-daily-route-tasks article > button { grid-column: 1 / -1; width: 100%; }
 }
+/* Linked activities remain optional and collapse on small screens. */
+.linked-journey { margin: 12px 0; padding: 16px; border: 1px solid #294758; border-radius: 16px; background: #0b1926; overflow-wrap: anywhere; }
+.linked-journey summary, .patch-note-card summary { cursor: pointer; padding: 10px 0; color: #8fe6ed; }
+.linked-journey button { margin: 5px; padding: 12px; min-height: 44px; max-width: 100%; white-space: normal; border: 1px solid #395a76; border-radius: 10px; color: #d4efff; background: #152b3c; }
+.linked-journey button:disabled { opacity: .5; }
+.linked-journey p { line-height: 1.65; }
+.v2-daily-route-tasks > details { grid-column: 1 / -1; }
+.v2-daily-route-tasks summary { cursor: pointer; padding: 12px; }
+.focus-route-list > details { grid-column: 1 / -1; }
+.focus-route-list > details > summary, #patch-notes-list > details > summary { cursor: pointer; padding: 14px; color: var(--cyan); }
+.rebuild-plan > p { grid-column: 1 / -1; margin: 0; line-height: 1.6; overflow-wrap: anywhere; }

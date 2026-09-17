@@ -24,7 +24,7 @@ const server = http.createServer((request, response) => {
   const context = await browser.newContext();
   await context.addInitScript(() => {
     localStorage.setItem("stellarOutpostIdleSave_v1", JSON.stringify({ version: 30, playerName: "迁移测试", tutorialSeen: true, dust: 10, lifetimeDust: 10, lastSeen: Date.now() }));
-    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "2.0.0");
+    localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "2.3.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   });
   const page = await context.newPage();

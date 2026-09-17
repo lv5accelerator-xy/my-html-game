@@ -70,6 +70,8 @@ jobs:
           node tests/usability-flow.test.js
           node tests/retention-flow.test.js
           node tests/daily-route.test.js
+          node tests/linked-journey.test.js
+          node tests/linked-journey-browser.test.js
           node tests/doctrine-build.test.js
           node tests/season.test.js
           node tests/companion-story.test.js

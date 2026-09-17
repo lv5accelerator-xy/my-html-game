@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "2.2.0";
-  const PATCH_NOTES_VERSION = "2.2.0";
+  const GAME_VERSION = "2.3.0";
+  const PATCH_NOTES_VERSION = "2.3.0";
   const SAVE_VERSION = 31;
   const V2_SYSTEMS = globalThis.StellarV2Systems;
   const NUMERIC_MIGRATION_VERSION = 6;
@@ -346,6 +346,7 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    { version: "2.3.0", theme: "归航之约", changes: ["可安排一、四或八小时归航任务，消耗现有补给获取材料与凭证。", "离线与在线都推进，完成报告永久等候，不要求准点签到。", "本次同时包含轻装归航、航线有别与深空回响三个阶段更新。"] },
     { version: "2.2.0", theme: "深空回响", changes: ["新增远征信号→伴星解读→航站加工→收藏回响的联动流程。", "八篇回响短篇可永久收藏，奖励为现有凭证和补给。", "每个阶段只显示一个下一步操作。"] },
     { version: "2.1.0", theme: "航线有别", changes: ["三条航线各有两种行动委托：扩建或加工、巡逻或守备、探路或长航。", "委托每日选择一次，可跨日完成，奖励使用现有材料、补给和凭证。", "战败报告提供下一步整备建议。"] },
     { version: "2.0.1", theme: "轻装归航", changes: ["更新记录默认只显示三条重点，历史详情按需展开。", "今日航线可选任务默认收起，减少指挥台信息负担。", "建筑购买预览增加本次增产的预计回本时间。"] },
@@ -4364,6 +4365,9 @@
         ...plan,
         buildingTargets,
         upgradeOrder,
+        fleetPreset: Math.min(2, clampGameCount(saved.fleetPreset)),
+        expeditionPreset: Math.min(2, clampGameCount(saved.expeditionPreset)),
+        operationIds: (Array.isArray(saved.operationIds) ? saved.operationIds : []).filter((id) => OPERATIONS_JOBS.some((job) => job.id === id)).slice(0, 3),
         savedAt: Math.max(0, Number(saved.savedAt) || 0),
       };
     });
@@ -11071,6 +11075,9 @@
       UPGRADES.some((upgrade) => upgrade.id === id),
     );
     plan.savedAt = Date.now();
+    plan.fleetPreset = state.fleetCommand.activePreset;
+    plan.expeditionPreset = state.expedition.activePreset;
+    plan.operationIds = state.operations.queue.map((order) => order.jobId).slice(0, 3);
     if (!state.rebuild.activePlanId) state.rebuild.activePlanId = plan.id;
     state.rebuild.lastReport = `${plan.name}已记录：${formatNumber(
       Object.values(plan.buildingTargets).reduce((total, amount) => total + amount, 0),
@@ -11173,11 +11180,18 @@
       );
       const progress = getRebuildPlanProgress(plan);
       const isActive = active?.id === plan.id;
+      const procurement = BUILDINGS.reduce((sum, building) => {
+        const owned = state.buildings[building.id] || 0;
+        const missing = Math.max(0, (plan.buildingTargets[building.id] || 0) - owned);
+        return safeAdd(sum, missing ? buildingCost(building, owned, missing) : 0);
+      }, 0);
       return `<article class="rebuild-plan${isActive ? " active" : ""}">
         <div><small>${isActive ? "当前方案" : saved ? "已记录" : "空白方案"}</small><strong>${plan.name}</strong><span>${saved ? `${formatNumber(unitTotal, 0)} 座设施 · ${plan.upgradeOrder.length} 项研究` : "记录当前舰队与研究"}</span></div>
         <em>${saved ? `${formatNumber(progress.complete, 0)} / ${formatNumber(progress.total, 0)}` : "—"}</em>
         <button type="button" class="secondary-button" data-rebuild-save="${plan.id}">${saved ? "覆盖记录" : "记录当前"}</button>
         <button type="button" data-rebuild-activate="${plan.id}" ${saved && !isActive ? "" : "disabled"}>${isActive ? "已启用" : "使用方案"}</button>
+        ${saved ? `<p>记录的作业：${(plan.operationIds || []).map((id) => OPERATIONS_JOBS.find((job) => job.id === id)?.name).filter(Boolean).join("、") || "暂无"}。按原输入消耗执行。</p><button type="button" data-v2-action="operations">安排作业</button>` : ""}
+        ${saved ? `<p>建筑采购尚需约 ${formatNumber(procurement)} 星尘，缺口 ${formatNumber(Math.max(0, procurement - state.dust))}（不含研究）。记录的舰队配装 ${Number(plan.fleetPreset || 0) + 1}、远征配装 ${Number(plan.expeditionPreset || 0) + 1}；换装仍需在对应页面确认并支付原有费用。</p><button type="button" data-v2-action="combat">舰队配装</button><button type="button" data-v2-action="expedition">远征配装</button>` : ""}
       </article>`;
     }).join("");
     elements.rebuildToggle.disabled = !active;
@@ -11196,6 +11210,10 @@
   function prestige() {
     const gain = getPrestigeGain();
     if (gain < 1) return;
+    const projectedCoreMultiplier = getCoreMultiplier({ ...state,
+      cores: Math.min(CORE_RESERVE_CAP, safeAdd(state.cores, gain)),
+      totalCores: Math.min(CORE_RESERVE_CAP, safeAdd(state.totalCores, gain)),
+    });
     const nextReconstructionCost = getReconstructionCostMultiplier({
       ...state,
       rebirths: state.rebirths + 1,
@@ -11206,7 +11224,7 @@
       title: `提炼 ${formatNumber(gain, 0)} 枚星核？`,
       message: `跃迁将清空当前星尘、自动化单元与本轮研究，但保留战斗强化、星港建筑与材料、星核商店、成就和统计。下一航线的自动化设施重建成本将调整为 ×${nextReconstructionCost.toFixed(
         2,
-      )}；星核加成采用后期递减曲线。`,
+      )}；星核永久产量倍率预计 ×${getCoreMultiplier().toFixed(2)} → ×${projectedCoreMultiplier.toFixed(2)}。这是星核部分的变化，不是重建前的即时产量；回响收藏、归航计划和委托进度保留。`,
       confirmText: "确认跃迁",
       cancelText: "暂不跃迁",
       onConfirm: () => {
@@ -12620,6 +12638,10 @@
   function renderPatchNotes() {
     elements.patchNotesCurrentVersion.textContent = `v${PATCH_NOTES_VERSION}`;
     elements.patchNotesList.textContent = "";
+    const archive = document.createElement("details");
+    const archiveSummary = document.createElement("summary");
+    archiveSummary.textContent = "查看全部历史版本（由新到旧）";
+    archive.append(archiveSummary);
 
     PATCH_NOTES.forEach((note, index) => {
       const card = document.createElement("article");
@@ -12661,8 +12683,9 @@
         details.append(summary, changes);
         card.append(details);
       } else card.append(heading, changes);
-      elements.patchNotesList.appendChild(card);
+      (index === 0 ? elements.patchNotesList : archive).appendChild(card);
     });
+    elements.patchNotesList.append(archive);
 
     elements.patchNotesList.scrollTop = 0;
   }
@@ -15976,7 +15999,13 @@
     const signature = JSON.stringify([routes, state.guidance.pinnedGoals]);
     if (signature === renderedFocusRouteSignature) return;
     renderedFocusRouteSignature = signature;
+    const optionalOpen = elements.focusRouteList.querySelector("details")?.open === true;
     elements.focusRouteList.replaceChildren();
+    const optionalRoutes = document.createElement("details");
+    optionalRoutes.open = optionalOpen;
+    const optionalSummary = document.createElement("summary");
+    optionalSummary.textContent = "其他推荐 · 有余力再做";
+    optionalRoutes.append(optionalSummary);
     routes.forEach((route, index) => {
       const shell = document.createElement("article");
       shell.className = `focus-route-shell ${route.kind}`;
@@ -16020,8 +16049,9 @@
         tools.appendChild(snooze);
       }
       shell.appendChild(tools);
-      elements.focusRouteList.appendChild(shell);
+      (index === 0 ? elements.focusRouteList : optionalRoutes).appendChild(shell);
     });
+    elements.focusRouteList.append(optionalRoutes);
     renderTrackedGoals();
   }
 
@@ -17641,6 +17671,7 @@
   setupTabs();
   setupStarfield();
   bindEvents();
+  document.querySelector(".focus-center")?.before(document.querySelector(".beacon-zone"));
   V2_SYSTEMS.attach({
     getState: () => state,
     now: () => Date.now(),

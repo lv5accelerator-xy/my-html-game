@@ -170,6 +170,7 @@
 
   function freshState(now = Date.now()) {
     return {
+      echo: { stage: 0, completed: 0, archive: [] },
       order: { day: "", route: "", id: "", progress: 0, claimed: false },
       retention: {
         enabled: false,
@@ -354,6 +355,8 @@
       lastPromptAt: safeTime(feedback.lastPromptAt),
     };
     const order = source.order || {};
+    base.echo = { stage: safeCount(source.echo?.stage, 3), completed: safeCount(source.echo?.completed, 8), archive: uniqueStrings(source.echo?.archive, new Set(Array.from({ length: 8 }, (_, i) => `echo-${i}`)), 8) };
+    base.echo.completed = base.echo.archive.length;
     if (ROUTE_ORDERS[order.route]?.some((entry) => entry.id === order.id)) {
       base.order = { day: /^\d{4}-\d{2}-\d{2}$/.test(order.day) ? order.day : "", route: order.route, id: order.id, progress: safeCount(order.progress, 5), claimed: order.claimed === true };
     }
@@ -419,6 +422,10 @@
   }
 
   function recordMetric(v2, metric, amount, gameState, now = Date.now()) {
+    if (amount > 0 && v2.echo.completed < 8) {
+      if (v2.echo.stage === 0 && metric === "expeditionRoutes") v2.echo.stage = 1;
+      else if (v2.echo.stage === 2 && metric === "operationsCompleted") v2.echo.stage = 3;
+    }
     const order = getOrder(v2);
     if (order && !v2.order.claimed && metric === order.metric) v2.order.progress = Math.min(order.goal, v2.order.progress + safeCount(amount, 1000000));
     ensureDaily(v2, gameState, now);
@@ -1053,6 +1060,22 @@
     root.querySelector("#v2-feedback-options").innerHTML = prompt.labels.map((label, index) => `<button type="button" data-v2-feedback-value="${index + 1}"><b>${index + 1}</b><span>${label}</span></button>`).join("");
   }
 
+  const ECHO_STORIES = ["那不是求救，而是一盏为归航者保留的灯。", "废弃中继站仍在转发一句迟到的晚安。", "一颗无名星的轨道上，八百年前的花园还在开花。", "漂流探针第一次听到了自己的回声。", "尘埃里藏着一张没有终点的回家路线。", "远方的灯火熄灭之前，把名字交给了星光。", "星港收到一封没有收件人的感谢信。", "你点亮的航标，成为了别人的第一颗星。"];
+
+  function interpretEcho(v2, gameState) {
+    if (v2.echo.stage !== 1 || !(gameState.endgame?.companions?.length > 0)) return false;
+    v2.echo.stage = 2;
+    return true;
+  }
+
+  function claimEcho(v2) {
+    if (v2.echo.stage !== 3 || v2.echo.completed >= 8) return null;
+    v2.echo.archive.push(`echo-${v2.echo.completed}`);
+    v2.echo.completed += 1;
+    v2.echo.stage = 0;
+    return { tokens: 10, supplies: 2 };
+  }
+
   function renderLinkedJourney() {
     if (!host) return;
     let root = document.querySelector("#linked-journey");
@@ -1069,8 +1092,24 @@
     root.querySelector("div").innerHTML = `<p>每天选择一项行动委托，不提高永久倍率。旧委托可跨日完成；选择新委托会放弃旧进度。</p>${available ? (ROUTE_ORDERS[v2.dailyRoute.routeId] || []).map((entry) => `<button type="button" data-route-order="${entry.id}">${entry.name} · ${entry.goal} 次 · ${entry.reward.materials ? entry.reward.materials + " 材料" : entry.reward.supplies ? entry.reward.supplies + " 补给" : entry.reward.tokens + " 凭证"}</button>`).join("") || "先选择今日主航线。" : "今日委托已锁定，不需要反复切换。"}${order ? `<p>${order.name}：${v2.order.progress}/${order.goal}</p><button type="button" data-v2-action="${order.action}">前往行动</button><button id="route-order-claim" type="button" ${v2.order.claimed || v2.order.progress < order.goal ? "disabled" : ""}>${v2.order.claimed ? "已领取" : "领取委托奖励"}</button>` : ""}`;
   }
 
+  function renderEcho() {
+    if (!host) return;
+    let root = document.querySelector("#echo-chain");
+    if (!root) {
+      root = document.createElement("details");
+      root.id = "echo-chain";
+      root.className = "linked-journey";
+      root.innerHTML = '<summary>深空回响 · 远征、伴星与加工联动</summary><div></div>';
+      document.querySelector("#linked-journey")?.after(root);
+    }
+    const echo = host.getState().v2.echo;
+    const labels = ["完成一个远征航段，带回信号", "邀请已解锁的伴星解读信号", "完成一次航站作业，将信号制成纪念物", "回响已加工，可以归档"];
+    root.querySelector("div").innerHTML = `<p>收藏 ${echo.completed}/8 · 奖励每篇凭证 ×10、补给 ×2。不会增加倍率，也不会因跃迁消失。</p><p>${echo.completed === 8 ? "八束回响已全部收藏。" : labels[echo.stage]}</p>${echo.completed < 8 ? `<button type="button" ${echo.stage === 1 ? 'id="echo-interpret"' : echo.stage === 3 ? 'id="echo-claim"' : `data-v2-action="${echo.stage === 0 ? "expedition" : "command"}"`}>${["前往远征", "伴星解读", "前往作业", "收藏回响"][echo.stage]}</button>` : ""}${echo.archive.map((_, i) => `<p>✧ ${ECHO_STORIES[i]}</p>`).join("")}`;
+  }
+
   function render() {
     renderLinkedJourney();
+    renderEcho();
     renderDailyRoute();
     renderRetention();
     renderRunBuild();
@@ -1083,6 +1122,14 @@
     if (host) return;
     host = nextHost;
     document.addEventListener("click", (event) => {
+      if (event.target.closest("#echo-interpret")) {
+        if (!interpretEcho(host.getState().v2, host.getState())) host.notify("等待伴星", "需要先通过超越解锁至少一位伴星。", "✧");
+        host.save(); host.render();
+      }
+      if (event.target.closest("#echo-claim")) {
+        const reward = claimEcho(host.getState().v2);
+        if (reward) { host.grantReward(reward); host.save(); host.render(); }
+      }
       const orderChoice = event.target.closest("[data-route-order]");
       if (orderChoice && chooseOrder(host.getState().v2, orderChoice.dataset.routeOrder, host.now())) { host.save(); host.render(); }
       if (event.target.closest("#route-order-claim")) {
@@ -1178,6 +1225,7 @@
   }
 
   globalThis.StellarV2Systems = Object.freeze({
+    interpretEcho, claimEcho, ECHO_STORIES,
     ROUTE_ORDERS, chooseOrder, getOrder, claimOrder,
     ROUTES, RUN_PROTOCOLS, RUN_VARIATIONS, COMPANION_STORIES, FEEDBACK_PROMPTS,
     RETENTION_EVENTS, freshState, sanitize, record, ensureDaily,

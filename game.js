@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "2.1.0";
-  const PATCH_NOTES_VERSION = "2.1.0";
+  const GAME_VERSION = "2.2.0";
+  const PATCH_NOTES_VERSION = "2.2.0";
   const SAVE_VERSION = 31;
   const V2_SYSTEMS = globalThis.StellarV2Systems;
   const NUMERIC_MIGRATION_VERSION = 6;
@@ -346,6 +346,7 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    { version: "2.2.0", theme: "深空回响", changes: ["新增远征信号→伴星解读→航站加工→收藏回响的联动流程。", "八篇回响短篇可永久收藏，奖励为现有凭证和补给。", "每个阶段只显示一个下一步操作。"] },
     { version: "2.1.0", theme: "航线有别", changes: ["三条航线各有两种行动委托：扩建或加工、巡逻或守备、探路或长航。", "委托每日选择一次，可跨日完成，奖励使用现有材料、补给和凭证。", "战败报告提供下一步整备建议。"] },
     { version: "2.0.1", theme: "轻装归航", changes: ["更新记录默认只显示三条重点，历史详情按需展开。", "今日航线可选任务默认收起，减少指挥台信息负担。", "建筑购买预览增加本次增产的预计回本时间。"] },
     {

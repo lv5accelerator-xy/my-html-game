@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "2.0.1";
-  const PATCH_NOTES_VERSION = "2.0.1";
+  const GAME_VERSION = "2.1.0";
+  const PATCH_NOTES_VERSION = "2.1.0";
   const SAVE_VERSION = 31;
   const V2_SYSTEMS = globalThis.StellarV2Systems;
   const NUMERIC_MIGRATION_VERSION = 6;
@@ -346,6 +346,7 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    { version: "2.1.0", theme: "航线有别", changes: ["三条航线各有两种行动委托：扩建或加工、巡逻或守备、探路或长航。", "委托每日选择一次，可跨日完成，奖励使用现有材料、补给和凭证。", "战败报告提供下一步整备建议。"] },
     { version: "2.0.1", theme: "轻装归航", changes: ["更新记录默认只显示三条重点，历史详情按需展开。", "今日航线可选任务默认收起，减少指挥台信息负担。", "建筑购买预览增加本次增产的预计回本时间。"] },
     {
       version: "2.0.0",
@@ -11922,6 +11923,7 @@
   }
 
   function setCombatReport(message) {
+    if (/失利|战败|失败/.test(message)) message += " 建议：先强化舰炮并选择胜率较高的近域目标；防守失败则优先补强基地防御。";
     state.combat.lastReport = message;
     if (state.activePage === "combat") {
       elements.combatReportText.textContent = message;

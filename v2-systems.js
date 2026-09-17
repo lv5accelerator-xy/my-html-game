@@ -143,8 +143,34 @@
     ),
   )].slice(0, limit);
 
+  const ROUTE_ORDERS = Object.freeze({
+    industry: [{ id: "expand", name: "扩建生产线", metric: "unitsBought", goal: 5, action: "fleet", reward: { materials: 3 } }, { id: "process", name: "循环加工", metric: "operationsCompleted", goal: 2, action: "command", reward: { tokens: 8 } }],
+    sentinel: [{ id: "patrol", name: "主动巡逻", metric: "battlesWon", goal: 3, action: "combat", reward: { supplies: 2 } }, { id: "hold", name: "守住航标", metric: "raidsDefended", goal: 1, action: "combat", reward: { materials: 4 } }],
+    pathfinder: [{ id: "scout", name: "近域探路", metric: "expeditionRoutes", goal: 2, action: "expedition", reward: { supplies: 2 } }, { id: "deep", name: "完整长航", metric: "expeditionsCompleted", goal: 1, action: "expedition", reward: { tokens: 12 } }],
+  });
+
+  function chooseOrder(v2, id, now = Date.now()) {
+    const route = v2.dailyRoute.routeId;
+    if (!ROUTE_ORDERS[route]?.some((entry) => entry.id === id)) return false;
+    if (v2.order.day === dayKey(now)) return false;
+    v2.order = { day: dayKey(now), route, id, progress: 0, claimed: false };
+    return true;
+  }
+
+  function getOrder(v2) {
+    return ROUTE_ORDERS[v2.order.route]?.find((entry) => entry.id === v2.order.id);
+  }
+
+  function claimOrder(v2) {
+    const order = getOrder(v2);
+    if (!order || v2.order.claimed || v2.order.progress < order.goal) return null;
+    v2.order.claimed = true;
+    return { ...order.reward };
+  }
+
   function freshState(now = Date.now()) {
     return {
+      order: { day: "", route: "", id: "", progress: 0, claimed: false },
       retention: {
         enabled: false,
         consentAt: 0,
@@ -327,6 +353,10 @@
       failures: Math.min(20, safeCount(feedback.failures, 20)),
       lastPromptAt: safeTime(feedback.lastPromptAt),
     };
+    const order = source.order || {};
+    if (ROUTE_ORDERS[order.route]?.some((entry) => entry.id === order.id)) {
+      base.order = { day: /^\d{4}-\d{2}-\d{2}$/.test(order.day) ? order.day : "", route: order.route, id: order.id, progress: safeCount(order.progress, 5), claimed: order.claimed === true };
+    }
     return base;
   }
 
@@ -389,6 +419,8 @@
   }
 
   function recordMetric(v2, metric, amount, gameState, now = Date.now()) {
+    const order = getOrder(v2);
+    if (order && !v2.order.claimed && metric === order.metric) v2.order.progress = Math.min(order.goal, v2.order.progress + safeCount(amount, 1000000));
     ensureDaily(v2, gameState, now);
     recordSeasonMetric(v2, metric, amount, now);
     if (!v2.dailyRoute.routeId || v2.dailyRoute.claimed) return;
@@ -1021,7 +1053,24 @@
     root.querySelector("#v2-feedback-options").innerHTML = prompt.labels.map((label, index) => `<button type="button" data-v2-feedback-value="${index + 1}"><b>${index + 1}</b><span>${label}</span></button>`).join("");
   }
 
+  function renderLinkedJourney() {
+    if (!host) return;
+    let root = document.querySelector("#linked-journey");
+    if (!root) {
+      root = document.createElement("details");
+      root.id = "linked-journey";
+      root.className = "v2-run-archive linked-journey";
+      root.innerHTML = '<summary>航线委托 · 按需展开</summary><div id="linked-journey-content"></div>';
+      document.querySelector("#v2-daily-route")?.after(root);
+    }
+    const v2 = host.getState().v2;
+    const order = getOrder(v2);
+    const available = v2.order.day !== dayKey(host.now());
+    root.querySelector("div").innerHTML = `<p>每天选择一项行动委托，不提高永久倍率。旧委托可跨日完成；选择新委托会放弃旧进度。</p>${available ? (ROUTE_ORDERS[v2.dailyRoute.routeId] || []).map((entry) => `<button type="button" data-route-order="${entry.id}">${entry.name} · ${entry.goal} 次 · ${entry.reward.materials ? entry.reward.materials + " 材料" : entry.reward.supplies ? entry.reward.supplies + " 补给" : entry.reward.tokens + " 凭证"}</button>`).join("") || "先选择今日主航线。" : "今日委托已锁定，不需要反复切换。"}${order ? `<p>${order.name}：${v2.order.progress}/${order.goal}</p><button type="button" data-v2-action="${order.action}">前往行动</button><button id="route-order-claim" type="button" ${v2.order.claimed || v2.order.progress < order.goal ? "disabled" : ""}>${v2.order.claimed ? "已领取" : "领取委托奖励"}</button>` : ""}`;
+  }
+
   function render() {
+    renderLinkedJourney();
     renderDailyRoute();
     renderRetention();
     renderRunBuild();
@@ -1034,6 +1083,12 @@
     if (host) return;
     host = nextHost;
     document.addEventListener("click", (event) => {
+      const orderChoice = event.target.closest("[data-route-order]");
+      if (orderChoice && chooseOrder(host.getState().v2, orderChoice.dataset.routeOrder, host.now())) { host.save(); host.render(); }
+      if (event.target.closest("#route-order-claim")) {
+        const reward = claimOrder(host.getState().v2);
+        if (reward) { host.grantReward(reward); host.save(); host.render(); }
+      }
       const routeButton = event.target.closest("[data-v2-route]");
       if (routeButton && selectDaily(host.getState().v2, host.getState(), routeButton.dataset.v2Route, host.now())) {
         host.notify("今日航线已确认", `${ROUTES[routeButton.dataset.v2Route].name}将只突出三项有意义的行动。`, ROUTES[routeButton.dataset.v2Route].icon);
@@ -1123,6 +1178,7 @@
   }
 
   globalThis.StellarV2Systems = Object.freeze({
+    ROUTE_ORDERS, chooseOrder, getOrder, claimOrder,
     ROUTES, RUN_PROTOCOLS, RUN_VARIATIONS, COMPANION_STORIES, FEEDBACK_PROMPTS,
     RETENTION_EVENTS, freshState, sanitize, record, ensureDaily,
     getEligibleRoutes, selectDaily, rerollDaily, recordMetric, dailyComplete,

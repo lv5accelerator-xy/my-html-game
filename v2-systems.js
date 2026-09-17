@@ -846,12 +846,14 @@
       return;
     }
     status.textContent = `${route.icon} ${route.name} · ${route.summary}`;
-    tasks.innerHTML = v2.dailyRoute.tasks.map((task, index) => {
+    const optionalOpen = tasks.querySelector("details")?.open === true;
+    const taskCards = v2.dailyRoute.tasks.map((task, index) => {
       const definition = route.tasks.find((item) => item.metric === task.metric) || route.tasks[index];
       const complete = task.progress >= task.goal;
       const ratio = Math.min(1, task.progress / task.goal);
       return `<article class="${complete ? "complete" : ""}"><span>${index === 0 ? "主" : "选"}</span><div><strong>${definition?.title || task.metric}</strong><small>${index === 0 ? "主要目标" : "可选奖励"} · ${Math.floor(task.progress)} / ${task.goal}</small><i><b style="width:${ratio * 100}%"></b></i></div><button type="button" data-v2-action="${definition?.action || "command"}">${complete ? "已完成" : "前往"}</button></article>`;
-    }).join("");
+    });
+    tasks.innerHTML = taskCards[0] + `<details ${optionalOpen ? "open" : ""}><summary>可选目标 · 完成 ${getDailyCompletion(v2).optionalCompleted}/2（不影响主奖励）</summary>${taskCards.slice(1).join("")}</details>`;
     claim.disabled = !dailyComplete(v2) || v2.dailyRoute.claimed;
     claim.textContent = v2.dailyRoute.claimed ? "今日已集中领取" : dailyComplete(v2) ? `集中领取 · 可选 ${getDailyCompletion(v2).optionalCompleted}/2` : "完成主目标后领取";
     reroll.disabled = v2.dailyRoute.rerollsUsed >= 1 || v2.dailyRoute.claimed;

@@ -31,8 +31,8 @@
   const SAVE_BACKUP_META_KEY = "stellarOutpostIdleSave_v1_backup_at";
   const PATCH_NOTES_SEEN_KEY = "stellarOutpostIdlePatchNotesSeen";
   const PERFORMANCE_MODE_KEY = "stellarOutpostIdlePerformanceMode";
-  const GAME_VERSION = "2.0.0";
-  const PATCH_NOTES_VERSION = "2.0.0";
+  const GAME_VERSION = "2.0.1";
+  const PATCH_NOTES_VERSION = "2.0.1";
   const SAVE_VERSION = 31;
   const V2_SYSTEMS = globalThis.StellarV2Systems;
   const NUMERIC_MIGRATION_VERSION = 6;
@@ -346,6 +346,7 @@
     "leaderboard",
   ];
   const PATCH_NOTES = [
+    { version: "2.0.1", theme: "轻装归航", changes: ["更新记录默认只显示三条重点，历史详情按需展开。", "今日航线可选任务默认收起，减少指挥台信息负担。", "建筑购买预览增加本次增产的预计回本时间。"] },
     {
       version: "2.0.0",
       theme: "群星归航",
@@ -12645,7 +12646,18 @@
         changes.appendChild(item);
       });
 
-      card.append(heading, changes);
+      if (index > 0 || note.changes.length > 3) {
+        const details = document.createElement("details");
+        const summary = document.createElement("summary");
+        summary.textContent = index > 0 ? "展开版本详情" : "更多更新详情";
+        if (index === 0) {
+          const highlights = document.createElement("ul");
+          while (changes.children.length > note.changes.length - 3) highlights.append(changes.firstElementChild);
+          card.append(heading, highlights);
+        } else card.append(heading);
+        details.append(summary, changes);
+        card.append(details);
+      } else card.append(heading, changes);
       elements.patchNotesList.appendChild(card);
     });
 
@@ -13463,7 +13475,7 @@
             actualRate.nextRate,
           )} / 秒 · 本次 +${formatProductionRate(
             actualRate.purchaseIncrease,
-          )} / 秒`
+          )} / 秒 · 预计回本 ${actualRate.purchaseIncrease > 0 ? formatDuration(purchase.cost / actualRate.purchaseIncrease) : "暂无增产"}`
         : "购买预览：当前星尘不足";
       info.append(titleRow, description, rate, purchasePreview);
 

@@ -22,6 +22,14 @@
     countFixedIntervalEvents,
   } = numeric;
 
+  // 导航分层只控制界面，不改变系统进度和玩法规则。
+  const UI_VISIBILITY = Object.freeze({
+    core: ["command", "fleet", "research"],
+    mid: ["combat", "core-shop"],
+    late: ["expedition", "transcend", "leaderboard"],
+    hidden: ["starport", "starfall", "missions"],
+  });
+
   const SAVE_KEY = "stellarOutpostIdleSave_v1";
   const SAVE_BACKUP_KEYS = [
     "stellarOutpostIdleSave_v1_backup_1",
@@ -3677,6 +3685,8 @@
     patchNotesButton: $("#patch-notes-button"),
     renameButton: $("#rename-button"),
     playerNameDisplay: $("#player-name-display"),
+    showAllSystemsButton: $("#show-all-systems-button"),
+    showAllSystemsStatus: $("#show-all-systems-status"),
     navigationModeButton: $("#navigation-mode-button"),
     navigationModeStatus: $("#navigation-mode-status"),
     navigationExpandButton: $("#navigation-expand-button"),
@@ -4176,6 +4186,7 @@
   function freshGuidanceState() {
     return {
       compactNavigation: true,
+      showAllSystems: false,
       seenFeatures: [],
       snoozedRoutes: {},
       pinnedGoals: [],
@@ -10118,6 +10129,7 @@
       : [];
     merged.guidance = {
       compactNavigation: raw.guidance?.compactNavigation !== false,
+      showAllSystems: raw.guidance?.showAllSystems === true,
       seenFeatures: [...new Set(seenFeatures)].slice(0, 48),
       pinnedGoals: [...new Set(pinnedGoals)].slice(0, 3),
       snoozedRoutes: Object.fromEntries(
@@ -15431,6 +15443,10 @@
   }
 
   function isPrimaryPageUnlocked(pageId, targetState = state) {
+    if (UI_VISIBILITY.hidden.includes(pageId) && !targetState.guidance?.showAllSystems) {
+      return false;
+    }
+
     const hasStarportProgress =
       Object.values(targetState.starport?.materials || {}).some((value) => value > 0) ||
       Object.values(targetState.starport?.modules || {}).some((value) => value > 0);
@@ -15472,7 +15488,23 @@
     return rules[pageId] !== false;
   }
 
+  function updateShowAllSystemsStatus() {
+    if (!elements.showAllSystemsStatus) return;
+    const showAll = state.guidance.showAllSystems;
+    elements.showAllSystemsStatus.textContent = showAll ? "当前：全部" : "当前：仅核心";
+    elements.showAllSystemsButton?.setAttribute("aria-pressed", String(showAll));
+  }
+
   function updateNavigationVisibility() {
+    const showAll = state.guidance.showAllSystems;
+    const isNewPlayer = (state.lifetimeDust || 0) < 500 && (state.rebirths || 0) === 0;
+    // 关闭全部系统或载入旧存档时，回到仍可见的页面。
+    if (!isPrimaryPageUnlocked(state.activePage) ||
+        (!showAll && isNewPlayer && !["command", "fleet"].includes(state.activePage))) {
+      activatePrimaryPage("command", { persist: false });
+      return;
+    }
+    updateShowAllSystemsStatus();
     const compact = state.guidance.compactNavigation;
     const focusedPages = new Set(FOCUSED_NAVIGATION_PAGES);
     if (["active", "exchange"].includes(getStarfallPhase())) {
@@ -15489,7 +15521,11 @@
     let visibleCount = 0;
     tabs.forEach((tab) => {
       const unlocked = isPrimaryPageUnlocked(tab.dataset.page);
-      const visible = unlocked && (!compact || focusedPages.has(tab.dataset.page));
+      const pageId = tab.dataset.page;
+      const hiddenByConfig = UI_VISIBILITY.hidden.includes(pageId) && !showAll;
+      const newPlayerAllowed = showAll || !isNewPlayer || ["command", "fleet"].includes(pageId);
+      const visible = unlocked && !hiddenByConfig && newPlayerAllowed &&
+        (showAll || !compact || focusedPages.has(pageId));
       if (unlocked) unlockedCount += 1;
       if (visible) visibleCount += 1;
       tab.hidden = !visible;
@@ -15498,22 +15534,24 @@
       tab.title = unlocked ? "" : "继续推进当前建议后解锁";
     });
     const hiddenCount = Math.max(0, unlockedCount - visibleCount);
-    elements.navigationModeStatus.textContent = compact ? "专注" : "完整";
+    elements.navigationModeStatus.textContent = showAll ? "全部系统" : compact ? "专注" : "展开";
     elements.navigationModeButton.classList.toggle("off", !compact);
     elements.navigationModeButton.setAttribute(
       "aria-label",
-      compact ? "当前使用专注导航，点击显示全部已解锁功能" : "当前显示全部已解锁功能，点击启用专注导航",
+      showAll ? "全部系统开关已启用，导航偏好在关闭该开关后生效"
+        : compact ? "当前使用专注导航，点击展开常规入口" : "当前展开常规入口，点击启用专注导航",
     );
-    elements.navigationExpandButton.hidden = unlockedCount <= FOCUSED_NAVIGATION_PAGES.length;
+    elements.navigationExpandButton.hidden = showAll || isNewPlayer || unlockedCount <= FOCUSED_NAVIGATION_PAGES.length;
     elements.navigationExpandButton.setAttribute("aria-expanded", String(!compact));
     elements.navigationExpandButton.querySelector("span").textContent = compact ? "＋" : "−";
     elements.navigationExpandButton.querySelector("strong").textContent = compact
-      ? "全部功能"
-      : "收起功能";
+      ? "展开导航"
+      : "收起导航";
     elements.navigationHiddenCount.textContent = compact ? String(hiddenCount) : "专注";
-    document.getElementById("primary-navigation").dataset.mode = compact
+    document.getElementById("primary-navigation").dataset.mode = compact && !showAll
       ? "focus"
       : "complete";
+    elements.commandMissionButton.hidden = !showAll;
     renderTrackedGoals();
     updateMobileQuickNavigation();
   }
@@ -15524,6 +15562,7 @@
       const pageId = button.dataset.mobilePage;
       const unlocked = isPrimaryPageUnlocked(pageId);
       button.disabled = !unlocked;
+      button.hidden = document.querySelector(`#primary-navigation [data-page="${pageId}"]`)?.hidden !== false;
       button.classList.toggle("active", state.activePage === pageId);
       button.title = unlocked ? `前往${button.querySelector("small")?.textContent || "该页面"}` : "尚未解锁";
     });
@@ -15538,7 +15577,28 @@
     elements.mobileCurrentAction.querySelector("small").textContent = urgent ? "警报" : "当前";
   }
 
+  function isActionReachable(action) {
+    // 非页面动作保留原有执行逻辑。
+    if (!PRIMARY_PAGES.includes(action)) return true;
+    return isPrimaryPageUnlocked(action);
+  }
+
   function getCommandRecommendation() {
+    const recommendation = getUnfilteredCommandRecommendation();
+    if (!isActionReachable(recommendation.action)) {
+      return {
+        icon: "⌁",
+        title: "航站运行稳定",
+        description: "当前没有必须立刻处理的事项，可以离线等待自动生产。",
+        progress: 1,
+        action: "fleet",
+        label: "继续扩建",
+      };
+    }
+    return recommendation;
+  }
+
+  function getUnfilteredCommandRecommendation() {
     const journeyChapter = getCurrentJourneyChapter();
     if (journeyChapter) {
       const progress = getJourneyProgress(journeyChapter);
@@ -15704,7 +15764,7 @@
       reward: "推进下一阶段解锁",
       reason: guide.description,
       snoozable: false,
-    }];
+    }].filter((route) => isActionReachable(route.action));
     const optionalRoutes = [{
       id: "daily-missions",
       kind: "optional",
@@ -15795,6 +15855,7 @@
     const seenActions = new Set([guide.action]);
     optionalRoutes.forEach((route) => {
       if (
+        !isActionReachable(route.action) ||
         routes.length >= 3 ||
         seenActions.has(route.action) ||
         (route.snoozable && state.guidance.snoozedRoutes?.[route.id] === todayKey)
@@ -15932,12 +15993,13 @@
     elements.returnBriefSummary.textContent = activeVoyage
       ? `航站状态：${activeVoyage.name}正在执行第 ${state.longVoyage.stageIndex + 1} 航段；${claimable > 0 ? `另有 ${claimable} 项委托奖励待领取。` : "当前没有委托奖励积压。"}`
       : `航站状态：${getStarportBlueprint().name}正在运行；已完成 ${collected} / ${collectionTotal} 项主要收藏。`;
-    elements.returnBriefRecommendation.textContent = `下一步：${guide.title}。${guide.description}`;
+    elements.returnBriefRecommendation.textContent = guide ? `下一步：${guide.title}。${guide.description}` : "暂无推荐事项";
     if (state.v2.lastReturn.nextReturnAt > Date.now()) {
       elements.returnBriefRecommendation.textContent += ` 建议在 ${new Date(state.v2.lastReturn.nextReturnAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })} 左右再次返回；此前离线收益仍在上限内。`;
     }
-    elements.returnBriefAction.textContent = guide.label;
-    elements.returnBriefAction.dataset.guideAction = guide.action;
+    elements.returnBriefAction.hidden = !guide?.action || !isActionReachable(guide.action);
+    elements.returnBriefAction.textContent = guide?.label || "";
+    elements.returnBriefAction.dataset.guideAction = guide?.action || "";
 
     const selected = getSelectedReturnDuty();
     elements.returnDutyOptions.replaceChildren();
@@ -15965,6 +16027,7 @@
     elements.returnDutyProgressLabel.textContent = `${formatNumber(state.returnProtocol.progress, 0)} / ${formatNumber(selected.goal, 0)}`;
     elements.returnDutyProgressBar.style.width = `${clamp(state.returnProtocol.progress / selected.goal, 0, 1) * 100}%`;
     elements.returnDutyDescription.textContent = `${selected.description} 奖励：4 分钟产量、5 凭证、每种材料 +1${state.lifetimeDust >= EXPEDITION_UNLOCK_DUST ? "、远征补给 +1" : ""}。`;
+    elements.returnDutyGoButton.hidden = !selected.action || !isActionReachable(selected.action);
     elements.returnDutyGoButton.textContent = selected.actionLabel;
     elements.returnDutyGoButton.dataset.guideAction = selected.action;
     elements.returnDutyGoButton.disabled = state.returnProtocol.claimed;
@@ -16011,7 +16074,8 @@
       shell.className = `focus-route-shell ${route.kind}`;
       const button = document.createElement("button");
       button.type = "button";
-      button.dataset.focusAction = route.action;
+      button.hidden = !route.action || !isActionReachable(route.action);
+      button.dataset.focusAction = route.action || "";
       button.className = "focus-route";
       const order = document.createElement("b");
       order.textContent = String(index + 1);
@@ -17433,15 +17497,27 @@
     elements.performanceButton.addEventListener("click", () => {
       setPerformanceMode(performanceMode === "eco" ? "quality" : "eco");
     });
+    elements.showAllSystemsButton?.addEventListener("click", () => {
+      state.guidance.showAllSystems = !state.guidance.showAllSystems;
+      updateNavigationVisibility();
+      saveGame();
+      showToast(
+        state.guidance.showAllSystems ? "已显示全部系统" : "已切换为专注模式",
+        state.guidance.showAllSystems
+          ? "所有已解锁的功能入口现在都可见。"
+          : "已隐藏星港、星愿和委托入口，可在设置中重新显示。",
+        "◫",
+      );
+    });
     elements.navigationModeButton.addEventListener("click", () => {
       state.guidance.compactNavigation = !state.guidance.compactNavigation;
       updateNavigationVisibility();
       saveGame();
       showToast(
-        state.guidance.compactNavigation ? "专注导航已启用" : "全部功能已展开",
+        state.guidance.compactNavigation ? "专注导航偏好已保存" : "展开导航偏好已保存",
         state.guidance.compactNavigation
-          ? "首栏只保留核心、紧急和限时入口，其他已解锁功能仍可随时展开。"
-          : "当前显示全部已解锁系统；尚未解锁的入口继续保持隐藏。",
+          ? "关闭“显示全部系统”后，导航按专注偏好显示。"
+          : "常规入口按进度展开；星港、星愿和委托需开启“显示全部系统”。",
         "➜",
       );
     });
@@ -17456,7 +17532,7 @@
           eyebrow: "v0.24.0 · 专注航程",
           icon: "➜",
           title: "功能没有减少，只是更容易找到",
-          message: "专注模式只保留核心入口、当前紧急事项和限时活动；点击“全部功能”可展开所有已解锁系统。指挥台的“今天只做三件事”会持续替你整理下一步。",
+          message: "专注模式优先保留当前航程入口；点击“展开导航”可查看常规入口。星港、星愿和委托可在设置中开启“显示全部系统”后访问。",
           confirmText: "知道了",
           cancelText: null,
         }), 100);

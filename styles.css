@@ -13288,3 +13288,31 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 .focus-route-list > details { grid-column: 1 / -1; }
 .focus-route-list > details > summary, #patch-notes-list > details > summary { cursor: pointer; padding: 14px; color: var(--cyan); }
 .rebuild-plan > p { grid-column: 1 / -1; margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
+
+/* 批次一：非核心模块按需展开，保留内部原有布局。 */
+.batch-secondary {
+  min-width: 0;
+  border: 1px solid rgba(92, 170, 205, 0.22);
+  border-radius: 16px;
+  background: rgba(6, 20, 36, 0.54);
+}
+.batch-secondary > summary {
+  padding: 14px 16px;
+  color: var(--text);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.batch-secondary:has(> [hidden]) { display: none; }
+#settings-menu .menu-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+#show-all-systems-status { margin-left: auto; }
+#primary-navigation [hidden],
+#mobile-quick-nav [hidden],
+#command-mission-button[hidden] { display: none !important; }
+@media (max-width: 680px) {
+  .mobile-quick-nav { grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); }
+}

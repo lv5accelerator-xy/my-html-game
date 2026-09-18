@@ -125,6 +125,11 @@
           </button>
           <button id="feedback-button" type="button">问题反馈</button>
           <button id="rename-button" type="button">修改玩家名称</button>
+          <button id="show-all-systems-button" class="menu-action" type="button" aria-pressed="false">
+            <span aria-hidden="true">◫</span>
+            <strong>显示全部系统</strong>
+            <small id="show-all-systems-status">当前：仅核心</small>
+          </button>
           <button id="navigation-mode-button" class="settings-toggle" type="button">
             <span>导航显示</span>
             <strong id="navigation-mode-status">渐进</strong>
@@ -346,6 +351,8 @@
                 <span>推荐会根据资源、解锁、袭击和可领取奖励自动变化。</span>
               </figcaption>
             </figure>
+            <details class="batch-secondary">
+              <summary>归航简报</summary>
             <section class="return-brief" aria-labelledby="return-brief-title">
               <header>
                 <span class="return-brief-icon" aria-hidden="true">⌁</span>
@@ -366,6 +373,9 @@
               <p id="return-brief-summary">航站正在整理本次归航状态。</p>
               <p id="return-brief-recommendation">航站正在分析当前最值得推进的目标。</p>
             </section>
+            </details>
+            <details class="batch-secondary">
+              <summary>今日航线</summary>
             <section id="v2-daily-route" class="v2-daily-route" aria-labelledby="v2-daily-route-title">
               <header>
                 <div>
@@ -382,23 +392,10 @@
                 <button id="v2-daily-route-claim" type="button" disabled>完成主目标后领取</button>
               </footer>
             </section>
+            </details>
+            <details class="batch-secondary">
+              <summary>其他航程建议</summary>
             <div id="focus-route-list" class="focus-route-list" aria-label="今日三件事"></div>
-            <details id="command-secondary-plans" class="command-secondary-plans">
-              <summary>
-                <span>
-                  <small>新手航路、补给与每日值守</small>
-                  <strong>其他安排</strong>
-                </span>
-                <b>按需展开</b>
-              </summary>
-              <div class="command-secondary-content">
-            <details class="v2-analytics-settings">
-              <summary><span><small>隐私友好 · 默认关闭</small><strong>匿名体验统计</strong></span><b>查看设置</b></summary>
-              <div>
-                <label><input id="v2-analytics-toggle" type="checkbox" /> 允许发送匿名玩法事件</label>
-                <p id="v2-analytics-status">不会发送玩家姓名、邮箱或完整存档。</p>
-                <small>用于分析 D1、D3、D7、D14 回访、关键节点转化、每日目标完成率、重签率和路线选择比例。你可以随时关闭。</small>
-              </div>
             </details>
             <article class="journey-card" aria-labelledby="journey-title">
               <div class="journey-card-copy">
@@ -419,6 +416,23 @@
               <div id="journey-chapter-dots" class="journey-chapter-dots" aria-label="新手航路进度"></div>
               <button id="journey-action-button" type="button">开始回收</button>
             </article>
+            <details id="command-secondary-plans" class="command-secondary-plans">
+              <summary>
+                <span>
+                  <small>补给与每日值守</small>
+                  <strong>其他安排</strong>
+                </span>
+                <b>按需展开</b>
+              </summary>
+              <div class="command-secondary-content">
+            <details class="v2-analytics-settings">
+              <summary><span><small>隐私友好 · 默认关闭</small><strong>匿名体验统计</strong></span><b>查看设置</b></summary>
+              <div>
+                <label><input id="v2-analytics-toggle" type="checkbox" /> 允许发送匿名玩法事件</label>
+                <p id="v2-analytics-status">不会发送玩家姓名、邮箱或完整存档。</p>
+                <small>用于分析 D1、D3、D7、D14 回访、关键节点转化、每日目标完成率、重签率和路线选择比例。你可以随时关闭。</small>
+              </div>
+            </details>
             <div class="duty-supply">
               <div class="duty-supply-copy">
                 <span class="duty-supply-icon" aria-hidden="true">◈</span>
@@ -485,6 +499,8 @@
             </button>
           </div>
 
+          <details class="batch-secondary">
+            <summary>伴星观测站</summary>
           <section
             id="companion-observatory"
             class="companion-observatory"
@@ -549,8 +565,9 @@
               <div id="v2-companion-gallery" class="v2-companion-gallery"></div>
             </section>
           </section>
+          </details>
 
-          <div class="scan-card" hidden>
+          <div class="scan-card">
             <div class="scan-copy">
               <span class="scan-icon" aria-hidden="true">⌁</span>
               <span>
@@ -787,6 +804,8 @@
               </div>
             </div>
           </details>
+          <details class="batch-secondary">
+            <summary>航线学说</summary>
           <section id="doctrine-hub" class="doctrine-hub" aria-labelledby="doctrine-title" hidden>
             <header>
               <span class="doctrine-heading-icon" aria-hidden="true">◒</span>
@@ -816,6 +835,7 @@
               <span id="doctrine-history">航行档案 0 次</span>
             </div>
           </section>
+          </details>
         </section>
 
         <section

@@ -15577,7 +15577,28 @@
     elements.mobileCurrentAction.querySelector("small").textContent = urgent ? "警报" : "当前";
   }
 
+  function isActionReachable(action) {
+    // 非页面动作保留原有执行逻辑。
+    if (!PRIMARY_PAGES.includes(action)) return true;
+    return isPrimaryPageUnlocked(action);
+  }
+
   function getCommandRecommendation() {
+    const recommendation = getUnfilteredCommandRecommendation();
+    if (!isActionReachable(recommendation.action)) {
+      return {
+        icon: "⌁",
+        title: "航站运行稳定",
+        description: "当前没有必须立刻处理的事项，可以离线等待自动生产。",
+        progress: 1,
+        action: "fleet",
+        label: "继续扩建",
+      };
+    }
+    return recommendation;
+  }
+
+  function getUnfilteredCommandRecommendation() {
     const journeyChapter = getCurrentJourneyChapter();
     if (journeyChapter) {
       const progress = getJourneyProgress(journeyChapter);
@@ -15743,7 +15764,7 @@
       reward: "推进下一阶段解锁",
       reason: guide.description,
       snoozable: false,
-    }];
+    }].filter((route) => isActionReachable(route.action));
     const optionalRoutes = [{
       id: "daily-missions",
       kind: "optional",
@@ -15834,6 +15855,7 @@
     const seenActions = new Set([guide.action]);
     optionalRoutes.forEach((route) => {
       if (
+        !isActionReachable(route.action) ||
         routes.length >= 3 ||
         seenActions.has(route.action) ||
         (route.snoozable && state.guidance.snoozedRoutes?.[route.id] === todayKey)
@@ -15971,12 +15993,13 @@
     elements.returnBriefSummary.textContent = activeVoyage
       ? `航站状态：${activeVoyage.name}正在执行第 ${state.longVoyage.stageIndex + 1} 航段；${claimable > 0 ? `另有 ${claimable} 项委托奖励待领取。` : "当前没有委托奖励积压。"}`
       : `航站状态：${getStarportBlueprint().name}正在运行；已完成 ${collected} / ${collectionTotal} 项主要收藏。`;
-    elements.returnBriefRecommendation.textContent = `下一步：${guide.title}。${guide.description}`;
+    elements.returnBriefRecommendation.textContent = guide ? `下一步：${guide.title}。${guide.description}` : "暂无推荐事项";
     if (state.v2.lastReturn.nextReturnAt > Date.now()) {
       elements.returnBriefRecommendation.textContent += ` 建议在 ${new Date(state.v2.lastReturn.nextReturnAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })} 左右再次返回；此前离线收益仍在上限内。`;
     }
-    elements.returnBriefAction.textContent = guide.label;
-    elements.returnBriefAction.dataset.guideAction = guide.action;
+    elements.returnBriefAction.hidden = !guide?.action || !isActionReachable(guide.action);
+    elements.returnBriefAction.textContent = guide?.label || "";
+    elements.returnBriefAction.dataset.guideAction = guide?.action || "";
 
     const selected = getSelectedReturnDuty();
     elements.returnDutyOptions.replaceChildren();
@@ -16004,6 +16027,7 @@
     elements.returnDutyProgressLabel.textContent = `${formatNumber(state.returnProtocol.progress, 0)} / ${formatNumber(selected.goal, 0)}`;
     elements.returnDutyProgressBar.style.width = `${clamp(state.returnProtocol.progress / selected.goal, 0, 1) * 100}%`;
     elements.returnDutyDescription.textContent = `${selected.description} 奖励：4 分钟产量、5 凭证、每种材料 +1${state.lifetimeDust >= EXPEDITION_UNLOCK_DUST ? "、远征补给 +1" : ""}。`;
+    elements.returnDutyGoButton.hidden = !selected.action || !isActionReachable(selected.action);
     elements.returnDutyGoButton.textContent = selected.actionLabel;
     elements.returnDutyGoButton.dataset.guideAction = selected.action;
     elements.returnDutyGoButton.disabled = state.returnProtocol.claimed;
@@ -16050,7 +16074,8 @@
       shell.className = `focus-route-shell ${route.kind}`;
       const button = document.createElement("button");
       button.type = "button";
-      button.dataset.focusAction = route.action;
+      button.hidden = !route.action || !isActionReachable(route.action);
+      button.dataset.focusAction = route.action || "";
       button.className = "focus-route";
       const order = document.createElement("b");
       order.textContent = String(index + 1);

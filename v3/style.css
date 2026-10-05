@@ -506,6 +506,60 @@ footer span + span:before {
   display: block;
   margin-top: 6px;
 }
+.purchase-gain,
+.goal-rail > .goal-eta {
+  color: var(--teal);
+}
+.estimate-note {
+  font-size: 12px;
+  margin: 18px 0;
+}
+.module-row .row-action button + button {
+  margin-top: 8px;
+}
+.workshop {
+  margin: 28px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 16px 0;
+}
+.workshop > p,
+.blueprint-lock,
+.timing-panel p {
+  font-size: 12px;
+}
+.workshop > p {
+  margin-top: 14px;
+}
+.timing-panel {
+  margin: 24px 0;
+}
+.timing-panel table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.timing-panel caption {
+  text-align: left;
+  margin: 12px 0;
+  color: var(--amber);
+}
+.timing-panel th,
+.timing-panel td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 5px;
+  text-align: left;
+  font-weight: normal;
+  overflow-wrap: anywhere;
+}
+.timing-panel th:first-child {
+  width: 42%;
+}
+.timing-panel small {
+  display: block;
+  margin-top: 5px;
+}
 .route-choices {
   border-top: 1px solid var(--line);
   margin: 14px 0 30px;

@@ -393,6 +393,265 @@ async function run() {
         }
       },
     );
+    const workshopSave = ready();
+    delete workshopSave.timing; // An actual v3.0 record has no timing field.
+    workshopSave.modules = { battery: 1, scanner: 1 };
+    workshopSave.equipped = ["battery", "scanner"];
+    workshopSave.samples = 60;
+    workshopSave.lore = [
+      { story: "hospital", choice: "preserve" },
+      { story: "garden", choice: "scrap" },
+    ];
+    await scenario(
+      "v3.0 workshop: craft missing story gear, upgrade both to level three, preserve choices and replace full equipment slots",
+      { [S.KEY]: JSON.stringify(workshopSave) },
+      async (page) => {
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator(".workshop summary").focus();
+        await page.keyboard.press("Space");
+        for (const id of ["medbay", "solar"]) {
+          await page.locator(`[data-action="module"][data-id="${id}"]`).click();
+          assert.equal((await read(page)).modules[id], 1);
+          assert.deepEqual((await read(page)).equipped, ["battery", "scanner"]);
+          assert.ok(
+            await page.locator(".workshop").evaluate((el) => el.open),
+            "crafting keeps the workshop open",
+          );
+          await page.locator(`[data-action="module"][data-id="${id}"]`).click();
+          await page.locator(`[data-action="module"][data-id="${id}"]`).click();
+          assert.equal((await read(page)).modules[id], 3);
+          assert.equal(
+            await page
+              .locator(`[data-action="module"][data-id="${id}"]`)
+              .count(),
+            0,
+          );
+        }
+        const saved = await read(page);
+        assert.equal(saved.samples, 14);
+        assert.deepEqual(saved.lore, workshopSave.lore);
+        const before = E.productionRate(saved);
+        await page.locator('[data-action="equip"][data-id="battery"]').click();
+        await page.locator('[data-action="equip"][data-id="medbay"]').click();
+        assert.ok(E.productionRate(await read(page)) > before);
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          assert.equal(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth > innerWidth,
+            ),
+            false,
+          );
+          if (screenshotDir)
+            await page.screenshot({
+              path: path.join(screenshotDir, `workshop-${width}.png`),
+              fullPage: true,
+            });
+        }
+        await page.reload();
+        assert.equal((await read(page)).modules.medbay, 3);
+        assert.equal((await read(page)).modules.solar, 3);
+        await page.locator("#settings-button").click();
+        await page.locator(".timing-panel summary").click();
+        assert.match(
+          await page.locator(".timing-panel").innerText(),
+          /历史用时不补写/,
+        );
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth > innerWidth,
+          ),
+          false,
+        );
+      },
+    );
+    const forecast = ready();
+    forecast.buildings = { drone: 9, sail: 24, forge: 2, relay: 0 };
+    forecast.dust = 1000000;
+    forecast.research = D.RESEARCH.map((r) => r.id);
+    forecast.modules = { medbay: 3, solar: 2 };
+    forecast.equipped = ["medbay", "solar"];
+    forecast.totalCores = forecast.cores = 16;
+    await scenario(
+      "fleet forecasts: selected batch updates gains and payback; actual purchase crosses a milestone with the predicted production",
+      { [S.KEY]: JSON.stringify(forecast) },
+      async (page) => {
+        await page.locator('#navigation [data-id="fleet"]').click();
+        const gain = page.locator('[data-buy-effect="drone"]');
+        const single = await gain.innerText();
+        assert.match(single, /^增产 \+/);
+        assert.match(
+          await page.locator('[data-buy-payback="drone"]').innerText(),
+          /^回本约 /,
+        );
+        await page.locator('[data-action="mode"][data-id="10"]').click();
+        assert.notEqual(await gain.innerText(), single);
+        assert.match(
+          await page.locator('[data-buy-id="drone"]').innerText(),
+          /×10/,
+        );
+        if (screenshotDir)
+          await page.screenshot({
+            path: path.join(screenshotDir, "fleet-forecast.png"),
+            fullPage: true,
+          });
+        await page.locator('[data-action="mode"][data-id="1"]').click();
+        assert.equal(await gain.innerText(), single);
+        const expected = structuredClone(forecast);
+        E.buy(expected, "drone");
+        await page.locator('[data-buy-id="drone"]').click();
+        const saved = await read(page);
+        assert.equal(saved.buildings.drone, 10);
+        assert.equal(E.productionRate(saved), E.productionRate(expected));
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          assert.equal(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth > innerWidth,
+            ),
+            false,
+          );
+        }
+      },
+    );
+    const reportFirst = ready();
+    reportFirst.buildings.drone = 1;
+    reportFirst.run.routeChosen = false;
+    reportFirst.run.dust = 0;
+    reportFirst.result = {
+      id: "wreck",
+      story: "hospital",
+      succeeded: true,
+      dust: 10,
+      samples: 2,
+      module: null,
+    };
+    await scenario(
+      "report goal: outranks early construction and route choice; keyboard activation focuses the reachable report",
+      { [S.KEY]: JSON.stringify(reportFirst) },
+      async (page) => {
+        assert.equal(
+          await page.locator("#next-goal-title").innerText(),
+          D.STORIES.hospital.title,
+        );
+        const button = page.locator('#main [data-goal-focus="report"]');
+        await button.focus();
+        await page.keyboard.press("Enter");
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "report",
+        );
+        assert.ok(await page.locator("#report").isVisible());
+        await page.locator('[data-action="claim"][data-id="preserve"]').click();
+        assert.equal((await read(page)).result, null);
+        assert.equal((await read(page)).lore[0].choice, "preserve");
+        assert.equal(
+          await page
+            .locator('#navigation [data-id="home"]')
+            .getAttribute("aria-current"),
+          "page",
+        );
+        assert.match(
+          await page.locator("#next-goal-title").innerText(),
+          /航次的方向/,
+        );
+      },
+    );
+    const waiting = ready();
+    waiting.dust = 0;
+    waiting.research = ["laser"];
+    waiting.lore = [{ story: "hospital", choice: "preserve" }];
+    await scenario(
+      "live ETA and local timing: income enables a purchase, research is recorded, and exported timing distinguishes offline from foreground",
+      { [S.KEY]: JSON.stringify(waiting) },
+      async (page) => {
+        assert.match(await page.locator("[data-goal-eta]").innerText(), /约 /);
+        await page.locator('#main [data-goal-focus="research-panels"]').click();
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "research-panels",
+        );
+        assert.match(
+          await page.locator('[data-buy-wait="drone"]').innerText(),
+          /还需约 /,
+        );
+        await page.clock.runFor(5000);
+        assert.equal(
+          await page.locator('[data-buy-wait="drone"]').innerText(),
+          "",
+        );
+        assert.equal(
+          await page.locator('[data-buy-id="drone"]').isEnabled(),
+          true,
+        );
+        await page
+          .locator('[data-action="research"][data-id="panels"]')
+          .click();
+        const active = (await read(page)).timing;
+        assert.equal(active.events.research.foregroundSeconds, 5);
+        assert.equal(active.offlineSeconds, 0);
+        await page.clock.fastForward(60000);
+        await page.locator("#settings-button").click();
+        await page.locator(".timing-panel summary").click();
+        assert.equal(
+          await page.locator('[data-timing-active="research"]').innerText(),
+          "5 秒",
+        );
+        assert.match(
+          await page.locator("[data-timing-total]").innerText(),
+          /离线 1 分 0 秒/,
+        );
+        const downloading = page.waitForEvent("download");
+        await page.locator('[data-action="export"]').click();
+        const download = await downloading;
+        const exported = JSON.parse(
+          fs.readFileSync(await download.path(), "utf8"),
+        );
+        assert.equal(exported.timing.events.research.foregroundSeconds, 5);
+        assert.equal(exported.timing.offlineSeconds, 60);
+        await page.setViewportSize({ width: 375, height: 900 });
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth > innerWidth,
+          ),
+          false,
+        );
+        if (screenshotDir)
+          await page.screenshot({
+            path: path.join(screenshotDir, "local-timing.png"),
+            fullPage: true,
+          });
+      },
+    );
+    const editing = ready();
+    editing.rebirths = 2;
+    editing.automation.enabled = true;
+    await scenario(
+      "automatic construction preserves an unfinished reserve input and its keyboard focus",
+      { [S.KEY]: JSON.stringify(editing) },
+      async (page) => {
+        await page.locator('#navigation [data-id="fleet"]').click();
+        const reserve = page.locator('[data-config="reserve"]');
+        await reserve.fill("200");
+        const before = Object.values((await read(page)).buildings).reduce(
+          (a, b) => a + b,
+          0,
+        );
+        await page.clock.runFor(2000);
+        assert.equal(await reserve.inputValue(), "200");
+        assert.equal(
+          await page.evaluate(() => document.activeElement.dataset.config),
+          "reserve",
+        );
+        await page.keyboard.type("00");
+        await page.keyboard.press("Tab");
+        const saved = await read(page);
+        assert.equal(saved.automation.reserve, 20000);
+        assert.ok(
+          Object.values(saved.buildings).reduce((a, b) => a + b, 0) > before,
+        );
+      },
+    );
     console.log(
       `v3 browser ok: ${checks} complete flows; identity/content/assets/console checked in every flow`,
     );

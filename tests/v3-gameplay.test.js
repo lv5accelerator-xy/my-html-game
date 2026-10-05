@@ -300,4 +300,276 @@ test("untrusted save text cannot become executable journal markup or unlock unkn
   // Rendering escapes journal text; browser coverage verifies this with a malicious imported journal.
   assert.equal(s.journal[0].text, raw.journal[0].text);
 });
+test("every story choice permits later crafting and upgrading without changing the choice or repeating rewards", () => {
+  for (const [story, id] of [
+    ["hospital", "medbay"],
+    ["garden", "solar"],
+  ]) {
+    for (const choice of D.STORIES[story].choices) {
+      const s = ready();
+      s.samples = 50;
+      assert.equal(E.moduleOffer(s, id).unlocked, false);
+      assert.equal(E.buildModule(s, id), false);
+      s.result = {
+        id: story === "hospital" ? "wreck" : "garden",
+        story,
+        succeeded: true,
+        dust: 50,
+        samples: 2,
+        module: null,
+      };
+      assert.ok(E.claimMission(s, choice.id));
+      const dust = s.dust,
+        lore = structuredClone(s.lore),
+        choices = s.run.choices;
+      const initialSamples = s.samples,
+        initialLevel = s.modules[id] || 0;
+      while ((s.modules[id] || 0) < D.MODULE_MAX_LEVEL)
+        assert.ok(E.buildModule(s, id));
+      assert.equal(
+        initialSamples - s.samples,
+        D.MODULE_UPGRADE_SAMPLES.reduce((a, b) => a + b, 0) +
+          (initialLevel ? 0 : D.MODULES.find((m) => m.id === id).samples),
+      );
+      assert.equal(E.buildModule(s, id), false);
+      assert.equal(E.claimMission(s, choice.id), false);
+      assert.deepEqual(s.lore, lore);
+      assert.equal(s.run.choices, choices);
+      assert.equal(s.dust, dust);
+      assert.equal(s.modules[id], 3);
+    }
+  }
+});
+test("workshop costs come from real safe exploration, all five modules reach level three, and full slots are preserved", () => {
+  const s = ready();
+  s.run.route = "explore";
+  assert.equal(E.buildModule(s, "battery"), false);
+  assert.ok(E.research(s, "navigation"));
+  function voyage(id, choice) {
+    assert.ok(E.startMission(s, id));
+    E.advance(s, s.lastAt + (s.mission.end - s.clock) * 1000, {
+      offline: true,
+    });
+    assert.ok(E.claimMission(s, choice));
+  }
+  voyage("wreck", "preserve");
+  s.cores = s.totalCores = 4;
+  assert.ok(E.repairPort(s));
+  voyage("garden", "scrap");
+  for (const m of D.MODULES) {
+    while ((s.modules[m.id] || 0) < 3) {
+      const offer = E.moduleOffer(s, m.id);
+      while (s.samples < offer.samples) voyage("belt");
+      const slots = [...s.equipped];
+      assert.ok(E.buildModule(s, m.id));
+      if (slots.length === 2) assert.deepEqual(s.equipped, slots);
+    }
+  }
+  assert.equal(s.equipped.length, 2);
+  assert.deepEqual(s.lore, [
+    { story: "hospital", choice: "preserve" },
+    { story: "garden", choice: "scrap" },
+  ]);
+  const before = structuredClone(s);
+  assert.equal(E.buildModule(s, "battery"), false);
+  assert.equal(E.buildModule(s, "unknown"), false);
+  assert.deepEqual(s, before);
+  s.samples = 0;
+  s.modules.nav = 1;
+  const poor = structuredClone(s);
+  assert.equal(E.buildModule(s, "nav"), false);
+  assert.deepEqual(s, poor);
+});
+test("purchase previews match actual milestone, research, core, route and equipped effects without mutating state", () => {
+  for (const route of D.ROUTES) {
+    for (const id of ["drone", "sail"]) {
+      const s = ready();
+      s.run.route = route.id;
+      s.buildings = { drone: 9, sail: 24, forge: 2, relay: 0 };
+      s.totalCores = 16;
+      s.research = ["panels", "network", "compact"];
+      s.modules = { medbay: 3, solar: 2 };
+      s.equipped = ["medbay", "solar"];
+      assert.ok(E.startMission(s, "belt"));
+      s.burstUntil = s.clock + 20;
+      const before = structuredClone(s),
+        rate = E.productionRate(s);
+      const p = E.purchasePreview(s, id, 10);
+      assert.deepEqual(s, before, "preview cannot change progress or RNG");
+      assert.equal(E.buy(s, id, 10), p.count);
+      assert.ok(Math.abs(E.productionRate(s) - rate - p.delta) < 1e-8);
+      assert.equal(before.dust - s.dust, p.cost);
+      assert.equal(
+        p.payback,
+        Math.ceil(p.cost / (p.delta / 2)),
+        "burst is excluded from payback",
+      );
+    }
+  }
+  const poor = E.createState(0);
+  poor.dust = 12;
+  assert.equal(E.purchasePreview(poor, "drone", "max").count, 1);
+  assert.equal(E.purchasePreview(poor, "sail").count, 0);
+  poor.buildings.drone = 10000;
+  assert.equal(E.purchasePreview(poor, "drone").count, 0);
+});
+test("income ETA accounts for burst expiry and mission diversion ending and stays finite or unknown", () => {
+  const s = E.createState(0);
+  assert.equal(E.incomeEta(s, 12), null);
+  assert.equal(E.incomeEta(s, 0), 0);
+  s.buildings.drone = 1;
+  s.run.dust = 600;
+  s.run.route = "explore";
+  assert.ok(E.startMission(s, "belt"));
+  s.burstUntil = 20;
+  const source = structuredClone(s);
+  for (const missing of [10, 50, 100]) {
+    const predicted = E.incomeEta(s, missing);
+    const actual = structuredClone(s),
+      initial = actual.dust;
+    while (actual.dust - initial < missing)
+      E.advance(actual, actual.lastAt + 1000, { offline: true });
+    assert.equal(predicted, actual.clock);
+  }
+  assert.deepEqual(s, source);
+  assert.equal(E.incomeEta(s, Infinity), null);
+});
+test("unclaimed reports outrank construction, routes and jumps, and every next goal remains reachable", () => {
+  for (const drone of [0, 1, 10, 50]) {
+    for (const dust of [0, 599, 600, D.PRESTIGE_DUST]) {
+      const s = ready();
+      s.buildings.drone = drone;
+      s.run.dust = dust;
+      s.run.routeChosen = false;
+      s.result = {
+        id: "wreck",
+        story: "hospital",
+        succeeded: true,
+        dust: 10,
+        samples: 2,
+        module: null,
+      };
+      const goal = E.nextGoal(s);
+      assert.equal(goal.action, "explore");
+      assert.equal(goal.focus, "report");
+      assert.equal(goal.eta, 0);
+      assert.ok(E.reachable(s, goal.action));
+      s.result = null;
+      assert.ok(E.reachable(s, E.nextGoal(s).action));
+    }
+  }
+  const s = ready();
+  assert.equal(E.nextGoal(s).focus, "research-laser");
+  s.research = ["laser"];
+  assert.equal(E.nextGoal(s).action, "explore");
+  s.lore = [{ story: "hospital", choice: "preserve" }];
+  s.research = D.RESEARCH.map((r) => r.id);
+  assert.match(E.nextGoal(s).focus, /^building-/);
+  assert.ok(Number.isFinite(E.nextGoal(s).eta));
+});
+test("local milestone timings distinguish visible and offline seconds, record once and survive a jump and reload", () => {
+  const s = E.createState(0);
+  E.advance(s, 5000, { active: true });
+  s.dust = 12;
+  assert.equal(E.buy(s, "drone"), 1);
+  const firstDrone = structuredClone(s.timing.events.drone);
+  assert.deepEqual(firstDrone, {
+    elapsedSeconds: 5,
+    foregroundSeconds: 5,
+    offlineSeconds: 0,
+    run: 1,
+    source: "manual",
+  });
+  E.advance(s, 105000, { offline: true });
+  s.run.dust = 600;
+  assert.ok(E.research(s, "laser"));
+  assert.equal(s.timing.events.research.elapsedSeconds, 105);
+  assert.equal(s.timing.events.research.foregroundSeconds, 5);
+  assert.equal(s.timing.events.research.offlineSeconds, 100);
+  s.dust = 100;
+  E.buy(s, "drone");
+  assert.deepEqual(s.timing.events.drone, firstDrone);
+  E.startMission(s, "wreck");
+  E.advance(s, s.lastAt + 90000, { active: true });
+  E.claimMission(s, "preserve");
+  s.run.dust = D.PRESTIGE_DUST;
+  assert.equal(E.prestige(s), 4);
+  const timing = structuredClone(s.timing);
+  assert.equal(timing.events.report.foregroundSeconds, 95);
+  assert.equal(timing.events.prestige.run, 1);
+  assert.deepEqual(E.sanitize(s, s.lastAt).timing, timing);
+  E.advance(s, s.lastAt + 1000, { active: true });
+  E.buy(s, "drone");
+  assert.deepEqual(s.timing.events.drone, firstDrone);
+  const auto = ready();
+  auto.rebirths = 4;
+  E.configure(auto, { enabled: true, research: true, dispatch: true });
+  E.startMission(auto, "belt");
+  E.advance(auto, auto.lastAt + 120000, { offline: true });
+  assert.equal(auto.timing.events.drone.source, "offline");
+  assert.equal(auto.timing.events.research.source, "offline");
+  assert.equal(auto.timing.events.report.source, "offline");
+  assert.equal(auto.timing.foregroundSeconds, 0);
+});
+test("v3.0 saves retain inventory, pending missions and archives; missing timing data starts now without fabricated events", () => {
+  const raw = ready();
+  delete raw.timing;
+  raw.modules = { medbay: 2, solar: 1 };
+  raw.equipped = ["medbay", "solar"];
+  raw.lore = [
+    { story: "hospital", choice: "preserve" },
+    { story: "garden", choice: "scrap" },
+  ];
+  raw.samples = 17;
+  raw.clock = 123;
+  raw.legacyArchive = {
+    buildings: { lab: 20 },
+    expedition: { active: true },
+    season: { unclaimed: [7] },
+  };
+  E.startMission(raw, "belt");
+  const restored = E.sanitize(raw, raw.lastAt);
+  for (const key of [
+    "dust",
+    "cores",
+    "samples",
+    "modules",
+    "equipped",
+    "lore",
+    "buildings",
+    "research",
+    "mission",
+    "legacyArchive",
+  ])
+    assert.deepEqual(restored[key], raw[key], key);
+  assert.equal(restored.timing.sinceClock, 123);
+  assert.equal(restored.timing.late, true);
+  assert.deepEqual(restored.timing.events, {});
+  assert.ok(E.moduleOffer(restored, "medbay").available);
+  restored.timing = {
+    sinceClock: -100,
+    foregroundSeconds: Infinity,
+    offlineSeconds: 999,
+    events: {
+      drone: {
+        elapsedSeconds: 999,
+        foregroundSeconds: 999,
+        offlineSeconds: 999,
+        run: -1,
+        source: "manual",
+      },
+      research: { source: '<img src=x onerror="alert(1)">' },
+      unknown: { source: "manual" },
+    },
+  };
+  const cleaned = E.sanitize(restored, restored.lastAt).timing;
+  assert.equal(
+    cleaned.foregroundSeconds + cleaned.offlineSeconds <= restored.clock,
+    true,
+  );
+  assert.equal(cleaned.events.drone.elapsedSeconds, restored.clock);
+  assert.equal(cleaned.events.drone.offlineSeconds, 0);
+  assert.equal(cleaned.events.research, undefined);
+  assert.equal(cleaned.events.unknown, undefined);
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

@@ -7,7 +7,7 @@
   "use strict";
   return Object.freeze({
     VERSION: 32,
-    GAME_VERSION: "3.0.0-preview.1",
+    GAME_VERSION: "3.1.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -50,6 +50,8 @@
       },
     ],
     MILESTONES: [10, 25, 50],
+    MODULE_MAX_LEVEL: 3,
+    MODULE_UPGRADE_SAMPLES: [6, 12],
     ROUTES: [
       {
         id: "industry",
@@ -111,17 +113,36 @@
       },
     ],
     MODULES: [
-      { id: "battery", name: "储能矩阵", detail: "每级全舰队产量 +12%。" },
-      { id: "scanner", name: "残骸透镜", detail: "每级扫描与信标收益 +25%。" },
+      {
+        id: "battery",
+        name: "储能矩阵",
+        samples: 4,
+        detail: "每级全舰队产量 +12%。",
+      },
+      {
+        id: "scanner",
+        name: "残骸透镜",
+        samples: 4,
+        detail: "每级扫描与信标收益 +25%。",
+      },
       {
         id: "medbay",
         name: "医疗舱电源",
+        samples: 4,
+        story: "hospital",
         detail: "每级全舰队产量 +10%。来自废弃医院船。",
       },
-      { id: "nav", name: "惯性导航仪", detail: "每级探索时间缩短 10%。" },
+      {
+        id: "nav",
+        name: "惯性导航仪",
+        samples: 6,
+        detail: "每级探索时间缩短 10%。",
+      },
       {
         id: "solar",
         name: "温室集光阵",
+        samples: 6,
+        story: "garden",
         detail: "每级光帆采集器产量 +30%。来自失落温室。",
       },
     ],

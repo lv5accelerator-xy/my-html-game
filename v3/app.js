@@ -70,8 +70,10 @@
     page = "home",
     buyMode = "1",
     signature = "",
+    rebuilding = false,
     toastTimer,
-    dialogOrigin;
+    dialogOrigin,
+    wasVisible = !document.hidden;
   const dialog = $("#dialog");
   function toast(message) {
     $("#toast").textContent = message;
@@ -169,22 +171,42 @@
       `<p>进度保存在这台设备。跃迁不会清除舰装、故事、航站修复和永久能力。</p>${blocked ? '<p class="save-warning">自动保存已暂停。请先导出记录，再恢复备份或重新启航。</p>' : ""}
       <div class="settings-links"><button ${action("export")}>导出航线记录</button><button ${action("import")}>导入记录</button><input id="import-file" type="file" accept=".json,application/json" hidden>${backup ? `<button ${action("backup")}>恢复上次备份</button>` : ""}</div>
       ${state.legacyArchive ? "<p>继承的旧航站记录已完整封存。原版的远征和活动奖励可在旧版继续处理。</p>" : ""}
-      <div class="settings-links"><a href="../">返回旧版航站</a><button ${action("legacy")}>继承本机旧航站</button><button ${action("reset")}>重新启航</button></div><p><small>拾荒航线 ${D.GAME_VERSION} · 离线结算最多 ${D.OFFLINE_SECONDS / 3600} 小时。故事选择不会自动代选。</small></p>`,
+      <div class="settings-links"><a href="../">返回旧版航站</a><button ${action("legacy")}>继承本机旧航站</button><button ${action("reset")}>重新启航</button></div>
+      <details class="timing-panel"><summary>本机航线用时</summary><p>前台用时按页面可见的秒数记录；航线用时包含已结算的离线时间。${state.timing.late ? "从本版本接续后开始记录，历史用时不补写。" : "记录从这条新航线启航时开始。"} 记录随导出文件保存。</p><p data-timing-total></p><table><caption>${state.timing.late ? "本版本首次记录" : "首次抵达"}</caption><thead><tr><th scope="col">节点</th><th scope="col">前台用时</th><th scope="col">航线用时</th></tr></thead><tbody>${[
+        ["drone", "建造无人机"],
+        ["research", "完成研究"],
+        ["report", "领取报告"],
+        ["prestige", "完成跃迁"],
+      ]
+        .map(
+          ([id, label]) =>
+            `<tr><th scope="row">${label}<small data-timing-source="${id}"></small></th><td data-timing-active="${id}"></td><td data-timing-elapsed="${id}"></td></tr>`,
+        )
+        .join("")}</tbody></table></details>
+      <p><small>拾荒航线 ${D.GAME_VERSION} · 离线结算最多 ${D.OFFLINE_SECONDS / 3600} 小时。故事选择不会自动代选。</small></p>`,
     );
+    updateNumbers();
   }
   $("#settings-button").addEventListener("click", settings);
-  function navigate(target) {
+  function navigate(target, focusId) {
     if (!E.reachable(state, target)) return;
     page = target;
     signature = "";
     render();
     $("#main").focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
+    if (focusId) {
+      const destination = document.getElementById(focusId);
+      destination?.focus({ preventScroll: true });
+      destination?.scrollIntoView({ block: "center", behavior: "instant" });
+    }
   }
   function quote(id) {
-    let count = buyMode === "max" ? 50 : Number(buyMode);
-    while (count > 1 && E.buildingCost(state, id, count) > state.dust) count--;
-    return { count, cost: E.buildingCost(state, id, count) };
+    return E.purchasePreview(
+      state,
+      id,
+      buyMode === "max" ? "max" : Number(buyMode),
+    );
   }
   function home() {
     const goal = E.nextGoal(state),
@@ -192,7 +214,7 @@
     return `<div class="home-layout"><section class="scene" aria-label="归航航站"><div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
       <button class="beacon-button" ${action("beacon")} ${state.beacon.expiresAt ? "" : "hidden"}>捕获金色信标<small>剩余 <span data-beacon-seconds>15</span> 秒</small></button>
       <div class="scan-area"><button class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
-      <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2><h2 id="next-goal-title">${goal.title}</h2><p>${goal.detail}</p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)}>${goal.label} →</button>
+      <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2><h2 id="next-goal-title">${goal.title}</h2><p>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
       <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
       ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}`;
   }
@@ -206,10 +228,10 @@
   function automation() {
     if (!E.capability(state, "autoBuy"))
       return `<p class="empty">第一次跃迁后，会有无人机替你继续购买设施。</p>`;
-    return `<section class="automation"><h3>舰队自动化</h3><div class="control-row"><label><input type="checkbox" data-config="enabled" ${state.automation.enabled ? "checked" : ""}>自动购买 · 每秒购买 1 艘</label></div>
-      ${E.capability(state, "planning") ? `<div class="control-row"><label>购买策略 <select data-config="policy"><option value="balanced" ${state.automation.policy === "balanced" ? "selected" : ""}>产量回本优先</option><option value="milestone" ${state.automation.policy === "milestone" ? "selected" : ""}>接近里程碑优先</option><option value="advanced" ${state.automation.policy === "advanced" ? "selected" : ""}>高级设施优先</option></select></label><label>保留星尘 <input data-config="reserve" type="number" min="0" max="1000000000000" step="100" value="${state.automation.reserve}"></label></div>` : "<p><small>第二次跃迁后可设置购买优先级与保留预算。</small></p>"}
-      ${E.capability(state, "autoResearch") ? `<div class="control-row"><label><input type="checkbox" data-config="research" ${state.automation.research ? "checked" : ""}>自动研究 · 每 5 秒完成一项可负担科技</label></div>` : ""}
-      ${E.capability(state, "autoDispatch") ? `<div class="control-row"><label><input type="checkbox" data-config="dispatch" ${state.automation.dispatch ? "checked" : ""}>重复派遣安全探索 · 故事等待手动选择</label></div>` : ""}</section>`;
+    return `<section class="automation"><h3>舰队自动化</h3><div class="control-row"><label><input type="checkbox" data-config="enabled" data-focus="config-enabled" ${state.automation.enabled ? "checked" : ""}>自动购买 · 每秒购买 1 艘</label></div>
+      ${E.capability(state, "planning") ? `<div class="control-row"><label>购买策略 <select data-config="policy" data-focus="config-policy"><option value="balanced" ${state.automation.policy === "balanced" ? "selected" : ""}>产量回本优先</option><option value="milestone" ${state.automation.policy === "milestone" ? "selected" : ""}>接近里程碑优先</option><option value="advanced" ${state.automation.policy === "advanced" ? "selected" : ""}>高级设施优先</option></select></label><label>保留星尘 <input data-config="reserve" data-focus="config-reserve" type="number" min="0" max="1000000000000" step="100" value="${state.automation.reserve}"></label></div>` : "<p><small>第二次跃迁后可设置购买优先级与保留预算。</small></p>"}
+      ${E.capability(state, "autoResearch") ? `<div class="control-row"><label><input type="checkbox" data-config="research" data-focus="config-research" ${state.automation.research ? "checked" : ""}>自动研究 · 每 5 秒完成一项可负担科技</label></div>` : ""}
+      ${E.capability(state, "autoDispatch") ? `<div class="control-row"><label><input type="checkbox" data-config="dispatch" data-focus="config-dispatch" ${state.automation.dispatch ? "checked" : ""}>重复派遣安全探索 · 故事等待手动选择</label></div>` : ""}</section>`;
   }
   function fleet() {
     return `<div class="page"><div class="page-header"><div><h1>把残骸，变成舰队。</h1><p>每种设施在 10、25、50 艘时产量翻倍。研究与路线会改变它们如何协同。</p></div><div class="buy-modes" aria-label="每次购买上限">${[
@@ -227,9 +249,11 @@
       )
         .map(
           (b) =>
-            `<div class="building-row"><div><h3>${b.name}</h3><p>${b.detail}</p><div class="milestone-track">${D.MILESTONES.map((n) => `<span class="${state.buildings[b.id] >= n ? "achieved" : ""}">${n} 艘 ×2</span>`).join("")}</div></div><div class="building-stats"><strong>${state.buildings[b.id]} 艘</strong><small>本设施基础 ${number(b.rate * state.buildings[b.id] * E.milestone(state.buildings[b.id]))} / 秒</small></div><div class="row-action"><button class="outline" ${action("buy", b.id)} data-buy-id="${b.id}"></button><small>下个里程碑 ${D.MILESTONES.find((n) => n > state.buildings[b.id]) || "已完成"}</small></div></div>`,
+            `<div class="building-row" id="building-${b.id}" tabindex="-1"><div><h3>${b.name}</h3><p>${b.detail}</p><div class="milestone-track">${D.MILESTONES.map((n) => `<span class="${state.buildings[b.id] >= n ? "achieved" : ""}">${n} 艘 ×2</span>`).join("")}</div></div><div class="building-stats"><strong>${state.buildings[b.id]} 艘</strong><small>本设施基础 ${number(b.rate * state.buildings[b.id] * E.milestone(state.buildings[b.id]))} / 秒</small></div><div class="row-action"><button class="outline" ${action("buy", b.id)} data-buy-id="${b.id}"></button><small class="purchase-gain" data-buy-effect="${b.id}"></small><small data-buy-payback="${b.id}"></small><small data-buy-wait="${b.id}"></small><small>下个里程碑 ${D.MILESTONES.find((n) => n > state.buildings[b.id]) || "已完成"}</small></div></div>`,
         )
-        .join("")}</section>
+        .join(
+          "",
+        )}</section><p class="estimate-note">增产包含路线、研究、舰装和里程碑；回本按常态产量估算。等待时间按现有舰队估算，自动购买与研究会使用星尘，实际等待会变化。</p>
       ${
         state.run.dust >= 40
           ? `<section><div class="section-title"><h2>航站研究</h2><small>本航次有效</small></div>${D.RESEARCH.filter(
@@ -237,7 +261,7 @@
             )
               .map(
                 (r) =>
-                  `<div class="research-row"><div><h3>${r.name}</h3><p>${r.detail}</p></div><small>${number(r.cost)} 星尘</small><div class="row-action"><button ${action("research", r.id)} ${state.research.includes(r.id) ? "disabled" : `data-min-dust="${r.cost}"`}>${state.research.includes(r.id) ? "已完成" : "研究"}</button></div></div>`,
+                  `<div class="research-row" id="research-${r.id}" tabindex="-1"><div><h3>${r.name}</h3><p>${r.detail}</p></div><small>${number(r.cost)} 星尘</small><div class="row-action"><button ${action("research", r.id)} ${state.research.includes(r.id) ? "disabled" : `data-min-dust="${r.cost}"`}>${state.research.includes(r.id) ? "已完成" : "研究"}</button></div></div>`,
               )
               .join("")}</section>`
           : ""
@@ -248,7 +272,7 @@
     if (!state.result) return "";
     const r = state.result,
       story = r.story && D.STORIES[r.story];
-    return `<section class="report" aria-label="归航报告"><h2>${story ? story.title : D.MISSIONS.find((m) => m.id === r.id).name + " · 归航报告"}</h2><p>${story ? story.text : r.succeeded ? "探索船安全归航，回收物已经送达。" : "裂隙干扰超出预期，探索船安全撤回，带回 1 份样本。"}</p><p>回收 ${number(r.dust)} 星尘 · ${r.samples} 份样本${r.module ? ` · 舰装「${D.MODULES.find((m) => m.id === r.module).name}」` : ""}</p>
+    return `<section class="report" id="report" tabindex="-1" aria-label="归航报告"><h2>${story ? story.title : D.MISSIONS.find((m) => m.id === r.id).name + " · 归航报告"}</h2><p>${story ? story.text : r.succeeded ? "探索船安全归航，回收物已经送达。" : "裂隙干扰超出预期，探索船安全撤回，带回 1 份样本。"}</p><p>回收 ${number(r.dust)} 星尘 · ${r.samples} 份样本${r.module ? ` · 舰装「${D.MODULES.find((m) => m.id === r.module).name}」` : ""}</p>
       ${story ? story.choices.map((c) => `<button class="story-choice" ${action("claim", c.id)}><strong>${c.name}</strong><small>${c.detail}</small></button>`).join("") : `<button class="primary" ${action("claim")}>收取回收物</button>`}</section>`;
   }
   function explore() {
@@ -264,14 +288,26 @@
       <section class="port-panel"><span class="port-progress">星港修复 ${state.starport} / ${D.PORT.length}</span><h2>${port ? port.name : "这里终于可以成为家。"}</h2><p>${port ? `需要 ${port.cores} 星核与 ${port.samples} 份样本。你拥有 ${number(state.cores)} 星核与 ${number(state.samples)} 份样本。` : D.PORT.at(-1).text}</p>${port ? `<button class="outline" ${action("port")} ${state.cores >= port.cores && state.samples >= port.samples ? "" : "disabled"}>修复航站</button>` : "<p>归航星港已建成。你可以继续选择不同航线，收集故事与舰装。</p>"}</section>
       <section><div class="section-title"><h2>随舰装备</h2><small>${state.equipped.length} / 2 槽位 · 跃迁保留</small></div>${
         D.MODULES.filter((m) => state.modules[m.id])
-          .map(
-            (m) =>
-              `<div class="module-row"><div><h3>${m.name}</h3><p>${m.detail}</p></div><small>${state.modules[m.id]} / 3 级</small><div class="row-action"><button ${action("equip", m.id)} ${!state.equipped.includes(m.id) && state.equipped.length >= 2 ? "disabled" : ""}>${state.equipped.includes(m.id) ? "卸下" : "装备"}</button></div></div>`,
-          )
+          .map((m) => {
+            const offer = E.moduleOffer(state, m.id);
+            return `<div class="module-row" data-module-id="${m.id}"><div><h3>${m.name}</h3><p>${m.detail}</p></div><small>${state.modules[m.id]} / ${D.MODULE_MAX_LEVEL} 级</small><div class="row-action"><button ${action("equip", m.id)} ${!state.equipped.includes(m.id) && state.equipped.length >= 2 ? "disabled" : ""}>${state.equipped.includes(m.id) ? "卸下" : "装备"}</button>${offer.level < D.MODULE_MAX_LEVEL ? `<button class="outline" ${action("module", m.id)} ${offer.available ? "" : "disabled"}>升级 · ${offer.samples} 样本</button>` : "<small>已达到最高等级</small>"}</div></div>`;
+          })
           .join("") ||
         '<p class="empty">回应医院船的信号，或进入裂隙寻找第一件舰装。</p>'
       }</section>
-      <details><summary>已收藏的航线故事 · ${state.lore.length} / 2</summary>${state.lore.map((r) => `<div class="lore-entry"><h3>${D.STORIES[r.story].title}</h3><p>${D.STORIES[r.story].text}</p><p>你的选择：${D.STORIES[r.story].choices.find((c) => c.id === r.choice).name}</p></div>`).join("") || '<p class="empty">你的每一个决定，都将留在这里。</p>'}</details></div>`;
+      ${workshop()}<details data-details-key="lore"><summary data-focus="details-lore">已收藏的航线故事 · ${state.lore.length} / 2</summary>${state.lore.map((r) => `<div class="lore-entry"><h3>${D.STORIES[r.story].title}</h3><p>${D.STORIES[r.story].text}</p><p>你的选择：${D.STORIES[r.story].choices.find((c) => c.id === r.choice).name}</p></div>`).join("") || '<p class="empty">你的每一个决定，都将留在这里。</p>'}</details></div>`;
+  }
+  function workshop() {
+    const missing = D.MODULES.filter((m) => !state.modules[m.id]);
+    return `<details class="workshop" data-details-key="workshop"><summary data-focus="details-workshop">舰装工坊 · ${number(state.samples)} 份样本</summary><p>探索样本可以装配缺少的舰装，也可以将已有舰装升至 ${D.MODULE_MAX_LEVEL} 级。处理过故事的任意选择，都能开放对应图纸。装配后可在上方替换装备，最多同时装备 2 件。</p>${
+      missing
+        .map((m) => {
+          const offer = E.moduleOffer(state, m.id);
+          return `<div class="module-row" data-module-id="${m.id}"><div><h3>${m.name}</h3><p>${m.detail}</p>${offer.unlocked ? "" : `<p class="blueprint-lock">${offer.reason}</p>`}</div><small>${offer.unlocked ? `${offer.samples} 份样本` : "图纸未开放"}</small><div class="row-action">${offer.unlocked ? `<button class="outline" ${action("module", m.id)} ${offer.available ? "" : "disabled"}>装配舰装</button>` : ""}</div></div>`;
+        })
+        .join("") ||
+      '<p class="empty">所有舰装均已装配。可以继续升级已有舰装。</p>'
+    }</details>`;
   }
   function jump() {
     const gain = E.prestigeGain(state);
@@ -288,8 +324,27 @@
     ).name;
     document.querySelectorAll("[data-buy-id]").forEach((button) => {
       const p = quote(button.dataset.buyId);
-      button.textContent = `建造${p.count > 1 ? ` ×${p.count}` : ""} · ${number(p.cost)} 星尘`;
-      button.disabled = p.cost > state.dust;
+      button.textContent = p.count
+        ? `建造${p.count > 1 ? ` ×${p.count}` : ""} · ${number(p.cost)} 星尘`
+        : "建造已达上限";
+      button.disabled = !p.count || p.cost > state.dust;
+      const field = (name, text) => {
+        const el = $(`[data-buy-${name}="${button.dataset.buyId}"]`);
+        if (el) el.textContent = text;
+      };
+      field("effect", p.count ? `增产 +${number(p.delta)} / 秒` : "");
+      field(
+        "payback",
+        p.payback === null ? "" : `回本约 ${duration(p.payback)}`,
+      );
+      field(
+        "wait",
+        !p.count || p.wait === 0
+          ? ""
+          : p.wait === null
+            ? "扫描信标积累星尘"
+            : `还需约 ${duration(p.wait)}`,
+      );
     });
     document.querySelectorAll("[data-min-dust]").forEach((button) => {
       button.disabled = state.dust < Number(button.dataset.minDust);
@@ -303,6 +358,14 @@
       el.textContent = number(state.run.dust);
     });
     const goal = E.nextGoal(state);
+    if ($("[data-goal-eta]"))
+      $("[data-goal-eta]").textContent =
+        goal.etaHint ||
+        (goal.eta === 0
+          ? "现在可以处理"
+          : goal.eta === null
+            ? "扫描信标，继续积累星尘"
+            : `按现有舰队，约 ${duration(goal.eta)}`);
     document.querySelectorAll("[data-goal-value]").forEach((el) => {
       el.textContent = number(Math.min(goal.value, goal.target));
     });
@@ -328,8 +391,25 @@
         );
       progress("[data-mission-progress]", (state.clock - m.start) / m.seconds);
     }
+    if ($("[data-timing-total]")) {
+      $("[data-timing-total]").textContent =
+        `累计前台 ${duration(state.timing.foregroundSeconds)} · 离线 ${duration(state.timing.offlineSeconds)}`;
+      for (const id of ["drone", "research", "report", "prestige"]) {
+        const event = state.timing.events[id];
+        $(`[data-timing-active="${id}"]`).textContent = event
+          ? duration(event.foregroundSeconds)
+          : "待记录";
+        $(`[data-timing-elapsed="${id}"]`).textContent = event
+          ? duration(event.elapsedSeconds)
+          : "待记录";
+        $(`[data-timing-source="${id}"]`).textContent = event
+          ? `第 ${event.run} 航次 · ${{ manual: "手动", auto: "自动", offline: "离线自动" }[event.source]}`
+          : "";
+      }
+    }
   }
   function render() {
+    if (rebuilding) return;
     if (!E.reachable(state, page)) page = "home";
     const goal = E.nextGoal(state);
     const tiers = [40, 120, 150, 600, 1500, 2400, 15000].map(
@@ -352,6 +432,7 @@
       state.samples,
       state.equipped,
       state.modules,
+      state.discoveries,
       state.mission,
       state.result,
       state.lore,
@@ -361,30 +442,52 @@
       state.automation,
     ]);
     if (next !== signature) {
-      const focus = document.activeElement?.dataset.focus;
-      const openDetails = Array.from(
-        $("#main").querySelectorAll("details"),
-      ).map((el) => el.open);
-      $("#navigation").innerHTML = [
-        ["home", "航站"],
-        ["fleet", "舰队"],
-        ["explore", "探索"],
-        ["jump", "跃迁"],
-      ]
-        .filter(([id]) => E.reachable(state, id))
-        .map(
-          ([id, label]) =>
-            `<button ${action("nav", id)} class="${page === id ? "active" : ""}" ${page === id ? 'disabled aria-current="page"' : id === "fleet" && !state.buildings.drone && page === "home" ? 'disabled title="从下一个目标启动舰队"' : ""}>${icon(id)}${label}</button>`,
-        )
-        .join("");
-      $("#main").innerHTML = { home, fleet, explore, jump }[page]();
-      Array.from($("#main").querySelectorAll("details")).forEach((el, i) => {
-        el.open = openDetails[i] || false;
-      });
-      if (focus)
-        document
-          .querySelector(`[data-focus="${CSS.escape(focus)}"]`)
-          ?.focus({ preventScroll: true });
+      const active = document.activeElement;
+      const focus = active?.dataset.focus;
+      const hadMainFocus = $("#main").contains(active);
+      const editing = active?.matches('input[data-config][type="number"]')
+        ? active.value
+        : null;
+      const openDetails = new Map(
+        Array.from(
+          $("#main").querySelectorAll("details[data-details-key]"),
+          (el) => [el.dataset.detailsKey, el.open],
+        ),
+      );
+      // Removing a focused input can fire change synchronously. It is still being
+      // edited, so preserve it without committing a budget or entering render twice.
+      rebuilding = true;
+      try {
+        $("#navigation").innerHTML = [
+          ["home", "航站"],
+          ["fleet", "舰队"],
+          ["explore", "探索"],
+          ["jump", "跃迁"],
+        ]
+          .filter(([id]) => E.reachable(state, id))
+          .map(
+            ([id, label]) =>
+              `<button ${action("nav", id)} class="${page === id ? "active" : ""}" ${page === id ? 'disabled aria-current="page"' : id === "fleet" && !state.buildings.drone && page === "home" ? 'disabled title="从下一个目标启动舰队"' : ""}>${icon(id)}${label}</button>`,
+          )
+          .join("");
+        $("#main").innerHTML = { home, fleet, explore, jump }[page]();
+        Array.from(
+          $("#main").querySelectorAll("details[data-details-key]"),
+        ).forEach((el) => {
+          el.open = openDetails.get(el.dataset.detailsKey) || false;
+        });
+        if (focus) {
+          const replacement = document.querySelector(
+            `[data-focus="${CSS.escape(focus)}"]`,
+          );
+          if (replacement && editing !== null) replacement.value = editing;
+          if (replacement && !replacement.disabled)
+            replacement.focus({ preventScroll: true });
+          else if (hadMainFocus) $("#main").focus({ preventScroll: true });
+        }
+      } finally {
+        rebuilding = false;
+      }
       signature = next;
     }
     updateNumbers();
@@ -425,7 +528,7 @@
         toast(`文件未能读取：${error.message}`);
       }
     }
-    if (target.dataset.config) {
+    if (target.dataset.config && !rebuilding) {
       E.configure(state, {
         [target.dataset.config]:
           target.type === "checkbox" ? target.checked : target.value,
@@ -440,7 +543,7 @@
     if (!button || button.disabled) return;
     const { action: kind, id } = button.dataset;
     if (kind === "nav") {
-      navigate(id);
+      navigate(id, button.dataset.goalFocus);
       return;
     }
     if (kind === "cancel") {
@@ -484,7 +587,12 @@
       E.claimMission(state, id || undefined);
       toast("回收物已入库，发现会陪你继续航行。");
     } else if (kind === "equip") E.equip(state, id);
-    else if (kind === "port") {
+    else if (kind === "module") {
+      if (E.buildModule(state, id))
+        toast(
+          `${D.MODULES.find((m) => m.id === id).name}已升至 ${state.modules[id]} 级。${state.equipped.includes(id) ? "舰装效果已生效。" : "可在随舰装备中替换装备。"}`,
+        );
+    } else if (kind === "port") {
       if (E.repairPort(state)) toast("航站的一盏灯，重新亮起了。");
     } else if (kind === "jump") {
       openDialog(
@@ -569,15 +677,18 @@
       `<p>离开期间，航站继续运行了 ${duration(loaded.report.seconds)}${loaded.report.capped ? "（已达到离线结算上限）" : ""}。</p><p>收集 ${number(loaded.report.dust)} 星尘${E.capability(state, "autoBuy") && state.automation.enabled ? "，自动购买也已完成" : ""}。${state.result ? "有一份探索报告在等你。" : ""}</p><div class="dialog-actions"><button class="primary" ${action("cancel")}>继续航线</button></div>`,
     );
   setInterval(() => {
+    const offline = document.hidden || Date.now() - state.lastAt > 30000;
     E.advance(state, Date.now(), {
-      offline: document.hidden || Date.now() - state.lastAt > 30000,
+      offline,
+      active: !offline,
     });
     render();
   }, 250);
   setInterval(save, 5000);
   document.addEventListener("visibilitychange", () => {
     state.beacon.expiresAt = 0;
-    E.advance(state, Date.now(), { offline: true });
+    E.advance(state, Date.now(), { offline: !wasVisible, active: wasVisible });
+    wasVisible = !document.hidden;
     save();
     render();
   });

@@ -1,0 +1,720 @@
+/* No DOM, storage or real-time timers: identical rules online and offline. */
+(function (root, factory) {
+  const data =
+    typeof module === "object" && module.exports
+      ? require("./data.js")
+      : root.SalvageData;
+  const api = factory(data);
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else root.SalvageEngine = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function (D) {
+  "use strict";
+  const byId = (items, id) => items.find((item) => item.id === id);
+  const bounded = (value, max = D.MAX_NUMBER) =>
+    Math.min(max, Math.max(0, Number(value) || 0));
+  const integer = (value, max = 10000) => Math.floor(bounded(value, max));
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const milestone = (count) =>
+    2 ** D.MILESTONES.filter((n) => count >= n).length;
+  const has = (s, id) => s.research.includes(id);
+  const equipped = (s, id) =>
+    s.equipped.includes(id) ? s.modules[id] || 0 : 0;
+  const unlocked = (s, item) =>
+    s.run.dust >= item.unlock || s.buildings[item.id] > 0;
+  function createState(now = Date.now(), seed = 0x51a7c0de) {
+    return {
+      schema: "salvage-orbit",
+      version: D.VERSION,
+      createdAt: now,
+      lastAt: now,
+      carryMs: 0,
+      clock: 0,
+      dust: 0,
+      lifetimeDust: 0,
+      cores: 0,
+      totalCores: 0,
+      rebirths: 0,
+      samples: 0,
+      buildings: Object.fromEntries(D.BUILDINGS.map((b) => [b.id, 0])),
+      research: [],
+      run: {
+        startedClock: 0,
+        dust: 0,
+        route: "industry",
+        routeChosen: false,
+        choices: 0,
+      },
+      automation: {
+        enabled: false,
+        policy: "balanced",
+        reserve: 0,
+        research: false,
+        dispatch: false,
+      },
+      modules: {},
+      equipped: [],
+      mission: null,
+      result: null,
+      repeatId: "belt",
+      lore: [],
+      journal: [],
+      discoveries: 0,
+      starport: 0,
+      records: [],
+      beacon: { nextAt: 45, expiresAt: 0 },
+      burstUntil: 0,
+      lastScanClock: -1,
+      rng: Number(seed) >>> 0 || 1,
+      legacyArchive: null,
+    };
+  }
+  function log(s, text) {
+    s.journal.unshift({ clock: s.clock, text });
+    s.journal = s.journal.slice(0, 12);
+  }
+  function random(s) {
+    let n = s.rng >>> 0;
+    n ^= n << 13;
+    n ^= n >>> 17;
+    n ^= n << 5;
+    s.rng = n >>> 0;
+    return s.rng / 4294967296;
+  }
+  function addDust(s, amount) {
+    const gain = bounded(amount);
+    s.dust = bounded(s.dust + gain);
+    s.lifetimeDust = bounded(s.lifetimeDust + gain);
+    s.run.dust = bounded(s.run.dust + gain);
+    return gain;
+  }
+  function costFactor(s) {
+    return (
+      (has(s, "compact") ? 0.9 : 1) *
+      Math.max(0.65, 0.96 ** Math.min(s.rebirths, 20))
+    );
+  }
+  function buildingCost(s, id, count = 1) {
+    const b = byId(D.BUILDINGS, id);
+    if (!b || count < 1 || count > 50 || s.buildings[id] + count > 10000)
+      return Infinity;
+    const total =
+      ((b.cost * b.growth ** s.buildings[id] * (b.growth ** count - 1)) /
+        (b.growth - 1)) *
+      costFactor(s);
+    return Number.isFinite(total) && total <= D.MAX_NUMBER
+      ? Math.ceil(total - 1e-9)
+      : Infinity;
+  }
+  function rawRate(s) {
+    let rate = 0;
+    for (const b of D.BUILDINGS) {
+      let factor = milestone(s.buildings[b.id]);
+      if (s.run.route === "industry" && s.buildings[b.id] >= 25) factor *= 1.25;
+      if (b.id === "sail") factor *= 1 + equipped(s, "solar") * 0.3;
+      rate += b.rate * s.buildings[b.id] * factor;
+    }
+    if (s.run.route === "industry")
+      rate *= 1 + Math.min(5, Math.floor(s.buildings.drone / 10)) * 0.08;
+    rate *= (has(s, "panels") ? 1.2 : 1) * (has(s, "network") ? 1.35 : 1);
+    rate *= 1 + Math.sqrt(s.totalCores) * 0.25;
+    rate *= 1 + equipped(s, "battery") * 0.12 + equipped(s, "medbay") * 0.1;
+    return bounded(rate);
+  }
+  function productionRate(s) {
+    return bounded(
+      rawRate(s) *
+        (s.mission ? 1 - s.mission.diversion : 1) *
+        (s.clock < s.burstUntil ? 2 : 1),
+    );
+  }
+  function scanValue(s) {
+    const value = 2 * (has(s, "laser") ? 2 : 1) + rawRate(s) * 0.12;
+    return bounded(
+      value *
+        (s.run.route === "reclaim" ? 3 : 1) *
+        (1 + equipped(s, "scanner") * 0.25),
+    );
+  }
+  function scan(s) {
+    if (s.clock - s.lastScanClock < 1) return 0;
+    s.lastScanClock = s.clock;
+    return addDust(s, scanValue(s));
+  }
+  function buy(s, id, requested = 1, budget = s.dust) {
+    const b = byId(D.BUILDINGS, id);
+    if (!b || !unlocked(s, b)) return 0;
+    const limit = Math.min(
+      50,
+      requested === "max" ? 50 : integer(requested, 50),
+    );
+    let count = limit;
+    const available = Math.min(s.dust, bounded(budget));
+    while (count > 0 && buildingCost(s, id, count) > available) count--;
+    if (!count) return 0;
+    const previous = s.buildings[id];
+    s.dust = Math.max(0, s.dust - buildingCost(s, id, count));
+    s.buildings[id] += count;
+    for (const level of D.MILESTONES)
+      if (previous < level && s.buildings[id] >= level)
+        log(s, `${b.name}达到 ${level} 艘，本设施产量翻倍。`);
+    if (previous === 0) log(s, `${b.name}启动，航线开始向更远处延伸。`);
+    return count;
+  }
+  function research(s, id, budget = s.dust) {
+    const item = byId(D.RESEARCH, id);
+    if (
+      !item ||
+      has(s, id) ||
+      s.run.dust < item.unlock ||
+      Math.min(s.dust, budget) < item.cost
+    )
+      return false;
+    s.dust -= item.cost;
+    s.research.push(id);
+    log(s, `完成研究：${item.name}。`);
+    return true;
+  }
+  function chooseRoute(s, id) {
+    if (s.run.routeChosen || s.buildings.drone === 0 || !byId(D.ROUTES, id))
+      return false;
+    s.run.route = id;
+    s.run.routeChosen = true;
+    log(s, `本航次选择${byId(D.ROUTES, id).name}。跃迁后可以重新选择。`);
+    return true;
+  }
+  function capability(s, id) {
+    return s.rebirths >= (byId(D.CAPABILITIES, id)?.run || Infinity);
+  }
+  function configure(s, patch) {
+    if (typeof patch.enabled === "boolean" && capability(s, "autoBuy"))
+      s.automation.enabled = patch.enabled;
+    if (capability(s, "planning")) {
+      if (["balanced", "milestone", "advanced"].includes(patch.policy))
+        s.automation.policy = patch.policy;
+      if (patch.reserve !== undefined)
+        s.automation.reserve = bounded(patch.reserve);
+    }
+    if (typeof patch.research === "boolean" && capability(s, "autoResearch"))
+      s.automation.research = patch.research;
+    if (typeof patch.dispatch === "boolean" && capability(s, "autoDispatch"))
+      s.automation.dispatch = patch.dispatch;
+  }
+  function affordableBest(s, policy = "balanced", reserve = 0) {
+    const before = rawRate(s);
+    const list = [];
+    for (const b of D.BUILDINGS) {
+      const cost = buildingCost(s, b.id);
+      if (!unlocked(s, b) || cost > Math.max(0, s.dust - reserve)) continue;
+      s.buildings[b.id]++;
+      const delta = Math.max(0.0001, rawRate(s) - before);
+      s.buildings[b.id]--;
+      let score = cost / delta;
+      if (policy === "milestone") {
+        const next = D.MILESTONES.find((n) => n > s.buildings[b.id]);
+        if (next && next - s.buildings[b.id] <= 3) score *= 0.45;
+      }
+      if (policy === "advanced") score /= 1 + D.BUILDINGS.indexOf(b) * 0.35;
+      list.push({ id: b.id, score, cost });
+    }
+    list.sort((a, b) => a.score - b.score || a.cost - b.cost);
+    return list[0] || null;
+  }
+  function missionOptions(s) {
+    return D.MISSIONS.filter(
+      (m) => s.starport >= m.unlockPort && (!m.research || has(s, m.research)),
+    );
+  }
+  function missionPreview(s, id) {
+    const m = byId(D.MISSIONS, id);
+    if (!m) return null;
+    const explorer = s.run.route === "explore";
+    return {
+      seconds: Math.max(
+        30,
+        Math.ceil(
+          m.seconds *
+            (explorer ? 0.65 : 1) *
+            Math.max(0.7, 1 - equipped(s, "nav") * 0.1),
+        ),
+      ),
+      diversion: m.diversion * (explorer ? 0.5 : 1),
+      chance: Math.min(
+        1,
+        m.chance +
+          (explorer && m.chance < 1 ? 0.15 : 0) +
+          (has(s, "navigation") && m.chance < 1 ? 0.05 : 0),
+      ),
+      samples: m.samples + (explorer ? 1 : 0),
+      dust: Math.max(20, rawRate(s) * m.yieldSeconds),
+    };
+  }
+  function startMission(s, id) {
+    if (
+      s.run.dust < 600 ||
+      s.mission ||
+      s.result ||
+      !missionOptions(s).some((m) => m.id === id) ||
+      rawRate(s) === 0
+    )
+      return false;
+    const m = byId(D.MISSIONS, id),
+      preview = missionPreview(s, id);
+    const succeeded = random(s) < preview.chance;
+    const module =
+      succeeded && m.chance < 1
+        ? ["battery", "scanner", "nav"][Math.floor(random(s) * 3)]
+        : null;
+    s.mission = {
+      id,
+      start: s.clock,
+      end: s.clock + preview.seconds,
+      ...preview,
+      succeeded,
+      module,
+    };
+    log(s, `派遣探索：${m.name}，预计 ${preview.seconds} 秒归航。`);
+    return true;
+  }
+  function completeMission(s) {
+    const m = s.mission;
+    if (!m || s.clock < m.end) return;
+    const def = byId(D.MISSIONS, m.id);
+    const story =
+      m.succeeded &&
+      def.story &&
+      !s.lore.some((entry) => entry.story === def.story) &&
+      s.run.choices < 2
+        ? def.story
+        : null;
+    s.result = {
+      id: m.id,
+      succeeded: m.succeeded,
+      dust: m.succeeded ? m.dust : 0,
+      samples: m.succeeded ? m.samples : 1,
+      module: m.module,
+      story,
+    };
+    s.mission = null;
+    log(
+      s,
+      `${def.name}归航，${m.succeeded ? "发现已送达，等待你的安排" : "未能进入裂隙，带回 1 份样本"}。`,
+    );
+  }
+  function grantModule(s, id) {
+    s.modules[id] = Math.min(3, (s.modules[id] || 0) + 1);
+    if (s.equipped.length < 2 && !s.equipped.includes(id)) s.equipped.push(id);
+  }
+  function claimMission(s, choiceId) {
+    const r = s.result;
+    if (!r) return false;
+    const story = r.story && D.STORIES[r.story];
+    const choice = story && byId(story.choices, choiceId);
+    if (story && !choice) return false;
+    addDust(s, r.dust);
+    s.samples = bounded(s.samples + r.samples);
+    if (r.module) grantModule(s, r.module);
+    if (choice) {
+      if (choice.dustSeconds)
+        addDust(s, Math.max(50, rawRate(s) * choice.dustSeconds));
+      if (choice.module) grantModule(s, choice.module);
+      s.samples = bounded(s.samples + (choice.samples || 0));
+      s.lore.push({ story: r.story, choice: choice.id });
+      s.run.choices++;
+      log(s, `${story.title}：${choice.name}。这段记忆会陪你进入下一航次。`);
+    }
+    s.discoveries = bounded(s.discoveries + (r.succeeded ? 1 : 0));
+    s.result = null;
+    return true;
+  }
+  function equip(s, id) {
+    if (!byId(D.MODULES, id) || !s.modules[id]) return false;
+    if (s.equipped.includes(id))
+      s.equipped = s.equipped.filter((x) => x !== id);
+    else if (s.equipped.length < 2) s.equipped.push(id);
+    else return false;
+    return true;
+  }
+  function claimBeacon(s) {
+    if (!s.beacon.expiresAt || s.clock >= s.beacon.expiresAt) return 0;
+    const reward =
+      Math.max(20, rawRate(s) * 30) *
+      (s.run.route === "reclaim" ? 2 : 1) *
+      (1 + equipped(s, "scanner") * 0.25);
+    s.beacon.expiresAt = 0;
+    if (s.run.route === "reclaim") s.burstUntil = s.clock + 20;
+    log(s, "捕获金色信标，临时补给已经入库。");
+    return addDust(s, reward);
+  }
+  function repairPort(s) {
+    const stage = D.PORT[s.starport];
+    if (!stage || s.cores < stage.cores || s.samples < stage.samples)
+      return false;
+    s.cores -= stage.cores;
+    s.samples -= stage.samples;
+    s.starport++;
+    log(s, stage.text);
+    return true;
+  }
+  function prestigeGain(s) {
+    return s.run.dust < D.PRESTIGE_DUST
+      ? 0
+      : Math.min(
+          1000000,
+          Math.floor(4 * Math.sqrt(s.run.dust / D.PRESTIGE_DUST)),
+        );
+  }
+  function prestige(s) {
+    const gain = prestigeGain(s);
+    if (!gain || s.mission || s.result) return false;
+    s.records.unshift({
+      seconds: s.clock - s.run.startedClock,
+      route: s.run.route,
+      gain,
+    });
+    s.records = s.records.slice(0, 5);
+    s.cores = bounded(s.cores + gain);
+    s.totalCores = bounded(s.totalCores + gain);
+    s.rebirths++;
+    s.buildings = Object.fromEntries(
+      D.BUILDINGS.map((b) => [b.id, b.id === "drone" ? 1 : 0]),
+    );
+    s.research = [];
+    s.dust = 12;
+    s.run = {
+      startedClock: s.clock,
+      dust: 12,
+      route: "industry",
+      routeChosen: false,
+      choices: 0,
+    };
+    s.automation.enabled = true;
+    s.beacon = { nextAt: s.clock + 45, expiresAt: 0 };
+    s.burstUntil = 0;
+    log(
+      s,
+      `第 ${s.rebirths + 1} 航次启航，获得 ${gain} 星核。舰装、故事和星港修复保留。`,
+    );
+    const newly = D.CAPABILITIES.find((c) => c.run === s.rebirths);
+    if (newly) log(s, `解锁${newly.name}：${newly.detail}`);
+    return gain;
+  }
+  function tick(s, offline) {
+    // Income uses the previous second's state. Completion and purchases affect the next second.
+    addDust(s, productionRate(s));
+    s.clock++;
+    completeMission(s);
+    if (s.beacon.expiresAt && s.clock >= s.beacon.expiresAt)
+      s.beacon.expiresAt = 0;
+    if (s.clock >= s.beacon.nextAt) {
+      s.beacon.expiresAt = offline ? 0 : s.clock + 15;
+      s.beacon.nextAt = s.clock + 120 + Math.floor(random(s) * 120);
+    }
+    const reserve = capability(s, "planning") ? s.automation.reserve : 0;
+    if (
+      capability(s, "autoResearch") &&
+      s.automation.research &&
+      s.clock % 5 === 0
+    ) {
+      const candidate = D.RESEARCH.find(
+        (r) =>
+          !has(s, r.id) && s.run.dust >= r.unlock && s.dust - reserve >= r.cost,
+      );
+      if (candidate) research(s, candidate.id, Math.max(0, s.dust - reserve));
+    }
+    if (capability(s, "autoBuy") && s.automation.enabled) {
+      const candidate = affordableBest(
+        s,
+        capability(s, "planning") ? s.automation.policy : "balanced",
+        reserve,
+      );
+      if (candidate) buy(s, candidate.id, 1, Math.max(0, s.dust - reserve));
+    }
+    if (capability(s, "autoDispatch") && s.automation.dispatch) {
+      if (s.result && !s.result.story) claimMission(s);
+      if (!s.result && !s.mission) {
+        const candidate =
+          missionOptions(s).find(
+            (m) => m.id === s.repeatId && m.chance === 1,
+          ) || D.MISSIONS.find((m) => m.id === "belt");
+        startMission(s, candidate.id);
+      }
+    }
+  }
+  function advance(s, now, options = {}) {
+    const elapsedMs = Math.max(0, Number(now) - s.lastAt);
+    if (!Number.isFinite(elapsedMs))
+      return { seconds: 0, dust: 0, capped: false };
+    if (Number(now) < s.lastAt) return { seconds: 0, dust: 0, capped: false };
+    const capped = elapsedMs > D.OFFLINE_SECONDS * 1000;
+    const total = Math.min(elapsedMs, D.OFFLINE_SECONDS * 1000) + s.carryMs;
+    const seconds = Math.floor(total / 1000),
+      before = s.lifetimeDust;
+    s.carryMs = total % 1000;
+    s.lastAt = Number(now);
+    for (let i = 0; i < seconds; i++) tick(s, options.offline === true);
+    return { seconds, dust: Math.max(0, s.lifetimeDust - before), capped };
+  }
+  function reachable(s, action) {
+    return (
+      ["home", "fleet"].includes(action) ||
+      (action === "explore" && s.run.dust >= 600) ||
+      (action === "jump" &&
+        (s.run.dust >= D.PRESTIGE_DUST * 0.3 || s.rebirths > 0))
+    );
+  }
+  function nextGoal(s) {
+    if (!s.buildings.drone)
+      return {
+        title: "启动第一艘拾荒无人机",
+        detail: "收集 12 星尘，建造无人机，让航站开始自动运转。",
+        action: "fleet",
+        label: "前往舰队",
+        value: s.dust,
+        target: buildingCost(s, "drone"),
+      };
+    if (!s.run.routeChosen)
+      return {
+        title: "决定这一航次的方向",
+        detail: "工业、回收、探索各有专长。本航次只需要选择一次。",
+        action: "fleet",
+        label: "选择航线",
+        value: 0,
+        target: 1,
+      };
+    if (s.buildings.drone < 10)
+      return {
+        title: "让无人机组成回收队",
+        detail: "建造 10 艘拾荒无人机，本设施产量翻倍。",
+        action: "fleet",
+        label: "扩建舰队",
+        value: s.buildings.drone,
+        target: 10,
+      };
+    if (s.result)
+      return {
+        title: s.result.story
+          ? D.STORIES[s.result.story].title
+          : "探索船已经归航",
+        detail: "报告等待你的安排。舰装和故事会保留到下一航次。",
+        action: "explore",
+        label: "查看报告",
+        value: 1,
+        target: 1,
+      };
+    if (!s.lore.length && reachable(s, "explore") && !s.mission)
+      return {
+        title: "回应废弃医院船的信号",
+        detail: "分流 20% 产量进行安全探索，带回第一段故事。",
+        action: "explore",
+        label: "派遣探索",
+        value: 0,
+        target: 1,
+      };
+    if (prestigeGain(s) > 0)
+      return {
+        title: "开启下一航次",
+        detail: `本次可获得 ${prestigeGain(s)} 星核。${D.CAPABILITIES.find((c) => c.run === s.rebirths + 1)?.name || "新航次与更高产量"}正在等待。`,
+        action: "jump",
+        label: "查看跃迁",
+        value: s.run.dust,
+        target: D.PRESTIGE_DUST,
+      };
+    if (
+      s.starport < D.PORT.length &&
+      s.rebirths > 0 &&
+      reachable(s, "explore")
+    ) {
+      const stage = D.PORT[s.starport];
+      if (s.cores >= stage.cores)
+        return {
+          title: stage.name,
+          detail: `收集 ${stage.samples} 份样本与 ${stage.cores} 星核，修复你的归航之地。`,
+          action: "explore",
+          label: "修复航站",
+          value: s.samples,
+          target: stage.samples,
+        };
+    }
+    return {
+      title: "积累下一次跃迁的能量",
+      detail: "扩建、研究或离线等待。达到目标后可以换来永久能力。",
+      action: reachable(s, "jump") ? "jump" : "fleet",
+      label: reachable(s, "jump") ? "查看跃迁进度" : "继续扩建",
+      value: s.run.dust,
+      target: D.PRESTIGE_DUST,
+    };
+  }
+  function sanitize(raw, now = Date.now()) {
+    if (!raw || raw.schema !== "salvage-orbit" || raw.version !== D.VERSION)
+      throw new Error("这份记录不属于当前航线版本，原文件已保留。");
+    const s = createState(now);
+    for (const key of [
+      "dust",
+      "lifetimeDust",
+      "cores",
+      "totalCores",
+      "samples",
+      "clock",
+      "discoveries",
+    ])
+      s[key] = bounded(raw[key]);
+    s.clock = integer(s.clock, 1e10);
+    s.rebirths = integer(raw.rebirths, 1000000);
+    s.starport = integer(raw.starport, D.PORT.length);
+    s.totalCores = Math.max(s.totalCores, s.cores);
+    s.createdAt = bounded(raw.createdAt || now, Number.MAX_SAFE_INTEGER);
+    s.lastAt = Math.min(
+      now,
+      bounded(raw.lastAt ?? now, Number.MAX_SAFE_INTEGER),
+    );
+    s.carryMs = bounded(raw.carryMs, 999);
+    s.rng = Number(raw.rng) >>> 0 || 1;
+    for (const b of D.BUILDINGS)
+      s.buildings[b.id] = integer(raw.buildings?.[b.id]);
+    s.research = D.RESEARCH.filter(
+      (r) => Array.isArray(raw.research) && raw.research.includes(r.id),
+    ).map((r) => r.id);
+    s.run = {
+      dust: bounded(raw.run?.dust),
+      startedClock: Math.min(s.clock, bounded(raw.run?.startedClock)),
+      route: byId(D.ROUTES, raw.run?.route) ? raw.run.route : "industry",
+      routeChosen: raw.run?.routeChosen === true,
+      choices: integer(raw.run?.choices, 2),
+    };
+    configure(s, raw.automation || {});
+    for (const m of D.MODULES)
+      if (raw.modules?.[m.id]) s.modules[m.id] = integer(raw.modules[m.id], 3);
+    s.equipped = [...new Set(Array.isArray(raw.equipped) ? raw.equipped : [])]
+      .filter((id) => s.modules[id])
+      .slice(0, 2);
+    s.lore = (Array.isArray(raw.lore) ? raw.lore : [])
+      .filter(
+        (r) =>
+          D.STORIES[r?.story] && byId(D.STORIES[r.story].choices, r.choice),
+      )
+      .filter((r, i, all) => all.findIndex((x) => x.story === r.story) === i)
+      .map((r) => ({ story: r.story, choice: r.choice }));
+    s.journal = (Array.isArray(raw.journal) ? raw.journal : [])
+      .filter((r) => typeof r?.text === "string")
+      .slice(0, 12)
+      .map((r) => ({
+        clock: Math.min(s.clock, bounded(r.clock)),
+        text: r.text.slice(0, 400),
+      }));
+    s.records = (Array.isArray(raw.records) ? raw.records : [])
+      .filter((r) => byId(D.ROUTES, r?.route))
+      .slice(0, 5)
+      .map((r) => ({
+        route: r.route,
+        seconds: bounded(r.seconds),
+        gain: bounded(r.gain),
+      }));
+    s.repeatId = D.MISSIONS.some((m) => m.id === raw.repeatId && m.chance === 1)
+      ? raw.repeatId
+      : "belt";
+    s.beacon = {
+      nextAt: bounded(raw.beacon?.nextAt || s.clock + 45),
+      expiresAt: Math.min(s.clock + 15, bounded(raw.beacon?.expiresAt)),
+    };
+    s.burstUntil = Math.min(s.clock + 20, bounded(raw.burstUntil));
+    s.lastScanClock = Math.min(s.clock, Number(raw.lastScanClock) || 0);
+    if (raw.mission && byId(D.MISSIONS, raw.mission.id)) {
+      const m = raw.mission;
+      s.mission = {
+        id: m.id,
+        start: Math.min(s.clock, bounded(m.start)),
+        end: Math.min(s.clock + 180, bounded(m.end)),
+        seconds: bounded(m.seconds, 180),
+        diversion: bounded(m.diversion, 0.4),
+        chance: bounded(m.chance, 1),
+        samples: bounded(m.samples, 4),
+        dust: bounded(m.dust),
+        succeeded: m.succeeded === true,
+        module: byId(D.MODULES, m.module) ? m.module : null,
+      };
+    }
+    if (raw.result && byId(D.MISSIONS, raw.result.id)) {
+      const r = raw.result;
+      s.mission = null;
+      s.result = {
+        id: r.id,
+        succeeded: r.succeeded === true,
+        dust: bounded(r.dust),
+        samples: bounded(r.samples, 4),
+        module: byId(D.MODULES, r.module) ? r.module : null,
+        story: D.STORIES[r.story] ? r.story : null,
+      };
+    }
+    if (raw.legacyArchive && typeof raw.legacyArchive === "object")
+      s.legacyArchive = clone(raw.legacyArchive);
+    return s;
+  }
+  function migrateLegacy(raw, now = Date.now()) {
+    if (
+      !raw ||
+      typeof raw !== "object" ||
+      Array.isArray(raw) ||
+      !raw.buildings ||
+      raw.schema
+    )
+      throw new Error("未识别到旧航站记录。");
+    const s = createState(now);
+    // The full old state is retained byte-for-byte by storage.js and structurally here.
+    // Only matching systems participate in v3. No old field is silently discarded.
+    s.legacyArchive = clone(raw);
+    s.dust = bounded(raw.dust);
+    s.lifetimeDust = Math.max(s.dust, bounded(raw.lifetimeDust));
+    s.cores = bounded(raw.cores);
+    s.totalCores = Math.max(s.cores, bounded(raw.totalCores));
+    s.rebirths = integer(raw.rebirths, 1000000);
+    s.run.dust = Math.max(s.dust, bounded(raw.runDust));
+    for (const b of D.BUILDINGS)
+      s.buildings[b.id] = integer(raw.buildings[b.id]);
+    const aliases = {
+      gloves: "laser",
+      panels: "panels",
+      compact: "compact",
+      network: "network",
+      navigation: "navigation",
+    };
+    for (const id of Array.isArray(raw.upgrades) ? raw.upgrades : [])
+      if (aliases[id] && !s.research.includes(aliases[id]))
+        s.research.push(aliases[id]);
+    s.automation.enabled = s.rebirths > 0 && raw.autoBuyEnabled === true;
+    log(
+      s,
+      "已继承旧航站。原有远征、奖励与研究记录完整封存，随时可以回旧版继续。",
+    );
+    return s;
+  }
+  return Object.freeze({
+    createState,
+    sanitize,
+    migrateLegacy,
+    advance,
+    scan,
+    scanValue,
+    addDust,
+    rawRate,
+    productionRate,
+    buildingCost,
+    buy,
+    research,
+    chooseRoute,
+    configure,
+    capability,
+    affordableBest,
+    missionOptions,
+    missionPreview,
+    startMission,
+    claimMission,
+    equip,
+    claimBeacon,
+    repairPort,
+    prestigeGain,
+    prestige,
+    reachable,
+    nextGoal,
+    milestone,
+  });
+});

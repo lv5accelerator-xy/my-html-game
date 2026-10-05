@@ -91,7 +91,8 @@ async function main() {
   });
 
   try {
-    const response = await page.goto(origin, { waitUntil: "domcontentloaded" });
+    // This fixture covers archived event and mission panels as well as core pages.
+    const response = await page.goto(`${origin}/?expert=1`, { waitUntil: "domcontentloaded" });
     assert.equal(response.status(), 200);
     await page.waitForFunction(() => Boolean(window.StellarOutpostCloudBridge));
 
@@ -199,7 +200,7 @@ async function main() {
       milestones: document.querySelectorAll("#starfall-milestone-list article").length,
       storeItems: document.querySelectorAll("#starfall-store-grid article").length,
     }));
-    assert.ok(["preview", "active", "exchange", "ended"].includes(starfallLayout.phase));
+    assert.ok(["preview", "active", "exchange", "ended", "archived"].includes(starfallLayout.phase));
     assert.equal(starfallLayout.letters, 7);
     assert.equal(starfallLayout.milestones, 7);
     assert.equal(starfallLayout.storeItems, 6);

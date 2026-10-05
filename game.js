@@ -29,6 +29,14 @@
     late: ["expedition", "transcend", "leaderboard"],
     hidden: ["starport", "starfall", "missions"],
   });
+  // 核心资源始终显示；次级资源保持后台产出与消耗。
+  const CORE_RESOURCES = Object.freeze(["dust", "cores", "shards"]);
+  const SECONDARY_RESOURCES = Object.freeze([
+    "tokens", "supplies", "fragments", "alloy", "crystal", "circuit",
+    "relic", "prism", "sensor", "ammo", "maintenance", "commandData",
+    "companionSignals", "starfallCurrency",
+  ]);
+
 
   const SAVE_KEY = "stellarOutpostIdleSave_v1";
   const SAVE_BACKUP_KEYS = [
@@ -3552,6 +3560,7 @@
     dust: $("#dust-value"),
     rate: $("#rate-value"),
     cores: $("#core-value"),
+    shards: $("#shards-value"),
     collect: $("#collect-button"),
     clickYield: $("#click-yield"),
     goalTitle: $("#next-goal-title"),
@@ -13196,15 +13205,15 @@
         <span class="fleet-command-state">三舰队在线</span>
       </div>
       <div class="fleet-command-resource-grid">
-        <div><span>◆</span><small>战术弹药</small><strong>${formatNumber(
+        <div data-secondary-resource="ammo"><span>◆</span><small>战术弹药</small><strong>${formatNumber(
           command.ammo,
           0,
         )}</strong></div>
-        <div><span>⬡</span><small>维护件</small><strong>${formatNumber(
+        <div data-secondary-resource="maintenance"><span>⬡</span><small>维护件</small><strong>${formatNumber(
           command.maintenance,
           0,
         )}</strong></div>
-        <div><span>⌘</span><small>指挥数据</small><strong>${formatNumber(
+        <div data-secondary-resource="commandData"><span>⌘</span><small>指挥数据</small><strong>${formatNumber(
           command.commandData,
           0,
         )}</strong></div>
@@ -13956,6 +13965,8 @@
     STARPORT_MATERIALS.forEach((material) => {
       const item = document.createElement("div");
       item.className = `material-chip${compact ? " compact" : ""}`;
+      item.dataset.secondaryResource = material.id;
+      item.hidden = !isResourceVisible(material.id);
       const icon = document.createElement("span");
       icon.className = `material-icon material-${material.id}`;
       icon.textContent = material.icon;
@@ -15488,7 +15499,20 @@
     return rules[pageId] !== false;
   }
 
+  function isResourceVisible(resourceId) {
+    if (CORE_RESOURCES.includes(resourceId)) return true;
+    if (SECONDARY_RESOURCES.includes(resourceId)) return Boolean(state.guidance?.showAllSystems);
+    return true;
+  }
+
+  function updateResourceVisibility() {
+    document.querySelectorAll("[data-secondary-resource]").forEach((node) => {
+      node.hidden = !isResourceVisible(node.dataset.secondaryResource);
+    });
+  }
+
   function updateShowAllSystemsStatus() {
+    updateResourceVisibility();
     if (!elements.showAllSystemsStatus) return;
     const showAll = state.guidance.showAllSystems;
     elements.showAllSystemsStatus.textContent = showAll ? "当前：全部" : "当前：仅核心";
@@ -16214,7 +16238,7 @@
     }).join("");
     elements.operationsComponentList.innerHTML = OPERATION_COMPONENTS.map((component) => {
       const amount = state.operations.components[component.id] || 0;
-      return `<article><span>${component.icon}</span><div><strong>${component.name}</strong><small>${component.use}</small></div><b>×${formatNumber(amount, 0)}</b><button type="button" data-operation-component="${component.id}" ${amount > 0 ? "" : "disabled"}>投入</button></article>`;
+      return `<article><span>${component.icon}</span><div><strong>${component.name}</strong><small>${component.use}</small></div><b data-secondary-resource="ammo" ${isResourceVisible("ammo") ? "" : "hidden"}>×${formatNumber(amount, 0)}</b><button type="button" data-operation-component="${component.id}" ${amount > 0 ? "" : "disabled"}>投入</button></article>`;
     }).join("");
     const materialPeak = Math.max(...STARPORT_MATERIALS.map(
       (material) => state.starport.materials[material.id] || 0,
@@ -16314,6 +16338,7 @@
     updateSaveSafetyStatus();
     updateUi();
     V2_SYSTEMS.render();
+    updateResourceVisibility();
   }
 
   function getCloudSaveMetadata(targetState = state) {
@@ -16571,6 +16596,8 @@
     elements.dust.textContent = formatDustReserve(state.dust);
     elements.rate.textContent = `${formatProductionRate(rate)} / 秒`;
     elements.cores.textContent = formatNumber(state.cores, 0);
+    elements.shards.textContent = formatNumber(state.endgame.shards, 0);
+    updateResourceVisibility();
     updateEvent();
     updateMissionSummary();
     updateStarfallSummary();

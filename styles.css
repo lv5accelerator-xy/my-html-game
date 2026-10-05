@@ -13316,3 +13316,11 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 @media (max-width: 680px) {
   .mobile-quick-nav { grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); }
 }
+
+/* 四项统计在窄屏分为两行，核心资源不会挤出屏幕。 */
+.resource-strip { grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 0.85fr)); }
+.resource-strip > * { min-width: 0; }
+.menu-note { font-size: 12px; line-height: 1.6; color: rgba(200, 226, 255, 0.6); padding: 6px 14px; margin: 0; }
+@media (max-width: 600px) {
+  .resource-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

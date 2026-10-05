@@ -38,6 +38,7 @@
   ]);
 
 
+  const AUTO_BUY_UNLOCK_RESEARCH = 5;
   const SAVE_KEY = "stellarOutpostIdleSave_v1";
   const SAVE_BACKUP_KEYS = [
     "stellarOutpostIdleSave_v1_backup_1",
@@ -3694,6 +3695,8 @@
     patchNotesButton: $("#patch-notes-button"),
     renameButton: $("#rename-button"),
     playerNameDisplay: $("#player-name-display"),
+    autoBuyButton: $("#auto-buy-button"),
+    autoBuyStatus: $("#auto-buy-status"),
     showAllSystemsButton: $("#show-all-systems-button"),
     showAllSystemsStatus: $("#show-all-systems-status"),
     navigationModeButton: $("#navigation-mode-button"),
@@ -3722,6 +3725,13 @@
     importFile: $("#import-file"),
     resetButton: $("#reset-button"),
     modalBackdrop: $("#modal-backdrop"),
+    offlineReportBackdrop: $("#offline-report-backdrop"),
+    offlineReportDuration: $("#offline-report-duration"),
+    offlineReportDust: $("#offline-report-dust"),
+    offlineReportRate: $("#offline-report-rate"),
+    offlineReportNote: $("#offline-report-note"),
+    offlineReportClose: $("#offline-report-close"),
+
     modalEyebrow: $("#modal-eyebrow"),
     modalIcon: $("#modal-icon"),
     modalTitle: $("#modal-title"),
@@ -4192,6 +4202,13 @@
     };
   }
 
+  function freshGoldenBeaconState() {
+    return {
+      nextAt: 0,
+      // active 与 expiresAt 不持久化：刷新页面应丢弃当前信标
+    };
+  }
+
   function freshGuidanceState() {
     return {
       compactNavigation: true,
@@ -4495,6 +4512,8 @@
       operations: freshOperationsState(),
       resourceCycle: freshResourceCycleState(),
       guidance: freshGuidanceState(),
+      goldenBeacon: freshGoldenBeaconState(),
+      autoBuyEnabled: false,
       duty: freshDutyState(),
       returnProtocol: freshReturnProtocolState(),
       starportLife: freshStarportLifeState(),
@@ -4518,6 +4537,11 @@
   }
 
   let state = freshState();
+  let activeGoldenBeacon = null;
+  let pendingOfflineReport = null;
+  let lastGoldenBeaconCheckAt = 0;
+  let lastAutoBuyAt = 0;
+  let offlineReportPreviousFocus = null;
   let performanceMode = loadPerformanceMode();
   document.documentElement.dataset.performanceMode = performanceMode;
   let renderedCommandCompanionSignature = null;
@@ -10136,6 +10160,8 @@
           (entry) => typeof entry === "string" && /^(route|atlas):[a-z0-9-]+$/i.test(entry),
         )
       : [];
+    merged.goldenBeacon = { nextAt: finiteTimestamp(raw.goldenBeacon?.nextAt) };
+    merged.autoBuyEnabled = raw.autoBuyEnabled === true;
     merged.guidance = {
       compactNavigation: raw.guidance?.compactNavigation !== false,
       showAllSystems: raw.guidance?.showAllSystems === true,
@@ -10754,18 +10780,7 @@
             )}，资源损失 ${formatNumber(raidReport.loss)} 星尘。`
           : "期间没有需要结算的大袭击。";
       if (presentation === "load") {
-        window.setTimeout(() => {
-          showModal({
-            eyebrow: "离线报告",
-            icon: raidReport.count > 0 ? "◆" : "⌁",
-            title: "欢迎返回星港",
-            message: `${productionSummary}${raidSummary}当前离线收益与袭击结算最多累计 ${formatDuration(
-              offlineLimit,
-            )}。`,
-            confirmText: "接收物资",
-            cancelText: null,
-          });
-        }, 250);
+        // 离线报告在启动通知队列中展示。
       } else if (presentation === "background") {
         showToast(
           raidReport.count > 0 ? "后台态势已结算" : "后台收益已结算",
@@ -10785,6 +10800,9 @@
     if (state.event?.expires < returnTime) state.event = null;
     if (state.buff?.expires < returnTime) state.buff = null;
     latestReturnReport = { elapsed, offlineGain, raidReport, operationReport };
+    if (presentation === "load" && elapsed >= 60) {
+      pendingOfflineReport = { ...latestReturnReport, offlineRate };
+    }
     state.v2.lastReturn = {
       at: returnTime,
       elapsed,
@@ -10822,13 +10840,15 @@
     registerExperienceSession();
   }
 
-  function buyBuilding(id) {
+  function buyBuilding(id, { silent = false } = {}) {
     const building = BUILDINGS.find((entry) => entry.id === id);
     if (!building || state.lifetimeDust < building.unlock) return;
-    const purchase = selectedPurchase(building);
+    const purchase = silent
+      ? { amount: 1, cost: buildingCost(building, state.buildings[id] || 0, 1) }
+      : selectedPurchase(building);
     if (purchase.amount < 1 || purchase.cost > state.dust + 1e-9) {
-      showToast("星尘不足", `还需要更多星尘来扩建${building.name}。`, "·");
-      playTone(160, 0.05, "square", 0.018);
+      if (!silent) showToast("星尘不足", `还需要更多星尘来扩建${building.name}。`, "·");
+      if (!silent) playTone(160, 0.05, "square", 0.018);
       return;
     }
     const previousRate = calculateRate();
@@ -10852,25 +10872,27 @@
     }
     const nextRate = calculateRate();
     const rateIncrease = Math.max(0, nextRate - previousRate);
-    playTone(380 + BUILDINGS.indexOf(building) * 38, 0.07, "sine");
+    if (!silent) playTone(380 + BUILDINGS.indexOf(building) * 38, 0.07, "sine");
     renderBuildings();
     updateUi(nextRate);
-    const purchasedCard = elements.buildingList.querySelector(
-      `[data-building-card="${building.id}"]`,
-    );
-    const resourceMain = document.querySelector(".resource-main");
-    const rateStat = elements.rate.closest(".resource-stat");
-    [purchasedCard, resourceMain, rateStat].forEach((target, index) => {
-      if (!target) return;
-      target.classList.remove("purchase-flash", "resource-spent", "value-gain");
-      window.requestAnimationFrame(() => {
-        target.classList.add(index === 0 ? "purchase-flash" : index === 1 ? "resource-spent" : "value-gain");
-      });
-      window.setTimeout(() => {
+    if (!silent) {
+      const purchasedCard = elements.buildingList.querySelector(
+        `[data-building-card="${building.id}"]`,
+      );
+      const resourceMain = document.querySelector(".resource-main");
+      const rateStat = elements.rate.closest(".resource-stat");
+      [purchasedCard, resourceMain, rateStat].forEach((target, index) => {
+        if (!target) return;
         target.classList.remove("purchase-flash", "resource-spent", "value-gain");
-      }, 760);
-    });
-    showToast(
+        window.requestAnimationFrame(() => {
+          target.classList.add(index === 0 ? "purchase-flash" : index === 1 ? "resource-spent" : "value-gain");
+        });
+        window.setTimeout(() => {
+          target.classList.remove("purchase-flash", "resource-spent", "value-gain");
+        }, 760);
+      });
+    }
+    if (!silent) showToast(
       "舰队产量已提升",
       `${building.name} +${purchase.amount} · ${formatProductionRate(
         previousRate,
@@ -10901,6 +10923,116 @@
     playTone(680, 0.12, "sine");
     renderUpgrades();
     updateUi();
+  }
+
+  function spawnGoldenBeacon(now = Date.now()) {
+    if (activeGoldenBeacon) return;
+    const lifetimeMs = 15000;
+    activeGoldenBeacon = { expiresAt: now + lifetimeMs };
+
+    let node = document.querySelector("#golden-beacon");
+    if (!node) {
+      node = document.createElement("button");
+      node.id = "golden-beacon";
+      node.type = "button";
+      node.className = "golden-beacon";
+      node.setAttribute("aria-label", "点击黄金信标获得奖励");
+      node.innerHTML = '<span aria-hidden="true">✦</span>';
+      node.addEventListener("click", claimGoldenBeacon);
+      document.body.appendChild(node);
+    }
+
+    // 位置：避开顶部导航（≥120px）和底部（≥120px）
+    const marginTop = 120;
+    const marginBottom = 120;
+    const marginSide = 60;
+    const minX = Math.min(marginSide, Math.max(0, window.innerWidth - 72));
+    const maxX = Math.max(minX, window.innerWidth - marginSide - 72);
+    const minY = Math.min(marginTop, Math.max(0, window.innerHeight - 72));
+    const maxY = Math.max(minY, window.innerHeight - marginBottom - 72);
+    const x = Math.floor(minX + Math.random() * (maxX - minX));
+    const y = Math.floor(minY + Math.random() * (maxY - minY));
+    node.style.left = `${x}px`;
+    node.style.top = `${y}px`;
+    node.classList.remove("golden-beacon-exit");
+    node.hidden = false;
+    node.classList.add("golden-beacon-enter");
+    window.setTimeout(() => node.classList.remove("golden-beacon-enter"), 400);
+  }
+
+  function claimGoldenBeacon() {
+    if (!activeGoldenBeacon) return;
+    const now = Date.now();
+    if (now >= activeGoldenBeacon.expiresAt) {
+      despawnGoldenBeacon();
+      state.goldenBeacon.nextAt = now + randomBetween(120000, 300000);
+      return;
+    }
+    const rate = calculateRate(state, false);
+    const reward = safeMultiply(rate, 30);
+    const safeReward = Math.max(10, reward);
+    addDust(safeReward);
+    showToast(
+      "黄金信标已激活",
+      `获得 30 秒产量：+${formatNumber(safeReward)} 星尘`,
+      "✦",
+    );
+    playAchievementTone();
+    despawnGoldenBeacon();
+    state.goldenBeacon.nextAt = now + randomBetween(120000, 300000);
+    saveGame();
+  }
+
+  function despawnGoldenBeacon() {
+    activeGoldenBeacon = null;
+    const node = document.querySelector("#golden-beacon");
+    if (node) {
+      node.classList.add("golden-beacon-exit");
+      window.setTimeout(() => {
+        if (activeGoldenBeacon) return;
+        node.hidden = true;
+        node.classList.remove("golden-beacon-exit");
+      }, 220);
+    }
+  }
+
+  function processGoldenBeacon(now = Date.now()) {
+    if (document.hidden || now - lastGoldenBeaconCheckAt < 1000) return;
+    lastGoldenBeaconCheckAt = now;
+    if (activeGoldenBeacon) {
+      if (now >= activeGoldenBeacon.expiresAt) {
+        despawnGoldenBeacon();
+        state.goldenBeacon.nextAt = now + randomBetween(120000, 300000);
+        saveGame();
+      }
+      return;
+    }
+    if (!state.goldenBeacon.nextAt) {
+      state.goldenBeacon.nextAt = now + randomBetween(30000, 90000);
+      return;
+    }
+    if (now >= state.goldenBeacon.nextAt) {
+      spawnGoldenBeacon(now);
+    }
+  }
+
+  function processAutoBuy(now = Date.now()) {
+    if (!state.autoBuyEnabled) return;
+    if (state.upgrades.length < AUTO_BUY_UNLOCK_RESEARCH) return;
+    if (now - lastAutoBuyAt < 1000) return;
+    lastAutoBuyAt = now;
+
+    const candidates = BUILDINGS.flatMap((building) => {
+      if (state.lifetimeDust < building.unlock) return [];
+      const owned = state.buildings[building.id] || 0;
+      const cost = buildingCost(building, owned, 1);
+      if (cost > state.dust + 1e-9) return [];
+      return [{ building, cost }];
+    });
+
+    if (candidates.length === 0) return;
+    candidates.sort((a, b) => a.cost - b.cost);
+    buyBuilding(candidates[0].building.id, { silent: true });
   }
 
   function collect(event) {
@@ -12438,6 +12570,41 @@
     }, 3200);
   }
 
+  function showOfflineReport(report) {
+    if (!elements.offlineReportBackdrop) return;
+    const rate = report.offlineRate ?? calculateRate(state, false);
+    elements.offlineReportDuration.textContent = formatDuration(report.elapsed);
+    elements.offlineReportDust.textContent =
+      `+${formatNumber(report.offlineGain, 0)}`;
+    elements.offlineReportRate.textContent =
+      `${formatNumber(rate, 0)} / 秒`;
+
+    const parts = [];
+    if (report.operationReport?.actions > 0) {
+      parts.push(`航站作业完成 ${report.operationReport.actions} 次`);
+    }
+    if (report.raidReport?.count > 0) {
+      parts.push(
+        `大袭击：守住 ${report.raidReport.defended} 次，失守 ${report.raidReport.breached} 次`,
+      );
+    }
+    if (parts.length === 0) {
+      parts.push("航线一切平静，舰队持续工作了整段时间。");
+    }
+    elements.offlineReportNote.textContent = parts.join(" · ");
+
+    offlineReportPreviousFocus = document.activeElement;
+    elements.offlineReportBackdrop.hidden = false;
+    elements.offlineReportClose.focus();
+  }
+
+  function closeOfflineReport() {
+    if (!elements.offlineReportBackdrop) return;
+    elements.offlineReportBackdrop.hidden = true;
+    offlineReportPreviousFocus?.focus?.();
+    window.setTimeout(showStartupNotices, 200);
+  }
+
   function showModal({
     eyebrow,
     icon,
@@ -12743,9 +12910,16 @@
       !elements.patchNotesBackdrop.hidden ||
       !elements.crescentLetterBackdrop.hidden ||
       !elements.communicationBackdrop.hidden ||
-      !elements.accountBackdrop.hidden
+      !elements.accountBackdrop.hidden ||
+      !elements.offlineReportBackdrop.hidden
     ) {
       window.setTimeout(showStartupNotices, 240);
+      return;
+    }
+    if (pendingOfflineReport) {
+      const report = pendingOfflineReport;
+      pendingOfflineReport = null;
+      showOfflineReport(report);
       return;
     }
     if (!state.playerName) {
@@ -15511,6 +15685,20 @@
     });
   }
 
+  function updateAutoBuyStatus() {
+    if (!elements.autoBuyStatus || !elements.autoBuyButton) return;
+    const unlocked = state.upgrades.length >= AUTO_BUY_UNLOCK_RESEARCH;
+    elements.autoBuyButton.disabled = !unlocked;
+    if (!unlocked) {
+      elements.autoBuyStatus.textContent =
+        `研究 ${state.upgrades.length} / ${AUTO_BUY_UNLOCK_RESEARCH} 项后解锁`;
+    } else {
+      elements.autoBuyStatus.textContent = state.autoBuyEnabled
+        ? "当前：开启"
+        : "当前：关闭";
+    }
+  }
+
   function updateShowAllSystemsStatus() {
     updateResourceVisibility();
     if (!elements.showAllSystemsStatus) return;
@@ -16590,6 +16778,7 @@
   }
 
   function updateUi(rateOverride = null) {
+    updateAutoBuyStatus();
     const rate = Number.isFinite(rateOverride) ? rateOverride : calculateRate();
 
     updatePlayerNameDisplay();
@@ -17123,6 +17312,25 @@
   }
 
   function bindEvents() {
+    elements.offlineReportClose?.addEventListener("click", closeOfflineReport);
+    elements.offlineReportBackdrop?.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeOfflineReport();
+      if (event.key === "Tab") { event.preventDefault(); elements.offlineReportClose.focus(); }
+    });
+    elements.autoBuyButton?.addEventListener("click", () => {
+      if (state.upgrades.length < AUTO_BUY_UNLOCK_RESEARCH) return;
+      state.autoBuyEnabled = !state.autoBuyEnabled;
+      updateAutoBuyStatus();
+      saveGame();
+      showToast(
+        state.autoBuyEnabled ? "自动购买已开启" : "自动购买已关闭",
+        state.autoBuyEnabled
+          ? "舰队将每秒自动购买最便宜的可用建筑。"
+          : "需要手动购买建筑。",
+        "⟳",
+      );
+    });
+
     document.addEventListener(
       "click",
       (event) => {
@@ -17704,6 +17912,7 @@
       }
       lastWallClock = Date.now();
       if (!document.hidden) {
+        processGoldenBeacon(Date.now());
         restartGameLoop();
         checkForGameUpdate();
       }
@@ -17751,6 +17960,8 @@
     if (rate > 0) addDust(safeMultiply(rate, delta));
     if (delta > 0) processOperations(delta);
     processRebuild(wallNow);
+    processGoldenBeacon(wallNow);
+    processAutoBuy(wallNow);
     state.playTime = safeAdd(state.playTime, delta);
     recordMissionProgress("playSeconds", delta);
 

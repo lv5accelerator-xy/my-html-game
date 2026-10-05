@@ -129,6 +129,11 @@
           </button>
           <button id="feedback-button" type="button">问题反馈</button>
           <button id="rename-button" type="button">修改玩家名称</button>
+          <button id="auto-buy-button" class="menu-action" type="button">
+            <span aria-hidden="true">⟳</span>
+            <strong>自动购买建筑</strong>
+            <small id="auto-buy-status">未解锁</small>
+          </button>
           <button id="show-all-systems-button" class="menu-action" type="button" aria-pressed="false">
             <span aria-hidden="true">◫</span>
             <strong>显示全部系统</strong>
@@ -2261,6 +2266,33 @@
 
     <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
+    <div id="offline-report-backdrop" class="offline-report-backdrop" hidden>
+      <div class="offline-report-card" role="dialog" aria-modal="true"
+           aria-labelledby="offline-report-title">
+        <header>
+          <span class="offline-report-icon" aria-hidden="true">⌁</span>
+          <small class="offline-report-eyebrow">离线报告</small>
+          <h2 id="offline-report-title">欢迎返回星港</h2>
+        </header>
+        <div class="offline-report-stats">
+          <div>
+            <small>离开时长</small>
+            <strong id="offline-report-duration">—</strong>
+          </div>
+          <div>
+            <small>获得星尘</small>
+            <strong id="offline-report-dust">—</strong>
+          </div>
+          <div>
+            <small>期间产量</small>
+            <strong id="offline-report-rate">—</strong>
+          </div>
+        </div>
+        <p id="offline-report-note" class="offline-report-note"></p>
+        <button type="button" id="offline-report-close"
+                class="primary-button">接收物资</button>
+      </div>
+    </div>
     <div id="modal-backdrop" class="modal-backdrop" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <span class="modal-icon" id="modal-icon" aria-hidden="true">✦</span>

@@ -2656,6 +2656,12 @@
 
     <script src="game-math.js?v=2.3.0"></script>
     <script src="v2-systems.js?v=2.3.0"></script>
+    <script>
+      // 解析期间同步加载，确保归档模块先于游戏启动，避免异步加载竞态。
+      if (new URLSearchParams(location.search).get("expert") === "1") {
+        document.write('<script src="legacy-systems.js?v=2.3.0"><\/script>');
+      }
+    </script>
     <script src="game.js?v=2.3.0"></script>
     <script src="firebase-config.js?v=2.3.0"></script>
     <script type="module" src="cloud-save.js?v=2.3.0"></script>

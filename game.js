@@ -22,6 +22,7 @@
     countFixedIntervalEvents,
   } = numeric;
 
+  const expertMode = new URLSearchParams(location.search).get("expert") === "1";
   // 导航分层只控制界面，不改变系统进度和玩法规则。
   const UI_VISIBILITY = Object.freeze({
     core: ["command", "fleet", "research"],
@@ -29,7 +30,19 @@
     late: ["expedition", "transcend", "leaderboard"],
     hidden: ["starport", "starfall", "missions"],
   });
+  // 核心资源始终显示；次级资源保持后台产出与消耗。
+  const CORE_RESOURCES = Object.freeze(["dust", "cores", "shards"]);
+  const SECONDARY_RESOURCES = Object.freeze([
+    "tokens", "supplies", "fragments", "alloy", "crystal", "circuit",
+    "relic", "prism", "sensor", "ammo", "maintenance", "commandData",
+    "companionSignals", "starfallCurrency",
+  ]);
 
+
+  const PRESTIGE_TIME_HISTORY_KEY = "stellarPrestigeTimes";
+  const PRESTIGE_CYCLE_START_KEY = "stellarPrestigeCycleStart";
+  const PRESTIGE_HISTORY_LIMIT = 3;
+  const AUTO_BUY_UNLOCK_RESEARCH = 5;
   const SAVE_KEY = "stellarOutpostIdleSave_v1";
   const SAVE_BACKUP_KEYS = [
     "stellarOutpostIdleSave_v1_backup_1",
@@ -3552,6 +3565,7 @@
     dust: $("#dust-value"),
     rate: $("#rate-value"),
     cores: $("#core-value"),
+    shards: $("#shards-value"),
     collect: $("#collect-button"),
     clickYield: $("#click-yield"),
     goalTitle: $("#next-goal-title"),
@@ -3685,6 +3699,8 @@
     patchNotesButton: $("#patch-notes-button"),
     renameButton: $("#rename-button"),
     playerNameDisplay: $("#player-name-display"),
+    autoBuyButton: $("#auto-buy-button"),
+    autoBuyStatus: $("#auto-buy-status"),
     showAllSystemsButton: $("#show-all-systems-button"),
     showAllSystemsStatus: $("#show-all-systems-status"),
     navigationModeButton: $("#navigation-mode-button"),
@@ -3713,6 +3729,13 @@
     importFile: $("#import-file"),
     resetButton: $("#reset-button"),
     modalBackdrop: $("#modal-backdrop"),
+    offlineReportBackdrop: $("#offline-report-backdrop"),
+    offlineReportDuration: $("#offline-report-duration"),
+    offlineReportDust: $("#offline-report-dust"),
+    offlineReportRate: $("#offline-report-rate"),
+    offlineReportNote: $("#offline-report-note"),
+    offlineReportClose: $("#offline-report-close"),
+
     modalEyebrow: $("#modal-eyebrow"),
     modalIcon: $("#modal-icon"),
     modalTitle: $("#modal-title"),
@@ -4183,6 +4206,13 @@
     };
   }
 
+  function freshGoldenBeaconState() {
+    return {
+      nextAt: 0,
+      // active 与 expiresAt 不持久化：刷新页面应丢弃当前信标
+    };
+  }
+
   function freshGuidanceState() {
     return {
       compactNavigation: true,
@@ -4486,6 +4516,8 @@
       operations: freshOperationsState(),
       resourceCycle: freshResourceCycleState(),
       guidance: freshGuidanceState(),
+      goldenBeacon: freshGoldenBeaconState(),
+      autoBuyEnabled: false,
       duty: freshDutyState(),
       returnProtocol: freshReturnProtocolState(),
       starportLife: freshStarportLifeState(),
@@ -4509,6 +4541,11 @@
   }
 
   let state = freshState();
+  let activeGoldenBeacon = null;
+  let pendingOfflineReport = null;
+  let lastGoldenBeaconCheckAt = 0;
+  let lastAutoBuyAt = 0;
+  let offlineReportPreviousFocus = null;
   let performanceMode = loadPerformanceMode();
   document.documentElement.dataset.performanceMode = performanceMode;
   let renderedCommandCompanionSignature = null;
@@ -6493,10 +6530,8 @@
 
   function getReconstructionCostMultiplier(targetState = state) {
     const rebirths = Math.max(0, targetState.rebirths || 0);
-    return Math.min(
-      3,
-      safeAdd(1, safeMultiply(0.12, safePow(rebirths, 0.45))),
-    );
+    // 每次跃迁累计降低 8% 建筑成本，最低保留基础成本的 50%。
+    return Math.max(0.5, safePow(0.92, rebirths));
   }
 
   function getStarportRank(id, targetState = state) {
@@ -7366,130 +7401,28 @@
     });
   }
 
-  function selectStarfallRoute(dayKey, routeId) {
-    if (getStarfallPhase() !== "active") return;
-    ensureStarfallDays();
-    if (!getAvailableStarfallDayKeys().includes(dayKey)) return;
-    const record = state.starfall.dayRecords.find((entry) => entry.key === dayKey);
-    const route = getStarfallRoute(routeId);
-    if (!record || record.selectedId || !record.optionIds.includes(routeId) || !route) return;
-    record.selectedId = routeId;
-    record.target = Math.max(1, clampGameNumber(route.target(state)));
-    record.progress = 0;
-    showToast("星路已确认", `${route.title} · 完成后获得 ${STARFALL_DAILY_REWARD} 余辉`, "☄");
-    renderStarfallEvent();
-    saveGame();
+  function selectStarfallRoute(...args) {
+    return globalThis.StellarLegacySystems?.modules.selectStarfallRoute?.(...args);
   }
 
-  function claimStarfallRoute(dayKey) {
-    if (getStarfallPhase() !== "active") return;
-    const record = state.starfall.dayRecords.find((entry) => entry.key === dayKey);
-    if (
-      !record ||
-      !getAvailableStarfallDayKeys().includes(dayKey) ||
-      record.claimed ||
-      record.progress < record.target
-    ) return;
-    record.claimed = true;
-    if (!state.starfall.completedDays.includes(dayKey)) {
-      state.starfall.completedDays.push(dayKey);
-    }
-    const gained = grantStarfallCurrency(STARFALL_DAILY_REWARD);
-    addLog(`星雨寄航：完成 ${dayKey} 星路。`);
-    showToast("星路抵达", `星雨余辉 +${gained}`, "☄");
-    renderStarfallEvent();
-    updateStarfallSummary();
-    saveGame();
+  function claimStarfallRoute(...args) {
+    return globalThis.StellarLegacySystems?.modules.claimStarfallRoute?.(...args);
   }
 
   function getStarfallLetterUnlockAt(letter) {
     return STARFALL_EVENT_START + letter.offset * STARFALL_DAY_MS;
   }
 
-  function chooseStarfallLetter(letterId, choiceId) {
-    const phase = getStarfallPhase();
-    if (!state.starfall || phase === "preview" || phase === "archived") return;
-    const letter = STARFALL_LETTERS.find((entry) => entry.id === letterId);
-    const choice = letter?.choices.find((entry) => entry.id === choiceId);
-    if (!letter || !choice || Date.now() < getStarfallLetterUnlockAt(letter)) return;
-    if (state.starfall.letterChoices[letter.id]) return;
-    state.starfall.letterChoices[letter.id] = choice.id;
-    const reward = phase === "active" ? grantStarfallCurrency(STARFALL_LETTER_REWARD) : 0;
-    showToast(
-      "星雨信笺已归档",
-      reward ? `${choice.result} · 余辉 +${reward}` : choice.result,
-      "✉",
-    );
-    renderStarfallEvent();
-    updateStarfallSummary();
-    saveGame();
+  function chooseStarfallLetter(...args) {
+    return globalThis.StellarLegacySystems?.modules.chooseStarfallLetter?.(...args);
   }
 
-  function claimStarfallMilestone(milestoneId) {
-    const phase = getStarfallPhase();
-    if (phase === "preview" || phase === "archived") return;
-    const milestone = STARFALL_MILESTONES.find((entry) => entry.id === milestoneId);
-    if (
-      !milestone ||
-      state.starfall.totalEarned < milestone.required ||
-      state.starfall.claimedMilestones.includes(milestone.id)
-    ) return;
-    state.starfall.claimedMilestones.push(milestone.id);
-    if (milestone.type === "dust") {
-      addDust(getMissionRewardDust(5), { trackMissions: false });
-    } else if (milestone.type === "supplies") {
-      state.expedition.supplies = Math.min(EXPEDITION_SUPPLY_CAP, state.expedition.supplies + 4);
-      state.expedition.fragments = Math.min(999000, state.expedition.fragments + 12);
-    } else if (milestone.type === "title") {
-      state.starfall.cosmetics.title = true;
-    } else if (milestone.type === "beacon") {
-      state.starfall.cosmetics.beacon = true;
-    } else if (milestone.type === "letter") {
-      state.starfall.cosmetics.letter = true;
-    } else if (milestone.type === "starport") {
-      state.starfall.cosmetics.starport = true;
-    } else if (milestone.type === "eighth") {
-      state.starfall.cosmetics.backdrop = true;
-      state.starfall.cosmetics.keepsake = true;
-    }
-    applyStarfallCosmetics();
-    showToast("星雨里程碑已领取", milestone.reward, "✦");
-    renderStarfallEvent();
-    saveGame();
+  function claimStarfallMilestone(...args) {
+    return globalThis.StellarLegacySystems?.modules.claimStarfallMilestone?.(...args);
   }
 
-  function purchaseStarfallItem(itemId) {
-    const phase = getStarfallPhase();
-    if (phase !== "active" && phase !== "exchange") return;
-    const item = STARFALL_STORE_ITEMS.find((entry) => entry.id === itemId);
-    const bought = clampGameCount(state.starfall.purchases[itemId]);
-    if (!item || state.starfall.currency < item.cost || (item.limit && bought >= item.limit)) return;
-    state.starfall.currency -= item.cost;
-    state.starfall.purchases[itemId] = bought + 1;
-    if (item.id === "emblem") {
-      state.starfall.cosmetics.emblem = true;
-    } else if (item.id === "postcard") {
-      state.starfall.cosmetics.postcard = true;
-    } else if (item.id === "dust") {
-      addDust(getMissionRewardDust(5), { trackMissions: false });
-    } else if (item.id === "materials") {
-      STARPORT_MATERIALS.forEach((material) => {
-        state.starport.materials[material.id] = Math.min(
-          999000,
-          state.starport.materials[material.id] + 3,
-        );
-      });
-    } else if (item.id === "components") {
-      OPERATION_COMPONENTS.forEach((component) => addOperationComponent(component.id, 2));
-    } else if (item.id === "expedition") {
-      state.expedition.supplies = Math.min(EXPEDITION_SUPPLY_CAP, state.expedition.supplies + 2);
-      state.expedition.fragments = Math.min(999000, state.expedition.fragments + 6);
-    }
-    applyStarfallCosmetics();
-    showToast("兑换完成", `${item.title}已送达航站。`, "☄");
-    renderStarfallEvent();
-    updateStarfallSummary();
-    saveGame();
+  function purchaseStarfallItem(...args) {
+    return globalThis.StellarLegacySystems?.modules.purchaseStarfallItem?.(...args);
   }
 
   function ensureMissionPeriods(now = Date.now()) {
@@ -7585,81 +7518,16 @@
     });
   }
 
-  function claimMission(kind, index) {
-    ensureMissionPeriods();
-    const period = kind === "weekly" ? state.missions.weekly : state.missions.daily;
-    const item = period.items[index];
-    if (!item || item.claimed || item.progress < item.target) return;
-    item.claimed = true;
-    const tokens = kind === "weekly" ? 12 : 5;
-    const rewardDust = getMissionRewardDust(kind === "weekly" ? 5 : 1);
-    grantMissionTokens(tokens);
-    addDust(rewardDust, { trackMissions: false });
-    if (kind === "daily") recordMissionProgress("dailyClaims", 1);
-    const template = getMissionTemplate(item.templateId);
-    addLog(`${kind === "weekly" ? "每周" : "每日"}委托完成：${template.title}。`);
-    showToast(
-      "航站委托已交付",
-      `${template.title} · +${tokens} 凭证 · +${formatNumber(rewardDust)} 星尘`,
-      template.icon,
-    );
-    renderMissions();
-    updateMissionSummary();
-    saveGame();
+  function claimMission(...args) {
+    return globalThis.StellarLegacySystems?.modules.claimMission?.(...args);
   }
 
-  function claimDailyMissionBonus() {
-    ensureMissionPeriods();
-    if (
-      state.missions.daily.completionClaimed ||
-      getCompletedMissionCount(state.missions.daily) < 3
-    ) {
-      return;
-    }
-    state.missions.daily.completionClaimed = true;
-    const rewardDust = getMissionRewardDust(10);
-    grantMissionTokens(15);
-    addDust(rewardDust, { trackMissions: false });
-    const signalReward = getSingularityCompanions().length > 0
-      ? grantCompanionSignals(1)
-      : 0;
-    addLog("今日航站委托总奖励已领取。");
-    showToast(
-      "今日航线已稳定",
-      `+15 凭证 · +${formatNumber(rewardDust)} 星尘${signalReward ? ` · 观测信号 +${signalReward}` : ""}`,
-      "☷",
-    );
-    renderMissions();
-    updateMissionSummary();
-    saveGame();
+  function claimDailyMissionBonus(...args) {
+    return globalThis.StellarLegacySystems?.modules.claimDailyMissionBonus?.(...args);
   }
 
-  function claimWeeklyMissionMilestone(index) {
-    ensureMissionPeriods();
-    const milestone = WEEKLY_MISSION_MILESTONES[index];
-    if (
-      !milestone ||
-      state.missions.weekly.milestonesClaimed.includes(index) ||
-      getCompletedMissionCount(state.missions.weekly) < milestone.required
-    ) {
-      return;
-    }
-    state.missions.weekly.milestonesClaimed.push(index);
-    const rewardDust = getMissionRewardDust(milestone.dustMinutes);
-    grantMissionTokens(milestone.tokens);
-    grantMissionMaterials(milestone.materials);
-    addDust(rewardDust, { trackMissions: false });
-    const materialText = milestone.materials > 0
-      ? ` · 每种材料 +${milestone.materials}`
-      : "";
-    showToast(
-      "本周委托里程碑",
-      `+${milestone.tokens} 凭证 · +${formatNumber(rewardDust)} 星尘${materialText}`,
-      "◆",
-    );
-    renderMissions();
-    updateMissionSummary();
-    saveGame();
+  function claimWeeklyMissionMilestone(...args) {
+    return globalThis.StellarLegacySystems?.modules.claimWeeklyMissionMilestone?.(...args);
   }
 
   function getDutyDayOrdinal(key) {
@@ -8103,89 +7971,12 @@
     saveGame();
   }
 
-  function rerollDailyMission() {
-    ensureMissionPeriods();
-    const period = state.missions.daily;
-    if (period.rerollsUsed >= 1) return;
-    const replaceIndex = period.items.findIndex(
-      (item) => !item.claimed && item.progress < item.target,
-    );
-    if (replaceIndex < 0) {
-      showToast("没有可重签的委托", "当前每日委托都已完成。", "☷");
-      return;
-    }
-    const usedIds = new Set(period.items.map((item) => item.templateId));
-    const candidates = seededMissionShuffle(
-      MISSION_TEMPLATES.filter(
-        (template) =>
-          !template.weeklyOnly &&
-          !usedIds.has(template.id) &&
-          template.eligible(state),
-      ),
-      `${period.key}:reroll:${period.items[replaceIndex].templateId}`,
-    );
-    if (!candidates.length) {
-      showToast("暂时没有替代委托", "解锁更多航站系统后会出现更多任务。", "☷");
-      return;
-    }
-    period.items[replaceIndex] = createMissionAssignment(candidates[0], "daily");
-    period.rerollsUsed = 1;
-    showToast("每日委托已重签", `新任务：${candidates[0].title}`, candidates[0].icon);
-    renderMissions();
-    updateMissionSummary();
-    saveGame();
+  function rerollDailyMission(...args) {
+    return globalThis.StellarLegacySystems?.modules.rerollDailyMission?.(...args);
   }
 
-  function purchaseMissionStoreItem(itemId) {
-    ensureMissionPeriods();
-    const item = MISSION_STORE_ITEMS[itemId];
-    if (!item || state.missions.tokens < item.cost) {
-      showToast("航站凭证不足", "完成更多每日与每周委托即可兑换。", "☷");
-      return;
-    }
-    if (itemId === "materialCrate" && state.lifetimeDust < COMBAT_UNLOCK_DUST) {
-      showToast("材料仓尚未接入", "解锁战斗系统后即可兑换星港材料箱。", "⌬");
-      return;
-    }
-    if (
-      itemId === "expeditionSupply" &&
-      state.lifetimeDust < EXPEDITION_UNLOCK_DUST
-    ) {
-      showToast("远征补给尚未接入", "累计获得 5 万星尘后即可兑换远征补给。", "▱");
-      return;
-    }
-    const now = Date.now();
-    if (
-      itemId === "combatRefit" &&
-      state.combat.attackCooldownUntil <= now &&
-      state.combat.skirmishCooldownUntil <= now
-    ) {
-      showToast("舰队已经就绪", "当前没有需要清除的主动战斗冷却。", "⬡");
-      return;
-    }
-    state.missions.tokens = clampGameCount(state.missions.tokens - item.cost);
-    if (itemId === "dustCrate") {
-      const rewardDust = getMissionRewardDust(5);
-      addDust(rewardDust, { trackMissions: false });
-      showToast("星尘整备包已接收", `星尘 +${formatNumber(rewardDust)}`, "✦");
-    } else if (itemId === "materialCrate") {
-      grantMissionMaterials(3);
-      showToast("星港材料箱已接收", "六种专属材料各 +3", "⌬");
-    } else if (itemId === "combatRefit") {
-      state.combat.attackCooldownUntil = now;
-      state.combat.skirmishCooldownUntil = now;
-      showToast("舰队紧急整备完成", "主动远征与近域清剿均已就绪。", "⬡");
-    } else if (itemId === "expeditionSupply") {
-      state.expedition.supplies = Math.min(
-        EXPEDITION_SUPPLY_CAP,
-        clampGameCount(safeAdd(state.expedition.supplies, 3)),
-      );
-      showToast("远征补给已装载", "远征补给 +3", "▱");
-    }
-    renderMissions();
-    updateMissionSummary();
-    updateUi();
-    saveGame();
+  function purchaseMissionStoreItem(...args) {
+    return globalThis.StellarLegacySystems?.modules.purchaseMissionStoreItem?.(...args);
   }
 
   function getExpeditionRouteType(routeTypeId) {
@@ -10127,6 +9918,8 @@
           (entry) => typeof entry === "string" && /^(route|atlas):[a-z0-9-]+$/i.test(entry),
         )
       : [];
+    merged.goldenBeacon = { nextAt: finiteTimestamp(raw.goldenBeacon?.nextAt) };
+    merged.autoBuyEnabled = raw.autoBuyEnabled === true;
     merged.guidance = {
       compactNavigation: raw.guidance?.compactNavigation !== false,
       showAllSystems: raw.guidance?.showAllSystems === true,
@@ -10745,18 +10538,7 @@
             )}，资源损失 ${formatNumber(raidReport.loss)} 星尘。`
           : "期间没有需要结算的大袭击。";
       if (presentation === "load") {
-        window.setTimeout(() => {
-          showModal({
-            eyebrow: "离线报告",
-            icon: raidReport.count > 0 ? "◆" : "⌁",
-            title: "欢迎返回星港",
-            message: `${productionSummary}${raidSummary}当前离线收益与袭击结算最多累计 ${formatDuration(
-              offlineLimit,
-            )}。`,
-            confirmText: "接收物资",
-            cancelText: null,
-          });
-        }, 250);
+        // 离线报告在启动通知队列中展示。
       } else if (presentation === "background") {
         showToast(
           raidReport.count > 0 ? "后台态势已结算" : "后台收益已结算",
@@ -10776,6 +10558,9 @@
     if (state.event?.expires < returnTime) state.event = null;
     if (state.buff?.expires < returnTime) state.buff = null;
     latestReturnReport = { elapsed, offlineGain, raidReport, operationReport };
+    if (presentation === "load" && elapsed >= 60) {
+      pendingOfflineReport = { ...latestReturnReport, offlineRate };
+    }
     state.v2.lastReturn = {
       at: returnTime,
       elapsed,
@@ -10813,13 +10598,15 @@
     registerExperienceSession();
   }
 
-  function buyBuilding(id) {
+  function buyBuilding(id, { silent = false } = {}) {
     const building = BUILDINGS.find((entry) => entry.id === id);
     if (!building || state.lifetimeDust < building.unlock) return;
-    const purchase = selectedPurchase(building);
+    const purchase = silent
+      ? { amount: 1, cost: buildingCost(building, state.buildings[id] || 0, 1) }
+      : selectedPurchase(building);
     if (purchase.amount < 1 || purchase.cost > state.dust + 1e-9) {
-      showToast("星尘不足", `还需要更多星尘来扩建${building.name}。`, "·");
-      playTone(160, 0.05, "square", 0.018);
+      if (!silent) showToast("星尘不足", `还需要更多星尘来扩建${building.name}。`, "·");
+      if (!silent) playTone(160, 0.05, "square", 0.018);
       return;
     }
     const previousRate = calculateRate();
@@ -10843,25 +10630,27 @@
     }
     const nextRate = calculateRate();
     const rateIncrease = Math.max(0, nextRate - previousRate);
-    playTone(380 + BUILDINGS.indexOf(building) * 38, 0.07, "sine");
+    if (!silent) playTone(380 + BUILDINGS.indexOf(building) * 38, 0.07, "sine");
     renderBuildings();
     updateUi(nextRate);
-    const purchasedCard = elements.buildingList.querySelector(
-      `[data-building-card="${building.id}"]`,
-    );
-    const resourceMain = document.querySelector(".resource-main");
-    const rateStat = elements.rate.closest(".resource-stat");
-    [purchasedCard, resourceMain, rateStat].forEach((target, index) => {
-      if (!target) return;
-      target.classList.remove("purchase-flash", "resource-spent", "value-gain");
-      window.requestAnimationFrame(() => {
-        target.classList.add(index === 0 ? "purchase-flash" : index === 1 ? "resource-spent" : "value-gain");
-      });
-      window.setTimeout(() => {
+    if (!silent) {
+      const purchasedCard = elements.buildingList.querySelector(
+        `[data-building-card="${building.id}"]`,
+      );
+      const resourceMain = document.querySelector(".resource-main");
+      const rateStat = elements.rate.closest(".resource-stat");
+      [purchasedCard, resourceMain, rateStat].forEach((target, index) => {
+        if (!target) return;
         target.classList.remove("purchase-flash", "resource-spent", "value-gain");
-      }, 760);
-    });
-    showToast(
+        window.requestAnimationFrame(() => {
+          target.classList.add(index === 0 ? "purchase-flash" : index === 1 ? "resource-spent" : "value-gain");
+        });
+        window.setTimeout(() => {
+          target.classList.remove("purchase-flash", "resource-spent", "value-gain");
+        }, 760);
+      });
+    }
+    if (!silent) showToast(
       "舰队产量已提升",
       `${building.name} +${purchase.amount} · ${formatProductionRate(
         previousRate,
@@ -10892,6 +10681,116 @@
     playTone(680, 0.12, "sine");
     renderUpgrades();
     updateUi();
+  }
+
+  function spawnGoldenBeacon(now = Date.now()) {
+    if (activeGoldenBeacon) return;
+    const lifetimeMs = 15000;
+    activeGoldenBeacon = { expiresAt: now + lifetimeMs };
+
+    let node = document.querySelector("#golden-beacon");
+    if (!node) {
+      node = document.createElement("button");
+      node.id = "golden-beacon";
+      node.type = "button";
+      node.className = "golden-beacon";
+      node.setAttribute("aria-label", "点击黄金信标获得奖励");
+      node.innerHTML = '<span aria-hidden="true">✦</span>';
+      node.addEventListener("click", claimGoldenBeacon);
+      document.body.appendChild(node);
+    }
+
+    // 位置：避开顶部导航（≥120px）和底部（≥120px）
+    const marginTop = 120;
+    const marginBottom = 120;
+    const marginSide = 60;
+    const minX = Math.min(marginSide, Math.max(0, window.innerWidth - 72));
+    const maxX = Math.max(minX, window.innerWidth - marginSide - 72);
+    const minY = Math.min(marginTop, Math.max(0, window.innerHeight - 72));
+    const maxY = Math.max(minY, window.innerHeight - marginBottom - 72);
+    const x = Math.floor(minX + Math.random() * (maxX - minX));
+    const y = Math.floor(minY + Math.random() * (maxY - minY));
+    node.style.left = `${x}px`;
+    node.style.top = `${y}px`;
+    node.classList.remove("golden-beacon-exit");
+    node.hidden = false;
+    node.classList.add("golden-beacon-enter");
+    window.setTimeout(() => node.classList.remove("golden-beacon-enter"), 400);
+  }
+
+  function claimGoldenBeacon() {
+    if (!activeGoldenBeacon) return;
+    const now = Date.now();
+    if (now >= activeGoldenBeacon.expiresAt) {
+      despawnGoldenBeacon();
+      state.goldenBeacon.nextAt = now + randomBetween(120000, 300000);
+      return;
+    }
+    const rate = calculateRate(state, false);
+    const reward = safeMultiply(rate, 30);
+    const safeReward = Math.max(10, reward);
+    addDust(safeReward);
+    showToast(
+      "黄金信标已激活",
+      `获得 30 秒产量：+${formatNumber(safeReward)} 星尘`,
+      "✦",
+    );
+    playAchievementTone();
+    despawnGoldenBeacon();
+    state.goldenBeacon.nextAt = now + randomBetween(120000, 300000);
+    saveGame();
+  }
+
+  function despawnGoldenBeacon() {
+    activeGoldenBeacon = null;
+    const node = document.querySelector("#golden-beacon");
+    if (node) {
+      node.classList.add("golden-beacon-exit");
+      window.setTimeout(() => {
+        if (activeGoldenBeacon) return;
+        node.hidden = true;
+        node.classList.remove("golden-beacon-exit");
+      }, 220);
+    }
+  }
+
+  function processGoldenBeacon(now = Date.now()) {
+    if (document.hidden || now - lastGoldenBeaconCheckAt < 1000) return;
+    lastGoldenBeaconCheckAt = now;
+    if (activeGoldenBeacon) {
+      if (now >= activeGoldenBeacon.expiresAt) {
+        despawnGoldenBeacon();
+        state.goldenBeacon.nextAt = now + randomBetween(120000, 300000);
+        saveGame();
+      }
+      return;
+    }
+    if (!state.goldenBeacon.nextAt) {
+      state.goldenBeacon.nextAt = now + randomBetween(30000, 90000);
+      return;
+    }
+    if (now >= state.goldenBeacon.nextAt) {
+      spawnGoldenBeacon(now);
+    }
+  }
+
+  function processAutoBuy(now = Date.now()) {
+    if (!state.autoBuyEnabled) return;
+    if (state.upgrades.length < AUTO_BUY_UNLOCK_RESEARCH) return;
+    if (now - lastAutoBuyAt < 1000) return;
+    lastAutoBuyAt = now;
+
+    const candidates = BUILDINGS.flatMap((building) => {
+      if (state.lifetimeDust < building.unlock) return [];
+      const owned = state.buildings[building.id] || 0;
+      const cost = buildingCost(building, owned, 1);
+      if (cost > state.dust + 1e-9) return [];
+      return [{ building, cost }];
+    });
+
+    if (candidates.length === 0) return;
+    candidates.sort((a, b) => a.cost - b.cost);
+    buyBuilding(candidates[0].building.id, { silent: true });
   }
 
   function collect(event) {
@@ -11219,6 +11118,49 @@
     elements.rebuildReport.textContent = state.rebuild.lastReport;
   }
 
+  function getPrestigeTimeHistory() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(PRESTIGE_TIME_HISTORY_KEY) || "[]");
+      return Array.isArray(parsed)
+        ? parsed.filter((value) => Number.isFinite(value) && value > 0).slice(-PRESTIGE_HISTORY_LIMIT)
+        : [];
+    } catch (error) { return []; }
+  }
+
+  function recordPrestigeTime(seconds) {
+    if (!Number.isFinite(seconds) || seconds <= 0) return;
+    const history = [...getPrestigeTimeHistory(), Math.max(1, Math.round(seconds))].slice(-PRESTIGE_HISTORY_LIMIT);
+    try {
+      localStorage.setItem(PRESTIGE_TIME_HISTORY_KEY, JSON.stringify(history));
+    } catch (error) { /* 存储不可用时不影响跃迁。 */ }
+  }
+
+  function recordPrestigeCycle() {
+    const now = Date.now();
+    try {
+      // 安装时间不会随跃迁重置；优先使用本地周期起点或现有航线起点。
+      const localStart = Number(localStorage.getItem(PRESTIGE_CYCLE_START_KEY));
+      const startedAt = localStart > 0 ? localStart : state.v2?.runBuild?.startedAt || state.experience?.installedAt;
+      if (startedAt > 0 && startedAt < now) recordPrestigeTime((now - startedAt) / 1000);
+      localStorage.setItem(PRESTIGE_CYCLE_START_KEY, String(now));
+    } catch (error) { /* 本地预览不可用时，正常执行原有结算。 */ }
+  }
+
+  function estimateNextPrestigeSeconds(targetState = state) {
+    const history = getPrestigeTimeHistory();
+    if (!history.length) return null;
+    const average = history.reduce((sum, value) => sum + value, 0) / history.length;
+    const nextFactor = Math.pow(0.7, Math.min(3, targetState.rebirths || 0));
+    return Math.max(60, Math.round(average * nextFactor));
+  }
+
+  function formatPrestigeEta(seconds) {
+    if (!Number.isFinite(seconds)) return "暂无历史数据";
+    if (seconds < 90) return "约 1 分钟";
+    if (seconds < 3600) return `约 ${Math.round(seconds / 60)} 分钟`;
+    return `约 ${(seconds / 3600).toFixed(1)} 小时`;
+  }
+
   function prestige() {
     const gain = getPrestigeGain();
     if (gain < 1) return;
@@ -11226,6 +11168,8 @@
       cores: Math.min(CORE_RESERVE_CAP, safeAdd(state.cores, gain)),
       totalCores: Math.min(CORE_RESERVE_CAP, safeAdd(state.totalCores, gain)),
     });
+    const prestigeEta = estimateNextPrestigeSeconds();
+    const etaText = prestigeEta ? ` 历史估算下次回到当前进度：${formatPrestigeEta(prestigeEta)}。` : "";
     const nextReconstructionCost = getReconstructionCostMultiplier({
       ...state,
       rebirths: state.rebirths + 1,
@@ -11236,11 +11180,12 @@
       title: `提炼 ${formatNumber(gain, 0)} 枚星核？`,
       message: `跃迁将清空当前星尘、自动化单元与本轮研究，但保留战斗强化、星港建筑与材料、星核商店、成就和统计。下一航线的自动化设施重建成本将调整为 ×${nextReconstructionCost.toFixed(
         2,
-      )}；星核永久产量倍率预计 ×${getCoreMultiplier().toFixed(2)} → ×${projectedCoreMultiplier.toFixed(2)}。这是星核部分的变化，不是重建前的即时产量；回响收藏、归航计划和委托进度保留。`,
+      )}；星核永久产量倍率预计 ×${getCoreMultiplier().toFixed(2)} → ×${projectedCoreMultiplier.toFixed(2)}。这是星核部分的变化，不是重建前的即时产量；回响收藏、归航计划和委托进度保留。${etaText} 跃迁后只需选择一项航线学说。`,
       confirmText: "确认跃迁",
       cancelText: "暂不跃迁",
       onConfirm: () => {
         refreshCareerRecords();
+        recordPrestigeCycle();
         const completedRun = V2_SYSTEMS?.completeRun?.(
           state.v2,
           state,
@@ -11369,7 +11314,7 @@
       title: companionReward
         ? `坍缩并唤醒${companionReward.name}？`
         : `坍缩并提炼 ${formatNumber(gain, 0)} 枚奇点碎片？`,
-      message: `本次操作将重置星尘、舰队、舰队编成方案与整备物资、研究、星核、星核商店、跃迁次数、战斗成长以及星港建筑和材料。成就、舰队收藏徽记、边境星区、奇点碎片及全部超越协议永久保留。当前遗产协议会保留每类星核强化 ${legacyRank} 级，并以 ${formatNumber(
+      message: `本次操作将重置星尘、舰队、舰队编成方案与整备物资、研究、星核、星核商店、跃迁次数、战斗成长以及星港建筑和材料。成就、舰队收藏徽记、边境星区、奇点碎片及全部超越协议永久保留。每类星核强化保留 ${legacyRank} 级，并以 ${formatNumber(
         startingDust,
       )} 初始星尘开启新周期。${
         companionReward
@@ -11793,46 +11738,8 @@
     )}%`;
   }
 
-  function upgradeStarportModule(moduleId) {
-    const module = STARPORT_MODULES.find((entry) => entry.id === moduleId);
-    if (!module || state.lifetimeDust < module.unlock) return;
-    const rank = getStarportRank(module.id);
-    if (rank >= module.maxRank) return;
-    const cost = getStarportModuleCost(module);
-    if (!canAffordStarportModule(module)) {
-      showToast("建设资源不足", `需要 ${describeStarportCost(cost)}。`, "⌬");
-      playTone(150, 0.06, "square", 0.018);
-      return;
-    }
-    state.dust = clampGameNumber(state.dust - cost.dust);
-    recordMissionProgress("dustSpent", cost.dust);
-    STARPORT_MATERIALS.forEach((material) => {
-      const amount = cost[material.id] || 0;
-      if (amount <= 0) return;
-      state.starport.materials[material.id] = clampGameCount(
-        state.starport.materials[material.id] - amount,
-      );
-    });
-    state.starport.modules[module.id] = clamp(
-      rank + 1,
-      0,
-      module.maxRank,
-    );
-    recordCrescentProgress("starportUpgrades");
-    recordMissionProgress("starportUpgrades", 1);
-    const action = rank === 0 ? "建造" : "强化";
-    const message = `${module.name}${action}完成，当前等级 ${rank + 1} / ${module.maxRank}。`;
-    addLog(message);
-    showToast(
-      `${module.name}${action}完成`,
-      `${describeStarportModuleEffect(module, rank + 1)}，增幅已生效。`,
-      module.icon,
-    );
-    playAchievementTone();
-    checkAchievements();
-    renderStarport();
-    updateUi();
-    saveGame();
+  function upgradeStarportModule(...args) {
+    return globalThis.StellarLegacySystems?.modules.upgradeStarportModule?.(...args);
   }
 
   function getStarportBlueprintPreview(blueprintId) {
@@ -11852,36 +11759,8 @@
     };
   }
 
-  function switchStarportBlueprint(blueprintId) {
-    const blueprint = STARPORT_BLUEPRINTS.find((entry) => entry.id === blueprintId);
-    if (!blueprint || state.starport.activeBlueprintId === blueprint.id) return;
-    const component = OPERATION_COMPONENTS.find(
-      (entry) => entry.id === blueprint.componentId,
-    );
-    if ((state.operations.components[blueprint.componentId] || 0) < 1) {
-      showToast(
-        "缺少蓝图切换组件",
-        `切换到${blueprint.name}需要 1 件${component?.name || "航站组件"}，可在航站作业台获取。`,
-        blueprint.icon,
-      );
-      return;
-    }
-    state.operations.components[blueprint.componentId] = clampGameCount(
-      state.operations.components[blueprint.componentId] - 1,
-    );
-    state.starport.activeBlueprintId = blueprint.id;
-    state.starport.blueprintSwitches = clampGameCount(
-      state.starport.blueprintSwitches + 1,
-    );
-    showToast(
-      `已启用${blueprint.name}`,
-      `${component?.name || "航站组件"} -1 · 新协同已进入生产、战斗与远征计算。`,
-      blueprint.icon,
-    );
-    addLog(`星港蓝图切换为${blueprint.name}。`);
-    renderStarport();
-    updateUi();
-    saveGame();
+  function switchStarportBlueprint(...args) {
+    return globalThis.StellarLegacySystems?.modules.switchStarportBlueprint?.(...args);
   }
 
   function attackSkirmish(targetId) {
@@ -12429,6 +12308,41 @@
     }, 3200);
   }
 
+  function showOfflineReport(report) {
+    if (!elements.offlineReportBackdrop) return;
+    const rate = report.offlineRate ?? calculateRate(state, false);
+    elements.offlineReportDuration.textContent = formatDuration(report.elapsed);
+    elements.offlineReportDust.textContent =
+      `+${formatNumber(report.offlineGain, 0)}`;
+    elements.offlineReportRate.textContent =
+      `${formatNumber(rate, 0)} / 秒`;
+
+    const parts = [];
+    if (report.operationReport?.actions > 0) {
+      parts.push(`航站作业完成 ${report.operationReport.actions} 次`);
+    }
+    if (report.raidReport?.count > 0) {
+      parts.push(
+        `大袭击：守住 ${report.raidReport.defended} 次，失守 ${report.raidReport.breached} 次`,
+      );
+    }
+    if (parts.length === 0) {
+      parts.push("航线一切平静，舰队持续工作了整段时间。");
+    }
+    elements.offlineReportNote.textContent = parts.join(" · ");
+
+    offlineReportPreviousFocus = document.activeElement;
+    elements.offlineReportBackdrop.hidden = false;
+    elements.offlineReportClose.focus();
+  }
+
+  function closeOfflineReport() {
+    if (!elements.offlineReportBackdrop) return;
+    elements.offlineReportBackdrop.hidden = true;
+    offlineReportPreviousFocus?.focus?.();
+    window.setTimeout(showStartupNotices, 200);
+  }
+
   function showModal({
     eyebrow,
     icon,
@@ -12734,9 +12648,16 @@
       !elements.patchNotesBackdrop.hidden ||
       !elements.crescentLetterBackdrop.hidden ||
       !elements.communicationBackdrop.hidden ||
-      !elements.accountBackdrop.hidden
+      !elements.accountBackdrop.hidden ||
+      !elements.offlineReportBackdrop.hidden
     ) {
       window.setTimeout(showStartupNotices, 240);
+      return;
+    }
+    if (pendingOfflineReport) {
+      const report = pendingOfflineReport;
+      pendingOfflineReport = null;
+      showOfflineReport(report);
       return;
     }
     if (!state.playerName) {
@@ -13196,15 +13117,15 @@
         <span class="fleet-command-state">三舰队在线</span>
       </div>
       <div class="fleet-command-resource-grid">
-        <div><span>◆</span><small>战术弹药</small><strong>${formatNumber(
+        <div data-secondary-resource="ammo"><span>◆</span><small>战术弹药</small><strong>${formatNumber(
           command.ammo,
           0,
         )}</strong></div>
-        <div><span>⬡</span><small>维护件</small><strong>${formatNumber(
+        <div data-secondary-resource="maintenance"><span>⬡</span><small>维护件</small><strong>${formatNumber(
           command.maintenance,
           0,
         )}</strong></div>
-        <div><span>⌘</span><small>指挥数据</small><strong>${formatNumber(
+        <div data-secondary-resource="commandData"><span>⌘</span><small>指挥数据</small><strong>${formatNumber(
           command.commandData,
           0,
         )}</strong></div>
@@ -13956,6 +13877,8 @@
     STARPORT_MATERIALS.forEach((material) => {
       const item = document.createElement("div");
       item.className = `material-chip${compact ? " compact" : ""}`;
+      item.dataset.secondaryResource = material.id;
+      item.hidden = !isResourceVisible(material.id);
       const icon = document.createElement("span");
       icon.className = `material-icon material-${material.id}`;
       icon.textContent = material.icon;
@@ -14011,194 +13934,20 @@
     ];
   }
 
-  function claimStarportLifeEvent() {
-    const event = ensureStarportLifeDay();
-    if (!event || state.starportLife.claimed) return;
-    const companion = SINGULARITY_COMPANIONS.find(
-      (entry) => entry.id === state.starportLife.companionId,
-    );
-    grantCompanionRewards(event.reward);
-    state.starportLife.claimed = true;
-    state.starportLife.totalEvents = clampGameCount(state.starportLife.totalEvents + 1);
-    state.starportLife.eventLog.push({ eventId: event.id, dayKey: state.starportLife.dayKey });
-    state.starportLife.eventLog = state.starportLife.eventLog.slice(-12);
-    addLog(`星港日常：${event.title}。`);
-    showToast("今日星港片段已收藏", `${event.title} · ${formatCompanionRewards(event.reward)}`, companion?.icon || event.icon);
-    playAchievementTone();
-    renderStarport();
-    updateUi();
-    saveGame();
+  function claimStarportLifeEvent(...args) {
+    return globalThis.StellarLegacySystems?.modules.claimStarportLifeEvent?.(...args);
   }
 
-  function renderStarportLife() {
-    const event = ensureStarportLifeDay();
-    const companion = SINGULARITY_COMPANIONS.find(
-      (entry) => entry.id === state.starportLife.companionId,
-    );
-    const stats = getStarportGalleryStats();
-    elements.starportGalleryStats.innerHTML = stats.map((entry) => `<span><i>${entry.icon}</i><small>${entry.label}</small><strong>${entry.value} / ${entry.total}</strong></span>`).join("");
-    elements.starportLifeEventIcon.textContent = companion?.icon || event?.icon || "·";
-    elements.starportLifeEventTitle.textContent = event?.title || "等待第一位住客";
-    elements.starportLifeEventStory.textContent = event
-      ? event.story.replace("{companion}", companion?.name || "一只伴星")
-      : "首次奇点超越并唤醒伴星后，这里每天会出现一段不影响倍率的星港生活。";
-    elements.starportLifeEventReward.textContent = event
-      ? `今日小礼物：${formatCompanionRewards(event.reward)}`
-      : "不会新增货币，也不会错过主线进度。";
-    elements.starportLifeEventClaim.disabled = !event || state.starportLife.claimed;
-    elements.starportLifeEventClaim.textContent = !event
-      ? "唤醒伴星后开放"
-      : state.starportLife.claimed
-        ? "今日已收藏"
-        : "收下并收藏片段";
-    const recentLogs = state.starportLife.eventLog.slice(-3).reverse();
-    elements.starportLifeLog.textContent = recentLogs.length
-      ? `最近片段：${recentLogs.map((record) => STARPORT_LIFE_EVENTS.find((entry) => entry.id === record.eventId)?.title).filter(Boolean).join(" · ")} · 累计 ${formatNumber(state.starportLife.totalEvents, 0)} 次`
-      : "生活日志尚未写下第一行。";
+  function renderStarportLife(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderStarportLife?.(...args);
   }
 
-  function renderStarportBlueprints() {
-    if (!elements.starportBlueprintList) return;
-    const active = getStarportBlueprint();
-    const currentPreview = getStarportBlueprintPreview(active.id);
-    elements.starportBlueprintActive.textContent = `当前：${active.name}`;
-    elements.starportBlueprintList.replaceChildren();
-    STARPORT_BLUEPRINTS.forEach((blueprint) => {
-      const isActive = blueprint.id === active.id;
-      const synergy = getStarportBlueprintSynergy(blueprint.id);
-      const preview = getStarportBlueprintPreview(blueprint.id);
-      const component = OPERATION_COMPONENTS.find(
-        (entry) => entry.id === blueprint.componentId,
-      );
-      const componentCount = state.operations.components[blueprint.componentId] || 0;
-      const card = document.createElement("article");
-      card.className = `starport-plan-card${isActive ? " active" : ""}`;
-      const heading = document.createElement("header");
-      heading.innerHTML = `<span aria-hidden="true">${blueprint.icon}</span><div><small>${blueprint.role}</small><strong>${blueprint.name}</strong></div><b>${isActive ? "运行中" : `协同 ×${formatNumber(synergy, 2)}`}</b>`;
-      const description = document.createElement("p");
-      description.textContent = blueprint.description;
-      const effect = document.createElement("div");
-      effect.className = "starport-plan-effect";
-      effect.textContent = blueprint.id === "industrial"
-        ? `自动生产 ×${formatNumber(synergy, 2)}`
-        : blueprint.id === "bastion"
-          ? `攻击与防御 ×${formatNumber(synergy, 2)}`
-          : `战利品 ×${formatNumber(synergy, 2)} · 远征成功率 +${formatNumber(preview.expeditionChance * 100, 1)}%`;
-      const comparison = document.createElement("small");
-      comparison.className = "starport-plan-preview";
-      comparison.textContent = [
-        `产量 ${formatNumber(currentPreview.automaticRate)} → ${formatNumber(preview.automaticRate)}`,
-        `战力 ${formatNumber(currentPreview.attackPower)} → ${formatNumber(preview.attackPower)}`,
-        `防御 ${formatNumber(currentPreview.defensePower)} → ${formatNumber(preview.defensePower)}`,
-        `掉落 ×${formatNumber(currentPreview.lootMultiplier, 2)} → ×${formatNumber(preview.lootMultiplier, 2)}`,
-      ].join(" · ");
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.starportBlueprint = blueprint.id;
-      button.disabled = isActive || componentCount < 1;
-      button.textContent = isActive
-        ? "当前方案"
-        : `切换 · ${component?.name || "航站组件"} 1（持有 ${formatNumber(componentCount, 0)}）`;
-      card.append(heading, description, effect, comparison, button);
-      elements.starportBlueprintList.appendChild(card);
-    });
+  function renderStarportBlueprints(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderStarportBlueprints?.(...args);
   }
 
-  function renderStarport() {
-    renderMaterialWallet(elements.starportMaterialList);
-    renderStarportLife();
-    renderStarportBlueprints();
-    if (!elements.starportSlotMap) return;
-    elements.starportSlotMap.textContent = "";
-    STARPORT_MODULES.forEach((module) => {
-      const rank = getStarportRank(module.id);
-      const unlocked = state.lifetimeDust >= module.unlock;
-      const maxed = rank >= module.maxRank;
-      const cost = getStarportModuleCost(module);
-      const affordable = canAffordStarportModule(module);
-      const card = document.createElement("article");
-      card.className = [
-        "starport-slot",
-        `slot-${module.position}`,
-        rank > 0 ? "online" : "",
-        unlocked ? "" : "locked",
-      ]
-        .filter(Boolean)
-        .join(" ");
-
-      const line = document.createElement("span");
-      line.className = "starport-callout-line";
-      line.setAttribute("aria-hidden", "true");
-      line.appendChild(document.createElement("i"));
-
-      const heading = document.createElement("div");
-      heading.className = "starport-slot-heading";
-      const icon = document.createElement("span");
-      icon.className = "starport-slot-icon";
-      icon.textContent = unlocked ? module.icon : "?";
-      const titleCopy = document.createElement("span");
-      const category = document.createElement("small");
-      category.textContent = `${module.category}附属建筑`;
-      const title = document.createElement("strong");
-      title.textContent = unlocked ? module.name : "未开放栏位";
-      titleCopy.append(category, title);
-      const rankLabel = document.createElement("b");
-      rankLabel.textContent = unlocked ? `${rank} / ${module.maxRank}` : "锁定";
-      heading.append(icon, titleCopy, rankLabel);
-
-      const description = document.createElement("p");
-      description.textContent = unlocked
-        ? module.description
-        : `累计获得 ${formatNumber(module.unlock, 0)} 星尘后开放`;
-
-      const footer = document.createElement("div");
-      footer.className = "starport-slot-footer";
-      const effect = document.createElement("span");
-      const currentEffect = describeStarportModuleEffect(module, rank);
-      effect.textContent = maxed
-        ? currentEffect
-        : `${currentEffect} → ${describeStarportModuleEffect(module, rank + 1)}`;
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.starportModule = module.id;
-      button.disabled = !unlocked || maxed || !affordable;
-      if (!unlocked) {
-        button.textContent = "未开放";
-      } else if (maxed) {
-        button.textContent = "已满级";
-      } else {
-        button.textContent = `${rank === 0 ? "建造" : "强化"} · ${describeStarportCost(cost)}`;
-      }
-      footer.append(effect, button);
-      card.append(line, heading, description, footer);
-      elements.starportSlotMap.appendChild(card);
-    });
-
-    const totalRank = getTotalStarportRanks();
-    elements.starportRankTotal.textContent = `${totalRank} / ${STARPORT_MODULES.reduce(
-      (total, module) => total + module.maxRank,
-      0,
-    )}`;
-    elements.starportProductionBoost.textContent = `×${formatNumber(
-      getStarportProductionMultiplier(),
-      2,
-    )}`;
-    elements.starportCostEfficiency.textContent = `-${formatNumber(
-      (1 - getStarportBuildingCostMultiplier()) * 100,
-      1,
-    )}%`;
-    elements.starportAttackBoost.textContent = `×${formatNumber(
-      getStarportAttackMultiplier(),
-      2,
-    )}`;
-    elements.starportDefenseBoost.textContent = `×${formatNumber(
-      getStarportDefenseMultiplier(),
-      2,
-    )}`;
-    elements.starportLootBoost.textContent = `×${formatNumber(
-      getStarportLootMultiplier(),
-      2,
-    )}`;
+  function renderStarport(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderStarport?.(...args);
   }
 
   function renderSkirmishTargets() {
@@ -14349,56 +14098,8 @@
     return includeDays ? `${days}天 ${time}` : time;
   }
 
-  function renderMissionList(kind, container) {
-    const period = kind === "weekly" ? state.missions.weekly : state.missions.daily;
-    container.textContent = "";
-    period.items.forEach((item, index) => {
-      const template = getMissionTemplate(item.templateId);
-      if (!template) return;
-      const completed = item.progress >= item.target;
-      const card = document.createElement("article");
-      card.className = `mission-card${completed ? " completed" : ""}${
-        item.claimed ? " claimed" : ""
-      }`;
-
-      const icon = document.createElement("span");
-      icon.className = "mission-card-icon";
-      icon.setAttribute("aria-hidden", "true");
-      icon.textContent = template.icon;
-
-      const copy = document.createElement("div");
-      copy.className = "mission-card-copy";
-      const title = document.createElement("strong");
-      title.textContent = template.title;
-      const detail = document.createElement("small");
-      detail.textContent = `${describeMission(template, kind, item.target)} · ${formatMissionProgress(
-        template,
-        item.progress,
-      )} / ${formatMissionProgress(template, item.target)}`;
-      const track = document.createElement("div");
-      track.className = "mission-progress-track";
-      const fill = document.createElement("span");
-      fill.style.width = `${clamp(item.progress / item.target, 0, 1) * 100}%`;
-      track.appendChild(fill);
-      copy.append(title, detail, track);
-
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.missionClaim = String(index);
-      button.dataset.missionKind = kind;
-      button.disabled = !completed || item.claimed;
-      button.textContent = item.claimed
-        ? "已领取"
-        : completed
-          ? kind === "weekly" ? "领取 12" : "领取 5"
-          : "进行中";
-      button.setAttribute(
-        "aria-label",
-        `${item.claimed ? "已领取" : "领取"}${template.title}奖励`,
-      );
-      card.append(icon, copy, button);
-      container.appendChild(card);
-    });
+  function renderMissionList(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderMissionList?.(...args);
   }
 
   function renderAnomalies() {
@@ -15052,90 +14753,8 @@
     elements.missionsNavigationBadge.hidden = claimable < 1;
   }
 
-  function renderMissions() {
-    ensureMissionPeriods();
-    const now = Date.now();
-    const claimable = getMissionClaimableCount();
-    const dailyCompleted = getCompletedMissionCount(state.missions.daily);
-    const weeklyCompleted = getCompletedMissionCount(state.missions.weekly);
-    elements.missionTokenBalance.textContent = formatNumber(
-      state.missions.tokens,
-      0,
-    );
-    elements.claimAllMissionsButton.disabled = claimable < 1;
-    elements.claimAllMissionsButton.textContent = claimable > 0
-      ? `一键领取全部（${claimable}）`
-      : "暂无可领奖励";
-    elements.dailyResetCountdown.textContent =
-      `距离刷新 ${formatMissionCountdown(getNextDailyReset(now) - now)}`;
-    elements.weeklyResetCountdown.textContent =
-      `距离刷新 ${formatMissionCountdown(getNextWeeklyReset(now) - now, true)}`;
-    elements.dailyRerollButton.disabled = state.missions.daily.rerollsUsed >= 1;
-    elements.dailyRerollButton.textContent = state.missions.daily.rerollsUsed >= 1
-      ? "今日已重签"
-      : "免费重签一项";
-    renderMissionList("daily", elements.dailyMissionList);
-    renderMissionList("weekly", elements.weeklyMissionList);
-
-    elements.dailyBonusProgress.textContent = `完成 ${Math.min(
-      dailyCompleted,
-      3,
-    )} / 3`;
-    elements.dailyBonusButton.disabled =
-      dailyCompleted < 3 || state.missions.daily.completionClaimed;
-    elements.dailyBonusButton.textContent = state.missions.daily.completionClaimed
-      ? "今日已领取"
-      : dailyCompleted >= 3
-        ? "领取总奖励"
-        : "尚未达成";
-
-    elements.weeklyMilestoneList.textContent = "";
-    WEEKLY_MISSION_MILESTONES.forEach((milestone, index) => {
-      const claimed = state.missions.weekly.milestonesClaimed.includes(index);
-      const reached = weeklyCompleted >= milestone.required;
-      const card = document.createElement("article");
-      card.className = `weekly-milestone${reached ? " completed" : ""}${
-        claimed ? " claimed" : ""
-      }`;
-      const title = document.createElement("strong");
-      title.textContent = `${milestone.required} 项里程碑`;
-      const reward = document.createElement("span");
-      reward.textContent = `+${milestone.tokens} 凭证 · ${milestone.dustMinutes} 分钟产量${
-        milestone.materials > 0 ? ` · 每种材料 +${milestone.materials}` : ""
-      }`;
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.weeklyMilestone = String(index);
-      button.disabled = !reached || claimed;
-      button.textContent = claimed
-        ? "已领取"
-        : reached
-          ? "领取奖励"
-          : `${weeklyCompleted} / ${milestone.required}`;
-      card.append(title, reward, button);
-      elements.weeklyMilestoneList.appendChild(card);
-    });
-
-    elements.missionStore.querySelectorAll("[data-mission-store]").forEach((button) => {
-      const item = MISSION_STORE_ITEMS[button.dataset.missionStore];
-      const lockedMaterial =
-        button.dataset.missionStore === "materialCrate" &&
-        state.lifetimeDust < COMBAT_UNLOCK_DUST;
-      const noCombatCooldown =
-        button.dataset.missionStore === "combatRefit" &&
-        state.combat.attackCooldownUntil <= now &&
-        state.combat.skirmishCooldownUntil <= now;
-      const lockedExpeditionSupply =
-        button.dataset.missionStore === "expeditionSupply" &&
-        state.lifetimeDust < EXPEDITION_UNLOCK_DUST;
-      button.disabled =
-        !item ||
-        state.missions.tokens < item.cost ||
-        lockedMaterial ||
-        noCombatCooldown ||
-        lockedExpeditionSupply;
-    });
-    updateMissionSummary();
+  function renderMissions(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderMissions?.(...args);
   }
 
   function formatStarfallCountdown(milliseconds) {
@@ -15191,192 +14810,28 @@
           : "纪念";
   }
 
-  function renderStarfallDays(now, phase) {
-    elements.starfallDayList.textContent = "";
-    if (phase !== "active") {
-      const empty = document.createElement("article");
-      empty.className = "starfall-empty-state";
-      empty.innerHTML = phase === "preview"
-        ? "<span>☄</span><div><strong>第一条星路将在 8 月 8 日出现</strong><p>活动开始后，每天从三种玩法中选择一种；晚到也能补做最近三天。</p></div>"
-        : "<span>◇</span><div><strong>本次流星观测已经结束</strong><p>星路不再产生余辉，已获得的余辉仍可在兑换期内使用。</p></div>";
-      elements.starfallDayList.appendChild(empty);
-      return;
-    }
-    ensureStarfallDays(now);
-    const availableKeys = getAvailableStarfallDayKeys(now);
-    availableKeys.forEach((key, index) => {
-      const record = state.starfall.dayRecords.find((entry) => entry.key === key);
-      if (!record) return;
-      const card = document.createElement("article");
-      card.className = `starfall-day-card${record.claimed ? " claimed" : ""}`;
-      const isToday = index === availableKeys.length - 1;
-      const heading = document.createElement("header");
-      heading.innerHTML = `<span><small>${isToday ? "今日星路" : "追赶星路"}</small><strong>${formatStarfallDayLabel(key)}</strong></span><b>${record.claimed ? "已抵达" : `+${STARFALL_DAILY_REWARD} 余辉`}</b>`;
-      card.appendChild(heading);
-      if (!record.selectedId) {
-        const options = document.createElement("div");
-        options.className = "starfall-route-options";
-        record.optionIds.forEach((routeId) => {
-          const route = getStarfallRoute(routeId);
-          if (!route) return;
-          const button = document.createElement("button");
-          button.type = "button";
-          button.dataset.starfallRoute = route.id;
-          button.dataset.starfallDay = key;
-          button.innerHTML = `<span>${route.icon}</span><strong>${route.title}</strong><small>${route.description}</small><em>选择此星路</em>`;
-          options.appendChild(button);
-        });
-        card.appendChild(options);
-      } else {
-        const route = getStarfallRoute(record.selectedId);
-        const progress = document.createElement("div");
-        progress.className = "starfall-route-progress";
-        const ratio = record.target > 0 ? clamp(record.progress / record.target, 0, 1) : 0;
-        progress.innerHTML = `<span class="starfall-route-icon">${route?.icon || "☄"}</span><div><small>已选择 · ${route?.title || "星路"}</small><strong>${formatMissionProgress(route || { format: "count" }, record.progress)} / ${formatMissionProgress(route || { format: "count" }, record.target)}</strong><div aria-hidden="true"><span style="width:${ratio * 100}%"></span></div></div>`;
-        const claim = document.createElement("button");
-        claim.type = "button";
-        claim.dataset.starfallClaim = key;
-        claim.disabled = record.claimed || record.progress < record.target;
-        claim.textContent = record.claimed
-          ? "已领取"
-          : record.progress >= record.target
-            ? "领取余辉"
-            : "航行中";
-        progress.appendChild(claim);
-        card.appendChild(progress);
-      }
-      elements.starfallDayList.appendChild(card);
-    });
+  function renderStarfallDays(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderStarfallDays?.(...args);
   }
 
-  function renderStarfallLetters(now, phase) {
-    elements.starfallLetterList.textContent = "";
-    STARFALL_LETTERS.forEach((letter, index) => {
-      const unlockAt = getStarfallLetterUnlockAt(letter);
-      const unlocked = now >= unlockAt && phase !== "preview";
-      const selectedId = state.starfall.letterChoices[letter.id];
-      const selectedChoice = letter.choices.find((choice) => choice.id === selectedId);
-      const card = document.createElement("article");
-      card.className = `starfall-letter${unlocked ? " unlocked" : " locked"}${selectedChoice ? " answered" : ""}`;
-      const header = document.createElement("header");
-      header.innerHTML = `<span>${index + 1}</span><div><small>${unlocked ? "信笺已抵达" : `${formatStarfallDayLabel(getUtcDailyKey(unlockAt))} 解锁`}</small><strong>${unlocked ? letter.title : "未抵达的星光"}</strong></div>`;
-      card.appendChild(header);
-      if (unlocked) {
-        const body = document.createElement("p");
-        body.textContent = letter.body;
-        card.appendChild(body);
-        if (selectedChoice) {
-          const result = document.createElement("blockquote");
-          result.innerHTML = `<strong>${selectedChoice.label}</strong><span>${selectedChoice.result}</span>`;
-          card.appendChild(result);
-        } else {
-          const choices = document.createElement("div");
-          choices.className = "starfall-letter-choices";
-          letter.choices.forEach((choice) => {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.dataset.starfallLetter = letter.id;
-            button.dataset.starfallChoice = choice.id;
-            button.disabled = phase === "archived";
-            button.textContent = choice.label;
-            choices.appendChild(button);
-          });
-          card.appendChild(choices);
-        }
-      }
-      elements.starfallLetterList.appendChild(card);
-    });
+  function renderStarfallLetters(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderStarfallLetters?.(...args);
   }
 
-  function renderStarfallMilestones(phase) {
-    elements.starfallMilestoneList.textContent = "";
-    STARFALL_MILESTONES.forEach((milestone) => {
-      const claimed = state.starfall.claimedMilestones.includes(milestone.id);
-      const reached = state.starfall.totalEarned >= milestone.required;
-      const card = document.createElement("article");
-      card.className = `${reached ? "reached" : ""}${claimed ? " claimed" : ""}`;
-      card.innerHTML = `<span>✦</span><div><small>${formatNumber(milestone.required, 0)} 累计余辉</small><strong>${milestone.title}</strong><p>${milestone.reward}</p></div>`;
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.starfallMilestone = milestone.id;
-      button.disabled = !reached || claimed || phase === "preview" || phase === "archived";
-      button.textContent = claimed ? "已领取" : reached ? "领取" : `${formatNumber(state.starfall.totalEarned, 0)} / ${formatNumber(milestone.required, 0)}`;
-      card.appendChild(button);
-      elements.starfallMilestoneList.appendChild(card);
-    });
+  function renderStarfallMilestones(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderStarfallMilestones?.(...args);
   }
 
-  function renderStarfallStore(phase) {
-    elements.starfallStoreGrid.textContent = "";
-    STARFALL_STORE_ITEMS.forEach((item) => {
-      const bought = clampGameCount(state.starfall.purchases[item.id]);
-      const soldOut = item.limit > 0 && bought >= item.limit;
-      const card = document.createElement("article");
-      card.innerHTML = `<span>${item.id === "emblem" ? "◇" : item.id === "postcard" ? "✉" : "✦"}</span><div><small>${item.limit ? "限定兑换" : "可重复兑换"}</small><strong>${item.title}</strong><p>${item.description}</p></div><b>${item.cost} 余辉</b>`;
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.starfallStore = item.id;
-      button.disabled = soldOut || state.starfall.currency < item.cost || !["active", "exchange"].includes(phase);
-      button.textContent = soldOut ? "已拥有" : "兑换";
-      card.appendChild(button);
-      elements.starfallStoreGrid.appendChild(card);
-    });
+  function renderStarfallStore(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderStarfallStore?.(...args);
   }
 
-  function renderStarfallCollection() {
-    const collection = [
-      ["title", "等一场星雨", "限定称号"],
-      ["beacon", "流星尾迹", "信标外观"],
-      ["letter", "英仙星笺", "纪念收藏"],
-      ["starport", "英仙夜航", "星港外观"],
-      ["emblem", "双星愿签", "限定徽记"],
-      ["postcard", "英仙纪念卡", "信笺纪念"],
-      ["keepsake", "第八颗流星", "最终收藏"],
-    ];
-    elements.starfallCollectionGrid.innerHTML = collection.map(([id, name, type]) => {
-      const unlocked = state.starfall.cosmetics[id] === true;
-      return `<article class="${unlocked ? "unlocked" : "locked"}"><span>${unlocked ? "☄" : "◇"}</span><small>${type}</small><strong>${unlocked ? name : "尚未获得"}</strong></article>`;
-    }).join("");
+  function renderStarfallCollection(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderStarfallCollection?.(...args);
   }
 
-  function renderStarfallEvent(now = Date.now()) {
-    ensureStarfallDays(now);
-    const phase = getStarfallPhase(now);
-    const phaseLabels = {
-      preview: "活动预告",
-      active: "流星观测中",
-      exchange: "余辉兑换期",
-      archived: "星雨纪念档案",
-    };
-    const targetTime = phase === "preview"
-      ? STARFALL_EVENT_START
-      : phase === "active"
-        ? STARFALL_EVENT_END
-        : STARFALL_EXCHANGE_END;
-    elements.starfallPhaseLabel.textContent = phaseLabels[phase];
-    elements.starfallCountdown.textContent = phase === "archived"
-      ? "活动与兑换均已结束"
-      : `${phase === "preview" ? "距离开启" : phase === "active" ? "距离观测结束" : "距离兑换关闭"} ${formatStarfallCountdown(targetTime - now)}`;
-    elements.starfallStatusNote.textContent = phase === "preview"
-      ? "活动持续至 8 月 22 日，兑换开放至 9 月 22 日。"
-      : phase === "active"
-        ? "每天选一路；错过时可追赶最近三天。"
-        : phase === "exchange"
-          ? "不再获得余辉；信笺可继续阅读，余辉可继续兑换。"
-          : "已获得的外观、信笺选择与收藏会永久保留。";
-    elements.starfallCurrency.textContent = formatNumber(state.starfall.currency, 0);
-    elements.starfallTotalEarned.textContent = formatNumber(state.starfall.totalEarned, 0);
-    const letterCount = Object.keys(state.starfall.letterChoices).length;
-    const milestoneCount = state.starfall.claimedMilestones.length;
-    elements.starfallLetterCount.textContent = `${letterCount} / ${STARFALL_LETTERS.length}`;
-    elements.starfallLetterSummary.textContent = `${letterCount} / ${STARFALL_LETTERS.length}`;
-    elements.starfallMilestoneSummary.textContent = `${milestoneCount} / ${STARFALL_MILESTONES.length}`;
-    renderStarfallDays(now, phase);
-    renderStarfallLetters(now, phase);
-    renderStarfallMilestones(phase);
-    renderStarfallStore(phase);
-    renderStarfallCollection();
-    updateStarfallSummary(now);
+  function renderStarfallEvent(...args) {
+    return globalThis.StellarLegacySystems?.modules.renderStarfallEvent?.(...args);
   }
 
   function renderLog() {
@@ -15443,7 +14898,7 @@
   }
 
   function isPrimaryPageUnlocked(pageId, targetState = state) {
-    if (UI_VISIBILITY.hidden.includes(pageId) && !targetState.guidance?.showAllSystems) {
+    if (UI_VISIBILITY.hidden.includes(pageId) && (!expertMode || !globalThis.StellarLegacySystems?.enabled)) {
       return false;
     }
 
@@ -15488,7 +14943,34 @@
     return rules[pageId] !== false;
   }
 
+  function isResourceVisible(resourceId) {
+    if (CORE_RESOURCES.includes(resourceId)) return true;
+    if (SECONDARY_RESOURCES.includes(resourceId)) return Boolean(state.guidance?.showAllSystems);
+    return true;
+  }
+
+  function updateResourceVisibility() {
+    document.querySelectorAll("[data-secondary-resource]").forEach((node) => {
+      node.hidden = !isResourceVisible(node.dataset.secondaryResource);
+    });
+  }
+
+  function updateAutoBuyStatus() {
+    if (!elements.autoBuyStatus || !elements.autoBuyButton) return;
+    const unlocked = state.upgrades.length >= AUTO_BUY_UNLOCK_RESEARCH;
+    elements.autoBuyButton.disabled = !unlocked;
+    if (!unlocked) {
+      elements.autoBuyStatus.textContent =
+        `研究 ${state.upgrades.length} / ${AUTO_BUY_UNLOCK_RESEARCH} 项后解锁`;
+    } else {
+      elements.autoBuyStatus.textContent = state.autoBuyEnabled
+        ? "当前：开启"
+        : "当前：关闭";
+    }
+  }
+
   function updateShowAllSystemsStatus() {
+    updateResourceVisibility();
     if (!elements.showAllSystemsStatus) return;
     const showAll = state.guidance.showAllSystems;
     elements.showAllSystemsStatus.textContent = showAll ? "当前：全部" : "当前：仅核心";
@@ -16214,7 +15696,7 @@
     }).join("");
     elements.operationsComponentList.innerHTML = OPERATION_COMPONENTS.map((component) => {
       const amount = state.operations.components[component.id] || 0;
-      return `<article><span>${component.icon}</span><div><strong>${component.name}</strong><small>${component.use}</small></div><b>×${formatNumber(amount, 0)}</b><button type="button" data-operation-component="${component.id}" ${amount > 0 ? "" : "disabled"}>投入</button></article>`;
+      return `<article><span>${component.icon}</span><div><strong>${component.name}</strong><small>${component.use}</small></div><b data-secondary-resource="ammo" ${isResourceVisible("ammo") ? "" : "hidden"}>×${formatNumber(amount, 0)}</b><button type="button" data-operation-component="${component.id}" ${amount > 0 ? "" : "disabled"}>投入</button></article>`;
     }).join("");
     const materialPeak = Math.max(...STARPORT_MATERIALS.map(
       (material) => state.starport.materials[material.id] || 0,
@@ -16314,6 +15796,7 @@
     updateSaveSafetyStatus();
     updateUi();
     V2_SYSTEMS.render();
+    updateResourceVisibility();
   }
 
   function getCloudSaveMetadata(targetState = state) {
@@ -16565,12 +16048,15 @@
   }
 
   function updateUi(rateOverride = null) {
+    updateAutoBuyStatus();
     const rate = Number.isFinite(rateOverride) ? rateOverride : calculateRate();
 
     updatePlayerNameDisplay();
     elements.dust.textContent = formatDustReserve(state.dust);
     elements.rate.textContent = `${formatProductionRate(rate)} / 秒`;
     elements.cores.textContent = formatNumber(state.cores, 0);
+    elements.shards.textContent = formatNumber(state.endgame.shards, 0);
+    updateResourceVisibility();
     updateEvent();
     updateMissionSummary();
     updateStarfallSummary();
@@ -16634,6 +16120,8 @@
         )} 枚可用星核；历史增幅将提升至 ×${formatNumber(getCoreMultiplier(
           projectedState,
         ))}。`;
+        const prestigeEta = estimateNextPrestigeSeconds();
+        if (prestigeEta) elements.prestigeDescription.textContent += ` 历史估算下次回到当前进度：${formatPrestigeEta(prestigeEta)}。`;
       } else {
         const remaining = Math.max(0, PRESTIGE_BASE_DUST - state.runDust);
         elements.prestigeDescription.textContent = `还需 ${formatNumber(
@@ -17096,6 +16584,25 @@
   }
 
   function bindEvents() {
+    elements.offlineReportClose?.addEventListener("click", closeOfflineReport);
+    elements.offlineReportBackdrop?.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeOfflineReport();
+      if (event.key === "Tab") { event.preventDefault(); elements.offlineReportClose.focus(); }
+    });
+    elements.autoBuyButton?.addEventListener("click", () => {
+      if (state.upgrades.length < AUTO_BUY_UNLOCK_RESEARCH) return;
+      state.autoBuyEnabled = !state.autoBuyEnabled;
+      updateAutoBuyStatus();
+      saveGame();
+      showToast(
+        state.autoBuyEnabled ? "自动购买已开启" : "自动购买已关闭",
+        state.autoBuyEnabled
+          ? "舰队将每秒自动购买最便宜的可用建筑。"
+          : "需要手动购买建筑。",
+        "⟳",
+      );
+    });
+
     document.addEventListener(
       "click",
       (event) => {
@@ -17499,15 +17006,11 @@
     });
     elements.showAllSystemsButton?.addEventListener("click", () => {
       state.guidance.showAllSystems = !state.guidance.showAllSystems;
-      updateNavigationVisibility();
       saveGame();
-      showToast(
-        state.guidance.showAllSystems ? "已显示全部系统" : "已切换为专注模式",
-        state.guidance.showAllSystems
-          ? "所有已解锁的功能入口现在都可见。"
-          : "已隐藏星港、星愿和委托入口，可在设置中重新显示。",
-        "◫",
-      );
+      const url = new URL(location.href);
+      if (state.guidance.showAllSystems) url.searchParams.set("expert", "1");
+      else url.searchParams.delete("expert");
+      location.assign(url.href);
     });
     elements.navigationModeButton.addEventListener("click", () => {
       state.guidance.compactNavigation = !state.guidance.compactNavigation;
@@ -17677,6 +17180,7 @@
       }
       lastWallClock = Date.now();
       if (!document.hidden) {
+        processGoldenBeacon(Date.now());
         restartGameLoop();
         checkForGameUpdate();
       }
@@ -17724,6 +17228,8 @@
     if (rate > 0) addDust(safeMultiply(rate, delta));
     if (delta > 0) processOperations(delta);
     processRebuild(wallNow);
+    processGoldenBeacon(wallNow);
+    processAutoBuy(wallNow);
     state.playTime = safeAdd(state.playTime, delta);
     recordMissionProgress("playSeconds", delta);
 
@@ -17742,7 +17248,106 @@
     scheduleGameLoop();
   }
 
+  function mountLegacySystems() {
+    if (!expertMode) return false;
+    if (!globalThis.StellarLegacySystems?.mount({
+      getState: () => state,
+      $,
+      COMBAT_UNLOCK_DUST,
+      EXPEDITION_SUPPLY_CAP,
+      EXPEDITION_UNLOCK_DUST,
+      MISSION_STORE_ITEMS,
+      MISSION_TEMPLATES,
+      OPERATION_COMPONENTS,
+      SINGULARITY_COMPANIONS,
+      STARFALL_DAILY_REWARD,
+      STARFALL_EVENT_END,
+      STARFALL_EVENT_START,
+      STARFALL_EXCHANGE_END,
+      STARFALL_LETTERS,
+      STARFALL_LETTER_REWARD,
+      STARFALL_MILESTONES,
+      STARFALL_STORE_ITEMS,
+      STARPORT_BLUEPRINTS,
+      STARPORT_LIFE_EVENTS,
+      STARPORT_MATERIALS,
+      STARPORT_MODULES,
+      WEEKLY_MISSION_MILESTONES,
+      addDust,
+      addLog,
+      addOperationComponent,
+      applyStarfallCosmetics,
+      canAffordStarportModule,
+      checkAchievements,
+      clamp,
+      clampGameCount,
+      clampGameNumber,
+      createMissionAssignment,
+      describeMission,
+      describeStarportCost,
+      describeStarportModuleEffect,
+      elements,
+      ensureMissionPeriods,
+      ensureStarfallDays,
+      ensureStarportLifeDay,
+      formatCompanionRewards,
+      formatMissionCountdown,
+      formatMissionProgress,
+      formatNumber,
+      formatStarfallCountdown,
+      formatStarfallDayLabel,
+      getAvailableStarfallDayKeys,
+      getCompletedMissionCount,
+      getMissionClaimableCount,
+      getMissionRewardDust,
+      getMissionTemplate,
+      getNextDailyReset,
+      getNextWeeklyReset,
+      getSingularityCompanions,
+      getStarfallLetterUnlockAt,
+      getStarfallPhase,
+      getStarfallRoute,
+      getStarportAttackMultiplier,
+      getStarportBlueprint,
+      getStarportBlueprintPreview,
+      getStarportBlueprintSynergy,
+      getStarportBuildingCostMultiplier,
+      getStarportDefenseMultiplier,
+      getStarportGalleryStats,
+      getStarportLootMultiplier,
+      getStarportModuleCost,
+      getStarportProductionMultiplier,
+      getStarportRank,
+      getTotalStarportRanks,
+      getUtcDailyKey,
+      grantCompanionRewards,
+      grantCompanionSignals,
+      grantMissionMaterials,
+      grantMissionTokens,
+      grantStarfallCurrency,
+      playAchievementTone,
+      playTone,
+      recordCrescentProgress,
+      recordMissionProgress,
+      renderMaterialWallet,
+      safeAdd,
+      saveGame,
+      seededMissionShuffle,
+      showToast,
+      updateMissionSummary,
+      updateStarfallSummary,
+      updateUi,
+    })) {
+      console.warn("专家模式加载失败，已保留核心系统。");
+      return false;
+    }
+    return true;
+  }
+
   loadGame();
+  mountLegacySystems();
+  // URL 决定本次模式，开关负责保存并切换对应入口。
+  state.guidance.showAllSystems = expertMode && Boolean(globalThis.StellarLegacySystems?.enabled);
   setupPrimaryNavigation();
   setupTabs();
   setupStarfield();

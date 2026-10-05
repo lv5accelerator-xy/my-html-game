@@ -46,7 +46,7 @@
         </a>
 
         <div class="resource-strip" aria-label="资源概览">
-          <div class="resource-main">
+          <div class="resource-main" data-resource="dust">
             <span class="resource-icon" aria-hidden="true">✦</span>
             <span>
               <small>星尘储量 · 上限 9999M</small>
@@ -57,9 +57,13 @@
             <small>自动产量</small>
             <strong id="rate-value">0 / 秒</strong>
           </div>
-          <div class="resource-stat">
+          <div class="resource-stat" data-resource="cores">
             <small>星核</small>
             <strong id="core-value">0</strong>
+          </div>
+          <div class="resource-stat" data-resource="shards">
+            <small>碎片</small>
+            <strong id="shards-value">0</strong>
           </div>
         </div>
 
@@ -125,11 +129,17 @@
           </button>
           <button id="feedback-button" type="button">问题反馈</button>
           <button id="rename-button" type="button">修改玩家名称</button>
+          <button id="auto-buy-button" class="menu-action" type="button">
+            <span aria-hidden="true">⟳</span>
+            <strong>自动购买建筑</strong>
+            <small id="auto-buy-status">未解锁</small>
+          </button>
           <button id="show-all-systems-button" class="menu-action" type="button" aria-pressed="false">
             <span aria-hidden="true">◫</span>
             <strong>显示全部系统</strong>
             <small id="show-all-systems-status">当前：仅核心</small>
           </button>
+          <p class="menu-note" id="resource-visibility-note">首屏只显示星尘、星核、碎片。其他资源仍在后台产出，打开“显示全部系统”后可查看。</p>
           <button id="navigation-mode-button" class="settings-toggle" type="button">
             <span>导航显示</span>
             <strong id="navigation-mode-status">渐进</strong>
@@ -512,7 +522,7 @@
                 <small>永久故事收藏 · 无数值倍率</small>
                 <h2 id="companion-observatory-title">伴星观测站</h2>
               </div>
-              <div class="companion-signal-balance">
+              <div class="companion-signal-balance" data-secondary-resource="companionSignals" hidden>
                 <span aria-hidden="true">⌁</span>
                 <span>
                   <small>观测信号</small>
@@ -1373,11 +1383,11 @@
               <h2 id="expedition-title">星区远征</h2>
             </div>
             <div class="expedition-wallets">
-              <span>
+              <span data-secondary-resource="supplies" hidden>
                 <small>远征补给</small>
                 <strong id="expedition-supply-balance">0</strong>
               </span>
-              <span>
+              <span data-secondary-resource="fragments" hidden>
                 <small>星图残片</small>
                 <strong id="expedition-fragment-balance">0</strong>
               </span>
@@ -1844,12 +1854,12 @@
           </header>
 
           <div class="starfall-wallet-row">
-            <div>
+            <div data-secondary-resource="starfallCurrency" hidden>
               <small>星雨余辉</small>
               <strong id="starfall-currency">0</strong>
               <span>唯一活动货币</span>
             </div>
-            <div>
+            <div data-secondary-resource="starfallCurrency" hidden>
               <small>累计获得</small>
               <strong id="starfall-total-earned">0</strong>
               <span>用于解锁里程碑</span>
@@ -1925,7 +1935,7 @@
             </div>
             <div class="missions-heading-actions">
               <button id="claim-all-missions-button" type="button" disabled>一键领取全部</button>
-              <div class="mission-token-balance">
+              <div class="mission-token-balance" data-secondary-resource="tokens" hidden>
                 <small>航站凭证</small>
                 <strong id="mission-token-balance">0</strong>
               </div>
@@ -2256,6 +2266,33 @@
 
     <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
+    <div id="offline-report-backdrop" class="offline-report-backdrop" hidden>
+      <div class="offline-report-card" role="dialog" aria-modal="true"
+           aria-labelledby="offline-report-title">
+        <header>
+          <span class="offline-report-icon" aria-hidden="true">⌁</span>
+          <small class="offline-report-eyebrow">离线报告</small>
+          <h2 id="offline-report-title">欢迎返回星港</h2>
+        </header>
+        <div class="offline-report-stats">
+          <div>
+            <small>离开时长</small>
+            <strong id="offline-report-duration">—</strong>
+          </div>
+          <div>
+            <small>获得星尘</small>
+            <strong id="offline-report-dust">—</strong>
+          </div>
+          <div>
+            <small>期间产量</small>
+            <strong id="offline-report-rate">—</strong>
+          </div>
+        </div>
+        <p id="offline-report-note" class="offline-report-note"></p>
+        <button type="button" id="offline-report-close"
+                class="primary-button">接收物资</button>
+      </div>
+    </div>
     <div id="modal-backdrop" class="modal-backdrop" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <span class="modal-icon" id="modal-icon" aria-hidden="true">✦</span>
@@ -2619,6 +2656,12 @@
 
     <script src="game-math.js?v=2.3.0"></script>
     <script src="v2-systems.js?v=2.3.0"></script>
+    <script>
+      // 解析期间同步加载，确保归档模块先于游戏启动，避免异步加载竞态。
+      if (new URLSearchParams(location.search).get("expert") === "1") {
+        document.write('<script src="legacy-systems.js?v=2.3.0"><\/script>');
+      }
+    </script>
     <script src="game.js?v=2.3.0"></script>
     <script src="firebase-config.js?v=2.3.0"></script>
     <script type="module" src="cloud-save.js?v=2.3.0"></script>

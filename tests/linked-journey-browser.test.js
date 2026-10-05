@@ -40,12 +40,13 @@ const server = http.createServer((request, response) => {
     });
     const closeFeedback = page.locator("#v2-feedback-close");
     if (await closeFeedback.isVisible()) await closeFeedback.click();
+    await page.locator(".batch-secondary > summary").filter({ hasText: "今日航线" }).click();
     await page.locator('[data-v2-route="industry"]').click();
-    await page.locator("#linked-journey > summary").click();
-    await page.locator('[data-route-order="expand"]').click();
+    await page.locator("#linked-journey > summary").press("Space");
+    await page.locator('[data-route-order="expand"]').press("Enter");
     assert.match(await page.locator("#linked-journey").innerText(), /扩建生产线：0\/5/);
-    await page.locator("#return-plan > summary").click();
-    await page.locator('[data-return-plan="short"]').click();
+    await page.locator("#return-plan > summary").press("Space");
+    await page.locator('[data-return-plan="short"]').press("Enter");
     assert.equal(await page.evaluate(() => window.StellarOutpostCloudBridge.createSnapshot().expedition.supplies), 19);
     assert.equal(await page.locator("#return-plan-claim").isEnabled(), false);
     await page.evaluate(() => {
@@ -55,9 +56,9 @@ const server = http.createServer((request, response) => {
       save.v2.echo.stage = 1;
       bridge.applySnapshot(save);
     });
-    await page.locator("#return-plan-claim").click();
-    await page.locator("#echo-chain > summary").click();
-    await page.locator("#echo-interpret").click();
+    await page.locator("#return-plan-claim").press("Enter");
+    await page.locator("#echo-chain > summary").press("Space");
+    await page.locator("#echo-interpret").press("Enter");
     assert.match(await page.locator("#echo-chain").innerText(), /完成一次航站作业/);
     await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
@@ -65,7 +66,7 @@ const server = http.createServer((request, response) => {
       window.StellarV2Systems.recordMetric(save.v2, "operationsCompleted", 1, save);
       bridge.applySnapshot(save);
     });
-    await page.locator("#echo-claim").click();
+    await page.locator("#echo-claim").press("Enter");
     const state = await page.evaluate(() => window.StellarOutpostCloudBridge.createSnapshot());
     assert.equal(state.v2.echo.completed, 1);
     assert.equal(state.v2.returnPlan.claimed, true);
@@ -77,7 +78,7 @@ const server = http.createServer((request, response) => {
     assert.equal(restored.v2.order.id, "expand");
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
     assert.deepEqual(errors, []);
-    console.log("linked browser ok: 390px, actual order/plan/interpret/claim clicks, reward deduction, reload persistence, zero pageerrors");
+    console.log("linked browser ok: 390px, route click and keyboard order/plan/interpret/claim, reward deduction, reload persistence, zero pageerrors");
   } finally {
     if (browser) await browser.close();
     await new Promise((resolve) => server.close(resolve));

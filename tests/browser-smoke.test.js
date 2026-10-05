@@ -106,7 +106,8 @@ async function main() {
   });
 
   try {
-    const response = await page.goto(origin, { waitUntil: "commit" });
+    // The veteran fixture exercises all archived systems through their supported entry.
+    const response = await page.goto(`${origin}/?expert=1`, { waitUntil: "commit" });
     assert.equal(response.status(), 200);
     await page.waitForFunction(() => Boolean(window.StellarOutpostCloudBridge), null, { timeout: 30_000 });
     await page.waitForTimeout(800);
@@ -255,7 +256,7 @@ async function main() {
     assert.ok(snapshot.focus.visiblePages.includes("command"));
     assert.ok(snapshot.focus.visiblePages.includes("missions"));
     assert.ok(snapshot.focus.visiblePages.includes("starfall"));
-    assert.equal(snapshot.focus.visiblePages.includes("leaderboard"), false);
+    assert.equal(snapshot.focus.visiblePages.includes("leaderboard"), true);
     await page.locator("#command-page-tab").click();
     assert.match(await page.locator("#atlas-next-title").textContent(), /下一条缺失记录/);
     await page.locator("#rebuild-hub > summary").click();
@@ -266,6 +267,7 @@ async function main() {
     assert.equal(recordedRebuild.activePlan.id, "slot-1");
     assert.equal(recordedRebuild.activePlan.buildingTargets.drone, 1200);
     await page.locator("#command-secondary-plans > summary").click();
+    await page.locator(".batch-secondary > summary").filter({ hasText: "其他航程建议" }).click();
     const focusRoutes = page.locator("#focus-route-list .focus-route");
     assert.ok(await focusRoutes.count() >= 1 && await focusRoutes.count() <= 3);
     assert.equal(await page.locator("#focus-route-list [data-focus-pin]").count(), await focusRoutes.count());
@@ -307,7 +309,7 @@ async function main() {
     assert.equal(await page.locator("#duty-progress i").count(), 7);
     assert.equal(await page.locator("#journey-chapter-dots i").count(), 8);
     assert.equal(await page.locator("#atlas-grid .atlas-entry").count(), 33);
-    assert.equal(await page.locator("#navigation-expand-button").isVisible(), true);
+    assert.equal(await page.locator("#navigation-expand-button").isVisible(), false, "expert mode already shows all navigation");
     assert.equal(snapshot.communicationsReady, true);
 
     await page.locator("#duty-claim-button").click();
@@ -861,6 +863,8 @@ async function main() {
     await page.locator('[data-companion-id="prismJelly"]').evaluate((button) => {
       button.click();
     });
+    const companionFold = page.locator(".batch-secondary").filter({ has: page.locator("#companion-event-scene") });
+    if (await companionFold.count()) await companionFold.locator(":scope > summary").click();
     assert.equal(await page.locator("#companion-event-scene").isVisible(), true);
     assert.match(await page.locator("#companion-event-name").textContent(), /棱镜水母/);
     assert.match(await page.locator("#companion-event-title").textContent(), /旧星图/);

@@ -14901,6 +14901,8 @@
     if (UI_VISIBILITY.hidden.includes(pageId) && (!expertMode || !globalThis.StellarLegacySystems?.enabled)) {
       return false;
     }
+    // 全部系统入口也允许查看已归档的星愿；不依赖当期活动日期。
+    if (UI_VISIBILITY.hidden.includes(pageId) && targetState.guidance?.showAllSystems) return true;
 
     const hasStarportProgress =
       Object.values(targetState.starport?.materials || {}).some((value) => value > 0) ||
@@ -17149,7 +17151,7 @@
       }
       if (
         event.code === "Space" &&
-        !["INPUT", "BUTTON", "TEXTAREA"].includes(document.activeElement?.tagName)
+        !["INPUT", "BUTTON", "TEXTAREA", "SELECT", "SUMMARY", "A"].includes(document.activeElement?.tagName)
       ) {
         event.preventDefault();
         collect();

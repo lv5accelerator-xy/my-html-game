@@ -38,6 +38,9 @@
   ]);
 
 
+  const PRESTIGE_TIME_HISTORY_KEY = "stellarPrestigeTimes";
+  const PRESTIGE_CYCLE_START_KEY = "stellarPrestigeCycleStart";
+  const PRESTIGE_HISTORY_LIMIT = 3;
   const AUTO_BUY_UNLOCK_RESEARCH = 5;
   const SAVE_KEY = "stellarOutpostIdleSave_v1";
   const SAVE_BACKUP_KEYS = [
@@ -6526,10 +6529,8 @@
 
   function getReconstructionCostMultiplier(targetState = state) {
     const rebirths = Math.max(0, targetState.rebirths || 0);
-    return Math.min(
-      3,
-      safeAdd(1, safeMultiply(0.12, safePow(rebirths, 0.45))),
-    );
+    // 每次跃迁累计降低 8% 建筑成本，最低保留基础成本的 50%。
+    return Math.max(0.5, safePow(0.92, rebirths));
   }
 
   function getStarportRank(id, targetState = state) {
@@ -11360,6 +11361,49 @@
     elements.rebuildReport.textContent = state.rebuild.lastReport;
   }
 
+  function getPrestigeTimeHistory() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(PRESTIGE_TIME_HISTORY_KEY) || "[]");
+      return Array.isArray(parsed)
+        ? parsed.filter((value) => Number.isFinite(value) && value > 0).slice(-PRESTIGE_HISTORY_LIMIT)
+        : [];
+    } catch (error) { return []; }
+  }
+
+  function recordPrestigeTime(seconds) {
+    if (!Number.isFinite(seconds) || seconds <= 0) return;
+    const history = [...getPrestigeTimeHistory(), Math.max(1, Math.round(seconds))].slice(-PRESTIGE_HISTORY_LIMIT);
+    try {
+      localStorage.setItem(PRESTIGE_TIME_HISTORY_KEY, JSON.stringify(history));
+    } catch (error) { /* 存储不可用时不影响跃迁。 */ }
+  }
+
+  function recordPrestigeCycle() {
+    const now = Date.now();
+    try {
+      // 安装时间不会随跃迁重置；优先使用本地周期起点或现有航线起点。
+      const localStart = Number(localStorage.getItem(PRESTIGE_CYCLE_START_KEY));
+      const startedAt = localStart > 0 ? localStart : state.v2?.runBuild?.startedAt || state.experience?.installedAt;
+      if (startedAt > 0 && startedAt < now) recordPrestigeTime((now - startedAt) / 1000);
+      localStorage.setItem(PRESTIGE_CYCLE_START_KEY, String(now));
+    } catch (error) { /* 本地预览不可用时，正常执行原有结算。 */ }
+  }
+
+  function estimateNextPrestigeSeconds(targetState = state) {
+    const history = getPrestigeTimeHistory();
+    if (!history.length) return null;
+    const average = history.reduce((sum, value) => sum + value, 0) / history.length;
+    const nextFactor = Math.pow(0.7, Math.min(3, targetState.rebirths || 0));
+    return Math.max(60, Math.round(average * nextFactor));
+  }
+
+  function formatPrestigeEta(seconds) {
+    if (!Number.isFinite(seconds)) return "暂无历史数据";
+    if (seconds < 90) return "约 1 分钟";
+    if (seconds < 3600) return `约 ${Math.round(seconds / 60)} 分钟`;
+    return `约 ${(seconds / 3600).toFixed(1)} 小时`;
+  }
+
   function prestige() {
     const gain = getPrestigeGain();
     if (gain < 1) return;
@@ -11367,6 +11411,8 @@
       cores: Math.min(CORE_RESERVE_CAP, safeAdd(state.cores, gain)),
       totalCores: Math.min(CORE_RESERVE_CAP, safeAdd(state.totalCores, gain)),
     });
+    const prestigeEta = estimateNextPrestigeSeconds();
+    const etaText = prestigeEta ? ` 历史估算下次回到当前进度：${formatPrestigeEta(prestigeEta)}。` : "";
     const nextReconstructionCost = getReconstructionCostMultiplier({
       ...state,
       rebirths: state.rebirths + 1,
@@ -11377,11 +11423,12 @@
       title: `提炼 ${formatNumber(gain, 0)} 枚星核？`,
       message: `跃迁将清空当前星尘、自动化单元与本轮研究，但保留战斗强化、星港建筑与材料、星核商店、成就和统计。下一航线的自动化设施重建成本将调整为 ×${nextReconstructionCost.toFixed(
         2,
-      )}；星核永久产量倍率预计 ×${getCoreMultiplier().toFixed(2)} → ×${projectedCoreMultiplier.toFixed(2)}。这是星核部分的变化，不是重建前的即时产量；回响收藏、归航计划和委托进度保留。`,
+      )}；星核永久产量倍率预计 ×${getCoreMultiplier().toFixed(2)} → ×${projectedCoreMultiplier.toFixed(2)}。这是星核部分的变化，不是重建前的即时产量；回响收藏、归航计划和委托进度保留。${etaText} 跃迁后只需选择一项航线学说。`,
       confirmText: "确认跃迁",
       cancelText: "暂不跃迁",
       onConfirm: () => {
         refreshCareerRecords();
+        recordPrestigeCycle();
         const completedRun = V2_SYSTEMS?.completeRun?.(
           state.v2,
           state,
@@ -11510,7 +11557,7 @@
       title: companionReward
         ? `坍缩并唤醒${companionReward.name}？`
         : `坍缩并提炼 ${formatNumber(gain, 0)} 枚奇点碎片？`,
-      message: `本次操作将重置星尘、舰队、舰队编成方案与整备物资、研究、星核、星核商店、跃迁次数、战斗成长以及星港建筑和材料。成就、舰队收藏徽记、边境星区、奇点碎片及全部超越协议永久保留。当前遗产协议会保留每类星核强化 ${legacyRank} 级，并以 ${formatNumber(
+      message: `本次操作将重置星尘、舰队、舰队编成方案与整备物资、研究、星核、星核商店、跃迁次数、战斗成长以及星港建筑和材料。成就、舰队收藏徽记、边境星区、奇点碎片及全部超越协议永久保留。每类星核强化保留 ${legacyRank} 级，并以 ${formatNumber(
         startingDust,
       )} 初始星尘开启新周期。${
         companionReward
@@ -16850,6 +16897,8 @@
         )} 枚可用星核；历史增幅将提升至 ×${formatNumber(getCoreMultiplier(
           projectedState,
         ))}。`;
+        const prestigeEta = estimateNextPrestigeSeconds();
+        if (prestigeEta) elements.prestigeDescription.textContent += ` 历史估算下次回到当前进度：${formatPrestigeEta(prestigeEta)}。`;
       } else {
         const remaining = Math.max(0, PRESTIGE_BASE_DUST - state.runDust);
         elements.prestigeDescription.textContent = `还需 ${formatNumber(

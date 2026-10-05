@@ -66,6 +66,11 @@ jobs:
           node --check game.js
           node --check cloud-save.js
           node --check v2-systems.js
+          node --check legacy-systems.js
+          node --check v3/data.js
+          node --check v3/engine.js
+          node --check v3/storage.js
+          node --check v3/app.js
           node tests/numeric-balance.test.js
           node tests/usability-flow.test.js
           node tests/retention-flow.test.js
@@ -78,6 +83,9 @@ jobs:
           node tests/save-migration-v200.test.js
           node tests/browser-smoke.test.js
           node tests/mobile-performance.test.js
+          node tests/v3-gameplay.test.js
+          node tests/v3-balance.test.js
+          node tests/v3-browser.test.js
 
   build:
     needs: test
@@ -91,8 +99,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site/assets
-          cp index.html styles.css game.js game-math.js v2-systems.js _site/
+          cp index.html styles.css game.js game-math.js v2-systems.js legacy-systems.js _site/
           cp -R assets/. _site/assets/
+          cp -R v3 _site/v3
 
           for optional_file in firebase-config.js cloud-save.js; do
             if [[ -f "$optional_file" ]]; then

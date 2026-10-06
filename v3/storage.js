@@ -21,6 +21,7 @@
         state.beacon.expiresAt = 0;
         const report = E.advance(state, now, {
           offline: now - state.lastAt > 30000,
+          report: true,
         });
         return { state, report, legacy: null, error: null };
       }

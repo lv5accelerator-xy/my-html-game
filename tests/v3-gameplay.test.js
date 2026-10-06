@@ -572,4 +572,85 @@ test("v3.0 saves retain inventory, pending missions and archives; missing timing
   assert.equal(cleaned.events.research, undefined);
   assert.equal(cleaned.events.unknown, undefined);
 });
+test("return briefing is observational: actual purchases, research, income and net balance match the unchanged simulation", () => {
+  const s = ready();
+  s.rebirths = 4;
+  E.configure(s, { enabled: true, research: true, dispatch: true });
+  E.startMission(s, "belt");
+  const before = E.progressSnapshot(s),
+    plain = structuredClone(s);
+  const report = E.advance(s, s.lastAt + 600000, {
+    offline: true,
+    report: true,
+  });
+  E.advance(plain, plain.lastAt + 600000, { offline: true });
+  assert.deepEqual(s, plain);
+  assert.ok(report.spentDust > 0);
+  assert.ok(report.buildings.length > 0);
+  assert.deepEqual(report.research, s.research);
+  assert.equal(report.netDust, s.dust - before.dust);
+  assert.ok(Math.abs(report.dust - report.spentDust - report.netDust) < 1e-7);
+  assert.equal(report.samples, s.samples - before.samples);
+  assert.equal(report.missionsCompleted, report.reportsClaimed);
+  assert.ok(report.reportsClaimed >= 4);
+  assert.equal(report.pending, null);
+});
+test("return briefing leaves a story pending, counts failed voyages, and never claims a story reward", () => {
+  const s = ready();
+  s.rebirths = 4;
+  E.configure(s, { dispatch: true });
+  E.startMission(s, "wreck");
+  const report = E.advance(s, s.lastAt + 600000, {
+    offline: true,
+    report: true,
+  });
+  assert.equal(report.missionsCompleted, 1);
+  assert.equal(report.reportsClaimed, 0);
+  assert.equal(report.pending, "wreck");
+  assert.equal(report.story, "hospital");
+  assert.deepEqual(s.lore, []);
+  assert.equal(s.samples, 0);
+  const failed = ready();
+  E.startMission(failed, "echo");
+  failed.mission.succeeded = false;
+  const failure = E.advance(failed, failed.lastAt + 150000, {
+    offline: true,
+    report: true,
+  });
+  assert.equal(failure.missionsCompleted, 1);
+  assert.equal(failure.reportsClaimed, 0);
+  assert.equal(failure.samples, 0);
+});
+test("background briefing aggregates several ticks and still respects the eight-hour cap", () => {
+  const a = ready(),
+    b = structuredClone(a),
+    before = E.progressSnapshot(a);
+  const totals = {
+    seconds: 0,
+    dust: 0,
+    spentDust: 0,
+    missionsCompleted: 0,
+    reportsClaimed: 0,
+    capped: false,
+  };
+  for (let i = 0; i < 120; i++) {
+    const report = E.advance(a, a.lastAt + 1000, {
+      offline: true,
+      report: true,
+    });
+    for (const key of Object.keys(totals))
+      if (key !== "capped") totals[key] += report[key];
+  }
+  const report = E.advance(b, b.lastAt + 120000, {
+    offline: true,
+    report: true,
+  });
+  assert.deepEqual(E.returnReport(a, before, totals), report);
+  const capped = E.advance(a, a.lastAt + 48 * 3600000, {
+    offline: true,
+    report: true,
+  });
+  assert.equal(capped.seconds, D.OFFLINE_SECONDS);
+  assert.equal(capped.capped, true);
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

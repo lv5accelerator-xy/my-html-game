@@ -560,6 +560,41 @@ footer span + span:before {
   display: block;
   margin-top: 5px;
 }
+.return-totals {
+  margin: 20px 0;
+}
+.return-totals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+  font-size: 13px;
+}
+.return-totals dd {
+  margin: 0;
+  color: var(--teal);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.return-changes {
+  padding-left: 20px;
+  font-size: 13px;
+}
+.return-pending {
+  color: var(--amber);
+}
+.return-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.return-banner p {
+  font-size: 12px;
+}
 .route-choices {
   border-top: 1px solid var(--line);
   margin: 14px 0 30px;

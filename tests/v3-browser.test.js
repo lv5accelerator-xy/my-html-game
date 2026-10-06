@@ -71,6 +71,7 @@ async function run() {
       if (r.status() >= 400) badResponses.push(`${r.status()} ${r.url()}`);
     });
     await page.clock.install({ time: TIME });
+    await page.clock.pauseAt(TIME);
     if (initial)
       await context.addInitScript((items) => {
         for (const [key, value] of Object.entries(items))
@@ -177,6 +178,11 @@ async function run() {
         await page.locator('[data-action="mission"][data-id="wreck"]').click();
         assert.equal((await read(page)).mission.id, "wreck");
         await page.clock.fastForward(90000);
+        await page.locator('#dialog [data-action="return-next"]').click();
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "report",
+        );
         await page.locator('[data-action="claim"][data-id="repair"]').click();
         const saved = await read(page);
         assert.equal(saved.modules.medbay, 1);
@@ -205,6 +211,7 @@ async function run() {
         assert.deepEqual((await read(page)).mission, beforeReload);
         await page.locator('#navigation [data-id="explore"]').click();
         await page.clock.fastForward(120000);
+        await page.locator('#dialog [data-action="cancel"]').click();
         await page.locator('[data-action="claim"]').click();
         assert.equal((await read(page)).result, null);
         if (screenshotDir)
@@ -591,6 +598,11 @@ async function run() {
         assert.equal(active.events.research.foregroundSeconds, 5);
         assert.equal(active.offlineSeconds, 0);
         await page.clock.fastForward(60000);
+        assert.equal(
+          await page.locator("#dialog-title").innerText(),
+          "归航简报",
+        );
+        await page.locator('#dialog [data-action="cancel"]').click();
         await page.locator("#settings-button").click();
         await page.locator(".timing-panel summary").click();
         assert.equal(
@@ -650,6 +662,52 @@ async function run() {
         assert.ok(
           Object.values(saved.buildings).reduce((a, b) => a + b, 0) > before,
         );
+      },
+    );
+    const returning = ready();
+    returning.lastAt = TIME - 600000;
+    returning.rebirths = 4;
+    E.configure(returning, { enabled: true, research: true, dispatch: true });
+    E.startMission(returning, "wreck");
+    const expectedReturn = structuredClone(returning);
+    E.advance(expectedReturn, TIME, { offline: true, report: true });
+    await scenario(
+      "return briefing: actual automation summary, mobile layout, direct report link and immediate reload without duplicate rewards",
+      { [S.KEY]: JSON.stringify(returning) },
+      async (page) => {
+        assert.equal(
+          await page.locator("#dialog-title").innerText(),
+          "归航简报",
+        );
+        const body = await page.locator("#dialog-body").innerText();
+        assert.match(body, /自动建造与研究支出/);
+        assert.match(body, /星尘净变化/);
+        assert.match(body, /聚焦扫描/);
+        assert.match(body, /最后一盏手术灯/);
+        assert.deepEqual(await read(page), expectedReturn);
+        await page.setViewportSize({ width: 375, height: 900 });
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth > innerWidth,
+          ),
+          false,
+        );
+        if (screenshotDir)
+          await page.screenshot({
+            path: path.join(screenshotDir, "return-briefing.png"),
+          });
+        await page.locator('#dialog [data-action="return-next"]').click();
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "report",
+        );
+        assert.deepEqual((await read(page)).lore, []);
+        await page.locator('[data-action="claim"][data-id="repair"]').click();
+        const claimed = await read(page);
+        await page.reload();
+        assert.equal(await page.locator("#dialog").isVisible(), false);
+        assert.deepEqual(await read(page), claimed);
+        assert.equal(claimed.lore.length, 1);
       },
     );
     console.log(

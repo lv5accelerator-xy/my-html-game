@@ -71,6 +71,8 @@
     buyMode = "1",
     signature = "",
     rebuilding = false,
+    lastReturnReport = loaded.report?.seconds >= 60 ? loaded.report : null,
+    absence = null,
     toastTimer,
     dialogOrigin,
     wasVisible = !document.hidden;
@@ -208,10 +210,53 @@
       buyMode === "max" ? "max" : Number(buyMode),
     );
   }
+  function showReturn(report = lastReturnReport) {
+    if (!report) return;
+    lastReturnReport = report;
+    const pending = state.result;
+    const signed = (value) =>
+      `${value > 0 ? "+" : value < 0 ? "−" : ""}${number(Math.abs(value))}`;
+    const changes = [
+      ...report.buildings.map(
+        (b) =>
+          `${D.BUILDINGS.find((item) => item.id === b.id).name} +${b.count} 艘`,
+      ),
+      ...report.research.map(
+        (id) => `完成研究：${D.RESEARCH.find((r) => r.id === id).name}`,
+      ),
+      ...report.modules.map(
+        (m) =>
+          `${D.MODULES.find((item) => item.id === m.id).name}升至 ${m.level} 级`,
+      ),
+    ];
+    openDialog(
+      "归航简报",
+      `<p>离开期间，航站运行了 ${duration(report.seconds)}${report.capped ? "（已达到 8 小时结算上限）" : ""}。</p>
+      <dl class="return-totals"><div><dt>生产与回收收入</dt><dd>${number(report.dust)} 星尘</dd></div><div><dt>自动建造与研究支出</dt><dd>${number(report.spentDust)} 星尘</dd></div><div><dt>星尘净变化</dt><dd>${signed(report.netDust)} 星尘</dd></div></dl>
+      <p>样本 ${signed(report.samples)} 份 · 探索归航 ${report.missionsCompleted} 次 · 自动领取 ${report.reportsClaimed} 次</p>
+      ${changes.length ? `<ul class="return-changes">${changes.map((text) => `<li>${text}</li>`).join("")}</ul>` : "<p>舰队按原配置持续运行。</p>"}
+      ${pending?.story ? `<p class="return-pending">「${D.STORIES[pending.story].title}」等待你的选择。</p>` : pending ? '<p class="return-pending">一份归航报告等待领取。</p>' : ""}
+      <div class="dialog-actions"><button ${action("cancel")}>留在航站</button><button class="primary" ${action("return-next")}>${state.result ? "处理归航报告" : "查看下一个目标"} →</button></div>`,
+    );
+    signature = "";
+    render();
+  }
+  function addAbsence(report) {
+    if (!absence) return;
+    for (const key of [
+      "seconds",
+      "dust",
+      "spentDust",
+      "missionsCompleted",
+      "reportsClaimed",
+    ])
+      absence.totals[key] += report[key] || 0;
+    absence.totals.capped ||= report.capped;
+  }
   function home() {
     const goal = E.nextGoal(state),
       recent = state.journal.slice(0, 3);
-    return `<div class="home-layout"><section class="scene" aria-label="归航航站"><div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
+    return `${lastReturnReport ? `<section class="return-banner"><div><strong>上次归航简报</strong><p>${duration(lastReturnReport.seconds)} · 探索归航 ${lastReturnReport.missionsCompleted} 次</p></div><button class="outline" ${action("return-report")}>查看简报</button></section>` : ""}<div class="home-layout"><section class="scene" aria-label="归航航站"><div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
       <button class="beacon-button" ${action("beacon")} ${state.beacon.expiresAt ? "" : "hidden"}>捕获金色信标<small>剩余 <span data-beacon-seconds>15</span> 秒</small></button>
       <div class="scan-area"><button class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
       <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2><h2 id="next-goal-title">${goal.title}</h2><p>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
@@ -440,6 +485,7 @@
       state.journal,
       Boolean(state.beacon.expiresAt),
       state.automation,
+      lastReturnReport?.seconds,
     ]);
     if (next !== signature) {
       const active = document.activeElement;
@@ -495,6 +541,8 @@
   function importText(text) {
     try {
       state = S.restore(storage, text);
+      lastReturnReport = null;
+      absence = null;
       blocked = false;
       page = "home";
       signature = "";
@@ -548,6 +596,17 @@
     }
     if (kind === "cancel") {
       closeDialog();
+      return;
+    }
+    if (kind === "return-report") {
+      showReturn();
+      return;
+    }
+    if (kind === "return-next") {
+      const goal = E.nextGoal(state);
+      closeDialog();
+      navigate(goal.action, goal.focus);
+      dialogOrigin = document.activeElement;
       return;
     }
     if (kind === "scan") {
@@ -621,6 +680,8 @@
     } else if (kind === "confirm-reset") {
       try {
         state = S.reset(storage);
+        lastReturnReport = null;
+        absence = null;
         blocked = false;
         page = "home";
         closeDialog();
@@ -671,24 +732,53 @@
       "选择你的启航方式",
       `<p>这台设备上已有旧航站记录。可以继承星尘、星核和匹配舰队，也可以从一艘新无人机开始体验航线。</p><p>旧研究、远征和未领取奖励会完整保留，随时可回旧版继续。</p><div class="dialog-actions"><button ${action("cancel")}>从零启航</button><button class="primary" ${action("legacy")}>继承旧航站</button></div>`,
     );
-  else if (loaded.report?.seconds >= 60)
-    openDialog(
-      "欢迎归航",
-      `<p>离开期间，航站继续运行了 ${duration(loaded.report.seconds)}${loaded.report.capped ? "（已达到离线结算上限）" : ""}。</p><p>收集 ${number(loaded.report.dust)} 星尘${E.capability(state, "autoBuy") && state.automation.enabled ? "，自动购买也已完成" : ""}。${state.result ? "有一份探索报告在等你。" : ""}</p><div class="dialog-actions"><button class="primary" ${action("cancel")}>继续航线</button></div>`,
-    );
+  else if (lastReturnReport) showReturn();
+  if (loaded.report?.seconds > 0 && !blocked) save();
   setInterval(() => {
     const offline = document.hidden || Date.now() - state.lastAt > 30000;
-    E.advance(state, Date.now(), {
+    const report = E.advance(state, Date.now(), {
       offline,
       active: !offline,
+      report: Boolean(absence) || offline,
     });
+    if (absence) addAbsence(report);
+    else if (offline && report.seconds >= 60 && !blocked) {
+      lastReturnReport = report;
+      save();
+      if (!dialog.open) showReturn(report);
+    }
     render();
   }, 250);
   setInterval(save, 5000);
   document.addEventListener("visibilitychange", () => {
     state.beacon.expiresAt = 0;
-    E.advance(state, Date.now(), { offline: !wasVisible, active: wasVisible });
+    const report = E.advance(state, Date.now(), {
+      offline: !wasVisible,
+      active: wasVisible,
+      report: !wasVisible,
+    });
+    if (!wasVisible && absence) {
+      addAbsence(report);
+      const summary = E.returnReport(state, absence.before, absence.totals);
+      absence = null;
+      if (summary.seconds >= 60 && !blocked) {
+        lastReturnReport = summary;
+        if (!dialog.open) showReturn(summary);
+      }
+    }
     wasVisible = !document.hidden;
+    if (!wasVisible)
+      absence = {
+        before: E.progressSnapshot(state),
+        totals: {
+          seconds: 0,
+          dust: 0,
+          spentDust: 0,
+          missionsCompleted: 0,
+          reportsClaimed: 0,
+          capped: false,
+        },
+      };
     save();
     render();
   });

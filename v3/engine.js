@@ -523,13 +523,41 @@
     if (newly) log(s, `解锁${newly.name}：${newly.detail}`);
     return gain;
   }
-  function tick(s, offline, active) {
+  function progressSnapshot(s) {
+    return {
+      dust: s.dust,
+      samples: s.samples,
+      buildings: { ...s.buildings },
+      research: [...s.research],
+      modules: { ...s.modules },
+    };
+  }
+  function returnReport(s, before, totals) {
+    return {
+      ...totals,
+      netDust: s.dust - before.dust,
+      samples: s.samples - before.samples,
+      buildings: D.BUILDINGS.map((b) => ({
+        id: b.id,
+        count: s.buildings[b.id] - before.buildings[b.id],
+      })).filter((b) => b.count > 0),
+      research: s.research.filter((id) => !before.research.includes(id)),
+      modules: D.MODULES.filter(
+        (m) => (s.modules[m.id] || 0) > (before.modules[m.id] || 0),
+      ).map((m) => ({ id: m.id, level: s.modules[m.id] })),
+      pending: s.result?.id || null,
+      story: s.result?.story || null,
+    };
+  }
+  function tick(s, offline, active, activity) {
     // Income uses the previous second's state. Completion and purchases affect the next second.
     addDust(s, productionRate(s));
     s.clock++;
     if (offline) s.timing.offlineSeconds++;
     else if (active) s.timing.foregroundSeconds++;
+    const returning = Boolean(s.mission && s.clock >= s.mission.end);
     completeMission(s);
+    if (activity && returning) activity.missionsCompleted++;
     if (s.beacon.expiresAt && s.clock >= s.beacon.expiresAt)
       s.beacon.expiresAt = 0;
     if (s.clock >= s.beacon.nextAt) {
@@ -546,13 +574,16 @@
         (r) =>
           !has(s, r.id) && s.run.dust >= r.unlock && s.dust - reserve >= r.cost,
       );
-      if (candidate)
+      if (candidate) {
+        const beforeDust = s.dust;
         research(
           s,
           candidate.id,
           Math.max(0, s.dust - reserve),
           offline ? "offline" : "auto",
         );
+        if (activity) activity.spentDust += Math.max(0, beforeDust - s.dust);
+      }
     }
     if (capability(s, "autoBuy") && s.automation.enabled) {
       const candidate = affordableBest(
@@ -560,7 +591,8 @@
         capability(s, "planning") ? s.automation.policy : "balanced",
         reserve,
       );
-      if (candidate)
+      if (candidate) {
+        const beforeDust = s.dust;
         buy(
           s,
           candidate.id,
@@ -568,10 +600,18 @@
           Math.max(0, s.dust - reserve),
           offline ? "offline" : "auto",
         );
+        if (activity) activity.spentDust += Math.max(0, beforeDust - s.dust);
+      }
     }
     if (capability(s, "autoDispatch") && s.automation.dispatch) {
-      if (s.result && !s.result.story)
-        claimMission(s, undefined, offline ? "offline" : "auto");
+      if (s.result && !s.result.story) {
+        const claimed = claimMission(
+          s,
+          undefined,
+          offline ? "offline" : "auto",
+        );
+        if (activity && claimed) activity.reportsClaimed++;
+      }
       if (!s.result && !s.mission) {
         const candidate =
           missionOptions(s).find(
@@ -582,6 +622,10 @@
     }
   }
   function advance(s, now, options = {}) {
+    const snapshot = options.report ? progressSnapshot(s) : null;
+    const activity = options.report
+      ? { spentDust: 0, missionsCompleted: 0, reportsClaimed: 0 }
+      : null;
     const elapsedMs = Math.max(0, Number(now) - s.lastAt);
     if (!Number.isFinite(elapsedMs))
       return { seconds: 0, dust: 0, capped: false };
@@ -594,8 +638,15 @@
     s.lastAt = Number(now);
     if (!s.timing) s.timing = freshTiming(s.clock, true);
     for (let i = 0; i < seconds; i++)
-      tick(s, options.offline === true, options.active === true);
-    return { seconds, dust: Math.max(0, s.lifetimeDust - before), capped };
+      tick(s, options.offline === true, options.active === true, activity);
+    const totals = {
+      seconds,
+      dust: Math.max(0, s.lifetimeDust - before),
+      capped,
+    };
+    return snapshot
+      ? returnReport(s, snapshot, { ...totals, ...activity })
+      : totals;
   }
   function reachable(s, action) {
     return (
@@ -966,6 +1017,8 @@
     addDust,
     rawRate,
     productionRate,
+    progressSnapshot,
+    returnReport,
     purchaseImpact,
     purchasePreview,
     incomeEta,

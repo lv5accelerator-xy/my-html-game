@@ -137,9 +137,58 @@ function verify() {
     "the documented explorer campaign completes within 60 minutes",
   );
   assert.ok(E.capability(campaign, "autoDispatch"));
+  const starportSeconds = campaign.clock;
+  const chapterStart = campaign.clock;
+  // Continue the same earned save: no injected cores, samples, equipment or buildings.
+  // Revisit every 15 seconds, follow the current goal, use safe voyages, and jump
+  // only when a permanent construction needs more cores.
+  for (let elapsed = 1; elapsed <= 45 * 60; elapsed++) {
+    E.advance(campaign, campaign.lastAt + 1000);
+    if (elapsed % 15 === 0) {
+      if (!campaign.run.routeChosen) E.chooseRoute(campaign, "explore");
+      if (campaign.beacon.expiresAt) E.claimBeacon(campaign);
+      if (campaign.result)
+        E.claimMission(
+          campaign,
+          campaign.result.story
+            ? D.STORIES[campaign.result.story].choices[0].id
+            : undefined,
+        );
+      const goal = E.nextGoal(campaign);
+      if (goal.focus?.startsWith("project-"))
+        E.buildProject(campaign, goal.focus.slice(8));
+      else if (goal.focus?.startsWith("module-")) {
+        const id = goal.focus.slice(7),
+          offer = E.moduleOffer(campaign, id);
+        if (offer.level < 2) E.buildModule(campaign, id);
+        else if (!campaign.equipped.includes(id)) {
+          if (campaign.equipped.length === 2)
+            E.equip(
+              campaign,
+              campaign.equipped.find((item) => item !== "nav") ||
+                campaign.equipped[0],
+            );
+          E.equip(campaign, id);
+        }
+      } else if (goal.focus?.startsWith("research-"))
+        E.research(campaign, goal.focus.slice(9));
+      else if (goal.focus?.startsWith("mission-"))
+        E.startMission(campaign, goal.focus.slice(8));
+      else if (goal.action === "jump" && E.prestigeGain(campaign))
+        E.prestige(campaign);
+    }
+    if (campaign.chapter.length === D.PROJECTS.length) break;
+  }
+  assert.equal(
+    campaign.chapter.length,
+    3,
+    "earned starport save can finish chapter two within another 45 minutes in the documented model",
+  );
+  assert.equal(campaign.lore.length, 5);
+  assert.ok(campaign.cores >= 0 && campaign.samples >= 0);
   console.table(rows);
   console.log(
-    `v3 balance ok: three routes, first-run beats, 15–25 minute jumps and faster second runs; starport campaign ${campaign.clock}s`,
+    `v3 balance ok: three routes, first-run beats, 15–25 minute jumps and faster second runs; starport ${starportSeconds}s, chapter two +${campaign.clock - chapterStart}s, complete campaign ${campaign.clock}s`,
   );
   return rows;
 }

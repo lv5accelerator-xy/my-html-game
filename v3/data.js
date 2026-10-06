@@ -7,7 +7,7 @@
   "use strict";
   return Object.freeze({
     VERSION: 32,
-    GAME_VERSION: "3.2.0-preview.1",
+    GAME_VERSION: "3.2.0-preview.2",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -195,6 +195,52 @@
         research: "navigation",
         detail: "安全探索。没有人的温室里，仍有一株植物在等待日出。",
       },
+      {
+        id: "message",
+        name: "漂泊通信带",
+        seconds: 150,
+        diversion: 0.2,
+        yieldSeconds: 150,
+        samples: 4,
+        chance: 1,
+        story: "relay",
+        unlockPort: 3,
+        chapter: true,
+        requiresStory: "hospital",
+        detail: "安全探索。沿着医院船留下的编号，寻找那份讯息的回执。",
+      },
+      {
+        id: "seedbank",
+        name: "失重种子库",
+        seconds: 210,
+        diversion: 0.25,
+        yieldSeconds: 160,
+        samples: 6,
+        chance: 1,
+        story: "nursery",
+        unlockPort: 3,
+        chapter: true,
+        project: "relay",
+        requiresStory: "garden",
+        equipment: { id: "nav", level: 2 },
+        detail: "安全探索。装备 2 级惯性导航仪，穿过缓慢旋转的育种舱。",
+      },
+      {
+        id: "horizon",
+        name: "黎明边界",
+        seconds: 240,
+        diversion: 0.3,
+        yieldSeconds: 200,
+        samples: 8,
+        chance: 1,
+        story: "horizon",
+        unlockPort: 3,
+        chapter: true,
+        project: "nursery",
+        research: "navigation",
+        equipment: { id: "scanner", level: 2 },
+        detail: "安全探索。装备 2 级残骸透镜，从恒星噪声里辨认另一座航站。",
+      },
     ],
     STORIES: {
       hospital: {
@@ -245,7 +291,136 @@
           },
         ],
       },
+      relay: {
+        title: "终于收到的回信",
+        continuity: {
+          story: "hospital",
+          choices: {
+            scrap:
+              "当年拆解医院船时登记的船体编号，替你在漂泊中继中找到了同一条航线。那些金属没有白白离开。",
+            repair:
+              "修复过的备用电源播出完整离港日志，你沿着其中的通信频段，找到了漂泊中继。那盏灯一直指着这里。",
+            preserve:
+              "你保存的平安讯息里藏着一个回执地址。如今，星港终于有能力把它送往该去的地方。",
+          },
+        },
+        text: "迟到的回执从远方传来：『这里是灯塔九号。我母亲在那艘船上。谢谢你告诉我她最后做了什么。』回信者阿遥并不要求奇迹，只问这条航线能否再次通行。你准备怎样连接两地？",
+        choices: [
+          {
+            id: "public",
+            name: "共享中继频段",
+            detail: "带回额外 6 份样本，供两地建设。",
+            samples: 6,
+          },
+          {
+            id: "power",
+            name: "为通信阵列供电",
+            detail: "获得储能矩阵或升 1 级；满 3 级时改为 6 份样本。",
+            module: "battery",
+            overflowSamples: 6,
+          },
+          {
+            id: "salvage",
+            name: "回收废弃中继外壳",
+            detail: "获得 120 秒产量的星尘，保留通信核心。",
+            dustSeconds: 120,
+          },
+        ],
+      },
+      nursery: {
+        title: "不只是一株幼苗",
+        continuity: {
+          story: "garden",
+          choices: {
+            scrap:
+              "回收光照设备时留下的序号，对应着种子库的培育清单。设备离开了旧温室，里面的记录却替更多种子找到了家。",
+            repair:
+              "重新点亮的温室送来一份发芽记录。失重种子库据此确认：这条航线还有人照顾生命。",
+            preserve:
+              "你带走的幼苗已经长出新叶。叶片的纹路与种子库的标本一致，它曾经属于一整座尚未醒来的花园。",
+          },
+        },
+        text: "库门后不是燃料，而是数千个休眠的种子盒。园艺员苇的录音说：『别把我的名字刻在墙上。种下它们，等别人来坐一坐。』阿遥发来消息，她的航站能出人手，却缺少可种植的土地。你选择先带回什么？",
+        choices: [
+          {
+            id: "seeds",
+            name: "带回种子与培育记录",
+            detail: "带回额外 8 份样本，准备永久育种舱。",
+            samples: 8,
+          },
+          {
+            id: "light",
+            name: "接续旧库的光照阵列",
+            detail: "获得温室集光阵或升 1 级；满 3 级时改为 8 份样本。",
+            module: "solar",
+            overflowSamples: 8,
+          },
+          {
+            id: "tools",
+            name: "回收闲置培育机械",
+            detail: "获得 150 秒产量的星尘，种子留在恒温箱中。",
+            dustSeconds: 150,
+          },
+        ],
+      },
+      horizon: {
+        title: "有人点亮另一端",
+        text: "黎明边界没有宝藏船，只有一座靠轮流停机维持的航站。阿遥站在观测窗前：『你不是来取走最后一点东西的，对吗？』你把星港、种子库和中继的坐标交给她。第一次，屏幕上的航线不再以残骸为终点。远航灯塔需要一份启用宣言。",
+        choices: [
+          {
+            id: "welcome",
+            name: "先向漂泊者发出邀请",
+            detail: "带回额外 10 份样本，为接待来船做准备。",
+            samples: 10,
+          },
+          {
+            id: "archive",
+            name: "先校验每一段安全航线",
+            detail: "获得惯性导航仪或升 1 级；满 3 级时改为 6 份样本。",
+            module: "nav",
+            overflowSamples: 6,
+          },
+          {
+            id: "supply",
+            name: "先送出一批建设物资",
+            detail: "获得 180 秒产量的星尘，完成两地共同回收。",
+            dustSeconds: 180,
+          },
+        ],
+      },
     },
+    PROJECTS: [
+      {
+        id: "relay",
+        name: "共鸣中继",
+        mission: "message",
+        story: "relay",
+        cores: 2,
+        samples: 10,
+        detail: "永久全舰队产量 ×1.05；开放失重种子库。",
+        text: "共鸣中继接通。阿遥的声音第一次不再隔着长久的静电：『收到，归航星港。』",
+      },
+      {
+        id: "nursery",
+        name: "永久育种舱",
+        mission: "seedbank",
+        story: "nursery",
+        cores: 3,
+        samples: 14,
+        detail: "每次成功探索永久多带回 1 份样本；开放黎明边界。",
+        text: "第一批种子在育种舱里苏醒。这里开始生产的，除了星尘，还有下一个春天。",
+      },
+      {
+        id: "lighthouse",
+        name: "远航灯塔",
+        mission: "horizon",
+        story: "horizon",
+        cores: 4,
+        samples: 20,
+        detail: "所有探索时间永久缩短 10%；第二章完成。",
+        text: "远航灯塔亮起，另一端也传来回应。那些曾只属于一个人的归航坐标，成为了两座航站之间的路。第二章「远航星图」完成。",
+      },
+    ],
     PORT: [
       {
         name: "重新点亮通信塔",

@@ -199,6 +199,12 @@
     window.scrollTo({ top: 0, behavior: "instant" });
     if (focusId) {
       const destination = document.getElementById(focusId);
+      for (
+        let parent = destination?.parentElement;
+        parent;
+        parent = parent.parentElement
+      )
+        if (parent.matches("details")) parent.open = true;
       destination?.focus({ preventScroll: true });
       destination?.scrollIntoView({ block: "center", behavior: "instant" });
     }
@@ -276,7 +282,7 @@
     return `<section class="automation"><h3>舰队自动化</h3><div class="control-row"><label><input type="checkbox" data-config="enabled" data-focus="config-enabled" ${state.automation.enabled ? "checked" : ""}>自动购买 · 每秒购买 1 艘</label></div>
       ${E.capability(state, "planning") ? `<div class="control-row"><label>购买策略 <select data-config="policy" data-focus="config-policy"><option value="balanced" ${state.automation.policy === "balanced" ? "selected" : ""}>产量回本优先</option><option value="milestone" ${state.automation.policy === "milestone" ? "selected" : ""}>接近里程碑优先</option><option value="advanced" ${state.automation.policy === "advanced" ? "selected" : ""}>高级设施优先</option></select></label><label>保留星尘 <input data-config="reserve" data-focus="config-reserve" type="number" min="0" max="1000000000000" step="100" value="${state.automation.reserve}"></label></div>` : "<p><small>第二次跃迁后可设置购买优先级与保留预算。</small></p>"}
       ${E.capability(state, "autoResearch") ? `<div class="control-row"><label><input type="checkbox" data-config="research" data-focus="config-research" ${state.automation.research ? "checked" : ""}>自动研究 · 每 5 秒完成一项可负担科技</label></div>` : ""}
-      ${E.capability(state, "autoDispatch") ? `<div class="control-row"><label><input type="checkbox" data-config="dispatch" data-focus="config-dispatch" ${state.automation.dispatch ? "checked" : ""}>重复派遣安全探索 · 故事等待手动选择</label></div>` : ""}</section>`;
+      ${E.capability(state, "autoDispatch") ? `<div class="control-row"><label><input type="checkbox" data-config="dispatch" data-focus="config-dispatch" ${state.automation.dispatch ? "checked" : ""}>重复派遣安全探索 · 新远航故事出现时暂停</label></div>` : ""}</section>`;
   }
   function fleet() {
     return `<div class="page"><div class="page-header"><div><h1>把残骸，变成舰队。</h1><p>每种设施在 10、25、50 艘时产量翻倍。研究与路线会改变它们如何协同。</p></div><div class="buy-modes" aria-label="每次购买上限">${[
@@ -317,30 +323,46 @@
     if (!state.result) return "";
     const r = state.result,
       story = r.story && D.STORIES[r.story];
-    return `<section class="report" id="report" tabindex="-1" aria-label="归航报告"><h2>${story ? story.title : D.MISSIONS.find((m) => m.id === r.id).name + " · 归航报告"}</h2><p>${story ? story.text : r.succeeded ? "探索船安全归航，回收物已经送达。" : "裂隙干扰超出预期，探索船安全撤回，带回 1 份样本。"}</p><p>回收 ${number(r.dust)} 星尘 · ${r.samples} 份样本${r.module ? ` · 舰装「${D.MODULES.find((m) => m.id === r.module).name}」` : ""}</p>
+    return `<section class="report" id="report" tabindex="-1" aria-label="归航报告"><h2>${story ? story.title : D.MISSIONS.find((m) => m.id === r.id).name + " · 归航报告"}</h2><p>${story ? escape(E.storyText(state, r.story)) : r.succeeded ? "探索船安全归航，回收物已经送达。" : "裂隙干扰超出预期，探索船安全撤回，带回 1 份样本。"}</p><p>回收 ${number(r.dust)} 星尘 · ${r.samples} 份样本${r.module ? ` · 舰装「${D.MODULES.find((m) => m.id === r.module).name}」` : ""}</p>
       ${story ? story.choices.map((c) => `<button class="story-choice" ${action("claim", c.id)}><strong>${c.name}</strong><small>${c.detail}</small></button>`).join("") : `<button class="primary" ${action("claim")}>收取回收物</button>`}</section>`;
+  }
+  function chapterMap() {
+    if (state.starport < D.PORT.length) return "";
+    const complete = state.chapter.length === D.PROJECTS.length;
+    return `<section class="chapter-map" aria-label="远航星图"><div class="section-title"><div><small>第二章</small><h2>远航星图</h2></div><span>永久建设 ${state.chapter.length} / ${D.PROJECTS.length}</span></div><p>星港有了归航的坐标。现在，把收到的回信与种子，送往有人等待的地方。所有旧选择都能继续这条航线。</p>
+      <div class="sector-grid">${D.PROJECTS.map((p, i) => {
+        const m = D.MISSIONS.find((item) => item.id === p.mission),
+          lock = E.missionLock(state, m.id);
+        const preview = E.missionPreview(state, m.id),
+          offer = E.projectOffer(state, p.id);
+        const known = state.lore.some((r) => r.story === p.story);
+        return `<article class="sector ${offer.built ? "connected" : ""}" id="mission-${m.id}" tabindex="-1"><span class="sector-status">0${i + 1} · ${offer.built ? "已连通" : lock ? "等待航路条件" : known ? "故事已记录" : "信号已定位"}</span><h3>${m.name}</h3><p>${m.detail}</p><p class="sector-metrics">${duration(preview.seconds)} · 分流 ${Math.round(preview.diversion * 100)}%<br>安全回收 ${number(preview.dust)} 星尘 · ${preview.samples} 份样本</p>${lock ? `<p class="blueprint-lock">${lock}</p>` : ""}<button class="outline" ${action("mission", m.id)} ${lock || state.mission || state.result || state.run.dust < 600 ? "disabled" : ""}>${known ? "再次安全探索" : "安全派遣"}</button><div class="sector-project" id="project-${p.id}" tabindex="-1"><h4>${p.name}${offer.built ? " · 已建成" : ""}</h4><p>${p.detail}</p>${offer.built ? "<small>永久效果已生效 · 跃迁保留</small>" : `<p>${p.cores} 星核 + ${p.samples} 样本<br>当前 ${number(state.cores)} 星核 · ${number(state.samples)} 样本</p>${known ? "" : "<small>先处理这个星域的首次故事。</small>"}<button ${action("project", p.id)} ${offer.available ? "" : "disabled"}>建设${p.name}</button>`}</div></article>`;
+      }).join(
+        "",
+      )}</div>${complete ? `<p class="chapter-complete">${D.PROJECTS.at(-1).text} 两地的故事暂告一段落，你可以继续扩建与探索。</p>` : ""}</section>`;
   }
   function explore() {
     const port = D.PORT[state.starport];
     return `<div class="page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${state.mission ? `<section class="mission-status"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 100)}% 产量</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div></section>` : ""}
+      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 100)}% 产量</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
+        .filter((m) => !m.chapter)
         .map((m) => {
           const p = E.missionPreview(state, m.id);
-          return `<div class="mission-row"><div><h3>${m.name}</h3><p>${m.detail}</p></div><div class="mission-metrics"><small>${duration(p.seconds)} · 分流 ${Math.round(p.diversion * 100)}%</small><p>成功率 ${Math.round(p.chance * 100)}%<br>成功回收 ${number(p.dust)} 星尘<br>${p.samples} 份样本</p></div><div class="row-action"><button class="${m.chance < 1 ? "" : "outline"}" ${action("mission", m.id)} ${state.mission || state.result ? "disabled" : ""}>${m.chance < 1 ? "风险派遣" : "安全派遣"}</button></div></div>`;
+          return `<div class="mission-row" id="mission-${m.id}" tabindex="-1"><div><h3>${m.name}</h3><p>${m.detail}</p></div><div class="mission-metrics"><small>${duration(p.seconds)} · 分流 ${Math.round(p.diversion * 100)}%</small><p>成功率 ${Math.round(p.chance * 100)}%<br>成功回收 ${number(p.dust)} 星尘<br>${p.samples} 份样本</p></div><div class="row-action"><button class="${m.chance < 1 ? "" : "outline"}" ${action("mission", m.id)} ${state.mission || state.result ? "disabled" : ""}>${m.chance < 1 ? "风险派遣" : "安全派遣"}</button></div></div>`;
         })
         .join("")}</section>
-      <section class="port-panel"><span class="port-progress">星港修复 ${state.starport} / ${D.PORT.length}</span><h2>${port ? port.name : "这里终于可以成为家。"}</h2><p>${port ? `需要 ${port.cores} 星核与 ${port.samples} 份样本。你拥有 ${number(state.cores)} 星核与 ${number(state.samples)} 份样本。` : D.PORT.at(-1).text}</p>${port ? `<button class="outline" ${action("port")} ${state.cores >= port.cores && state.samples >= port.samples ? "" : "disabled"}>修复航站</button>` : "<p>归航星港已建成。你可以继续选择不同航线，收集故事与舰装。</p>"}</section>
+      <section class="port-panel"><span class="port-progress">星港修复 ${state.starport} / ${D.PORT.length}</span><h2>${port ? port.name : "这里终于可以成为家。"}</h2><p>${port ? `需要 ${port.cores} 星核与 ${port.samples} 份样本。你拥有 ${number(state.cores)} 星核与 ${number(state.samples)} 份样本。` : D.PORT.at(-1).text}</p>${port ? `<button class="outline" ${action("port")} ${state.cores >= port.cores && state.samples >= port.samples ? "" : "disabled"}>修复航站</button>` : "<p>归航星港已建成。远航星图已经开放，新的回信正在等待。</p>"}</section>
       <section><div class="section-title"><h2>随舰装备</h2><small>${state.equipped.length} / 2 槽位 · 跃迁保留</small></div>${
         D.MODULES.filter((m) => state.modules[m.id])
           .map((m) => {
             const offer = E.moduleOffer(state, m.id);
-            return `<div class="module-row" data-module-id="${m.id}"><div><h3>${m.name}</h3><p>${m.detail}</p></div><small>${state.modules[m.id]} / ${D.MODULE_MAX_LEVEL} 级</small><div class="row-action"><button ${action("equip", m.id)} ${!state.equipped.includes(m.id) && state.equipped.length >= 2 ? "disabled" : ""}>${state.equipped.includes(m.id) ? "卸下" : "装备"}</button>${offer.level < D.MODULE_MAX_LEVEL ? `<button class="outline" ${action("module", m.id)} ${offer.available ? "" : "disabled"}>升级 · ${offer.samples} 样本</button>` : "<small>已达到最高等级</small>"}</div></div>`;
+            return `<div class="module-row" id="module-${m.id}" tabindex="-1" data-module-id="${m.id}"><div><h3>${m.name}</h3><p>${m.detail}</p></div><small>${state.modules[m.id]} / ${D.MODULE_MAX_LEVEL} 级</small><div class="row-action"><button ${action("equip", m.id)} ${!state.equipped.includes(m.id) && state.equipped.length >= 2 ? "disabled" : ""}>${state.equipped.includes(m.id) ? "卸下" : "装备"}</button>${offer.level < D.MODULE_MAX_LEVEL ? `<button class="outline" ${action("module", m.id)} ${offer.available ? "" : "disabled"}>升级 · ${offer.samples} 样本</button>` : "<small>已达到最高等级</small>"}</div></div>`;
           })
           .join("") ||
         '<p class="empty">回应医院船的信号，或进入裂隙寻找第一件舰装。</p>'
       }</section>
-      ${workshop()}<details data-details-key="lore"><summary data-focus="details-lore">已收藏的航线故事 · ${state.lore.length} / 2</summary>${state.lore.map((r) => `<div class="lore-entry"><h3>${D.STORIES[r.story].title}</h3><p>${D.STORIES[r.story].text}</p><p>你的选择：${D.STORIES[r.story].choices.find((c) => c.id === r.choice).name}</p></div>`).join("") || '<p class="empty">你的每一个决定，都将留在这里。</p>'}</details></div>`;
+      ${workshop()}<details data-details-key="lore"><summary data-focus="details-lore">已收藏的航线故事 · ${state.lore.length} / ${state.starport === D.PORT.length ? Object.keys(D.STORIES).length : 2}</summary>${state.lore.map((r) => `<div class="lore-entry"><h3>${D.STORIES[r.story].title}</h3><p>${escape(E.storyText(state, r.story))}</p><p>你的选择：${D.STORIES[r.story].choices.find((c) => c.id === r.choice).name}</p></div>`).join("") || '<p class="empty">你的每一个决定，都将留在这里。</p>'}</details></div>`;
   }
   function workshop() {
     const missing = D.MODULES.filter((m) => !state.modules[m.id]);
@@ -348,7 +370,7 @@
       missing
         .map((m) => {
           const offer = E.moduleOffer(state, m.id);
-          return `<div class="module-row" data-module-id="${m.id}"><div><h3>${m.name}</h3><p>${m.detail}</p>${offer.unlocked ? "" : `<p class="blueprint-lock">${offer.reason}</p>`}</div><small>${offer.unlocked ? `${offer.samples} 份样本` : "图纸未开放"}</small><div class="row-action">${offer.unlocked ? `<button class="outline" ${action("module", m.id)} ${offer.available ? "" : "disabled"}>装配舰装</button>` : ""}</div></div>`;
+          return `<div class="module-row" id="module-${m.id}" tabindex="-1" data-module-id="${m.id}"><div><h3>${m.name}</h3><p>${m.detail}</p>${offer.unlocked ? "" : `<p class="blueprint-lock">${offer.reason}</p>`}</div><small>${offer.unlocked ? `${offer.samples} 份样本` : "图纸未开放"}</small><div class="row-action">${offer.unlocked ? `<button class="outline" ${action("module", m.id)} ${offer.available ? "" : "disabled"}>装配舰装</button>` : ""}</div></div>`;
         })
         .join("") ||
       '<p class="empty">所有舰装均已装配。可以继续升级已有舰装。</p>'
@@ -356,7 +378,7 @@
   }
   function jump() {
     const gain = E.prestigeGain(state);
-    return `<div class="page"><div class="page-header"><div><h1>下一次启航，会有所不同。</h1><p>用这一航次的积累换取星核和永久能力。舰装、故事、样本与修复的星港会与你同行。</p></div></div><div class="jump-layout"><div><div class="jump-number">${gain || 4} <small>星核${gain ? "可获得" : "起"}</small></div><p>本航次收集 <strong data-run-dust>${number(state.run.dust)}</strong> / ${number(D.PRESTIGE_DUST)} 星尘</p><div class="progress" role="progressbar" aria-label="跃迁进度" aria-valuemin="0" aria-valuemax="100" data-jump-progress><span></span></div><p>星核带来的全舰队产量：×${number(1 + Math.sqrt(state.totalCores) * 0.25)}。消费星核修复航站也不会减少这项历史加成。</p><p><small>新航次从 1 艘无人机与 12 星尘开始。临时设施与研究需要重新建设。</small></p>${state.mission || state.result ? '<p class="save-warning">请先等待探索归航，并处理报告。</p>' : ""}<button class="primary" ${action("jump")} ${gain && !state.mission && !state.result ? "" : "disabled"}>${gain ? "开启下一航次" : "尚在积累能量"}</button></div><div><h2>每次都能解锁新工作</h2>${D.CAPABILITIES.map((c) => `<div class="capability-row ${E.capability(state, c.id) ? "unlocked" : ""}"><span>${E.capability(state, c.id) ? "已解锁" : `第 ${c.run} 次跃迁`}</span><div><h3>${c.name}</h3><p>${c.detail}</p></div></div>`).join("")}</div></div><section><h2>最近的航次</h2>${state.records.map((r, i) => `<div class="history-row"><span>${D.ROUTES.find((route) => route.id === r.route).name}</span><span>${duration(r.seconds)}</span><span>+${number(r.gain)} 星核</span></div>`).join("") || '<p class="empty">第一条航线正在由你写下。</p>'}</section></div>`;
+    return `<div class="page"><div class="page-header"><div><h1>下一次启航，会有所不同。</h1><p>用这一航次的积累换取星核和永久能力。舰装、故事、样本、修复的星港与远航建设会与你同行。</p></div></div><div class="jump-layout"><div><div class="jump-number">${gain || 4} <small>星核${gain ? "可获得" : "起"}</small></div><p>本航次收集 <strong data-run-dust>${number(state.run.dust)}</strong> / ${number(D.PRESTIGE_DUST)} 星尘</p><div class="progress" role="progressbar" aria-label="跃迁进度" aria-valuemin="0" aria-valuemax="100" data-jump-progress><span></span></div><p>星核带来的全舰队产量：×${number(1 + Math.sqrt(state.totalCores) * 0.25)}。消费星核修复航站也不会减少这项历史加成。</p><p><small>新航次从 1 艘无人机与 12 星尘开始。临时设施与研究需要重新建设。</small></p>${state.mission || state.result ? '<p class="save-warning">请先等待探索归航，并处理报告。</p>' : ""}<button class="primary" ${action("jump")} ${gain && !state.mission && !state.result ? "" : "disabled"}>${gain ? "开启下一航次" : "尚在积累能量"}</button></div><div><h2>每次都能解锁新工作</h2>${D.CAPABILITIES.map((c) => `<div class="capability-row ${E.capability(state, c.id) ? "unlocked" : ""}"><span>${E.capability(state, c.id) ? "已解锁" : `第 ${c.run} 次跃迁`}</span><div><h3>${c.name}</h3><p>${c.detail}</p></div></div>`).join("")}</div></div><section><h2>最近的航次</h2>${state.records.map((r, i) => `<div class="history-row"><span>${D.ROUTES.find((route) => route.id === r.route).name}</span><span>${duration(r.seconds)}</span><span>+${number(r.gain)} 星核</span></div>`).join("") || '<p class="empty">第一条航线正在由你写下。</p>'}</section></div>`;
   }
   function updateNumbers() {
     $("#dust-value").textContent = number(state.dust);
@@ -474,6 +496,7 @@
       state.cores,
       state.rebirths,
       state.starport,
+      state.chapter,
       state.samples,
       state.equipped,
       state.modules,
@@ -653,10 +676,18 @@
         );
     } else if (kind === "port") {
       if (E.repairPort(state)) toast("航站的一盏灯，重新亮起了。");
+    } else if (kind === "project") {
+      if (E.buildProject(state, id))
+        toast(
+          `${D.PROJECTS.find((p) => p.id === id).name}已建成，永久效果已生效。`,
+        );
+    } else if (kind === "dispatch-stop") {
+      E.configure(state, { dispatch: false });
+      toast("本次探索继续。归航后将等待你的下一次安排。");
     } else if (kind === "jump") {
       openDialog(
         "开启下一航次？",
-        `<p>获得 ${E.prestigeGain(state)} 星核，并解锁${D.CAPABILITIES.find((c) => c.run === state.rebirths + 1)?.name || "新航次"}。</p><p>临时设施、研究和本轮星尘重置。舰装、故事、样本、星核和星港修复保留，新航次携带 1 艘无人机与 12 星尘。</p><div class="dialog-actions"><button ${action("cancel")}>继续这一航次</button><button class="primary" ${action("confirm-jump")}>启航</button></div>`,
+        `<p>获得 ${E.prestigeGain(state)} 星核，并解锁${D.CAPABILITIES.find((c) => c.run === state.rebirths + 1)?.name || "新航次"}。</p><p>临时设施、研究和本轮星尘重置。舰装、故事、样本、星核、星港修复与远航建设保留，新航次携带 1 艘无人机与 12 星尘。</p><div class="dialog-actions"><button ${action("cancel")}>继续这一航次</button><button class="primary" ${action("confirm-jump")}>启航</button></div>`,
       );
       return;
     } else if (kind === "confirm-jump") {

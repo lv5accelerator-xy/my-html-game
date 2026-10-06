@@ -710,6 +710,180 @@ async function run() {
         assert.equal(claimed.lore.length, 1);
       },
     );
+    const farVoyage = ready();
+    farVoyage.starport = 3;
+    farVoyage.rebirths = 4;
+    farVoyage.cores = 12;
+    farVoyage.totalCores = 28;
+    farVoyage.samples = 100;
+    farVoyage.modules = { medbay: 1 };
+    farVoyage.equipped = ["medbay"];
+    farVoyage.research = ["navigation"];
+    farVoyage.lore = [
+      { story: "hospital", choice: "repair" },
+      { story: "garden", choice: "scrap" },
+    ];
+    farVoyage.run.choices = 2;
+    farVoyage.run.dust = D.PRESTIGE_DUST;
+    farVoyage.lifetimeDust = D.PRESTIGE_DUST;
+    await scenario(
+      "chapter two: three real voyages, old-choice follow-ups, prerequisite gear, long-voyage reload, permanent construction and jump preservation on desktop and phone",
+      { [S.KEY]: JSON.stringify(farVoyage) },
+      async (page) => {
+        await page.locator('#main [data-goal-focus="mission-message"]').click();
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "mission-message",
+        );
+        assert.equal(
+          await page
+            .locator('[data-action="mission"][data-id="seedbank"]')
+            .isDisabled(),
+          true,
+        );
+        assert.equal(
+          await page
+            .locator('[data-action="project"][data-id="relay"]')
+            .isDisabled(),
+          true,
+        );
+        if (screenshotDir)
+          await page
+            .locator(".chapter-map")
+            .screenshot({ path: path.join(screenshotDir, "chapter-map.png") });
+        const voyage = async (id, choice, text) => {
+          await page
+            .locator(`[data-action="mission"][data-id="${id}"]`)
+            .click();
+          const s = await read(page);
+          assert.equal(s.mission.id, id);
+          await page.clock.fastForward((s.mission.end - s.clock) * 1000);
+          await page.locator('#dialog [data-action="return-next"]').click();
+          assert.match(await page.locator("#report").innerText(), text);
+          await page
+            .locator(`[data-action="claim"][data-id="${choice}"]`)
+            .click();
+        };
+        await voyage("message", "public", /备用电源播出完整离港日志/);
+        await page.locator('[data-action="project"][data-id="relay"]').click();
+        assert.deepEqual((await read(page)).chapter, ["relay"]);
+        await page.locator('#navigation [data-id="home"]').click();
+        await page.locator('#main [data-goal-focus="module-nav"]').click();
+        assert.equal(await page.locator(".workshop").getAttribute("open"), "");
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "module-nav",
+        );
+        await page.locator('[data-action="module"][data-id="nav"]').click();
+        await page.locator('[data-action="module"][data-id="nav"]').click();
+        assert.equal((await read(page)).modules.nav, 2);
+        assert.ok((await read(page)).equipped.includes("nav"));
+        await page.setViewportSize({ width: 375, height: 900 });
+        await voyage("seedbank", "seeds", /回收光照设备时留下的序号/);
+        await page
+          .locator('[data-action="project"][data-id="nursery"]')
+          .click();
+        assert.deepEqual((await read(page)).chapter, ["relay", "nursery"]);
+        await page.locator('#navigation [data-id="home"]').click();
+        await page.locator('#main [data-goal-focus="module-scanner"]').click();
+        await page.locator('[data-action="module"][data-id="scanner"]').click();
+        await page.locator('[data-action="module"][data-id="scanner"]').click();
+        assert.equal(
+          await page
+            .locator('[data-action="equip"][data-id="scanner"]')
+            .isDisabled(),
+          true,
+        );
+        await page.locator('[data-action="equip"][data-id="medbay"]').click();
+        await page.locator('[data-action="equip"][data-id="scanner"]').click();
+        await page
+          .locator('[data-action="mission"][data-id="horizon"]')
+          .click();
+        await page.clock.fastForward(5000);
+        const underway = (await read(page)).mission;
+        assert.ok(underway.seconds > 180);
+        await page.reload();
+        assert.deepEqual((await read(page)).mission, underway);
+        await page.locator('#main [data-goal-focus="active-mission"]').click();
+        const returning = await read(page);
+        await page.clock.fastForward(
+          (returning.mission.end - returning.clock) * 1000,
+        );
+        await page.locator('#dialog [data-action="return-next"]').click();
+        assert.match(
+          await page.locator("#report").innerText(),
+          /阿遥站在观测窗前/,
+        );
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth > innerWidth,
+          ),
+          false,
+        );
+        await page.locator('[data-action="claim"][data-id="welcome"]').click();
+        await page
+          .locator('[data-action="project"][data-id="lighthouse"]')
+          .click();
+        const completed = await read(page);
+        assert.deepEqual(completed.chapter, ["relay", "nursery", "lighthouse"]);
+        assert.equal(completed.cores, 3);
+        assert.equal(completed.totalCores, 28);
+        assert.equal(completed.run.choices, 2);
+        assert.equal(completed.lore.length, 5);
+        assert.deepEqual(completed.lore.slice(0, 2), farVoyage.lore);
+        assert.match(
+          await page.locator(".chapter-complete").innerText(),
+          /第二章「远航星图」完成/,
+        );
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          assert.equal(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth > innerWidth,
+            ),
+            false,
+          );
+          if (screenshotDir)
+            await page
+              .locator(".chapter-map")
+              .screenshot({
+                path: path.join(screenshotDir, `chapter-complete-${width}.png`),
+              });
+        }
+        await page.locator('#navigation [data-id="jump"]').click();
+        await page.locator('[data-action="jump"]').click();
+        await page.locator('[data-action="confirm-jump"]').click();
+        const next = await read(page);
+        assert.equal(next.rebirths, 5);
+        assert.deepEqual(next.chapter, completed.chapter);
+        assert.deepEqual(next.lore, completed.lore);
+        assert.deepEqual(next.modules, completed.modules);
+        await page.reload();
+        assert.deepEqual((await read(page)).chapter, completed.chapter);
+      },
+    );
+    const autoVoyage = ready();
+    autoVoyage.rebirths = 4;
+    autoVoyage.automation.dispatch = true;
+    E.startMission(autoVoyage, "belt");
+    await scenario(
+      "automatic voyages can pause after the current return without cancelling it or losing its reward",
+      { [S.KEY]: JSON.stringify(autoVoyage) },
+      async (page) => {
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator('[data-action="dispatch-stop"]').click();
+        const s = await read(page);
+        assert.equal(s.automation.dispatch, false);
+        assert.equal(s.mission.id, "belt");
+        await page.clock.fastForward(120000);
+        await page.locator('#dialog [data-action="return-next"]').click();
+        assert.equal((await read(page)).result.id, "belt");
+        await page.locator('[data-action="claim"]').click();
+        await page.clock.runFor(1000);
+        assert.equal((await read(page)).mission, null);
+        assert.equal((await read(page)).samples, 2);
+      },
+    );
     console.log(
       `v3 browser ok: ${checks} complete flows; identity/content/assets/console checked in every flow`,
     );

@@ -653,4 +653,207 @@ test("background briefing aggregates several ticks and still respects the eight-
   assert.equal(capped.seconds, D.OFFLINE_SECONDS);
   assert.equal(capped.capped, true);
 });
+function chapterReady() {
+  const s = ready();
+  s.starport = 3;
+  s.rebirths = 4;
+  s.cores = 12;
+  s.totalCores = 28;
+  s.samples = 60;
+  s.modules = { nav: 2, scanner: 2 };
+  s.equipped = ["nav", "scanner"];
+  s.research = ["navigation"];
+  s.lore = [
+    { story: "hospital", choice: "preserve" },
+    { story: "garden", choice: "preserve" },
+  ];
+  s.run.choices = 2;
+  return s;
+}
+test("chapter two gates each sector and construction in sequence, including actually equipped level-two gear", () => {
+  const s = ready();
+  assert.ok(E.missionLock(s, "message"));
+  assert.equal(E.startMission(s, "message"), false);
+  assert.equal(E.buildProject(s, "relay"), false);
+  s.starport = 3;
+  assert.match(E.missionLock(s, "message"), /最后一盏手术灯/);
+  s.lore = [{ story: "hospital", choice: "scrap" }];
+  assert.equal(E.missionLock(s, "message"), "");
+  assert.match(E.missionLock(s, "seedbank"), /共鸣中继/);
+  s.lore.push({ story: "relay", choice: "public" });
+  s.cores = 2;
+  s.samples = 10;
+  assert.ok(E.buildProject(s, "relay"));
+  assert.match(E.missionLock(s, "seedbank"), /等不到的日出/);
+  s.lore.push({ story: "garden", choice: "scrap" });
+  s.modules.nav = 2;
+  assert.match(E.missionLock(s, "seedbank"), /装备 2 级/);
+  assert.ok(E.equip(s, "nav"));
+  assert.equal(E.missionLock(s, "seedbank"), "");
+  assert.equal(E.buildProject(s, "nursery"), false);
+  assert.equal(E.startMission(s, "horizon"), false);
+  const unchanged = structuredClone(s);
+  assert.equal(E.buildProject(s, "relay"), false);
+  assert.equal(E.buildProject(s, "unknown"), false);
+  assert.deepEqual(s, unchanged);
+});
+test("all nine old-choice combinations continue through three new stories without overwriting choices or automatic decisions", () => {
+  for (const hospital of D.STORIES.hospital.choices)
+    for (const garden of D.STORIES.garden.choices) {
+      const s = chapterReady();
+      s.lore[0].choice = hospital.id;
+      s.lore[1].choice = garden.id;
+      const original = structuredClone(s.lore);
+      assert.match(
+        E.storyText(s, "relay"),
+        new RegExp(D.STORIES.relay.continuity.choices[hospital.id]),
+      );
+      assert.match(
+        E.storyText(s, "nursery"),
+        new RegExp(D.STORIES.nursery.continuity.choices[garden.id]),
+      );
+      for (const project of D.PROJECTS) {
+        const before = structuredClone(s);
+        assert.ok(E.startMission(s, project.mission));
+        const saved = E.sanitize(s, s.lastAt);
+        assert.deepEqual(
+          saved.mission,
+          s.mission,
+          "long voyages must survive a reload",
+        );
+        E.configure(s, { dispatch: true });
+        E.advance(s, s.lastAt + s.mission.seconds * 1000, { offline: true });
+        assert.equal(s.result.story, project.story);
+        assert.deepEqual(
+          s.lore,
+          before.lore,
+          "automation never chooses chapter stories",
+        );
+        assert.ok(
+          E.claimMission(
+            s,
+            D.STORIES[project.story].choices[
+              D.STORIES.hospital.choices.indexOf(hospital)
+            ].id,
+          ),
+        );
+        const rate = E.rawRate(s),
+          cores = s.totalCores;
+        assert.ok(E.buildProject(s, project.id));
+        assert.equal(s.totalCores, cores);
+        if (project.id === "relay")
+          assert.ok(Math.abs(E.rawRate(s) - rate * 1.05) < 1e-8);
+        assert.equal(
+          s.run.choices,
+          2,
+          "chapter choices do not consume the original two-story limit",
+        );
+        assert.equal(E.claimMission(s), false);
+      }
+      assert.deepEqual(s.lore.slice(0, 2), original);
+      assert.deepEqual(
+        s.chapter,
+        D.PROJECTS.map((p) => p.id),
+      );
+      assert.equal(s.lore.length, 5);
+      assert.deepEqual(E.sanitize(s, s.lastAt), s);
+      const preview = E.missionPreview(s, "belt");
+      const noBonus = structuredClone(s);
+      noBonus.chapter = ["relay"];
+      assert.equal(
+        preview.samples,
+        E.missionPreview(noBonus, "belt").samples + 1,
+      );
+      assert.ok(
+        preview.seconds <=
+          Math.ceil(E.missionPreview(noBonus, "belt").seconds * 0.9),
+      );
+      s.run.dust = D.PRESTIGE_DUST;
+      assert.ok(E.prestige(s));
+      assert.deepEqual(
+        s.chapter,
+        D.PROJECTS.map((p) => p.id),
+      );
+      assert.deepEqual(s.lore.slice(0, 2), original);
+    }
+});
+test("chapter goals always lead to a reachable prerequisite, gear, sample, report or construction target", () => {
+  const s = chapterReady();
+  assert.equal(E.nextGoal(s).focus, "mission-message");
+  s.lore.push({ story: "relay", choice: "public" });
+  s.cores = 0;
+  assert.equal(E.nextGoal(s).action, "jump");
+  s.rebirths = 0;
+  assert.equal(E.nextGoal(s).action, "fleet");
+  assert.ok(E.reachable(s, E.nextGoal(s).action));
+  s.cores = 12;
+  s.rebirths = 4;
+  s.samples = 0;
+  assert.equal(E.nextGoal(s).focus, "mission-message");
+  s.samples = 60;
+  assert.equal(E.nextGoal(s).focus, "project-relay");
+  E.buildProject(s, "relay");
+  s.equipped = [];
+  s.modules.nav = 1;
+  s.samples = 0;
+  assert.equal(E.nextGoal(s).focus, "mission-belt");
+  s.samples = 60;
+  assert.equal(E.nextGoal(s).focus, "module-nav");
+  s.modules.nav = 2;
+  s.equipped = ["nav"];
+  assert.equal(E.nextGoal(s).focus, "mission-seedbank");
+  E.startMission(s, "seedbank");
+  assert.equal(E.nextGoal(s).focus, "active-mission");
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  assert.equal(E.nextGoal(s).focus, "report");
+});
+test("old saves gain only the optional empty chapter; invalid construction and repeat dispatch cannot unlock or replay chapter rewards", () => {
+  const old = chapterReady();
+  delete old.chapter;
+  const restored = E.sanitize(old, old.lastAt);
+  assert.deepEqual(restored, { ...old, chapter: [] });
+  old.chapter = ["lighthouse", "unknown"];
+  old.repeatId = "horizon";
+  const cleaned = E.sanitize(old, old.lastAt);
+  assert.deepEqual(cleaned.chapter, []);
+  assert.equal(cleaned.repeatId, "belt");
+  const s = chapterReady();
+  s.modules.battery = 3;
+  E.startMission(s, "message");
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  const samples = s.samples,
+    reward = s.result.samples;
+  assert.ok(E.claimMission(s, "power"));
+  assert.equal(s.samples, samples + reward + 6);
+  s.result = {
+    id: "message",
+    story: "relay",
+    samples: 4,
+    dust: 20,
+    succeeded: true,
+    module: null,
+  };
+  assert.equal(E.sanitize(s, s.lastAt).result.story, null);
+});
+test("auto dispatch pauses for a reachable new chapter story but still runs ordinary safe voyages when prerequisites are missing", () => {
+  const s = chapterReady();
+  E.configure(s, { dispatch: true });
+  E.advance(s, s.lastAt + 1000);
+  assert.equal(s.mission, null, "first new story awaits a deliberate dispatch");
+  s.lore.push({ story: "relay", choice: "public" });
+  assert.ok(E.buildProject(s, "relay"));
+  s.modules.nav = 1;
+  E.advance(s, s.lastAt + 1000);
+  assert.equal(s.mission.id, "belt");
+  assert.equal(
+    E.nextGoal(s).focus,
+    "module-nav",
+    "ordinary automation must not hide the prerequisite goal",
+  );
+  s.modules.nav = 2;
+  E.advance(s, s.lastAt + 120000);
+  assert.equal(s.mission, null);
+  assert.equal(s.result, null);
+  assert.equal(E.nextGoal(s).focus, "mission-seedbank");
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

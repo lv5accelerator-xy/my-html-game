@@ -80,6 +80,7 @@
       journal: [],
       discoveries: 0,
       starport: 0,
+      chapter: [],
       records: [],
       beacon: { nextAt: 45, expiresAt: 0 },
       burstUntil: 0,
@@ -139,6 +140,7 @@
     rate *= (has(s, "panels") ? 1.2 : 1) * (has(s, "network") ? 1.35 : 1);
     rate *= 1 + Math.sqrt(s.totalCores) * 0.25;
     rate *= 1 + equipped(s, "battery") * 0.12 + equipped(s, "medbay") * 0.1;
+    if (s.chapter?.includes("relay")) rate *= 1.05;
     return bounded(rate);
   }
   function productionRate(s) {
@@ -303,10 +305,32 @@
     list.sort((a, b) => a.score - b.score || a.cost - b.cost);
     return list[0] || null;
   }
+  function storyText(s, id) {
+    const story = D.STORIES[id];
+    if (!story) return "";
+    const prior =
+      story.continuity &&
+      s.lore.find((r) => r.story === story.continuity.story);
+    const context = prior && story.continuity.choices[prior.choice];
+    return [context, story.text].filter(Boolean).join(" ");
+  }
+  function missionLock(s, id) {
+    const m = byId(D.MISSIONS, id);
+    if (!m) return "未知航线";
+    if (s.starport < m.unlockPort)
+      return `先完成星港修复 ${m.unlockPort} / ${D.PORT.length}`;
+    if (m.project && !s.chapter?.includes(m.project))
+      return `先建成${byId(D.PROJECTS, m.project).name}`;
+    if (m.requiresStory && !s.lore.some((r) => r.story === m.requiresStory))
+      return `先处理「${D.STORIES[m.requiresStory].title}」的故事选择`;
+    if (m.research && !has(s, m.research))
+      return `本航次先研究${byId(D.RESEARCH, m.research).name}`;
+    if (m.equipment && equipped(s, m.equipment.id) < m.equipment.level)
+      return `装备 ${m.equipment.level} 级${byId(D.MODULES, m.equipment.id).name}`;
+    return "";
+  }
   function missionOptions(s) {
-    return D.MISSIONS.filter(
-      (m) => s.starport >= m.unlockPort && (!m.research || has(s, m.research)),
-    );
+    return D.MISSIONS.filter((m) => !missionLock(s, m.id));
   }
   function missionPreview(s, id) {
     const m = byId(D.MISSIONS, id);
@@ -318,7 +342,8 @@
         Math.ceil(
           m.seconds *
             (explorer ? 0.65 : 1) *
-            Math.max(0.7, 1 - equipped(s, "nav") * 0.1),
+            Math.max(0.7, 1 - equipped(s, "nav") * 0.1) *
+            (s.chapter?.includes("lighthouse") ? 0.9 : 1),
         ),
       ),
       diversion: m.diversion * (explorer ? 0.5 : 1),
@@ -328,7 +353,10 @@
           (explorer && m.chance < 1 ? 0.15 : 0) +
           (has(s, "navigation") && m.chance < 1 ? 0.05 : 0),
       ),
-      samples: m.samples + (explorer ? 1 : 0),
+      samples:
+        m.samples +
+        (explorer ? 1 : 0) +
+        (s.chapter?.includes("nursery") ? 1 : 0),
       dust: Math.max(20, rawRate(s) * m.yieldSeconds),
     };
   }
@@ -367,7 +395,7 @@
       m.succeeded &&
       def.story &&
       !s.lore.some((entry) => entry.story === def.story) &&
-      s.run.choices < 2
+      (def.chapter || s.run.choices < 2)
         ? def.story
         : null;
     s.result = {
@@ -440,10 +468,17 @@
     if (choice) {
       if (choice.dustSeconds)
         addDust(s, Math.max(50, rawRate(s) * choice.dustSeconds));
-      if (choice.module) grantModule(s, choice.module);
+      if (choice.module) {
+        if (
+          choice.overflowSamples &&
+          s.modules[choice.module] >= D.MODULE_MAX_LEVEL
+        )
+          s.samples = bounded(s.samples + choice.overflowSamples);
+        else grantModule(s, choice.module);
+      }
       s.samples = bounded(s.samples + (choice.samples || 0));
       s.lore.push({ story: r.story, choice: choice.id });
-      s.run.choices++;
+      if (!byId(D.MISSIONS, r.id).chapter) s.run.choices++;
       log(s, `${story.title}：${choice.name}。这段记忆会陪你进入下一航次。`);
     }
     s.discoveries = bounded(s.discoveries + (r.succeeded ? 1 : 0));
@@ -477,6 +512,35 @@
     s.samples -= stage.samples;
     s.starport++;
     log(s, stage.text);
+    return true;
+  }
+  function projectOffer(s, id) {
+    const project = byId(D.PROJECTS, id);
+    if (!project) return null;
+    const index = D.PROJECTS.indexOf(project);
+    const built = s.chapter?.includes(id) || false;
+    const unlocked =
+      s.starport === D.PORT.length &&
+      D.PROJECTS.slice(0, index).every((p) => s.chapter?.includes(p.id)) &&
+      s.lore.some((r) => r.story === project.story);
+    return {
+      ...project,
+      built,
+      unlocked,
+      available:
+        !built &&
+        unlocked &&
+        s.cores >= project.cores &&
+        s.samples >= project.samples,
+    };
+  }
+  function buildProject(s, id) {
+    const offer = projectOffer(s, id);
+    if (!offer?.available) return false;
+    s.cores -= offer.cores;
+    s.samples -= offer.samples;
+    s.chapter.push(id);
+    log(s, offer.text);
     return true;
   }
   function prestigeGain(s) {
@@ -612,10 +676,13 @@
         );
         if (activity && claimed) activity.reportsClaimed++;
       }
-      if (!s.result && !s.mission) {
+      const newStory = missionOptions(s).some(
+        (m) => m.chapter && !s.lore.some((r) => r.story === m.story),
+      );
+      if (!s.result && !s.mission && !newStory) {
         const candidate =
           missionOptions(s).find(
-            (m) => m.id === s.repeatId && m.chance === 1,
+            (m) => m.id === s.repeatId && m.chance === 1 && !m.chapter,
           ) || D.MISSIONS.find((m) => m.id === "belt");
         startMission(s, candidate.id);
       }
@@ -657,6 +724,118 @@
         (s.run.dust >= D.PRESTIGE_DUST * 0.3 || s.rebirths > 0))
     );
   }
+  function chapterGoal(s) {
+    if (s.starport < D.PORT.length || !reachable(s, "explore")) return null;
+    const project = D.PROJECTS.find((p) => !s.chapter?.includes(p.id));
+    if (!project) return null;
+    const base = {
+      action: "explore",
+      label: "查看远航星图",
+      value: 0,
+      target: 1,
+      eta: 0,
+    };
+    const researchGoal = (id) => {
+      const r = byId(D.RESEARCH, id);
+      return {
+        ...base,
+        title: `为远航研究${r.name}`,
+        detail: r.detail,
+        action: "fleet",
+        label: "前往研究",
+        focus: `research-${id}`,
+        value: s.dust,
+        target: r.cost,
+        eta: incomeEta(s, Math.max(0, r.cost - s.dust)),
+      };
+    };
+    const waitGoal = () => ({
+      ...base,
+      title: "等待远航探索归航",
+      detail: "舰队仍在生产。若要更换航线或跃迁，可先选择本次归航后暂停派遣。",
+      focus: "active-mission",
+      value: s.clock - s.mission.start,
+      target: s.mission.seconds,
+      eta: Math.max(0, s.mission.end - s.clock),
+    });
+    if (s.mission && byId(D.MISSIONS, s.mission.id).chapter) return waitGoal();
+    const m = byId(D.MISSIONS, project.mission);
+    if (!s.lore.some((r) => r.story === project.story)) {
+      if (m.requiresStory && !s.lore.some((r) => r.story === m.requiresStory)) {
+        const prior = D.MISSIONS.find((item) => item.story === m.requiresStory);
+        if (prior.research && !has(s, prior.research))
+          return researchGoal(prior.research);
+        if (s.mission) return waitGoal();
+        return {
+          ...base,
+          title: `接续「${D.STORIES[m.requiresStory].title}」`,
+          detail:
+            "处理这段旧航线故事，才能辨认它在远方留下的线索。任何选择都可以继续。",
+          focus: `mission-${prior.id}`,
+        };
+      }
+      if (m.research && !has(s, m.research)) return researchGoal(m.research);
+      if (m.equipment && equipped(s, m.equipment.id) < m.equipment.level) {
+        const item = byId(D.MODULES, m.equipment.id),
+          offer = moduleOffer(s, item.id);
+        if (offer.level < m.equipment.level && s.samples < offer.samples)
+          return {
+            ...base,
+            title: `为${item.name}收集样本`,
+            detail: `下一次装配或升级需要 ${offer.samples} 份样本，目标为 ${m.equipment.level} 级。`,
+            focus: "mission-belt",
+            value: s.samples,
+            target: offer.samples,
+            eta: null,
+            etaHint: "安全探索归航后领取样本",
+          };
+        return {
+          ...base,
+          title: `${offer.level < m.equipment.level ? "升级" : "装备"}${item.name}`,
+          detail: `前往${m.name}需要装备 ${m.equipment.level} 级${item.name}。已有两件装备时，先卸下一件，再装备它。`,
+          focus: `module-${item.id}`,
+        };
+      }
+      if (s.mission) return waitGoal();
+      return {
+        ...base,
+        title: `探索${m.name}`,
+        detail: m.detail,
+        focus: `mission-${m.id}`,
+      };
+    }
+    if (s.cores < project.cores && s.mission) return waitGoal();
+    if (s.cores < project.cores)
+      return {
+        ...base,
+        title: `为${project.name}补充星核`,
+        detail: `永久建设需要 ${project.cores} 星核，当前还缺 ${project.cores - s.cores}。开启新航次可以补充。`,
+        action: reachable(s, "jump") ? "jump" : "fleet",
+        label: reachable(s, "jump") ? "查看跃迁" : "扩建舰队",
+        value: s.run.dust,
+        target: D.PRESTIGE_DUST,
+        eta: incomeEta(s, Math.max(0, D.PRESTIGE_DUST - s.run.dust)),
+      };
+    if (s.samples < project.samples)
+      return {
+        ...base,
+        title: `为${project.name}收集样本`,
+        detail: `永久建设需要 ${project.samples} 份样本。继续安全探索，领取归航报告。`,
+        focus: `mission-${missionLock(s, m.id) ? "belt" : m.id}`,
+        value: s.samples,
+        target: project.samples,
+        eta: null,
+        etaHint: "探索归航后领取样本",
+      };
+    return {
+      ...base,
+      title: `建设${project.name}`,
+      detail: project.detail,
+      focus: `project-${project.id}`,
+      value: s.samples,
+      target: project.samples,
+    };
+  }
   function nextGoal(s) {
     if (s.result)
       return {
@@ -692,6 +871,8 @@
         target: 1,
         eta: 0,
       };
+    const chapter = chapterGoal(s);
+    if (chapter) return chapter;
     if (
       s.rebirths === 0 &&
       s.research.length === 0 &&
@@ -878,6 +1059,16 @@
       )
       .filter((r, i, all) => all.findIndex((x) => x.story === r.story) === i)
       .map((r) => ({ story: r.story, choice: r.choice }));
+    for (const p of D.PROJECTS) {
+      if (
+        s.starport !== D.PORT.length ||
+        !Array.isArray(raw.chapter) ||
+        !raw.chapter.includes(p.id) ||
+        !s.lore.some((r) => r.story === p.story)
+      )
+        break;
+      s.chapter.push(p.id);
+    }
     s.journal = (Array.isArray(raw.journal) ? raw.journal : [])
       .filter((r) => typeof r?.text === "string")
       .slice(0, 12)
@@ -928,7 +1119,9 @@
         };
       }
     }
-    s.repeatId = D.MISSIONS.some((m) => m.id === raw.repeatId && m.chance === 1)
+    s.repeatId = D.MISSIONS.some(
+      (m) => m.id === raw.repeatId && m.chance === 1 && !m.chapter,
+    )
       ? raw.repeatId
       : "belt";
     s.beacon = {
@@ -938,30 +1131,36 @@
     s.burstUntil = Math.min(s.clock + 20, bounded(raw.burstUntil));
     s.lastScanClock = Math.min(s.clock, Number(raw.lastScanClock) || 0);
     if (raw.mission && byId(D.MISSIONS, raw.mission.id)) {
-      const m = raw.mission;
+      const m = raw.mission,
+        def = byId(D.MISSIONS, m.id);
       s.mission = {
         id: m.id,
         start: Math.min(s.clock, bounded(m.start)),
-        end: Math.min(s.clock + 180, bounded(m.end)),
-        seconds: bounded(m.seconds, 180),
+        end: Math.min(s.clock + def.seconds, bounded(m.end)),
+        seconds: bounded(m.seconds, def.seconds),
         diversion: bounded(m.diversion, 0.4),
         chance: bounded(m.chance, 1),
-        samples: bounded(m.samples, 4),
+        samples: bounded(m.samples, Math.max(4, def.samples + 2)),
         dust: bounded(m.dust),
         succeeded: m.succeeded === true,
         module: byId(D.MODULES, m.module) ? m.module : null,
       };
     }
     if (raw.result && byId(D.MISSIONS, raw.result.id)) {
-      const r = raw.result;
+      const r = raw.result,
+        def = byId(D.MISSIONS, r.id);
       s.mission = null;
       s.result = {
         id: r.id,
         succeeded: r.succeeded === true,
         dust: bounded(r.dust),
-        samples: bounded(r.samples, 4),
+        samples: bounded(r.samples, Math.max(4, def.samples + 2)),
         module: byId(D.MODULES, r.module) ? r.module : null,
-        story: D.STORIES[r.story] ? r.story : null,
+        story:
+          r.story === def.story &&
+          !s.lore.some((entry) => entry.story === r.story)
+            ? r.story || null
+            : null,
       };
     }
     if (raw.legacyArchive && typeof raw.legacyArchive === "object")
@@ -1030,7 +1229,9 @@
     capability,
     affordableBest,
     missionOptions,
+    missionLock,
     missionPreview,
+    storyText,
     startMission,
     claimMission,
     moduleOffer,
@@ -1038,6 +1239,9 @@
     equip,
     claimBeacon,
     repairPort,
+    projectOffer,
+    buildProject,
+    chapterGoal,
     prestigeGain,
     prestige,
     reachable,

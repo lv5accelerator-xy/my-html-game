@@ -584,6 +584,72 @@ footer span + span:before {
 .return-pending {
   color: var(--amber);
 }
+.chapter-map {
+  margin: 24px 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--amber);
+  background: var(--surface);
+}
+.chapter-map .section-title h2 {
+  margin: 6px 0 0;
+}
+.sector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+.sector {
+  min-width: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.sector h3 {
+  font-size: 19px;
+  margin: 14px 0;
+}
+.sector-status {
+  color: var(--muted);
+  font-size: 12px;
+}
+.connected .sector-status,
+.chapter-complete {
+  color: var(--teal);
+}
+.sector p {
+  overflow-wrap: anywhere;
+}
+.sector-metrics {
+  font-size: 13px;
+}
+.sector-project {
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+  padding-top: 18px;
+}
+.sector-project h4 {
+  margin: 0;
+  font-size: 16px;
+}
+.sector-project small {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--muted);
+}
+.chapter-complete {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  margin-bottom: 0;
+}
+@media (max-width: 900px) {
+  .sector-grid {
+    grid-template-columns: 1fr;
+  }
+  .chapter-map {
+    padding: 20px;
+  }
+}
 .return-banner {
   display: flex;
   align-items: center;

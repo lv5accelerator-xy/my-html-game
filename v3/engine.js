@@ -73,6 +73,7 @@
       },
       modules: {},
       equipped: [],
+      loadouts: { production: null, voyage: null },
       mission: null,
       result: null,
       repeatId: "belt",
@@ -82,6 +83,7 @@
       starport: 0,
       chapter: [],
       campaign: { completed: [], preparation: null },
+      council: { completed: [], priority: null, preparation: null },
       records: [],
       beacon: { nextAt: 45, expiresAt: 0 },
       burstUntil: 0,
@@ -313,14 +315,22 @@
       story.continuity &&
       s.lore.find((r) => r.story === story.continuity.story);
     const context = prior && story.continuity.choices[prior.choice];
-    const mission = D.MISSIONS.find((m) => m.campaign && m.story === id);
+    const mission = D.MISSIONS.find(
+      (m) => (m.campaign || m.council) && m.story === id,
+    );
     const record =
       mission &&
       (s.result?.id === mission.id
         ? s.result
-        : s.campaign.completed.find((r) => r.id === mission.id));
+        : (mission.council ? s.council : s.campaign).completed.find(
+            (r) => r.id === mission.id,
+          ));
     const preparation = record && byId(D.EXPEDITION_PLANS, record.plan)?.report;
-    return [context, preparation, story.text].filter(Boolean).join(" ");
+    const focus =
+      mission?.requiresPortFocus && byId(D.PORT_FOCUSES, s.council.priority);
+    return [context, preparation, focus && focus.text, story.text]
+      .filter(Boolean)
+      .join(" ");
   }
   function campaignMission(s) {
     return (
@@ -328,7 +338,7 @@
     );
   }
   function prepareMission(s, id, plan) {
-    const m = campaignMission(s);
+    const m = campaignMission(s) || councilMission(s);
     if (
       !m ||
       m.id !== id ||
@@ -338,7 +348,31 @@
       !byId(D.EXPEDITION_PLANS, plan)
     )
       return false;
-    s.campaign.preparation = { id, plan };
+    (m.council ? s.council : s.campaign).preparation = { id, plan };
+    return true;
+  }
+  function councilMission(s) {
+    if (campaignMission(s) || !s.chapter.includes("lighthouse")) return null;
+    return D.COUNCIL_MISSIONS[s.council.completed.length] || null;
+  }
+  function portFocusOffer(s, id) {
+    const focus = byId(D.PORT_FOCUSES, id);
+    if (!focus) return null;
+    const unlocked =
+      !campaignMission(s) && s.council.completed[0]?.id === "port-council";
+    return {
+      ...focus,
+      unlocked,
+      built: s.council.priority === id,
+      available: unlocked && !s.council.priority && s.samples >= focus.samples,
+    };
+  }
+  function buildPortFocus(s, id) {
+    const offer = portFocusOffer(s, id);
+    if (!offer?.available) return false;
+    s.samples -= offer.samples;
+    s.council.priority = id;
+    log(s, `${offer.name}建成：${offer.text} 永久保留；所有救援航路仍然开放。`);
     return true;
   }
   function routeArchive(s) {
@@ -347,11 +381,14 @@
         ? 1
         : s.chapter.length < D.PROJECTS.length
           ? 2
-          : 3;
+          : campaignMission(s)
+            ? 3
+            : 4;
     return {
       chapter,
-      title: ["最后一盏灯", "远航星图", "白噪声海"][chapter - 1],
-      complete: chapter === 3 && !campaignMission(s),
+      title: ["最后一盏灯", "远航星图", "白噪声海", "谁的归航权"][chapter - 1],
+      complete: chapter === 4 && !councilMission(s),
+      priority: byId(D.PORT_FOCUSES, s.council.priority)?.name || null,
       characters: D.CHARACTERS.filter((c) =>
         s.lore.some((r) => r.story === c.story),
       ),
@@ -369,11 +406,13 @@
       }),
       entries: s.lore.map((r) => {
         const mission = D.MISSIONS.find(
-          (m) => m.campaign && m.story === r.story,
+          (m) => (m.campaign || m.council) && m.story === r.story,
         );
         const record =
           mission &&
-          s.campaign.completed.find((item) => item.id === mission.id);
+          (mission.council ? s.council : s.campaign).completed.find(
+            (item) => item.id === mission.id,
+          );
         return {
           ...r,
           title: D.STORIES[r.story].title,
@@ -395,8 +434,14 @@
       return s.campaign.completed.some((r) => r.id === id)
         ? "这段主线已经完成，可在航线档案重读"
         : "先完成上一段白噪声海交接";
+    if (m.council && councilMission(s)?.id !== id)
+      return s.council.completed.some((r) => r.id === id)
+        ? "这段主线已经完成，可在航线档案重读"
+        : "先完成上一段两港主线";
     if (m.requiresStory && !s.lore.some((r) => r.story === m.requiresStory))
       return `先处理「${D.STORIES[m.requiresStory].title}」的故事选择`;
+    if (m.requiresPortFocus && !s.council.priority)
+      return "先建成一种港口建设重点，三种方向都能继续";
     if (m.research && !has(s, m.research))
       return `本航次先研究${byId(D.RESEARCH, m.research).name}`;
     if (m.equipment && equipped(s, m.equipment.id) < m.equipment.level)
@@ -411,19 +456,22 @@
     if (!m) return null;
     const explorer = s.run.route === "explore";
     const plan =
-      m.campaign &&
+      (m.campaign || m.council) &&
       byId(
         D.EXPEDITION_PLANS,
         planId ||
-          (s.campaign.preparation?.id === id
-            ? s.campaign.preparation.plan
+          ((m.council ? s.council : s.campaign).preparation?.id === id
+            ? (m.council ? s.council : s.campaign).preparation.plan
             : ""),
       );
+    const focus =
+      (m.council || m.rescue) && byId(D.PORT_FOCUSES, s.council.priority);
     return {
       seconds: Math.max(
         30,
         Math.ceil(
           m.seconds *
+            (focus ? focus.seconds : 1) *
             (plan ? plan.seconds : 1) *
             (explorer ? 0.65 : 1) *
             Math.max(0.7, 1 - equipped(s, "nav") * 0.1) *
@@ -431,7 +479,10 @@
         ),
       ),
       diversion:
-        m.diversion * (explorer ? 0.5 : 1) * (plan ? plan.diversion : 1),
+        m.diversion *
+        (explorer ? 0.5 : 1) *
+        (plan ? plan.diversion : 1) *
+        (focus ? focus.diversion : 1),
       chance: Math.min(
         1,
         m.chance +
@@ -440,6 +491,7 @@
       ),
       samples:
         m.samples +
+        (focus ? focus.bonusSamples : 0) +
         (plan ? plan.samples : 0) +
         (explorer ? 1 : 0) +
         (s.chapter?.includes("nursery") ? 1 : 0),
@@ -457,7 +509,8 @@
       return false;
     const m = byId(D.MISSIONS, id),
       preview = missionPreview(s, id);
-    if (m.campaign && s.campaign.preparation?.id !== id) return false;
+    const track = m.council ? s.council : s.campaign;
+    if ((m.campaign || m.council) && track.preparation?.id !== id) return false;
     const succeeded = random(s) < preview.chance;
     const module =
       succeeded && m.chance < 1
@@ -470,9 +523,9 @@
       ...preview,
       succeeded,
       module,
-      ...(m.campaign ? { plan: s.campaign.preparation.plan } : {}),
+      ...(m.campaign || m.council ? { plan: track.preparation.plan } : {}),
     };
-    if (m.campaign) s.campaign.preparation = null;
+    if (m.campaign || m.council) track.preparation = null;
     log(s, `派遣探索：${m.name}，预计 ${preview.seconds} 秒归航。`);
     return true;
   }
@@ -484,7 +537,7 @@
       m.succeeded &&
       def.story &&
       !s.lore.some((entry) => entry.story === def.story) &&
-      (def.chapter || def.campaign || s.run.choices < 2)
+      (def.chapter || def.campaign || def.council || s.run.choices < 2)
         ? def.story
         : null;
     s.result = {
@@ -494,7 +547,7 @@
       samples: m.succeeded ? m.samples : 1,
       module: m.module,
       story,
-      ...(def.campaign ? { plan: m.plan } : {}),
+      ...(def.campaign || def.council ? { plan: m.plan } : {}),
     };
     s.mission = null;
     log(
@@ -550,8 +603,9 @@
     if (!r) return false;
     const mission = byId(D.MISSIONS, r.id);
     if (
-      mission.campaign &&
-      (campaignMission(s)?.id !== r.id ||
+      (mission.campaign || mission.council) &&
+      ((mission.council ? councilMission(s) : campaignMission(s))?.id !==
+        r.id ||
         r.story !== mission.story ||
         !byId(D.EXPEDITION_PLANS, r.plan))
     )
@@ -576,7 +630,8 @@
       }
       s.samples = bounded(s.samples + (choice.samples || 0));
       s.lore.push({ story: r.story, choice: choice.id });
-      if (!mission.chapter && !mission.campaign) s.run.choices++;
+      if (!mission.chapter && !mission.campaign && !mission.council)
+        s.run.choices++;
       log(s, `${story.title}：${choice.name}。这段记忆会陪你进入下一航次。`);
     }
     s.discoveries = bounded(s.discoveries + (r.succeeded ? 1 : 0));
@@ -590,6 +645,14 @@
         );
       }
     }
+    if (mission.council) {
+      s.council.completed.push({ id: r.id, plan: r.plan });
+      if (!councilMission(s))
+        log(
+          s,
+          "第四章「谁的归航权」完成。两港的分段接续方案已经归档，三支船队仍在安全等待位置。正式救援将在第五章继续。",
+        );
+    }
     s.result = null;
     return true;
   }
@@ -600,6 +663,33 @@
     else if (s.equipped.length < 2) s.equipped.push(id);
     else return false;
     return true;
+  }
+  function validLoadout(s, items) {
+    return (
+      Array.isArray(items) &&
+      items.length <= 2 &&
+      new Set(items).size === items.length &&
+      items.every((id) => byId(D.MODULES, id) && s.modules[id] > 0)
+    );
+  }
+  function saveLoadout(s, id) {
+    if (!byId(D.LOADOUTS, id) || !validLoadout(s, s.equipped)) return false;
+    s.loadouts[id] = [...s.equipped];
+    return true;
+  }
+  function applyLoadout(s, id) {
+    if (!byId(D.LOADOUTS, id) || !validLoadout(s, s.loadouts[id])) return false;
+    s.equipped = [...s.loadouts[id]];
+    return true;
+  }
+  function loadoutPreview(s, id, missionId) {
+    if (!byId(D.LOADOUTS, id) || !validLoadout(s, s.loadouts[id])) return null;
+    const previewState = { ...s, equipped: [...s.loadouts[id]] };
+    return {
+      rate: rawRate(previewState),
+      mission: missionPreview(previewState, missionId),
+      lock: missionLock(previewState, missionId),
+    };
   }
   function claimBeacon(s) {
     if (!s.beacon.expiresAt || s.clock >= s.beacon.expiresAt) return 0;
@@ -786,7 +876,8 @@
       }
       const newStory = missionOptions(s).some(
         (m) =>
-          (m.chapter || m.campaign) && !s.lore.some((r) => r.story === m.story),
+          (m.chapter || m.campaign || m.council) &&
+          !s.lore.some((r) => r.story === m.story),
       );
       if (!s.result && !s.mission && !newStory) {
         const candidate =
@@ -795,7 +886,8 @@
               m.id === s.repeatId &&
               m.chance === 1 &&
               !m.chapter &&
-              !m.campaign,
+              !m.campaign &&
+              !m.council,
           ) || D.MISSIONS.find((m) => m.id === "belt");
         startMission(s, candidate.id);
       }
@@ -872,6 +964,17 @@
           }
         : null;
     }
+    if (m.council && councilMission(s)?.id !== id) {
+      const prior = campaignMission(s) || councilMission(s);
+      return prior
+        ? {
+            ...base,
+            title: "继续当前两港主线",
+            detail: prior.detail,
+            focus: `mission-${prior.id}`,
+          }
+        : null;
+    }
     if (m.requiresStory && !s.lore.some((r) => r.story === m.requiresStory)) {
       const prior = D.MISSIONS.find((item) => item.story === m.requiresStory);
       return (
@@ -882,6 +985,20 @@
           focus: `mission-${prior.id}`,
         }
       );
+    }
+    if (m.requiresPortFocus && !s.council.priority) {
+      const samples = D.PORT_FOCUSES[0].samples;
+      return {
+        ...base,
+        title: s.samples < samples ? "为港口建设收集样本" : "确定港口建设重点",
+        detail: `三种方向均需 ${samples} 份样本，建成后永久保留，所有救援航路都能继续。`,
+        label: s.samples < samples ? "前往安全补给" : "比较建设方向",
+        focus: s.samples < samples ? "mission-supply-run" : "port-focus",
+        value: s.samples,
+        target: samples,
+        eta: s.samples < samples ? null : 0,
+        ...(s.samples < samples ? { etaHint: "两港补给归航后领取样本" } : {}),
+      };
     }
     if (m.research && !has(s, m.research)) {
       const r = byId(D.RESEARCH, m.research);
@@ -900,6 +1017,18 @@
     if (m.equipment && equipped(s, m.equipment.id) < m.equipment.level) {
       const item = byId(D.MODULES, m.equipment.id),
         offer = moduleOffer(s, item.id);
+      if (
+        validLoadout(s, s.loadouts.voyage) &&
+        s.loadouts.voyage.includes(item.id) &&
+        offer.level >= m.equipment.level
+      )
+        return {
+          ...base,
+          title: "切换远航准备方案",
+          detail: `已保存的远航方案包含 ${offer.level} 级${item.name}，切换后满足本航段装备要求。`,
+          label: "切换装备方案",
+          focus: "loadouts",
+        };
       if (offer.level < m.equipment.level && s.samples < offer.samples)
         return {
           ...base,
@@ -928,7 +1057,7 @@
     const m = campaignMission(s);
     if (!m) return null;
     const prerequisite = missionPrerequisite(s, m.id);
-    if (prerequisite) return prerequisite;
+    if (prerequisite && s.mission?.id !== m.id) return prerequisite;
     if (s.mission)
       return {
         title: "等待航段记录归航",
@@ -949,6 +1078,34 @@
       focus: `mission-${m.id}`,
       value: s.campaign.completed.length,
       target: D.MISSIONS.filter((item) => item.campaign).length,
+      eta: 0,
+    };
+  }
+  function councilGoal(s) {
+    const m = councilMission(s);
+    if (!m || !reachable(s, "explore")) return null;
+    // A launched mission keeps its snapshot even if the player changes equipment.
+    if (s.mission?.id === m.id)
+      return {
+        title: "等待两港记录归航",
+        detail: "当前航程按派遣时的准备结算。报告会保留，离线不会错过故事。",
+        action: "explore",
+        label: "查看航程",
+        focus: "active-mission",
+        value: s.clock - s.mission.start,
+        target: s.mission.seconds,
+        eta: Math.max(0, s.mission.end - s.clock),
+      };
+    const prerequisite = missionPrerequisite(s, m.id);
+    if (prerequisite) return prerequisite;
+    return {
+      title: `${s.council.preparation?.id === m.id ? "派遣" : "准备"}${m.name}`,
+      detail: "比较航前方案，核对两港的接待与交班记录。所有方案都能继续主线。",
+      action: "explore",
+      label: "安排两港航程",
+      focus: `mission-${m.id}`,
+      value: s.council.completed.length + (s.council.priority ? 1 : 0),
+      target: 4,
       eta: 0,
     };
   }
@@ -1103,6 +1260,8 @@
     if (chapter) return chapter;
     const campaign = campaignGoal(s);
     if (campaign) return campaign;
+    const council = councilGoal(s);
+    if (council) return council;
     if (
       s.rebirths === 0 &&
       s.research.length === 0 &&
@@ -1282,6 +1441,9 @@
     s.equipped = [...new Set(Array.isArray(raw.equipped) ? raw.equipped : [])]
       .filter((id) => s.modules[id])
       .slice(0, 2);
+    for (const loadout of D.LOADOUTS)
+      if (validLoadout(s, raw.loadouts?.[loadout.id]))
+        s.loadouts[loadout.id] = [...raw.loadouts[loadout.id]];
     s.lore = (Array.isArray(raw.lore) ? raw.lore : [])
       .filter(
         (r) =>
@@ -1324,6 +1486,40 @@
       byId(D.EXPEDITION_PLANS, preparation?.plan)
     )
       s.campaign.preparation = { id: preparation.id, plan: preparation.plan };
+    // Fourth-chapter records are independent of the original three handoffs.
+    for (const m of D.COUNCIL_MISSIONS) {
+      const record = raw.council?.completed?.[s.council.completed.length];
+      if (
+        campaignMission(s) ||
+        !s.chapter.includes("lighthouse") ||
+        record?.id !== m.id ||
+        !byId(D.EXPEDITION_PLANS, record.plan) ||
+        !s.lore.some((r) => r.story === m.story) ||
+        (m.requiresPortFocus && !s.council.priority)
+      )
+        break;
+      s.council.completed.push({ id: m.id, plan: record.plan });
+      if (
+        m.id === "port-council" &&
+        byId(D.PORT_FOCUSES, raw.council?.priority)
+      )
+        s.council.priority = raw.council.priority;
+    }
+    s.lore = s.lore.filter((r) => {
+      const m = D.COUNCIL_MISSIONS.find((item) => item.story === r.story);
+      return !m || s.council.completed.some((record) => record.id === m.id);
+    });
+    const councilPreparation = raw.council?.preparation;
+    if (
+      councilPreparation?.id === councilMission(s)?.id &&
+      byId(D.EXPEDITION_PLANS, councilPreparation?.plan) &&
+      (!byId(D.MISSIONS, councilPreparation.id).requiresPortFocus ||
+        s.council.priority)
+    )
+      s.council.preparation = {
+        id: councilPreparation.id,
+        plan: councilPreparation.plan,
+      };
     s.journal = (Array.isArray(raw.journal) ? raw.journal : [])
       .filter((r) => typeof r?.text === "string")
       .slice(0, 12)
@@ -1376,7 +1572,11 @@
     }
     s.repeatId = D.MISSIONS.some(
       (m) =>
-        m.id === raw.repeatId && m.chance === 1 && !m.chapter && !m.campaign,
+        m.id === raw.repeatId &&
+        m.chance === 1 &&
+        !m.chapter &&
+        !m.campaign &&
+        !m.council,
     )
       ? raw.repeatId
       : "belt";
@@ -1390,9 +1590,10 @@
       const m = byId(D.MISSIONS, r?.id);
       return (
         m &&
-        (!m.campaign ||
+        (!(m.campaign || m.council) ||
           (s.chapter.includes("lighthouse") &&
-            campaignMission(s)?.id === m.id &&
+            (m.council ? councilMission(s) : campaignMission(s))?.id === m.id &&
+            (!m.requiresPortFocus || s.council.priority) &&
             r.succeeded === true &&
             byId(D.EXPEDITION_PLANS, r.plan)))
       );
@@ -1400,7 +1601,7 @@
     const limits = (def) => ({
       seconds: Math.ceil(
         def.seconds *
-          (def.campaign
+          (def.campaign || def.council
             ? Math.max(...D.EXPEDITION_PLANS.map((p) => p.seconds))
             : 1),
       ),
@@ -1408,7 +1609,10 @@
         4,
         def.samples +
           2 +
-          (def.campaign
+          (def.council
+            ? Math.max(...D.PORT_FOCUSES.map((p) => p.bonusSamples))
+            : 0) +
+          (def.campaign || def.council
             ? Math.max(...D.EXPEDITION_PLANS.map((p) => p.samples))
             : 0),
       ),
@@ -1422,19 +1626,25 @@
         start: Math.min(s.clock, bounded(m.start)),
         end: Math.min(s.clock + max.seconds, bounded(m.end)),
         seconds: bounded(m.seconds, max.seconds),
-        diversion: bounded(m.diversion, def.campaign ? 0.5 : 0.4),
+        diversion: bounded(
+          m.diversion,
+          def.campaign || def.council ? 0.5 : 0.4,
+        ),
         chance: bounded(m.chance, 1),
         samples: bounded(m.samples, max.samples),
         dust: bounded(m.dust),
         succeeded: m.succeeded === true,
         module: byId(D.MODULES, m.module) ? m.module : null,
-        ...(def.campaign ? { plan: m.plan } : {}),
+        ...(def.campaign || def.council ? { plan: m.plan } : {}),
       };
     }
     if (
       raw.result &&
       validCampaign(raw.result) &&
-      (!byId(D.MISSIONS, raw.result.id).campaign ||
+      (!(
+        byId(D.MISSIONS, raw.result.id).campaign ||
+        byId(D.MISSIONS, raw.result.id).council
+      ) ||
         raw.result.story === byId(D.MISSIONS, raw.result.id).story)
     ) {
       const r = raw.result,
@@ -1451,10 +1661,13 @@
           !s.lore.some((entry) => entry.story === r.story)
             ? r.story || null
             : null,
-        ...(def.campaign ? { plan: r.plan } : {}),
+        ...(def.campaign || def.council ? { plan: r.plan } : {}),
       };
     }
-    if (s.mission || s.result) s.campaign.preparation = null;
+    if (s.mission || s.result) {
+      s.campaign.preparation = null;
+      s.council.preparation = null;
+    }
     if (raw.legacyArchive && typeof raw.legacyArchive === "object")
       s.legacyArchive = clone(raw.legacyArchive);
     return s;
@@ -1525,6 +1738,10 @@
     missionPreview,
     storyText,
     campaignMission,
+    councilMission,
+    councilGoal,
+    portFocusOffer,
+    buildPortFocus,
     prepareMission,
     campaignGoal,
     missionPrerequisite,
@@ -1534,6 +1751,9 @@
     moduleOffer,
     buildModule,
     equip,
+    saveLoadout,
+    applyLoadout,
+    loadoutPreview,
     claimBeacon,
     repairPort,
     projectOffer,

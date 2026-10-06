@@ -937,11 +937,9 @@ async function run() {
           });
         }
         if (screenshotDir)
-          await page
-            .locator(".campaign-panel")
-            .screenshot({
-              path: path.join(screenshotDir, "white-noise-plans-desktop.png"),
-            });
+          await page.locator(".campaign-panel").screenshot({
+            path: path.join(screenshotDir, "white-noise-plans-desktop.png"),
+          });
         await page.locator('[data-action="prepare"][data-id="supply"]').click();
         await page.reload();
         assert.equal((await read(page)).campaign.preparation.plan, "supply");
@@ -980,11 +978,9 @@ async function run() {
           .click();
         await page.clock.runFor(3500);
         if (screenshotDir)
-          await page
-            .locator(".campaign-panel")
-            .screenshot({
-              path: path.join(screenshotDir, "white-noise-plans-mobile.png"),
-            });
+          await page.locator(".campaign-panel").screenshot({
+            path: path.join(screenshotDir, "white-noise-plans-mobile.png"),
+          });
         for (const [id, plan, choice, text] of [
           ["false-beacon", "calibrate", "aid", /两地公开的观测/],
           ["first-convoy", "relay", "letters", /收到应急供给/],
@@ -1025,7 +1021,7 @@ async function run() {
           true,
         );
         assert.match(
-          await page.locator(".campaign-complete").innerText(),
+          await page.locator(".campaign-complete").textContent(),
           /第一支船队已经安全进港/,
         );
         await page.clock.runFor(3500);
@@ -1038,17 +1034,16 @@ async function run() {
             false,
           );
           if (screenshotDir)
-            await page
-              .locator(".campaign-panel")
-              .screenshot({
-                path: path.join(
-                  screenshotDir,
-                  `chapter-three-complete-${width}.png`,
-                ),
-              });
+            await page.locator(".campaign-complete").screenshot({
+              path: path.join(
+                screenshotDir,
+                `chapter-three-complete-${width}.png`,
+              ),
+            });
         }
+        await page.locator('[data-focus="chapter-three"]').click();
         await page
-          .locator('.campaign-panel [data-goal-focus="route-archive"]')
+          .locator('.campaign-complete [data-goal-focus="route-archive"]')
           .click();
         assert.equal(
           await page.locator("#route-archive").getAttribute("open"),
@@ -1056,7 +1051,7 @@ async function run() {
         );
         assert.match(
           await page.locator(".archive-current").innerText(),
-          /第三章|第3章/,
+          /第四章|第4章/,
         );
         await page.locator('[data-focus="letter-receipt"]').click();
         assert.match(
@@ -1101,13 +1096,11 @@ async function run() {
         assert.deepEqual(exported.campaign, completed.campaign);
         await page.keyboard.press("Escape");
         await page.locator("#settings-button").click();
-        await page
-          .locator("#import-file")
-          .setInputFiles({
-            name: "third-chapter.json",
-            mimeType: "application/json",
-            buffer: Buffer.from(JSON.stringify(exported)),
-          });
+        await page.locator("#import-file").setInputFiles({
+          name: "third-chapter.json",
+          mimeType: "application/json",
+          buffer: Buffer.from(JSON.stringify(exported)),
+        });
         assert.deepEqual((await read(page)).campaign, completed.campaign);
         assert.deepEqual((await read(page)).lore, completed.lore);
         await page.reload();
@@ -1182,6 +1175,306 @@ async function run() {
           .locator('[data-action="mission"][data-id="message"]')
           .click();
         assert.equal((await read(page)).mission.id, "message");
+      },
+    );
+    const chapterFour = structuredClone(chapterThree);
+    for (const m of D.MISSIONS.filter((m) => m.campaign)) {
+      E.prepareMission(chapterFour, m.id, "relay");
+      E.startMission(chapterFour, m.id);
+      E.advance(
+        chapterFour,
+        chapterFour.lastAt + chapterFour.mission.seconds * 1000,
+      );
+      E.claimMission(chapterFour, D.STORIES[m.story].choices[0].id);
+    }
+    chapterFour.lastAt = TIME;
+    chapterFour.run.dust = D.PRESTIGE_DUST;
+    // These two optional fields were absent in the published v3.3 save format.
+    delete chapterFour.council;
+    delete chapterFour.loadouts;
+    const noOverflow = async (page) =>
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth,
+        ),
+        false,
+      );
+    for (const focus of D.PORT_FOCUSES) {
+      await scenario(
+        `chapter four ${focus.name}: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump`,
+        { [S.KEY]: JSON.stringify(chapterFour) },
+        async (page) => {
+          const loaded = await read(page);
+          for (const key of [
+            "dust",
+            "cores",
+            "samples",
+            "buildings",
+            "research",
+            "modules",
+            "lore",
+            "campaign",
+          ])
+            assert.deepEqual(loaded[key], chapterFour[key]);
+          await page
+            .locator('#main [data-goal-focus="mission-port-council"]')
+            .click();
+          assert.equal(
+            await page.locator(".campaign-complete").getAttribute("open"),
+            null,
+          );
+          assert.ok(await page.locator(".council-panel").isVisible());
+          await page
+            .locator('[data-action="prepare"][data-id="relay"]')
+            .click();
+          await page
+            .locator('[data-action="mission"][data-id="port-council"]')
+            .click();
+          let current = await read(page);
+          await page.clock.fastForward(current.mission.seconds * 1000);
+          await page.locator('#dialog [data-action="return-next"]').click();
+          assert.match(
+            await page.locator("#report").innerText(),
+            /禾继续照顾伤员/,
+          );
+          await page
+            .locator('[data-action="claim"][data-id="capacity"]')
+            .click();
+          await page.clock.runFor(3500);
+          for (const width of [1280, 375]) {
+            await page.setViewportSize({ width, height: 900 });
+            await noOverflow(page);
+            assert.ok(await page.locator("#port-focus").isVisible());
+            if (screenshotDir && focus.id === "reception")
+              await page.locator(".council-panel").screenshot({
+                path: path.join(screenshotDir, `port-directions-${width}.png`),
+              });
+          }
+          const beforeBuild = await read(page);
+          await page
+            .locator(`[data-action="port-focus"][data-id="${focus.id}"]`)
+            .click();
+          assert.match(
+            await page.locator("#dialog-body").innerText(),
+            /不能重新选择/,
+          );
+          await page.keyboard.press("Escape");
+          assert.deepEqual((await read(page)).council, beforeBuild.council);
+          assert.equal((await read(page)).samples, beforeBuild.samples);
+          await page
+            .locator(`[data-action="port-focus"][data-id="${focus.id}"]`)
+            .click();
+          await page
+            .locator(
+              `[data-action="confirm-port-focus"][data-id="${focus.id}"]`,
+            )
+            .click();
+          assert.equal((await read(page)).samples, beforeBuild.samples - 18);
+          assert.equal((await read(page)).council.priority, focus.id);
+          assert.equal(
+            await page.locator('[data-action="port-focus"]').count(),
+            0,
+          );
+          current = await read(page);
+          const preview = E.missionPreview(
+            current,
+            "old-observatory",
+            "supply",
+          );
+          const preparation = page.locator(
+            '[data-action="prepare"][data-id="supply"]',
+          );
+          assert.match(
+            await preparation.innerText(),
+            new RegExp(`${preview.samples} 样本`),
+          );
+          assert.match(
+            await preparation.innerText(),
+            new RegExp(`分流 ${Math.round(preview.diversion * 1000) / 10}%`),
+          );
+          await preparation.click();
+          const saved = (await read(page)).council;
+          await page.reload();
+          assert.deepEqual((await read(page)).council, saved);
+          await page
+            .locator('#main [data-goal-focus="mission-old-observatory"]')
+            .click();
+          await page
+            .locator('[data-action="mission"][data-id="old-observatory"]')
+            .click();
+          const launched = (await read(page)).mission;
+          for (const key of ["seconds", "diversion", "dust", "samples"])
+            assert.equal(launched[key], preview[key]);
+          await page.locator('[data-action="equip"][data-id="nav"]').click();
+          assert.deepEqual((await read(page)).mission, launched);
+          await page.clock.fastForward(5000);
+          await page.reload();
+          assert.deepEqual((await read(page)).mission, launched);
+          await page
+            .locator('#main [data-goal-focus="active-mission"]')
+            .click();
+          current = await read(page);
+          await page.clock.fastForward(
+            (current.mission.end - current.clock) * 1000,
+          );
+          await page.locator('#dialog [data-action="return-next"]').click();
+          assert.match(
+            await page.locator("#report").innerText(),
+            /植物经历过的明暗/,
+          );
+          await page
+            .locator('[data-action="claim"][data-id="crosscheck"]')
+            .click();
+          await page.locator('[data-action="equip"][data-id="nav"]').click();
+          await page
+            .locator('[data-action="prepare"][data-id="calibrate"]')
+            .click();
+          await page
+            .locator('[data-action="mission"][data-id="shared-watch"]')
+            .click();
+          await page.clock.fastForward(8 * 3600 * 1000);
+          await page.locator('#dialog [data-action="return-next"]').click();
+          assert.equal((await read(page)).council.completed.length, 2);
+          assert.match(
+            await page.locator("#report").innerText(),
+            /把自己的名字写进第一班/,
+          );
+          await noOverflow(page);
+          await page
+            .locator('[data-action="claim"][data-id="joint-watch"]')
+            .click();
+          const completed = await read(page);
+          assert.equal(completed.council.completed.length, 3);
+          assert.equal(completed.lore.length, 11);
+          assert.deepEqual(completed.lore.slice(0, 8), chapterFour.lore);
+          assert.match(
+            await page.locator(".council-complete").innerText(),
+            /离线不会导致剧情失败/,
+          );
+          for (const width of [1280, 375]) {
+            await page.setViewportSize({ width, height: 900 });
+            await noOverflow(page);
+            if (screenshotDir && focus.id === "reception")
+              await page.locator(".council-complete").screenshot({
+                path: path.join(
+                  screenshotDir,
+                  `chapter-four-complete-${width}.png`,
+                ),
+              });
+          }
+          await page
+            .locator('.council-panel [data-goal-focus="route-archive"]')
+            .click();
+          assert.match(
+            await page.locator(".archive-current").innerText(),
+            /第4章/,
+          );
+          await page.locator('[data-focus="letter-next-watch"]').click();
+          assert.match(
+            await page
+              .locator('[data-details-key="letter-next-watch"]')
+              .innerText(),
+            /等待不算失败/,
+          );
+          await page.locator('[data-focus="story-tide-record"]').click();
+          assert.match(
+            await page
+              .locator('[data-details-key="story-tide-record"]')
+              .innerText(),
+            new RegExp(focus.text),
+          );
+          assert.equal((await read(page)).samples, completed.samples);
+          await page.locator('#navigation [data-id="jump"]').click();
+          await page.locator('[data-action="jump"]').click();
+          await page.locator('[data-action="confirm-jump"]').click();
+          assert.deepEqual((await read(page)).council, completed.council);
+          await page.reload();
+          assert.deepEqual((await read(page)).council, completed.council);
+          assert.deepEqual((await read(page)).lore, completed.lore);
+        },
+      );
+    }
+    const presetSave = structuredClone(chapterThree);
+    presetSave.modules.battery = 2;
+    presetSave.modules.medbay = 2;
+    presetSave.samples = 60;
+    await scenario(
+      "saved equipment presets: real production/voyage comparison, one-click two-slot replacement, active snapshot preservation, reload, upgrades and export/import",
+      { [S.KEY]: JSON.stringify(presetSave) },
+      async (page) => {
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page
+          .locator('[data-action="loadout-save"][data-id="voyage"]')
+          .click();
+        await page.locator('[data-action="equip"][data-id="nav"]').click();
+        await page.locator('[data-action="equip"][data-id="scanner"]').click();
+        await page.locator('[data-action="equip"][data-id="battery"]').click();
+        await page.locator('[data-action="equip"][data-id="medbay"]').click();
+        await page
+          .locator('[data-action="loadout-save"][data-id="production"]')
+          .click();
+        const production = await read(page);
+        assert.deepEqual(production.loadouts.production, ["battery", "medbay"]);
+        assert.deepEqual(production.loadouts.voyage, ["nav", "scanner"]);
+        assert.equal(production.equipped.length, 2);
+        await page.clock.runFor(3500);
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          await noOverflow(page);
+          assert.ok(await page.locator("#loadouts").isVisible());
+          if (screenshotDir)
+            await page.locator("#loadouts").screenshot({
+              path: path.join(screenshotDir, `equipment-presets-${width}.png`),
+            });
+        }
+        await page
+          .locator('[data-action="loadout-apply"][data-id="voyage"]')
+          .click();
+        assert.deepEqual((await read(page)).equipped, ["nav", "scanner"]);
+        assert.equal(
+          E.rawRate(await read(page)),
+          E.loadoutPreview(production, "voyage", "white-noise").rate,
+        );
+        await page.locator('[data-action="prepare"][data-id="supply"]').click();
+        await page
+          .locator('[data-action="mission"][data-id="white-noise"]')
+          .click();
+        const launched = (await read(page)).mission;
+        await page
+          .locator('[data-action="loadout-apply"][data-id="production"]')
+          .click();
+        assert.deepEqual((await read(page)).mission, launched);
+        assert.deepEqual((await read(page)).equipped, ["battery", "medbay"]);
+        await page.reload();
+        assert.deepEqual((await read(page)).loadouts, production.loadouts);
+        assert.deepEqual((await read(page)).mission, launched);
+        await page.locator('#main [data-goal-focus="active-mission"]').click();
+        await page.locator('[data-action="module"][data-id="nav"]').click();
+        assert.equal((await read(page)).modules.nav, 3);
+        await page
+          .locator('[data-action="loadout-apply"][data-id="voyage"]')
+          .click();
+        assert.deepEqual((await read(page)).mission, launched);
+        assert.deepEqual((await read(page)).equipped, ["nav", "scanner"]);
+        const saved = await read(page);
+        await page.locator("#settings-button").click();
+        const downloadPromise = page.waitForEvent("download");
+        await page.locator('[data-action="export"]').click();
+        const exported = JSON.parse(
+          fs.readFileSync(await (await downloadPromise).path(), "utf8"),
+        );
+        assert.deepEqual(exported.loadouts, saved.loadouts);
+        assert.deepEqual(exported.mission, launched);
+        await page.keyboard.press("Escape");
+        await page.locator("#settings-button").click();
+        await page.locator("#import-file").setInputFiles({
+          name: "fourth-chapter-presets.json",
+          mimeType: "application/json",
+          buffer: Buffer.from(JSON.stringify(exported)),
+        });
+        await page.locator("#confirm-import").click();
+        assert.deepEqual((await read(page)).loadouts, saved.loadouts);
+        assert.deepEqual((await read(page)).mission, launched);
       },
     );
     console.log(

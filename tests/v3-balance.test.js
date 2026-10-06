@@ -187,6 +187,7 @@ function verify() {
   assert.equal(campaign.lore.length, 5);
   assert.ok(campaign.cores >= 0 && campaign.samples >= 0);
   const thirdChapterRows = [];
+  const fourthChapterRows = [];
   // Start every preparation comparison from the same earned two-chapter save.
   for (const plan of D.EXPEDITION_PLANS) {
     const continued = structuredClone(campaign),
@@ -227,12 +228,60 @@ function verify() {
       chapterThreeSeconds: continued.clock - start,
       earnedSamples: continued.samples - campaign.samples,
     });
+    for (const focus of D.PORT_FOCUSES) {
+      const fourth = structuredClone(continued),
+        start = fourth.clock,
+        samples = fourth.samples;
+      // The same earned fleet and level-two gear continue into the next chapter.
+      E.saveLoadout(fourth, "voyage");
+      for (let elapsed = 1; elapsed <= 20 * 60; elapsed++) {
+        E.advance(fourth, fourth.lastAt + 1000);
+        if (elapsed % 15 === 0) {
+          if (fourth.result)
+            E.claimMission(
+              fourth,
+              fourth.result.story
+                ? D.STORIES[fourth.result.story].choices[0].id
+                : undefined,
+            );
+          if (fourth.council.completed.length === 3) break;
+          const goal = E.nextGoal(fourth);
+          if (goal.focus === "port-focus") E.buildPortFocus(fourth, focus.id);
+          else if (goal.focus === "loadouts") E.applyLoadout(fourth, "voyage");
+          else if (goal.focus?.startsWith("research-"))
+            E.research(fourth, goal.focus.slice(9));
+          else if (goal.focus?.startsWith("mission-")) {
+            const id = goal.focus.slice(8);
+            E.prepareMission(fourth, id, plan.id);
+            E.startMission(fourth, id);
+          }
+        }
+      }
+      assert.equal(
+        fourth.council.completed.length,
+        3,
+        `${focus.name}/${plan.name} finishes on earned resources`,
+      );
+      assert.equal(fourth.lore.length, 11);
+      assert.deepEqual(fourth.lore.slice(0, 8), continued.lore);
+      assert.deepEqual(fourth.campaign, continued.campaign);
+      assert.equal(fourth.council.priority, focus.id);
+      assert.ok(fourth.samples >= 0 && fourth.cores >= 0);
+      assert.ok(fourth.clock - start <= 15 * 60);
+      fourthChapterRows.push({
+        preparation: plan.name,
+        port: focus.name,
+        chapterFourSeconds: fourth.clock - start,
+        netSamples: fourth.samples - samples,
+      });
+    }
   }
   console.table(rows);
   console.log(
     `v3 balance ok: three routes, first-run beats, 15–25 minute jumps and faster second runs; starport ${starportSeconds}s, chapter two +${campaign.clock - chapterStart}s, complete campaign ${campaign.clock}s`,
   );
   console.table(thirdChapterRows);
+  console.table(fourthChapterRows);
   return rows;
 }
 if (require.main === module) verify();

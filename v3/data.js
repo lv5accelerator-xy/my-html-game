@@ -5,9 +5,9 @@
   else root.SalvageData = data;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
-  return Object.freeze({
+  const data = {
     VERSION: 32,
-    GAME_VERSION: "3.3.0-preview.1",
+    GAME_VERSION: "3.4.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -302,6 +302,99 @@
           "第一支船队留下了可复用的航路记录。往返两港，稳定回收物资与样本。",
       },
     ],
+    PORT_FOCUSES: [
+      {
+        id: "reception",
+        name: "接待扩容",
+        samples: 18,
+        diversion: 0.85,
+        seconds: 1,
+        bonusSamples: 0,
+        detail:
+          "建成备用泊位与轮班宿舍。第四章及后续救援航程分流减少 15%，为在港居民保留更多生产能力。",
+        text: "祁岳把铺位、供暖和接班人逐项登记。备用泊位亮起接待灯，承诺有了可以核查的容量。",
+      },
+      {
+        id: "ecology",
+        name: "生态补给",
+        samples: 18,
+        diversion: 1,
+        seconds: 1,
+        bonusSamples: 2,
+        detail:
+          "建成育种补给站。第四章及后续救援每次成功归航额外带回 2 份样本，支持持续供给。",
+        text: "两港居民在育种舱划出补给区，保留植物休息的光照时段。新来船上的园艺工接过培育表。",
+      },
+      {
+        id: "archive",
+        name: "档案校准",
+        samples: 18,
+        diversion: 1,
+        seconds: 0.85,
+        bonusSamples: 0,
+        detail:
+          "建成独立观测档案台。第四章及后续救援航程缩短 15%，让核验过的数据能够重复使用。",
+        text: "归航保存原始观测与两港的签名副本。每段航路都标明来源、等待位置和暂停条件。",
+      },
+    ],
+    LOADOUTS: [
+      { id: "production", name: "日常生产" },
+      { id: "voyage", name: "远航准备" },
+    ],
+    COUNCIL_MISSIONS: [
+      {
+        id: "port-council",
+        name: "双港会议与离港日志",
+        seconds: 150,
+        diversion: 0.2,
+        yieldSeconds: 150,
+        samples: 8,
+        chance: 1,
+        story: "council-log",
+        unlockPort: 3,
+        council: true,
+        project: "lighthouse",
+        requiresStory: "arrival",
+        detail: "两港一起核对铺位、供暖与值班能力，重查医院船最后的离港日志。",
+      },
+      {
+        id: "old-observatory",
+        name: "旧观测站修复",
+        seconds: 300,
+        diversion: 0.3,
+        yieldSeconds: 210,
+        samples: 10,
+        chance: 1,
+        story: "tide-record",
+        unlockPort: 3,
+        council: true,
+        project: "lighthouse",
+        requiresStory: "council-log",
+        requiresPortFocus: true,
+        research: "navigation",
+        equipment: { id: "scanner", level: 2 },
+        detail:
+          "用苇留下的多年光照记录修补观测空白，验证静潮中实际可通行的窗口。",
+      },
+      {
+        id: "shared-watch",
+        name: "分段接续演练",
+        seconds: 330,
+        diversion: 0.35,
+        yieldSeconds: 250,
+        samples: 12,
+        chance: 1,
+        story: "handoff-plan",
+        unlockPort: 3,
+        council: true,
+        project: "lighthouse",
+        requiresStory: "tide-record",
+        requiresPortFocus: true,
+        equipment: { id: "nav", level: 2 },
+        detail:
+          "无人探针验证双向中继、备用泊位与交班规则，为三支等待的船队制定救援方案。",
+      },
+    ],
     EXPEDITION_PLANS: [
       {
         id: "calibrate",
@@ -582,6 +675,110 @@
         ],
       },
     },
+    COUNCIL_STORIES: {
+      "council-log": {
+        title: "我们今天还能接住谁",
+        continuity: {
+          story: "arrival",
+          choices: {
+            watch: "阿遥把第一班值守的名单带到会议上，先问下一班谁来接替。",
+            letters:
+              "你读给新树的信留在育种舱。新来的居民也愿意为下一支船队留一个地址。",
+            unload:
+              "第一支船队带来的工具已经入库，祁岳据此重算了扩建和供暖能力。",
+          },
+        },
+        text: "守灯协议把三支等待的船队列为『无法确认接待』。你问归航，这一栏的人应该把船开到哪里，屏幕没有地址。祁岳认真核对铺位、供暖与轮班人数；阿遥把两港的求助频道接进会议室。医院船日志记着十一年前最后一次广播：旧泊位关闭，等待下一次认证窗口。那个窗口没有再来。禾继续照顾伤员，把平安讯息留在备用电源里。阿遥在育种舱坐了一会儿，回来后说：『我希望那时有人接住她。但我不能要求你改写那一天。我想知道的是，我们今天还能接住谁。』两港同意先把建设重点做成实际安排。三支船队仍在安全泊位等待，下一步由你准备。",
+        choices: [
+          {
+            id: "capacity",
+            name: "公开接待与轮班清单",
+            detail: "额外 6 份样本。开放三种永久建设方向。",
+            samples: 6,
+          },
+          {
+            id: "listen",
+            name: "先记录每支船队的需要",
+            detail: "额外 6 份样本。开放三种永久建设方向。",
+            samples: 6,
+          },
+          {
+            id: "source",
+            name: "保存原始离港记录",
+            detail: "额外 6 份样本。开放三种永久建设方向。",
+            samples: 6,
+          },
+        ],
+      },
+      "tide-record": {
+        title: "有些窗口会再打开",
+        continuity: {
+          story: "council-log",
+          choices: {
+            capacity: "两港公开的清单，给每次观测留出了可以接班的人手。",
+            listen:
+              "等待船队的需求记录提醒大家：确认窗口时，也要确认到达后的补给。",
+            source: "保存原始记录的做法，让这次观测仍能追溯每个数据来源。",
+          },
+        },
+        text: "旧观测站失去了数年的航路记录，苇的育种档案却每天记下光照变化。植物经历过的明暗补齐了观测空白。归航核对两份原始资料，发现静潮由多组周期叠加而成；旧网只保存灾难后的短期记录，把所有失联航段标成永久不可用。有些窗口会短暂重开，有些依然不能通过。你们让探针实际往返，只把已经验证的窗口交给船长，并为每段航路标出观察员、交接点和备用泊位。祁岳说：『记录能让别人复核，我才敢交给下一班。』苇留下的是旧录音与植物，新的核验由仍在这里的人完成。",
+        choices: [
+          {
+            id: "crosscheck",
+            name: "让两港独立复核",
+            detail: "额外 8 份样本。开放分段接续演练。",
+            samples: 8,
+          },
+          {
+            id: "light-record",
+            name: "保留植物与光照原始记录",
+            detail: "温室集光阵升 1 级；满级转为 8 份样本。",
+            module: "solar",
+            overflowSamples: 8,
+          },
+          {
+            id: "fallback",
+            name: "先标出安全等待泊位",
+            detail: "额外获得 180 秒产量的星尘。开放分段接续演练。",
+            dustSeconds: 180,
+          },
+        ],
+      },
+      "handoff-plan": {
+        title: "把承诺交给下一班",
+        continuity: {
+          story: "tide-record",
+          choices: {
+            crosscheck: "两港的独立复核都已经签名；任何一方都可以提出暂停。",
+            "light-record":
+              "光照与植物记录留在观测台旁，新来的园艺工也能读懂它们。",
+            fallback: "备用泊位先写进交接表，探针每到一站都确认可以安全等待。",
+          },
+        },
+        text: "探针按双向中继逐段往返，在每个交接点先确认观察结果、接班人和备用泊位。归航核验了整套方案：中央保存原始记录并发出警告，现场负责核对自己能看见的航段，任何一站都能暂停。祁岳要求出发前说明谁承担风险、谁来接班、什么情况停止，然后把自己的名字写进第一班名单。阿遥把名单读给等待的船长：『每一段我们都会重新确认。需要停下时，就在已经核验的泊位等。』旧守灯协议仍在运行，但两港已经备好一份可执行、可复核的替代方案。三支船队的正式救援将在第五章开始；现在的等待没有离线惩罚。",
+        choices: [
+          {
+            id: "joint-watch",
+            name: "共同签署第一班名单",
+            detail: "额外 10 份样本。第四章完成，轮班安排永久归档。",
+            samples: 10,
+          },
+          {
+            id: "public-record",
+            name: "把交接与暂停条件公开",
+            detail: "惯性导航仪升 1 级；满级转为 8 份样本。第四章完成。",
+            module: "nav",
+            overflowSamples: 8,
+          },
+          {
+            id: "backup",
+            name: "再次核对备用泊位",
+            detail: "额外获得 210 秒产量的星尘。第四章完成。",
+            dustSeconds: 210,
+          },
+        ],
+      },
+    },
     CHARACTERS: [
       {
         id: "ayao",
@@ -613,6 +810,27 @@
       },
     ],
     LETTERS: [
+      {
+        id: "today",
+        from: "ayao",
+        story: "council-log",
+        title: "今天还能接住的人",
+        text: "母亲的最后一天已经记在原始日志里。我把那份讯息交给档案，今天的值班名单交给还活着的人。我会接下一班，也会确认有人接我的班。——阿遥",
+      },
+      {
+        id: "light-years",
+        from: "wei",
+        story: "tide-record",
+        title: "多年光照记录",
+        text: "第 412 次光照校正：幼苗在长时间阴影后仍能发新叶。原始时段见附表。——苇，旧育种记录。附注：两港观测员已用实际往返验证对应航段，植物记录作为复核资料保存。",
+      },
+      {
+        id: "next-watch",
+        from: "qiyue",
+        story: "handoff-plan",
+        title: "谁来接我的班",
+        text: "出发前写清观察员、接班人和暂停条件。我已经签了第一班；下一班也签过以后，我们再把路线交出去。备用泊位始终保留，等待不算失败。——祁岳",
+      },
       {
         id: "receipt",
         from: "ayao",
@@ -743,5 +961,8 @@
         detail: "自动收取普通报告并继续安全探索，故事选择由你处理。",
       },
     ],
-  });
+  };
+  data.MISSIONS.push(...data.COUNCIL_MISSIONS);
+  Object.assign(data.STORIES, data.COUNCIL_STORIES);
+  return Object.freeze(data);
 });

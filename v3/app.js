@@ -366,15 +366,16 @@
     const header = `<div class="section-title"><div><small>第三章 · ${m ? "当前航段" : "已完成"}</small><h2>白噪声海</h2></div><span>交接 ${count} / 3</span></div>`;
     const archiveLink = `<button class="outline" ${action("nav", "explore")} data-goal-focus="route-archive">查看航线与人物档案 →</button>`;
     if (!m)
-      return `<section class="campaign-panel campaign-complete" aria-label="白噪声海">${header}<h3>第一支船队已经安全进港。</h3><p>两港补给线永久开放，可手动探索，也可重复派遣。阿遥开始第一班值守，祁岳交出了能接班的记录。</p><p>第三章的来信与选择已经归档。静潮与守灯协议的后续故事将在下一章继续；此刻你可以自由扩建和补给。</p>${archiveLink}</section>`;
-    const lock = E.missionLock(state, m.id),
-      busy = Boolean(state.mission || state.result);
-    const selected =
-      state.campaign.preparation?.id === m.id &&
-      state.campaign.preparation.plan;
+      return `<details class="campaign-panel campaign-complete" aria-label="白噪声海" data-details-key="chapter-three"><summary data-focus="chapter-three">第三章已完成 · 展开白噪声海交接记录</summary>${header}<h3>第一支船队已经安全进港。</h3><p>两港补给线永久开放，可手动探索，也可重复派遣。阿遥开始第一班值守，祁岳交出了能接班的记录。</p><p>第三章的来信与选择已经归档。第四章将一起核对接待、生态与航路记录，为仍在等待的三支船队准备。</p>${archiveLink}</details>`;
     const stages = D.MISSIONS.filter((item) => item.campaign);
-    return `<section class="campaign-panel" aria-label="白噪声海">${header}<ol class="campaign-stages">${stages.map((item, i) => `<li ${i === count ? 'aria-current="step"' : ""}>${i < count ? "✓" : `0${i + 1}`} ${item.name}</li>`).join("")}</ol>
-      <article id="mission-${m.id}" tabindex="-1"><h3>${m.name}</h3><p>${m.detail}</p><p>所有方案都是安全航程。派遣前比较准备方案；没有倒计时惩罚，归航后等你决定。</p>${lock ? `<p class="blueprint-lock">${lock}</p>${prerequisiteButton(m.id)}` : ""}
+    return `<section class="campaign-panel" aria-label="白噪声海">${header}<ol class="campaign-stages">${stages.map((item, i) => `<li ${i === count ? 'aria-current="step"' : ""}>${i < count ? "✓" : `0${i + 1}`} ${item.name}</li>`).join("")}</ol>${preparedVoyage(m, state.campaign)}</section>`;
+  }
+  function preparedVoyage(m, track) {
+    const archiveLink = `<button class="outline" ${action("nav", "explore")} data-goal-focus="route-archive">查看航线与人物档案 →</button>`;
+    const lock = state.mission?.id === m.id ? "" : E.missionLock(state, m.id),
+      busy = Boolean(state.mission || state.result);
+    const selected = track.preparation?.id === m.id && track.preparation.plan;
+    return `<article id="mission-${m.id}" tabindex="-1"><h3>${m.name}</h3><p>${m.detail}</p><p>所有方案都是安全航程。派遣前比较准备方案；没有倒计时惩罚，归航后等你决定。</p>${lock ? `<p class="blueprint-lock">${lock}</p>${prerequisiteButton(m.id)}` : ""}
       <div class="preparation-grid" aria-label="航前准备方案">${D.EXPEDITION_PLANS.map(
         (plan) => {
           const p = E.missionPreview(state, m.id, plan.id);
@@ -382,14 +383,88 @@
         },
       ).join("")}</div>
       <p id="preparation-status" role="status">${selected ? `已准备：${D.EXPEDITION_PLANS.find((p) => p.id === selected).name}。派遣时锁定航程与回收，刷新保留。` : busy ? "当前探索与报告处理后，再安排这一段航程。" : "先选择一种准备方案，再派遣。"}</p>
-      <div class="campaign-actions"><button class="primary" ${action("mission", m.id)} ${lock || busy || !selected || state.run.dust < 600 ? "disabled" : ""}>派遣${m.name}</button>${archiveLink}</div></article></section>`;
+      <div class="campaign-actions"><button class="primary" ${action("mission", m.id)} ${lock || busy || !selected || state.run.dust < 600 ? "disabled" : ""}>派遣${m.name}</button>${archiveLink}</div></article>`;
+  }
+  function councilPanel() {
+    if (E.campaignMission(state) || !state.chapter.includes("lighthouse"))
+      return "";
+    const m = E.councilMission(state),
+      focus = D.PORT_FOCUSES.find((p) => p.id === state.council.priority),
+      count = state.council.completed.length + (focus ? 1 : 0);
+    const header = `<div class="section-title"><div><small>第四章 · ${m ? "当前安排" : "已完成"}</small><h2>谁的归航权</h2></div><span>准备 ${count} / 4</span></div>`;
+    const archiveLink = `<button class="outline" ${action("nav", "explore")} data-goal-focus="route-archive">重读两港记录与人物来信 →</button>`;
+    if (!m)
+      return `<section class="campaign-panel council-panel council-complete" aria-label="谁的归航权">${header}<h3>把承诺交给下一班。</h3><p>${focus.name}已建成。双向中继、备用泊位与暂停条件完成演练，所有记录永久保留。</p><p>第一支船队在港，另外三支船队安全等待。第五章《没有唯一灯塔》的正式救援将在后续版本开放；你可以继续生产与两港补给，离线不会导致剧情失败。</p>${archiveLink}</section>`;
+    const phases = [
+      "双港会议与离港日志",
+      "港口建设重点",
+      "旧观测站修复",
+      "分段接续演练",
+    ];
+    const building = m.requiresPortFocus && !focus;
+    const focusStatus = focus
+      ? `<div class="port-focus-built" id="port-focus" tabindex="-1"><strong>永久建设 · ${focus.name}</strong><p>${focus.detail}</p><small>以下预览已包含建设效果，所有救援方向都能继续。</small></div>`
+      : "";
+    const construction = `<article id="port-focus" tabindex="-1"><h3>先把承诺建起来</h3><p>三种方向均使用 18 份样本。选择一项永久建设，跃迁后保留；所有方向都能完成救援和抵达终章。</p><p>当前 ${number(state.samples)} 份样本${state.samples < 18 ? " · 可通过两港补给收集" : ""}</p><div class="port-focus-grid">${D.PORT_FOCUSES.map(
+      (p) => {
+        const offer = E.portFocusOffer(state, p.id),
+          preview = E.missionPreview(
+            { ...state, council: { ...state.council, priority: p.id } },
+            m.id,
+            "relay",
+          );
+        return `<div class="port-focus-option"><h4>${p.name}</h4><p>${p.detail}</p><p class="focus-example">下一段采用分段接续：${duration(preview.seconds)} · 分流 ${Math.round(preview.diversion * 1000) / 10}% · ${preview.samples} 样本</p><button class="outline" ${action("port-focus", p.id)} ${offer.available ? "" : "disabled"}>建设 · ${p.samples} 样本</button></div>`;
+      },
+    ).join(
+      "",
+    )}</div>${state.samples < 18 ? prerequisiteButton(m.id) : ""}</article>`;
+    return `<section class="campaign-panel council-panel" aria-label="谁的归航权">${header}<ol class="campaign-stages">${phases.map((p, i) => `<li ${i === count ? 'aria-current="step"' : ""}>${i < count ? "✓" : `0${i + 1}`} ${p}</li>`).join("")}</ol>${focusStatus}${building ? construction : preparedVoyage(m, state.council)}</section>`;
+  }
+  function loadoutPanel() {
+    if (!Object.values(state.modules).some((n) => n > 0)) return "";
+    let m =
+      E.campaignMission(state) ||
+      E.councilMission(state) ||
+      D.MISSIONS.find((m) => m.id === state.repeatId);
+    if (
+      (state.mission || state.result)?.id === m.id &&
+      (m.campaign || m.council)
+    ) {
+      const stages = [
+        ...D.MISSIONS.filter((m) => m.campaign),
+        ...D.COUNCIL_MISSIONS,
+      ];
+      m =
+        stages[stages.findIndex((item) => item.id === m.id) + 1] ||
+        D.MISSIONS.find((m) => m.id === state.repeatId);
+    }
+    const names = (items) =>
+      items.length
+        ? items
+            .map(
+              (id) =>
+                `${D.MODULES.find((m) => m.id === id).name} ${state.modules[id]} 级`,
+            )
+            .join("、")
+        : "空槽";
+    return `<section class="loadout-panel" id="loadouts" tabindex="-1" aria-label="装备方案"><div class="section-title"><h2>装备方案</h2><small>一键切换 · 跃迁保留</small></div><p>当前装备：${names(state.equipped)}。先在随舰装备中选好，再保存到对应方案。</p><p>预览用于下一段「${m.name}」，未选择航前方案时按基础航程比较。切换会改变当前生产；已出发航程按派遣时的时间、分流和回收结算。</p><div class="loadout-grid">${D.LOADOUTS.map(
+      (loadout) => {
+        const items = state.loadouts[loadout.id],
+          preview = E.loadoutPreview(state, loadout.id, m.id),
+          matched =
+            items &&
+            items.length === state.equipped.length &&
+            items.every((id) => state.equipped.includes(id));
+        return `<article class="loadout-option"><h3>${loadout.name}${matched ? " · 使用中" : ""}</h3><p>${items ? names(items) : "尚未保存"}</p>${preview ? `<p class="loadout-metrics">常态产量 ${number(preview.rate)} / 秒<br>下一段 ${duration(preview.mission.seconds)} · 分流 ${Math.round(preview.mission.diversion * 1000) / 10}%<br>${number(preview.mission.dust)} 星尘 · ${preview.mission.samples} 样本</p>${preview.lock ? `<small>${preview.lock}</small>` : "<small>满足本航段进入条件</small>"}` : ""}<div class="loadout-actions"><button class="outline" ${action("loadout-save", loadout.id)}>保存当前装备</button><button ${action("loadout-apply", loadout.id)} ${!preview || matched ? "disabled" : ""}>使用${loadout.name}</button></div></article>`;
+      },
+    ).join("")}</div></section>`;
   }
   function routeArchive() {
     const archive = E.routeArchive(state);
     const sender = (id) => D.CHARACTERS.find((c) => c.id === id).name;
     return `<details class="route-archive" id="route-archive" tabindex="-1" data-details-key="lore"><summary data-focus="details-lore">航线与人物档案 · ${state.lore.length} 段故事</summary>
-      <p class="archive-current">当前：第${archive.chapter}章 · ${archive.title}${archive.complete ? " · 第一支船队交接完成" : ""}</p>
-      <p>第一章 · 星港 ${state.starport} / 3　第二章 · 建设 ${state.chapter.length} / 3　第三章 · 交接 ${state.campaign.completed.length} / 3</p>
+      <p class="archive-current">当前：第${archive.chapter}章 · ${archive.title}${archive.complete ? " · 两港救援准备完成" : ""}</p>
+      <p>第一章 · 星港 ${state.starport} / 3　第二章 · 建设 ${state.chapter.length} / 3　第三章 · 交接 ${state.campaign.completed.length} / 3　第四章 · 准备 ${state.council.completed.length + (state.council.priority ? 1 : 0)} / 4</p>${archive.priority ? `<p>永久建设方向：${archive.priority}。所有救援与结局入口保留。</p>` : ""}
       <h3>人物与来信</h3>${
         archive.characters
           .map(
@@ -410,16 +485,16 @@
   function explore() {
     const port = D.PORT[state.starport];
     return `<div class="page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${campaignPanel()}${chapterMap()}
+      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${councilPanel()}${campaignPanel()}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
-        .filter((m) => !m.chapter && !m.campaign)
+        .filter((m) => !m.chapter && !m.campaign && !m.council)
         .map((m) => {
           const p = E.missionPreview(state, m.id);
           return `<div class="mission-row" id="mission-${m.id}" tabindex="-1"><div><h3>${m.name}</h3><p>${m.detail}</p></div><div class="mission-metrics"><small>${duration(p.seconds)} · 分流 ${Math.round(p.diversion * 100)}%</small><p>成功率 ${Math.round(p.chance * 100)}%<br>成功回收 ${number(p.dust)} 星尘<br>${p.samples} 份样本</p></div><div class="row-action"><button class="${m.chance < 1 ? "" : "outline"}" ${action("mission", m.id)} ${state.mission || state.result ? "disabled" : ""}>${m.chance < 1 ? "风险派遣" : "安全派遣"}</button></div></div>`;
         })
         .join("")}</section>
       <section class="port-panel" id="port-panel" tabindex="-1"><span class="port-progress">星港修复 ${state.starport} / ${D.PORT.length}</span><h2>${port ? port.name : "这里终于可以成为家。"}</h2><p>${port ? `需要 ${port.cores} 星核与 ${port.samples} 份样本。你拥有 ${number(state.cores)} 星核与 ${number(state.samples)} 份样本。` : D.PORT.at(-1).text}</p>${port ? `<button class="outline" ${action("port")} ${state.cores >= port.cores && state.samples >= port.samples ? "" : "disabled"}>修复航站</button>` : "<p>归航星港已建成。远航星图已经开放，新的回信正在等待。</p>"}</section>
-      <section><div class="section-title"><h2>随舰装备</h2><small>${state.equipped.length} / 2 槽位 · 跃迁保留</small></div>${
+      ${loadoutPanel()}<section><div class="section-title"><h2>随舰装备</h2><small>${state.equipped.length} / 2 槽位 · 跃迁保留</small></div>${
         D.MODULES.filter((m) => state.modules[m.id])
           .map((m) => {
             const offer = E.moduleOffer(state, m.id);
@@ -564,6 +639,8 @@
       state.starport,
       state.chapter,
       state.campaign,
+      state.council,
+      state.loadouts,
       state.samples,
       state.equipped,
       state.modules,
@@ -738,7 +815,28 @@
       E.claimMission(state, id || undefined);
       toast("回收物已入库，发现会陪你继续航行。");
     } else if (kind === "equip") E.equip(state, id);
-    else if (kind === "module") {
+    else if (kind === "loadout-save") {
+      if (E.saveLoadout(state, id))
+        toast(`${D.LOADOUTS.find((p) => p.id === id).name}方案已保存。`);
+    } else if (kind === "loadout-apply") {
+      if (E.applyLoadout(state, id))
+        toast("装备方案已切换，当前生产按新装备运行；已出发航程保留原准备。");
+    } else if (kind === "port-focus") {
+      const offer = E.portFocusOffer(state, id);
+      if (!offer?.available) return;
+      openDialog(
+        "确定港口建设重点？",
+        `<p>${offer.name}：${offer.detail}</p><p>使用 ${offer.samples} 份样本，建成后永久保留，不能重新选择。三种方向都能继续主线，所有结局均保留入口。</p><div class="dialog-actions"><button ${action("cancel")}>继续比较</button><button class="primary" ${action("confirm-port-focus", id)}>建设${offer.name}</button></div>`,
+      );
+      return;
+    } else if (kind === "confirm-port-focus") {
+      if (E.buildPortFocus(state, id)) {
+        closeDialog();
+        toast(
+          `${D.PORT_FOCUSES.find((p) => p.id === id).name}已建成，航程预览已更新。`,
+        );
+      }
+    } else if (kind === "module") {
       if (E.buildModule(state, id))
         toast(
           `${D.MODULES.find((m) => m.id === id).name}已升至 ${state.modules[id]} 级。${state.equipped.includes(id) ? "舰装效果已生效。" : "可在随舰装备中替换装备。"}`,

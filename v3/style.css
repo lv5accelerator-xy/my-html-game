@@ -1526,7 +1526,70 @@ summary {
 p {
   overflow-wrap: anywhere;
 }
+.council-panel .campaign-stages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.port-focus-grid,
+.loadout-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.loadout-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.port-focus-option,
+.loadout-option {
+  min-width: 0;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.port-focus-option h4,
+.loadout-option h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+.focus-example,
+.loadout-metrics {
+  color: var(--teal);
+  font-variant-numeric: tabular-nums;
+}
+.loadout-panel {
+  margin: 32px 0;
+}
+.loadout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.port-focus-built {
+  margin: 20px 0;
+  padding: 16px;
+  border-left: 2px solid var(--teal);
+  background: var(--surface);
+}
+.campaign-complete > summary {
+  cursor: pointer;
+  color: var(--teal);
+}
 @media (max-width: 760px) {
+  .port-focus-grid,
+  .loadout-grid,
+  .council-panel .campaign-stages {
+    grid-template-columns: 1fr;
+  }
+  .council-panel .campaign-stages {
+    gap: 8px;
+  }
+  .port-focus-option,
+  .loadout-option {
+    padding: 16px;
+  }
   .resources {
     min-width: 0;
     max-width: 100%;

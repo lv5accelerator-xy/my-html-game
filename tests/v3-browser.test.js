@@ -82,6 +82,7 @@ async function run() {
     await page.locator("#next-goal-title").waitFor();
     try {
       assert.match(await page.title(), /拾荒航线/);
+      assert.equal(page.url(), url);
       assert.ok(await page.locator("#main").innerText());
       await check(page, context);
       assert.deepEqual(errors, [], "runtime errors");
@@ -844,11 +845,9 @@ async function run() {
             false,
           );
           if (screenshotDir)
-            await page
-              .locator(".chapter-map")
-              .screenshot({
-                path: path.join(screenshotDir, `chapter-complete-${width}.png`),
-              });
+            await page.locator(".chapter-map").screenshot({
+              path: path.join(screenshotDir, `chapter-complete-${width}.png`),
+            });
         }
         await page.locator('#navigation [data-id="jump"]').click();
         await page.locator('[data-action="jump"]').click();
@@ -882,6 +881,307 @@ async function run() {
         await page.clock.runFor(1000);
         assert.equal((await read(page)).mission, null);
         assert.equal((await read(page)).samples, 2);
+      },
+    );
+    const chapterThree = ready();
+    chapterThree.rebirths = 4;
+    chapterThree.starport = 3;
+    chapterThree.chapter = ["relay", "nursery", "lighthouse"];
+    chapterThree.modules = { nav: 2, scanner: 2 };
+    chapterThree.equipped = ["nav", "scanner"];
+    chapterThree.research = ["navigation"];
+    chapterThree.samples = 30;
+    chapterThree.run.choices = 2;
+    chapterThree.lore = [
+      { story: "hospital", choice: "preserve" },
+      { story: "garden", choice: "repair" },
+      { story: "relay", choice: "public" },
+      { story: "nursery", choice: "seeds" },
+      { story: "horizon", choice: "archive" },
+    ];
+    await scenario(
+      "chapter three: actual preparation previews, saved plans, voyage reload, offline manual decisions, mobile convoy handoff, letters, archive rereading and persistent supply route",
+      { [S.KEY]: JSON.stringify(chapterThree) },
+      async (page) => {
+        await page
+          .locator('#main [data-goal-focus="mission-white-noise"]')
+          .click();
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "mission-white-noise",
+        );
+        assert.equal(
+          await page.locator(".completed-sectors").getAttribute("open"),
+          null,
+        );
+        assert.equal(
+          await page
+            .locator('[data-action="mission"][data-id="white-noise"]')
+            .isDisabled(),
+          true,
+        );
+        for (const plan of D.EXPEDITION_PLANS) {
+          const p = E.missionPreview(chapterThree, "white-noise", plan.id);
+          const option = page.locator(
+            `[data-action="prepare"][data-id="${plan.id}"]`,
+          );
+          assert.match(
+            await option.innerText(),
+            new RegExp(`${p.samples} 样本`),
+          );
+          await option.click();
+          assert.equal(await option.getAttribute("aria-pressed"), "true");
+          assert.deepEqual((await read(page)).campaign.preparation, {
+            id: "white-noise",
+            plan: plan.id,
+          });
+        }
+        if (screenshotDir)
+          await page
+            .locator(".campaign-panel")
+            .screenshot({
+              path: path.join(screenshotDir, "white-noise-plans-desktop.png"),
+            });
+        await page.locator('[data-action="prepare"][data-id="supply"]').click();
+        await page.reload();
+        assert.equal((await read(page)).campaign.preparation.plan, "supply");
+        await page
+          .locator('#main [data-goal-focus="mission-white-noise"]')
+          .click();
+        assert.equal(
+          await page
+            .locator('[data-action="prepare"][data-id="supply"]')
+            .getAttribute("aria-pressed"),
+          "true",
+        );
+        await page
+          .locator('[data-action="mission"][data-id="white-noise"]')
+          .click();
+        const preview = E.missionPreview(chapterThree, "white-noise", "supply");
+        assert.equal((await read(page)).mission.seconds, preview.seconds);
+        assert.equal((await read(page)).mission.diversion, preview.diversion);
+        await page.clock.fastForward(5000);
+        const underway = (await read(page)).mission;
+        await page.reload();
+        assert.deepEqual((await read(page)).mission, underway);
+        await page.locator('#main [data-goal-focus="active-mission"]').click();
+        const s = await read(page);
+        await page.clock.fastForward((s.mission.end - s.clock) * 1000);
+        await page.locator('#dialog [data-action="return-next"]').click();
+        assert.match(
+          await page.locator("#report").innerText(),
+          /先校验安全航线|优先校验安全航线/,
+        );
+        assert.match(await page.locator("#report").innerText(), /等待稍长/);
+        await page.locator('[data-action="claim"][data-id="share"]').click();
+        await page.setViewportSize({ width: 375, height: 900 });
+        await page
+          .locator('[data-action="prepare"][data-id="calibrate"]')
+          .click();
+        await page.clock.runFor(3500);
+        if (screenshotDir)
+          await page
+            .locator(".campaign-panel")
+            .screenshot({
+              path: path.join(screenshotDir, "white-noise-plans-mobile.png"),
+            });
+        for (const [id, plan, choice, text] of [
+          ["false-beacon", "calibrate", "aid", /两地公开的观测/],
+          ["first-convoy", "relay", "letters", /收到应急供给/],
+        ]) {
+          await page
+            .locator(`[data-action="prepare"][data-id="${plan}"]`)
+            .click();
+          await page
+            .locator(`[data-action="mission"][data-id="${id}"]`)
+            .click();
+          const current = await read(page);
+          await page.clock.fastForward(current.mission.seconds * 1000);
+          await page.locator('#dialog [data-action="return-next"]').click();
+          assert.match(await page.locator("#report").innerText(), text);
+          assert.equal(
+            (await read(page)).campaign.completed.length,
+            id === "false-beacon" ? 1 : 2,
+          );
+          assert.equal(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth > innerWidth,
+            ),
+            false,
+          );
+          await page
+            .locator(`[data-action="claim"][data-id="${choice}"]`)
+            .click();
+        }
+        const completed = await read(page);
+        assert.equal(completed.campaign.completed.length, 3);
+        assert.equal(completed.lore.length, 8);
+        assert.deepEqual(completed.lore.slice(0, 5), chapterThree.lore);
+        assert.equal(completed.repeatId, "supply-run");
+        assert.equal(
+          await page
+            .locator('[data-action="mission"][data-id="supply-run"]')
+            .isEnabled(),
+          true,
+        );
+        assert.match(
+          await page.locator(".campaign-complete").innerText(),
+          /第一支船队已经安全进港/,
+        );
+        await page.clock.runFor(3500);
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          assert.equal(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth > innerWidth,
+            ),
+            false,
+          );
+          if (screenshotDir)
+            await page
+              .locator(".campaign-panel")
+              .screenshot({
+                path: path.join(
+                  screenshotDir,
+                  `chapter-three-complete-${width}.png`,
+                ),
+              });
+        }
+        await page
+          .locator('.campaign-panel [data-goal-focus="route-archive"]')
+          .click();
+        assert.equal(
+          await page.locator("#route-archive").getAttribute("open"),
+          "",
+        );
+        assert.match(
+          await page.locator(".archive-current").innerText(),
+          /第三章|第3章/,
+        );
+        await page.locator('[data-focus="letter-receipt"]').click();
+        assert.match(
+          await page.locator('[data-details-key="letter-receipt"]').innerText(),
+          /平安讯息/,
+        );
+        await page.locator('[data-focus="letter-handoff"]').click();
+        assert.match(
+          await page.locator('[data-details-key="letter-handoff"]').innerText(),
+          /下一班人知道怎么回家/,
+        );
+        await page.locator('[data-focus="story-observations"]').click();
+        assert.match(
+          await page
+            .locator('[data-details-key="story-observations"]')
+            .innerText(),
+          /补给优先/,
+        );
+        assert.equal(
+          await page.locator('#route-archive [data-action="claim"]').count(),
+          0,
+        );
+        if (screenshotDir)
+          await page
+            .locator(".character-file")
+            .filter({ hasText: "祁岳" })
+            .screenshot({
+              path: path.join(screenshotDir, "qiyue-letter-mobile.png"),
+            });
+        assert.equal(
+          (await read(page)).samples,
+          completed.samples,
+          "rereading never grants rewards",
+        );
+        assert.deepEqual((await read(page)).lore, completed.lore);
+        await page.locator("#settings-button").click();
+        const downloadPromise = page.waitForEvent("download");
+        await page.locator('[data-action="export"]').click();
+        const exported = JSON.parse(
+          fs.readFileSync(await (await downloadPromise).path(), "utf8"),
+        );
+        assert.deepEqual(exported.campaign, completed.campaign);
+        await page.keyboard.press("Escape");
+        await page.locator("#settings-button").click();
+        await page
+          .locator("#import-file")
+          .setInputFiles({
+            name: "third-chapter.json",
+            mimeType: "application/json",
+            buffer: Buffer.from(JSON.stringify(exported)),
+          });
+        assert.deepEqual((await read(page)).campaign, completed.campaign);
+        assert.deepEqual((await read(page)).lore, completed.lore);
+        await page.reload();
+        assert.deepEqual((await read(page)).campaign, completed.campaign);
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page
+          .locator('[data-action="mission"][data-id="supply-run"]')
+          .click();
+        assert.equal((await read(page)).mission.id, "supply-run");
+      },
+    );
+    const missingPrerequisite = structuredClone(chapterThree);
+    missingPrerequisite.research = [];
+    missingPrerequisite.modules.scanner = 1;
+    missingPrerequisite.samples = 0;
+    await scenario(
+      "mobile current star map leads directly to research, samples and actual equipped gear; completed sectors remain folded",
+      { [S.KEY]: JSON.stringify(missingPrerequisite) },
+      async (page) => {
+        await page.setViewportSize({ width: 375, height: 900 });
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page
+          .locator('.campaign-panel [data-goal-focus="research-navigation"]')
+          .click();
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "research-navigation",
+        );
+        await page
+          .locator('[data-action="research"][data-id="navigation"]')
+          .click();
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page
+          .locator('.campaign-panel [data-goal-focus="mission-belt"]')
+          .click();
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "mission-belt",
+        );
+        for (let i = 0; i < 2; i++) {
+          await page.locator('[data-action="mission"][data-id="belt"]').click();
+          const s = await read(page);
+          await page.clock.fastForward(s.mission.seconds * 1000);
+          await page.locator('#dialog [data-action="return-next"]').click();
+          await page.locator('[data-action="claim"]').click();
+        }
+        await page
+          .locator('.campaign-panel [data-goal-focus="module-scanner"]')
+          .click();
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "module-scanner",
+        );
+        await page.locator('[data-action="module"][data-id="scanner"]').click();
+        assert.equal((await read(page)).modules.scanner, 2);
+        assert.equal(
+          await page.locator(".completed-sectors").getAttribute("open"),
+          null,
+        );
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth > innerWidth,
+          ),
+          false,
+        );
+        await page.locator('[data-focus="completed-sectors"]').click();
+        assert.equal(
+          await page.locator(".completed-sectors .sector").count(),
+          3,
+        );
+        await page
+          .locator('[data-action="mission"][data-id="message"]')
+          .click();
+        assert.equal((await read(page)).mission.id, "message");
       },
     );
     console.log(

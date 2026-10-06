@@ -186,10 +186,53 @@ function verify() {
   );
   assert.equal(campaign.lore.length, 5);
   assert.ok(campaign.cores >= 0 && campaign.samples >= 0);
+  const thirdChapterRows = [];
+  // Start every preparation comparison from the same earned two-chapter save.
+  for (const plan of D.EXPEDITION_PLANS) {
+    const continued = structuredClone(campaign),
+      start = continued.clock;
+    for (let elapsed = 1; elapsed <= 20 * 60; elapsed++) {
+      E.advance(continued, continued.lastAt + 1000);
+      if (elapsed % 15 === 0) {
+        if (continued.result)
+          E.claimMission(
+            continued,
+            continued.result.story
+              ? D.STORIES[continued.result.story].choices[0].id
+              : undefined,
+          );
+        if (continued.campaign.completed.length === 3) break;
+        const goal = E.nextGoal(continued);
+        if (goal.focus?.startsWith("research-"))
+          E.research(continued, goal.focus.slice(9));
+        if (goal.focus?.startsWith("mission-")) {
+          const id = goal.focus.slice(8);
+          E.prepareMission(continued, id, plan.id);
+          E.startMission(continued, id);
+        }
+      }
+    }
+    assert.equal(
+      continued.campaign.completed.length,
+      3,
+      `${plan.name} finishes without injected resources`,
+    );
+    assert.equal(continued.lore.length, 8);
+    assert.deepEqual(continued.lore.slice(0, 5), campaign.lore);
+    assert.deepEqual(continued.chapter, campaign.chapter);
+    assert.ok(continued.samples >= 0 && continued.cores >= 0);
+    assert.ok(E.missionOptions(continued).some((m) => m.id === "supply-run"));
+    thirdChapterRows.push({
+      preparation: plan.name,
+      chapterThreeSeconds: continued.clock - start,
+      earnedSamples: continued.samples - campaign.samples,
+    });
+  }
   console.table(rows);
   console.log(
     `v3 balance ok: three routes, first-run beats, 15–25 minute jumps and faster second runs; starport ${starportSeconds}s, chapter two +${campaign.clock - chapterStart}s, complete campaign ${campaign.clock}s`,
   );
+  console.table(thirdChapterRows);
   return rows;
 }
 if (require.main === module) verify();

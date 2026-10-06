@@ -81,6 +81,7 @@
       discoveries: 0,
       starport: 0,
       chapter: [],
+      campaign: { completed: [], preparation: null },
       records: [],
       beacon: { nextAt: 45, expiresAt: 0 },
       burstUntil: 0,
@@ -312,7 +313,76 @@
       story.continuity &&
       s.lore.find((r) => r.story === story.continuity.story);
     const context = prior && story.continuity.choices[prior.choice];
-    return [context, story.text].filter(Boolean).join(" ");
+    const mission = D.MISSIONS.find((m) => m.campaign && m.story === id);
+    const record =
+      mission &&
+      (s.result?.id === mission.id
+        ? s.result
+        : s.campaign.completed.find((r) => r.id === mission.id));
+    const preparation = record && byId(D.EXPEDITION_PLANS, record.plan)?.report;
+    return [context, preparation, story.text].filter(Boolean).join(" ");
+  }
+  function campaignMission(s) {
+    return (
+      D.MISSIONS.filter((m) => m.campaign)[s.campaign.completed.length] || null
+    );
+  }
+  function prepareMission(s, id, plan) {
+    const m = campaignMission(s);
+    if (
+      !m ||
+      m.id !== id ||
+      missionLock(s, id) ||
+      s.mission ||
+      s.result ||
+      !byId(D.EXPEDITION_PLANS, plan)
+    )
+      return false;
+    s.campaign.preparation = { id, plan };
+    return true;
+  }
+  function routeArchive(s) {
+    const chapter =
+      s.starport < D.PORT.length
+        ? 1
+        : s.chapter.length < D.PROJECTS.length
+          ? 2
+          : 3;
+    return {
+      chapter,
+      title: ["最后一盏灯", "远航星图", "白噪声海"][chapter - 1],
+      complete: chapter === 3 && !campaignMission(s),
+      characters: D.CHARACTERS.filter((c) =>
+        s.lore.some((r) => r.story === c.story),
+      ),
+      letters: D.LETTERS.filter((l) =>
+        s.lore.some((r) => r.story === l.story),
+      ).map((l) => {
+        const prior =
+          l.continuity && s.lore.find((r) => r.story === l.continuity.story);
+        return {
+          ...l,
+          text: [prior && l.continuity.choices[prior.choice], l.text]
+            .filter(Boolean)
+            .join(" "),
+        };
+      }),
+      entries: s.lore.map((r) => {
+        const mission = D.MISSIONS.find(
+          (m) => m.campaign && m.story === r.story,
+        );
+        const record =
+          mission &&
+          s.campaign.completed.find((item) => item.id === mission.id);
+        return {
+          ...r,
+          title: D.STORIES[r.story].title,
+          text: storyText(s, r.story),
+          decision: byId(D.STORIES[r.story].choices, r.choice).name,
+          plan: record && byId(D.EXPEDITION_PLANS, record.plan).name,
+        };
+      }),
+    };
   }
   function missionLock(s, id) {
     const m = byId(D.MISSIONS, id);
@@ -321,6 +391,10 @@
       return `先完成星港修复 ${m.unlockPort} / ${D.PORT.length}`;
     if (m.project && !s.chapter?.includes(m.project))
       return `先建成${byId(D.PROJECTS, m.project).name}`;
+    if (m.campaign && campaignMission(s)?.id !== id)
+      return s.campaign.completed.some((r) => r.id === id)
+        ? "这段主线已经完成，可在航线档案重读"
+        : "先完成上一段白噪声海交接";
     if (m.requiresStory && !s.lore.some((r) => r.story === m.requiresStory))
       return `先处理「${D.STORIES[m.requiresStory].title}」的故事选择`;
     if (m.research && !has(s, m.research))
@@ -332,21 +406,32 @@
   function missionOptions(s) {
     return D.MISSIONS.filter((m) => !missionLock(s, m.id));
   }
-  function missionPreview(s, id) {
+  function missionPreview(s, id, planId) {
     const m = byId(D.MISSIONS, id);
     if (!m) return null;
     const explorer = s.run.route === "explore";
+    const plan =
+      m.campaign &&
+      byId(
+        D.EXPEDITION_PLANS,
+        planId ||
+          (s.campaign.preparation?.id === id
+            ? s.campaign.preparation.plan
+            : ""),
+      );
     return {
       seconds: Math.max(
         30,
         Math.ceil(
           m.seconds *
+            (plan ? plan.seconds : 1) *
             (explorer ? 0.65 : 1) *
             Math.max(0.7, 1 - equipped(s, "nav") * 0.1) *
             (s.chapter?.includes("lighthouse") ? 0.9 : 1),
         ),
       ),
-      diversion: m.diversion * (explorer ? 0.5 : 1),
+      diversion:
+        m.diversion * (explorer ? 0.5 : 1) * (plan ? plan.diversion : 1),
       chance: Math.min(
         1,
         m.chance +
@@ -355,9 +440,10 @@
       ),
       samples:
         m.samples +
+        (plan ? plan.samples : 0) +
         (explorer ? 1 : 0) +
         (s.chapter?.includes("nursery") ? 1 : 0),
-      dust: Math.max(20, rawRate(s) * m.yieldSeconds),
+      dust: Math.max(20, rawRate(s) * m.yieldSeconds * (plan ? plan.dust : 1)),
     };
   }
   function startMission(s, id) {
@@ -371,6 +457,7 @@
       return false;
     const m = byId(D.MISSIONS, id),
       preview = missionPreview(s, id);
+    if (m.campaign && s.campaign.preparation?.id !== id) return false;
     const succeeded = random(s) < preview.chance;
     const module =
       succeeded && m.chance < 1
@@ -383,7 +470,9 @@
       ...preview,
       succeeded,
       module,
+      ...(m.campaign ? { plan: s.campaign.preparation.plan } : {}),
     };
+    if (m.campaign) s.campaign.preparation = null;
     log(s, `派遣探索：${m.name}，预计 ${preview.seconds} 秒归航。`);
     return true;
   }
@@ -395,7 +484,7 @@
       m.succeeded &&
       def.story &&
       !s.lore.some((entry) => entry.story === def.story) &&
-      (def.chapter || s.run.choices < 2)
+      (def.chapter || def.campaign || s.run.choices < 2)
         ? def.story
         : null;
     s.result = {
@@ -405,6 +494,7 @@
       samples: m.succeeded ? m.samples : 1,
       module: m.module,
       story,
+      ...(def.campaign ? { plan: m.plan } : {}),
     };
     s.mission = null;
     log(
@@ -458,6 +548,14 @@
   function claimMission(s, choiceId, source = "manual") {
     const r = s.result;
     if (!r) return false;
+    const mission = byId(D.MISSIONS, r.id);
+    if (
+      mission.campaign &&
+      (campaignMission(s)?.id !== r.id ||
+        r.story !== mission.story ||
+        !byId(D.EXPEDITION_PLANS, r.plan))
+    )
+      return false;
     const story = r.story && D.STORIES[r.story];
     const choice = story && byId(story.choices, choiceId);
     if (story && !choice) return false;
@@ -478,10 +576,20 @@
       }
       s.samples = bounded(s.samples + (choice.samples || 0));
       s.lore.push({ story: r.story, choice: choice.id });
-      if (!byId(D.MISSIONS, r.id).chapter) s.run.choices++;
+      if (!mission.chapter && !mission.campaign) s.run.choices++;
       log(s, `${story.title}：${choice.name}。这段记忆会陪你进入下一航次。`);
     }
     s.discoveries = bounded(s.discoveries + (r.succeeded ? 1 : 0));
+    if (mission.campaign) {
+      s.campaign.completed.push({ id: r.id, plan: r.plan });
+      if (!campaignMission(s)) {
+        s.repeatId = "supply-run";
+        log(
+          s,
+          "第三章「白噪声海」完成。第一支船队安全进港，两港补给线永久开放。新的值班表已经归档。",
+        );
+      }
+    }
     s.result = null;
     return true;
   }
@@ -677,12 +785,17 @@
         if (activity && claimed) activity.reportsClaimed++;
       }
       const newStory = missionOptions(s).some(
-        (m) => m.chapter && !s.lore.some((r) => r.story === m.story),
+        (m) =>
+          (m.chapter || m.campaign) && !s.lore.some((r) => r.story === m.story),
       );
       if (!s.result && !s.mission && !newStory) {
         const candidate =
           missionOptions(s).find(
-            (m) => m.id === s.repeatId && m.chance === 1 && !m.chapter,
+            (m) =>
+              m.id === s.repeatId &&
+              m.chance === 1 &&
+              !m.chapter &&
+              !m.campaign,
           ) || D.MISSIONS.find((m) => m.id === "belt");
         startMission(s, candidate.id);
       }
@@ -723,6 +836,121 @@
       (action === "jump" &&
         (s.run.dust >= D.PRESTIGE_DUST * 0.3 || s.rebirths > 0))
     );
+  }
+  function missionPrerequisite(s, id) {
+    const m = byId(D.MISSIONS, id);
+    if (!m || !reachable(s, "explore")) return null;
+    const base = {
+      action: "explore",
+      label: "补齐航路条件",
+      value: 0,
+      target: 1,
+      eta: 0,
+    };
+    if (s.starport < m.unlockPort)
+      return {
+        ...base,
+        title: "先修复归航星港",
+        detail: "航站需要可靠的归航位置。",
+        focus: "port-panel",
+      };
+    if (m.project && !s.chapter.includes(m.project))
+      return {
+        ...base,
+        title: `先建成${byId(D.PROJECTS, m.project).name}`,
+        detail: "在远航星图完成前序故事与建设。",
+        focus: `project-${m.project}`,
+      };
+    if (m.campaign && campaignMission(s)?.id !== id) {
+      const prior = campaignMission(s);
+      return prior
+        ? {
+            ...base,
+            title: "继续当前交接",
+            detail: prior.detail,
+            focus: `mission-${prior.id}`,
+          }
+        : null;
+    }
+    if (m.requiresStory && !s.lore.some((r) => r.story === m.requiresStory)) {
+      const prior = D.MISSIONS.find((item) => item.story === m.requiresStory);
+      return (
+        missionPrerequisite(s, prior.id) || {
+          ...base,
+          title: `接续「${D.STORIES[m.requiresStory].title}」`,
+          detail: "任意故事选择都能继续。",
+          focus: `mission-${prior.id}`,
+        }
+      );
+    }
+    if (m.research && !has(s, m.research)) {
+      const r = byId(D.RESEARCH, m.research);
+      return {
+        ...base,
+        title: `为远航研究${r.name}`,
+        detail: r.detail,
+        action: "fleet",
+        label: "前往研究",
+        focus: `research-${r.id}`,
+        value: s.dust,
+        target: r.cost,
+        eta: incomeEta(s, Math.max(0, r.cost - s.dust)),
+      };
+    }
+    if (m.equipment && equipped(s, m.equipment.id) < m.equipment.level) {
+      const item = byId(D.MODULES, m.equipment.id),
+        offer = moduleOffer(s, item.id);
+      if (offer.level < m.equipment.level && s.samples < offer.samples)
+        return {
+          ...base,
+          title: `为${item.name}收集样本`,
+          detail: `下一次装配或升级需要 ${offer.samples} 份样本。`,
+          label: "前往安全回收",
+          focus: "mission-belt",
+          value: s.samples,
+          target: offer.samples,
+          eta: null,
+          etaHint: "安全探索归航后领取样本",
+        };
+      return {
+        ...base,
+        title: `${offer.level < m.equipment.level ? "升级" : "装备"}${item.name}`,
+        detail: `需要装备 ${m.equipment.level} 级${item.name}。两槽已满时先卸下一件。`,
+        label: "前往舰装",
+        focus: `module-${item.id}`,
+      };
+    }
+    return null;
+  }
+  function campaignGoal(s) {
+    if (!s.chapter.includes("lighthouse") || !reachable(s, "explore"))
+      return null;
+    const m = campaignMission(s);
+    if (!m) return null;
+    const prerequisite = missionPrerequisite(s, m.id);
+    if (prerequisite) return prerequisite;
+    if (s.mission)
+      return {
+        title: "等待航段记录归航",
+        detail: "生产继续进行；归航报告会保留，等待你的安排。",
+        action: "explore",
+        label: "查看航程",
+        focus: "active-mission",
+        value: s.clock - s.mission.start,
+        target: s.mission.seconds,
+        eta: Math.max(0, s.mission.end - s.clock),
+      };
+    return {
+      title: `${s.campaign.preparation?.id === m.id ? "派遣" : "准备"}${m.name}`,
+      detail:
+        "先比较校准、补给与分段接续的航程和回收，再派遣无人探针。所有方案都能继续故事。",
+      action: "explore",
+      label: "安排白噪声海航程",
+      focus: `mission-${m.id}`,
+      value: s.campaign.completed.length,
+      target: D.MISSIONS.filter((item) => item.campaign).length,
+      eta: 0,
+    };
   }
   function chapterGoal(s) {
     if (s.starport < D.PORT.length || !reachable(s, "explore")) return null;
@@ -873,6 +1101,8 @@
       };
     const chapter = chapterGoal(s);
     if (chapter) return chapter;
+    const campaign = campaignGoal(s);
+    if (campaign) return campaign;
     if (
       s.rebirths === 0 &&
       s.research.length === 0 &&
@@ -1069,6 +1299,31 @@
         break;
       s.chapter.push(p.id);
     }
+    // Optional v32 campaign data never changes the original construction array.
+    for (const m of D.MISSIONS.filter((item) => item.campaign)) {
+      const record = raw.campaign?.completed?.[s.campaign.completed.length];
+      if (
+        !s.chapter.includes("lighthouse") ||
+        record?.id !== m.id ||
+        !byId(D.EXPEDITION_PLANS, record.plan) ||
+        !s.lore.some((r) => r.story === m.story)
+      )
+        break;
+      s.campaign.completed.push({ id: m.id, plan: record.plan });
+    }
+    s.lore = s.lore.filter((r) => {
+      const m = D.MISSIONS.find(
+        (item) => item.campaign && item.story === r.story,
+      );
+      return !m || s.campaign.completed.some((record) => record.id === m.id);
+    });
+    const preparation = raw.campaign?.preparation;
+    if (
+      s.chapter.includes("lighthouse") &&
+      preparation?.id === campaignMission(s)?.id &&
+      byId(D.EXPEDITION_PLANS, preparation?.plan)
+    )
+      s.campaign.preparation = { id: preparation.id, plan: preparation.plan };
     s.journal = (Array.isArray(raw.journal) ? raw.journal : [])
       .filter((r) => typeof r?.text === "string")
       .slice(0, 12)
@@ -1120,7 +1375,8 @@
       }
     }
     s.repeatId = D.MISSIONS.some(
-      (m) => m.id === raw.repeatId && m.chance === 1 && !m.chapter,
+      (m) =>
+        m.id === raw.repeatId && m.chance === 1 && !m.chapter && !m.campaign,
     )
       ? raw.repeatId
       : "belt";
@@ -1130,23 +1386,57 @@
     };
     s.burstUntil = Math.min(s.clock + 20, bounded(raw.burstUntil));
     s.lastScanClock = Math.min(s.clock, Number(raw.lastScanClock) || 0);
-    if (raw.mission && byId(D.MISSIONS, raw.mission.id)) {
+    const validCampaign = (r) => {
+      const m = byId(D.MISSIONS, r?.id);
+      return (
+        m &&
+        (!m.campaign ||
+          (s.chapter.includes("lighthouse") &&
+            campaignMission(s)?.id === m.id &&
+            r.succeeded === true &&
+            byId(D.EXPEDITION_PLANS, r.plan)))
+      );
+    };
+    const limits = (def) => ({
+      seconds: Math.ceil(
+        def.seconds *
+          (def.campaign
+            ? Math.max(...D.EXPEDITION_PLANS.map((p) => p.seconds))
+            : 1),
+      ),
+      samples: Math.max(
+        4,
+        def.samples +
+          2 +
+          (def.campaign
+            ? Math.max(...D.EXPEDITION_PLANS.map((p) => p.samples))
+            : 0),
+      ),
+    });
+    if (raw.mission && validCampaign(raw.mission)) {
       const m = raw.mission,
         def = byId(D.MISSIONS, m.id);
+      const max = limits(def);
       s.mission = {
         id: m.id,
         start: Math.min(s.clock, bounded(m.start)),
-        end: Math.min(s.clock + def.seconds, bounded(m.end)),
-        seconds: bounded(m.seconds, def.seconds),
-        diversion: bounded(m.diversion, 0.4),
+        end: Math.min(s.clock + max.seconds, bounded(m.end)),
+        seconds: bounded(m.seconds, max.seconds),
+        diversion: bounded(m.diversion, def.campaign ? 0.5 : 0.4),
         chance: bounded(m.chance, 1),
-        samples: bounded(m.samples, Math.max(4, def.samples + 2)),
+        samples: bounded(m.samples, max.samples),
         dust: bounded(m.dust),
         succeeded: m.succeeded === true,
         module: byId(D.MODULES, m.module) ? m.module : null,
+        ...(def.campaign ? { plan: m.plan } : {}),
       };
     }
-    if (raw.result && byId(D.MISSIONS, raw.result.id)) {
+    if (
+      raw.result &&
+      validCampaign(raw.result) &&
+      (!byId(D.MISSIONS, raw.result.id).campaign ||
+        raw.result.story === byId(D.MISSIONS, raw.result.id).story)
+    ) {
       const r = raw.result,
         def = byId(D.MISSIONS, r.id);
       s.mission = null;
@@ -1154,15 +1444,17 @@
         id: r.id,
         succeeded: r.succeeded === true,
         dust: bounded(r.dust),
-        samples: bounded(r.samples, Math.max(4, def.samples + 2)),
+        samples: bounded(r.samples, limits(def).samples),
         module: byId(D.MODULES, r.module) ? r.module : null,
         story:
           r.story === def.story &&
           !s.lore.some((entry) => entry.story === r.story)
             ? r.story || null
             : null,
+        ...(def.campaign ? { plan: r.plan } : {}),
       };
     }
+    if (s.mission || s.result) s.campaign.preparation = null;
     if (raw.legacyArchive && typeof raw.legacyArchive === "object")
       s.legacyArchive = clone(raw.legacyArchive);
     return s;
@@ -1232,6 +1524,11 @@
     missionLock,
     missionPreview,
     storyText,
+    campaignMission,
+    prepareMission,
+    campaignGoal,
+    missionPrerequisite,
+    routeArchive,
     startMission,
     claimMission,
     moduleOffer,

@@ -856,4 +856,246 @@ test("auto dispatch pauses for a reachable new chapter story but still runs ordi
   assert.equal(s.result, null);
   assert.equal(E.nextGoal(s).focus, "mission-seedbank");
 });
+function thirdChapterReady() {
+  const s = chapterReady();
+  s.chapter = D.PROJECTS.map((p) => p.id);
+  s.lore.push(
+    { story: "relay", choice: "public" },
+    { story: "nursery", choice: "seeds" },
+    { story: "horizon", choice: "welcome" },
+  );
+  s.modules = { nav: 2, scanner: 2 };
+  s.equipped = ["nav", "scanner"];
+  s.research = ["navigation"];
+  return s;
+}
+test("chapter three requires a deliberate preparation and previews real time, diversion and rewards without spending resources", () => {
+  const s = thirdChapterReady(),
+    before = structuredClone(s);
+  const previews = D.EXPEDITION_PLANS.map((p) =>
+    E.missionPreview(s, "white-noise", p.id),
+  );
+  assert.deepEqual(s, before);
+  assert.ok(
+    previews[0].seconds < previews[2].seconds &&
+      previews[2].seconds < previews[1].seconds,
+  );
+  assert.ok(
+    previews[0].diversion > previews[1].diversion &&
+      previews[1].diversion > previews[2].diversion,
+  );
+  assert.ok(
+    previews[1].dust > previews[2].dust && previews[2].dust > previews[0].dust,
+  );
+  assert.ok(
+    previews[1].samples > previews[2].samples &&
+      previews[2].samples > previews[0].samples,
+  );
+  assert.equal(E.startMission(s, "white-noise"), false);
+  assert.equal(E.prepareMission(s, "false-beacon", "supply"), false);
+  assert.equal(E.prepareMission(s, "white-noise", "unknown"), false);
+  assert.ok(E.prepareMission(s, "white-noise", "supply"));
+  assert.equal(s.dust, before.dust);
+  assert.deepEqual(E.sanitize(s, s.lastAt), s);
+  assert.ok(E.startMission(s, "white-noise"));
+  for (const key of ["seconds", "diversion", "dust", "samples"])
+    assert.equal(s.mission[key], previews[1][key]);
+  assert.equal(s.mission.plan, "supply");
+  assert.equal(s.campaign.preparation, null);
+  assert.equal(E.prepareMission(s, "white-noise", "relay"), false);
+});
+test("nine old-choice combinations and every preparation and new decision finish chapter three with one-time rewards and original records", () => {
+  for (const hospital of D.STORIES.hospital.choices)
+    for (const garden of D.STORIES.garden.choices)
+      for (let planIndex = 0; planIndex < 3; planIndex++)
+        for (let choiceIndex = 0; choiceIndex < 3; choiceIndex++) {
+          const s = thirdChapterReady();
+          s.lore[0].choice = hospital.id;
+          s.lore[1].choice = garden.id;
+          const original = structuredClone(s.lore);
+          E.configure(s, { dispatch: true });
+          for (const [i, m] of D.MISSIONS.filter(
+            (item) => item.campaign,
+          ).entries()) {
+            const plan = D.EXPEDITION_PLANS[(planIndex + i) % 3].id;
+            assert.equal(E.campaignMission(s).id, m.id);
+            assert.equal(E.missionLock(s, m.id), "");
+            assert.ok(E.prepareMission(s, m.id, plan));
+            assert.ok(E.startMission(s, m.id));
+            assert.deepEqual(E.sanitize(s, s.lastAt), s);
+            E.advance(s, s.lastAt + (s.mission.seconds + 600) * 1000, {
+              offline: true,
+            });
+            assert.equal(
+              s.result.story,
+              m.story,
+              "offline automation must wait for each decision",
+            );
+            assert.equal(s.campaign.completed.length, i);
+            assert.match(
+              E.storyText(s, m.story),
+              new RegExp(D.EXPEDITION_PLANS[(planIndex + i) % 3].report),
+            );
+            const result = structuredClone(s.result);
+            assert.ok(
+              E.claimMission(
+                s,
+                D.STORIES[m.story].choices[(choiceIndex + i) % 3].id,
+              ),
+            );
+            const awarded = {
+              dust: s.dust,
+              samples: s.samples,
+              modules: structuredClone(s.modules),
+            };
+            s.result = result;
+            assert.equal(
+              E.claimMission(s, D.STORIES[m.story].choices[0].id),
+              false,
+            );
+            assert.deepEqual(
+              { dust: s.dust, samples: s.samples, modules: s.modules },
+              awarded,
+            );
+            assert.equal(E.sanitize(s, s.lastAt).result, null);
+            s.result = null;
+          }
+          assert.deepEqual(s.lore.slice(0, 5), original);
+          assert.equal(s.lore.length, 8);
+          assert.equal(s.run.choices, 2);
+          assert.equal(s.campaign.completed.length, 3);
+          assert.equal(s.repeatId, "supply-run");
+          assert.ok(E.missionOptions(s).some((m) => m.id === "supply-run"));
+          assert.equal(E.prepareMission(s, "first-convoy", "supply"), false);
+          assert.deepEqual(E.sanitize(s, s.lastAt), s);
+          assert.ok(E.routeArchive(s).complete);
+          E.configure(s, { dispatch: false });
+          s.run.dust = D.PRESTIGE_DUST;
+          const campaign = structuredClone(s.campaign),
+            lore = structuredClone(s.lore);
+          assert.ok(E.prestige(s));
+          assert.deepEqual(s.campaign, campaign);
+          assert.deepEqual(s.lore, lore);
+          assert.deepEqual(E.sanitize(s, s.lastAt).campaign, campaign);
+        }
+});
+test("long supply voyages and high-diversion calibration survive reload; offline claims never duplicate campaign rewards", () => {
+  for (const plan of ["supply", "calibrate"]) {
+    let s = thirdChapterReady();
+    for (const id of ["white-noise", "false-beacon"]) {
+      E.prepareMission(s, id, "relay");
+      E.startMission(s, id);
+      E.advance(s, s.lastAt + s.mission.seconds * 1000);
+      E.claimMission(s, D.STORIES[s.result.story].choices[0].id);
+    }
+    s.equipped = [];
+    E.prepareMission(s, "first-convoy", plan);
+    E.startMission(s, "first-convoy");
+    if (plan === "supply") assert.ok(s.mission.seconds > 300);
+    else assert.ok(s.mission.diversion > 0.4);
+    E.advance(s, s.lastAt + 5000);
+    assert.deepEqual(E.sanitize(s, s.lastAt), s);
+    const storage = memory({ [S.KEY]: JSON.stringify(s) });
+    const loaded = S.load(storage, s.lastAt + 8 * 3600 * 1000);
+    s = loaded.state;
+    assert.equal(loaded.report.missionsCompleted, 1);
+    assert.equal(s.result.plan, plan);
+    assert.equal(s.campaign.completed.length, 2);
+    assert.ok(E.claimMission(s, "watch"));
+    S.save(storage, s);
+    const again = S.load(storage, s.lastAt);
+    assert.equal(again.state.result, null);
+    assert.equal(again.state.campaign.completed.length, 3);
+    assert.equal(again.state.samples, s.samples);
+  }
+});
+test("v32 records gain only optional campaign data; invalid preparations, out-of-order records and fabricated reports cannot skip the story", () => {
+  const old = thirdChapterReady();
+  delete old.campaign;
+  assert.equal(D.VERSION, 32);
+  assert.deepEqual(E.sanitize(old, old.lastAt), {
+    ...old,
+    campaign: { completed: [], preparation: null },
+  });
+  const invalid = {
+    ...old,
+    campaign: {
+      completed: [{ id: "first-convoy", plan: "supply" }],
+      preparation: { id: "false-beacon", plan: "relay" },
+    },
+  };
+  invalid.lore.push({ story: "arrival", choice: "watch" });
+  const clean = E.sanitize(invalid, invalid.lastAt);
+  assert.deepEqual(clean.campaign, { completed: [], preparation: null });
+  assert.equal(clean.lore.length, 5);
+  for (const result of [
+    { id: "first-convoy", plan: "supply", story: "arrival", succeeded: true },
+    {
+      id: "white-noise",
+      plan: "unknown",
+      story: "observations",
+      succeeded: true,
+    },
+    { id: "white-noise", plan: "supply", story: null, succeeded: true },
+    {
+      id: "white-noise",
+      plan: "supply",
+      story: "observations",
+      succeeded: false,
+    },
+  ])
+    assert.equal(E.sanitize({ ...old, result }, old.lastAt).result, null);
+});
+test("campaign goals expose reachable research, sample and gear prerequisites; archives reflect old decisions and rereading is observational", () => {
+  const s = thirdChapterReady();
+  s.research = [];
+  assert.equal(E.nextGoal(s).focus, "research-navigation");
+  s.research = ["navigation"];
+  s.modules.scanner = 1;
+  s.samples = 0;
+  assert.equal(E.nextGoal(s).focus, "mission-belt");
+  s.samples = 10;
+  assert.equal(E.nextGoal(s).focus, "module-scanner");
+  s.modules.scanner = 2;
+  s.equipped = ["nav"];
+  assert.equal(E.nextGoal(s).focus, "module-scanner");
+  E.equip(s, "scanner");
+  assert.equal(E.nextGoal(s).focus, "mission-white-noise");
+  for (const route of D.ROUTES) {
+    s.run.route = route.id;
+    assert.ok(E.reachable(s, E.nextGoal(s).action));
+  }
+  const before = structuredClone(s),
+    archive = E.routeArchive(s);
+  assert.deepEqual(s, before);
+  assert.equal(archive.chapter, 3);
+  assert.equal(archive.characters.length, 2);
+  assert.equal(archive.letters.length, 2);
+  assert.equal(archive.entries[0].choice, s.lore[0].choice);
+  assert.match(archive.letters[0].text, /备用电源|拆解登记|平安讯息/);
+  assert.ok(!archive.characters.some((c) => c.id === "qiyue"));
+});
+test("automation waits for manual campaign preparations and decisions, then uses the unlocked safe supply route", () => {
+  const s = thirdChapterReady();
+  E.configure(s, { dispatch: true });
+  E.advance(s, s.lastAt + 8 * 3600 * 1000, { offline: true });
+  assert.equal(s.mission, null);
+  assert.equal(s.result, null);
+  assert.equal(s.campaign.completed.length, 0);
+  for (const m of D.MISSIONS.filter((item) => item.campaign)) {
+    E.prepareMission(s, m.id, "relay");
+    E.startMission(s, m.id);
+    E.advance(s, s.lastAt + s.mission.seconds * 1000);
+    assert.equal(E.nextGoal(s).focus, "report");
+    E.claimMission(s, D.STORIES[m.story].choices[0].id);
+  }
+  const lore = structuredClone(s.lore),
+    samples = s.samples;
+  E.advance(s, s.lastAt + 1000);
+  assert.equal(s.mission.id, "supply-run");
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  assert.equal(s.result, null);
+  assert.ok(s.samples > samples);
+  assert.deepEqual(s.lore, lore);
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

@@ -642,12 +642,146 @@ footer span + span:before {
   padding-top: 20px;
   margin-bottom: 0;
 }
+.chapter-map > .current-sector {
+  border-left: 2px solid var(--amber);
+  padding: 16px 22px;
+  background: #edbb7506;
+}
+.chapter-map details {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  margin-bottom: 0;
+}
+.prerequisite-link {
+  display: block;
+  margin: 12px 0;
+  white-space: normal;
+}
+.campaign-panel {
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--teal);
+  background: var(--surface);
+  padding: 26px;
+  margin: 24px 0;
+}
+.campaign-panel h2 {
+  margin: 6px 0 0;
+}
+.campaign-panel h3 {
+  font-size: 22px;
+  margin-top: 24px;
+}
+.campaign-stages {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+  margin: 24px 0;
+}
+.campaign-stages [aria-current] {
+  color: var(--teal);
+}
+.preparation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 24px 0 16px;
+}
+.preparation-option {
+  text-align: left;
+  padding: 18px;
+  min-width: 0;
+}
+.preparation-option strong {
+  font-size: 16px;
+  color: var(--text);
+}
+.preparation-option span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.preparation-option[aria-pressed="true"] {
+  border-color: var(--amber);
+  background: #edbb750b;
+}
+.preparation-option[aria-pressed="true"] strong {
+  color: var(--amber);
+}
+.campaign-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+#preparation-status {
+  font-size: 13px;
+  color: var(--teal);
+}
+.campaign-complete h3 {
+  color: var(--teal);
+}
+.route-archive {
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+.archive-current {
+  color: var(--teal);
+  margin-top: 24px;
+}
+.character-file {
+  border-top: 1px solid var(--line);
+  padding: 16px 0;
+}
+.character-file h4 {
+  margin: 0;
+  font-size: 17px;
+}
+.character-file h4 small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: normal;
+}
+.character-file details,
+.lore-entry {
+  margin: 18px 0;
+}
+.route-archive summary {
+  line-height: 1.8;
+}
 @media (max-width: 900px) {
   .sector-grid {
     grid-template-columns: 1fr;
   }
   .chapter-map {
     padding: 20px;
+  }
+  .preparation-grid {
+    grid-template-columns: 1fr;
+  }
+  .preparation-option {
+    padding: 14px;
+  }
+  .preparation-option span {
+    margin-top: 6px;
+  }
+  .campaign-panel {
+    padding: 20px;
+  }
+  .campaign-stages {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .campaign-actions {
+    flex-direction: column;
+  }
+  .character-file h4 small {
+    display: block;
+    margin-top: 8px;
   }
 }
 .return-banner {

@@ -19,6 +19,9 @@
   const has = (s, id) => s.research.includes(id);
   const equipped = (s, id) =>
     s.equipped.includes(id) ? s.modules[id] || 0 : 0;
+  const storyMission = (m) => m.campaign || m.council || m.rescue;
+  const missionTrack = (s, m) =>
+    m.rescue ? s.rescue : m.council ? s.council : s.campaign;
   const unlocked = (s, item) =>
     s.run.dust >= item.unlock || s.buildings[item.id] > 0;
   function freshTiming(clock = 0, late = false) {
@@ -84,6 +87,14 @@
       chapter: [],
       campaign: { completed: [], preparation: null },
       council: { completed: [], priority: null, preparation: null },
+      rescue: {
+        completed: [],
+        energy: null,
+        berth: false,
+        checks: null,
+        preparation: null,
+        protocol: false,
+      },
       records: [],
       beacon: { nextAt: 45, expiresAt: 0 },
       burstUntil: 0,
@@ -315,20 +326,18 @@
       story.continuity &&
       s.lore.find((r) => r.story === story.continuity.story);
     const context = prior && story.continuity.choices[prior.choice];
-    const mission = D.MISSIONS.find(
-      (m) => (m.campaign || m.council) && m.story === id,
-    );
+    const mission = D.MISSIONS.find((m) => storyMission(m) && m.story === id);
     const record =
       mission &&
       (s.result?.id === mission.id
         ? s.result
-        : (mission.council ? s.council : s.campaign).completed.find(
-            (r) => r.id === mission.id,
-          ));
+        : missionTrack(s, mission).completed.find((r) => r.id === mission.id));
     const preparation = record && byId(D.EXPEDITION_PLANS, record.plan)?.report;
     const focus =
       mission?.requiresPortFocus && byId(D.PORT_FOCUSES, s.council.priority);
-    return [context, preparation, focus && focus.text, story.text]
+    const energy =
+      mission?.rescue && byId(D.RESCUE_ENERGY, s.rescue.energy)?.text;
+    return [context, preparation, focus && focus.text, energy, story.text]
       .filter(Boolean)
       .join(" ");
   }
@@ -338,7 +347,7 @@
     );
   }
   function prepareMission(s, id, plan) {
-    const m = campaignMission(s) || councilMission(s);
+    const m = campaignMission(s) || councilMission(s) || rescueMission(s);
     if (
       !m ||
       m.id !== id ||
@@ -348,12 +357,113 @@
       !byId(D.EXPEDITION_PLANS, plan)
     )
       return false;
-    (m.council ? s.council : s.campaign).preparation = { id, plan };
+    missionTrack(s, m).preparation = { id, plan };
     return true;
   }
   function councilMission(s) {
     if (campaignMission(s) || !s.chapter.includes("lighthouse")) return null;
     return D.COUNCIL_MISSIONS[s.council.completed.length] || null;
+  }
+  function rescueUnlocked(s) {
+    return (
+      s.chapter.includes("lighthouse") &&
+      !campaignMission(s) &&
+      s.council.completed.length === D.COUNCIL_MISSIONS.length &&
+      Boolean(s.council.priority)
+    );
+  }
+  function rescueMission(s) {
+    return rescueUnlocked(s)
+      ? D.RESCUE_MISSIONS[s.rescue.completed.length] || null
+      : null;
+  }
+  function rescueEnergyOffer(s, id) {
+    const energy = byId(D.RESCUE_ENERGY, id);
+    if (!energy) return null;
+    const reason = !rescueUnlocked(s)
+      ? "先完成两港接续演练"
+      : s.rescue.energy
+        ? "供电方案已安排，所有救援航路仍开放"
+        : s.mission || s.result
+          ? "先处理当前航程与报告"
+          : s.buildings.drone < (energy.drones || 0)
+            ? `需要 ${energy.drones} 艘无人机，或选择无需资源的轮换方案`
+            : s.samples < energy.samples
+              ? `需要 ${energy.samples} 份样本，或选择无需资源的轮换方案`
+              : "";
+    return { ...energy, available: !reason, reason };
+  }
+  function arrangeRescueEnergy(s, id) {
+    const offer = rescueEnergyOffer(s, id);
+    if (!offer?.available) return false;
+    s.samples -= offer.samples;
+    s.rescue.energy = id;
+    log(s, `救援供电：${offer.name}。${offer.text}`);
+    return true;
+  }
+  function confirmBackupBerth(s) {
+    if (
+      rescueMission(s)?.requiresBackupBerth !== true ||
+      !s.rescue.energy ||
+      s.rescue.berth ||
+      s.mission ||
+      s.result
+    )
+      return false;
+    s.rescue.berth = true;
+    log(s, "第二队已安排在核验过的备用泊位。等待没有期限；离线不会失去船队。");
+    return true;
+  }
+  function confirmedRescue(s, id) {
+    const checks = s.rescue.checks;
+    return (
+      checks?.id === id &&
+      D.RESCUE_CONFIRMATIONS.every((c) => checks.confirmed.includes(c.id))
+    );
+  }
+  function validRescueSnapshot(s, m, r) {
+    return (
+      !m.rescue ||
+      (r.energy === s.rescue.energy &&
+        byId(D.RESCUE_ENERGY, r.energy) &&
+        (!m.requiresBackupBerth || s.rescue.berth) &&
+        Array.isArray(r.confirmations) &&
+        r.confirmations.length === D.RESCUE_CONFIRMATIONS.length &&
+        D.RESCUE_CONFIRMATIONS.every((c) => r.confirmations.includes(c.id)))
+    );
+  }
+  function confirmRescue(s, id, confirmation) {
+    const m = rescueMission(s);
+    if (
+      !m ||
+      m.id !== id ||
+      !byId(D.RESCUE_CONFIRMATIONS, confirmation) ||
+      !s.rescue.energy ||
+      (m.requiresBackupBerth && !s.rescue.berth) ||
+      s.mission ||
+      s.result
+    )
+      return false;
+    if (s.rescue.checks?.id !== id) s.rescue.checks = { id, confirmed: [] };
+    if (s.rescue.checks.confirmed.includes(confirmation)) return false;
+    s.rescue.checks.confirmed.push(confirmation);
+    return true;
+  }
+  function adoptKeeperProtocol(s) {
+    if (
+      !rescueUnlocked(s) ||
+      rescueMission(s) ||
+      s.rescue.protocol ||
+      s.mission ||
+      s.result
+    )
+      return false;
+    s.rescue.protocol = true;
+    log(
+      s,
+      "两港居民与抵达船长共同确认新守灯协议。三队全部抵达，等待名单清空；轮班人员能够继续维护航路。",
+    );
+    return true;
   }
   function portFocusOffer(s, id) {
     const focus = byId(D.PORT_FOCUSES, id);
@@ -383,17 +493,29 @@
           ? 2
           : campaignMission(s)
             ? 3
-            : 4;
+            : councilMission(s)
+              ? 4
+              : 5;
     return {
       chapter,
-      title: ["最后一盏灯", "远航星图", "白噪声海", "谁的归航权"][chapter - 1],
-      complete: chapter === 4 && !councilMission(s),
+      title: [
+        "最后一盏灯",
+        "远航星图",
+        "白噪声海",
+        "谁的归航权",
+        "没有唯一灯塔",
+      ][chapter - 1],
+      complete: chapter === 5 && s.rescue.protocol,
+      rescued: s.rescue.completed.length,
+      protocol: s.rescue.protocol ? D.KEEPER_PROTOCOL : null,
       priority: byId(D.PORT_FOCUSES, s.council.priority)?.name || null,
       characters: D.CHARACTERS.filter((c) =>
         s.lore.some((r) => r.story === c.story),
       ),
-      letters: D.LETTERS.filter((l) =>
-        s.lore.some((r) => r.story === l.story),
+      letters: D.LETTERS.filter(
+        (l) =>
+          s.lore.some((r) => r.story === l.story) &&
+          (!l.requiresProtocol || s.rescue.protocol),
       ).map((l) => {
         const prior =
           l.continuity && s.lore.find((r) => r.story === l.continuity.story);
@@ -406,11 +528,11 @@
       }),
       entries: s.lore.map((r) => {
         const mission = D.MISSIONS.find(
-          (m) => (m.campaign || m.council) && m.story === r.story,
+          (m) => storyMission(m) && m.story === r.story,
         );
         const record =
           mission &&
-          (mission.council ? s.council : s.campaign).completed.find(
+          missionTrack(s, mission).completed.find(
             (item) => item.id === mission.id,
           );
         return {
@@ -438,6 +560,10 @@
       return s.council.completed.some((r) => r.id === id)
         ? "这段主线已经完成，可在航线档案重读"
         : "先完成上一段两港主线";
+    if (m.rescue && rescueMission(s)?.id !== id)
+      return s.rescue.completed.some((r) => r.id === id)
+        ? "这队已经安全抵达，可在航线档案重读"
+        : "先完成两港演练与上一队救援";
     if (m.requiresStory && !s.lore.some((r) => r.story === m.requiresStory))
       return `先处理「${D.STORIES[m.requiresStory].title}」的故事选择`;
     if (m.requiresPortFocus && !s.council.priority)
@@ -446,6 +572,11 @@
       return `本航次先研究${byId(D.RESEARCH, m.research).name}`;
     if (m.equipment && equipped(s, m.equipment.id) < m.equipment.level)
       return `装备 ${m.equipment.level} 级${byId(D.MODULES, m.equipment.id).name}`;
+    if (m.rescue && !s.rescue.energy) return "先安排救援供电，轮换方案无需资源";
+    if (m.requiresBackupBerth && !s.rescue.berth)
+      return "先确认第二队的备用泊位";
+    if (m.rescue && !confirmedRescue(s, id))
+      return "出发前逐项确认观测窗口、船长意愿与目的港接待";
     return "";
   }
   function missionOptions(s) {
@@ -456,21 +587,23 @@
     if (!m) return null;
     const explorer = s.run.route === "explore";
     const plan =
-      (m.campaign || m.council) &&
+      storyMission(m) &&
       byId(
         D.EXPEDITION_PLANS,
         planId ||
-          ((m.council ? s.council : s.campaign).preparation?.id === id
-            ? (m.council ? s.council : s.campaign).preparation.plan
+          (missionTrack(s, m).preparation?.id === id
+            ? missionTrack(s, m).preparation.plan
             : ""),
       );
     const focus =
       (m.council || m.rescue) && byId(D.PORT_FOCUSES, s.council.priority);
+    const energy = m.rescue && byId(D.RESCUE_ENERGY, s.rescue.energy);
     return {
       seconds: Math.max(
         30,
         Math.ceil(
           m.seconds *
+            (energy ? energy.seconds : 1) *
             (focus ? focus.seconds : 1) *
             (plan ? plan.seconds : 1) *
             (explorer ? 0.65 : 1) *
@@ -491,6 +624,7 @@
       ),
       samples:
         m.samples +
+        (energy ? energy.bonusSamples : 0) +
         (focus ? focus.bonusSamples : 0) +
         (plan ? plan.samples : 0) +
         (explorer ? 1 : 0) +
@@ -509,8 +643,8 @@
       return false;
     const m = byId(D.MISSIONS, id),
       preview = missionPreview(s, id);
-    const track = m.council ? s.council : s.campaign;
-    if ((m.campaign || m.council) && track.preparation?.id !== id) return false;
+    const track = missionTrack(s, m);
+    if (storyMission(m) && track.preparation?.id !== id) return false;
     const succeeded = random(s) < preview.chance;
     const module =
       succeeded && m.chance < 1
@@ -523,9 +657,15 @@
       ...preview,
       succeeded,
       module,
-      ...(m.campaign || m.council ? { plan: track.preparation.plan } : {}),
+      ...(storyMission(m) ? { plan: track.preparation.plan } : {}),
+      ...(m.rescue
+        ? {
+            energy: s.rescue.energy,
+            confirmations: [...s.rescue.checks.confirmed],
+          }
+        : {}),
     };
-    if (m.campaign || m.council) track.preparation = null;
+    if (storyMission(m)) track.preparation = null;
     log(s, `派遣探索：${m.name}，预计 ${preview.seconds} 秒归航。`);
     return true;
   }
@@ -537,7 +677,7 @@
       m.succeeded &&
       def.story &&
       !s.lore.some((entry) => entry.story === def.story) &&
-      (def.chapter || def.campaign || def.council || s.run.choices < 2)
+      (def.chapter || storyMission(def) || s.run.choices < 2)
         ? def.story
         : null;
     s.result = {
@@ -547,7 +687,10 @@
       samples: m.succeeded ? m.samples : 1,
       module: m.module,
       story,
-      ...(def.campaign || def.council ? { plan: m.plan } : {}),
+      ...(storyMission(def) ? { plan: m.plan } : {}),
+      ...(def.rescue
+        ? { energy: m.energy, confirmations: [...m.confirmations] }
+        : {}),
     };
     s.mission = null;
     log(
@@ -603,11 +746,16 @@
     if (!r) return false;
     const mission = byId(D.MISSIONS, r.id);
     if (
-      (mission.campaign || mission.council) &&
-      ((mission.council ? councilMission(s) : campaignMission(s))?.id !==
-        r.id ||
+      storyMission(mission) &&
+      ((mission.rescue
+        ? rescueMission(s)
+        : mission.council
+          ? councilMission(s)
+          : campaignMission(s)
+      )?.id !== r.id ||
         r.story !== mission.story ||
-        !byId(D.EXPEDITION_PLANS, r.plan))
+        !byId(D.EXPEDITION_PLANS, r.plan) ||
+        !validRescueSnapshot(s, mission, r))
     )
       return false;
     const story = r.story && D.STORIES[r.story];
@@ -630,8 +778,7 @@
       }
       s.samples = bounded(s.samples + (choice.samples || 0));
       s.lore.push({ story: r.story, choice: choice.id });
-      if (!mission.chapter && !mission.campaign && !mission.council)
-        s.run.choices++;
+      if (!mission.chapter && !storyMission(mission)) s.run.choices++;
       log(s, `${story.title}：${choice.name}。这段记忆会陪你进入下一航次。`);
     }
     s.discoveries = bounded(s.discoveries + (r.succeeded ? 1 : 0));
@@ -651,6 +798,15 @@
         log(
           s,
           "第四章「谁的归航权」完成。两港的分段接续方案已经归档，三支船队仍在安全等待位置。正式救援将在第五章继续。",
+        );
+    }
+    if (mission.rescue) {
+      s.rescue.completed.push({ id: r.id, plan: r.plan });
+      s.rescue.checks = null;
+      if (!rescueMission(s))
+        log(
+          s,
+          "等待名单上的三队全部抵达。请共同核对守灯协议，中央与现场各自承担可确认的责任。",
         );
     }
     s.result = null;
@@ -874,11 +1030,13 @@
         );
         if (activity && claimed) activity.reportsClaimed++;
       }
-      const newStory = missionOptions(s).some(
-        (m) =>
-          (m.chapter || m.campaign || m.council) &&
-          !s.lore.some((r) => r.story === m.story),
-      );
+      const newStory =
+        missionOptions(s).some(
+          (m) =>
+            (m.chapter || storyMission(m)) &&
+            !s.lore.some((r) => r.story === m.story),
+        ) ||
+        (rescueUnlocked(s) && !s.rescue.protocol);
       if (!s.result && !s.mission && !newStory) {
         const candidate =
           missionOptions(s).find(
@@ -887,7 +1045,8 @@
               m.chance === 1 &&
               !m.chapter &&
               !m.campaign &&
-              !m.council,
+              !m.council &&
+              !m.rescue,
           ) || D.MISSIONS.find((m) => m.id === "belt");
         startMission(s, candidate.id);
       }
@@ -975,6 +1134,17 @@
           }
         : null;
     }
+    if (m.rescue && rescueMission(s)?.id !== id) {
+      const prior = campaignMission(s) || councilMission(s) || rescueMission(s);
+      return prior
+        ? {
+            ...base,
+            title: "继续当前接续",
+            detail: prior.detail,
+            focus: `mission-${prior.id}`,
+          }
+        : null;
+    }
     if (m.requiresStory && !s.lore.some((r) => r.story === m.requiresStory)) {
       const prior = D.MISSIONS.find((item) => item.story === m.requiresStory);
       return (
@@ -1049,6 +1219,34 @@
         focus: `module-${item.id}`,
       };
     }
+    if (m.rescue && !s.rescue.energy)
+      return {
+        ...base,
+        title: "安排救援供电",
+        detail: "比较三种方案，轮换照明无需资源。设施、居民与原始记录保留。",
+        label: "比较供电方案",
+        focus: "rescue-energy",
+      };
+    if (m.requiresBackupBerth && !s.rescue.berth)
+      return {
+        ...base,
+        title: "为第二队安排备用泊位",
+        detail:
+          "窗口提前闭合。先停在核验过的泊位，等待下一次确认；离线不会失败。",
+        label: "确认等待地址",
+        focus: "rescue-berth",
+      };
+    if (m.rescue && !confirmedRescue(s, id))
+      return {
+        ...base,
+        title: "逐项确认这一队的航段",
+        detail: "观测员、船长与目的港各自确认。失联不当作同意。",
+        label: "核对三方应答",
+        focus: "rescue-checks",
+        value:
+          s.rescue.checks?.id === id ? s.rescue.checks.confirmed.length : 0,
+        target: 3,
+      };
     return null;
   }
   function campaignGoal(s) {
@@ -1108,6 +1306,46 @@
       target: 4,
       eta: 0,
     };
+  }
+  function rescueGoal(s) {
+    if (!rescueUnlocked(s) || s.rescue.protocol || !reachable(s, "explore"))
+      return null;
+    if (s.mission)
+      return {
+        title: "等待当前航程归航",
+        detail: "派遣时的准备已锁定。报告会保留，离线不会错过救援。",
+        action: "explore",
+        label: "查看航程",
+        focus: "active-mission",
+        value: s.clock - s.mission.start,
+        target: s.mission.seconds,
+        eta: Math.max(0, s.mission.end - s.clock),
+      };
+    const m = rescueMission(s);
+    if (!m)
+      return {
+        title: "共同确认新的守灯协议",
+        detail:
+          "等待名单上的三队已安全抵达。两港与船长共同核对中央、现场和接班人的责任。",
+        action: "explore",
+        label: "核对守灯协议",
+        focus: "keeper-protocol",
+        value: 3,
+        target: 3,
+        eta: 0,
+      };
+    return (
+      missionPrerequisite(s, m.id) || {
+        title: `${s.rescue.preparation?.id === m.id ? "派遣" : "准备"}${m.name}`,
+        detail: "三方应答已经记录。选择一种航前准备，按核验过的短线逐队接引。",
+        action: "explore",
+        label: "安排救援航程",
+        focus: `mission-${m.id}`,
+        value: s.rescue.completed.length,
+        target: 3,
+        eta: 0,
+      }
+    );
   }
   function chapterGoal(s) {
     if (s.starport < D.PORT.length || !reachable(s, "explore")) return null;
@@ -1262,6 +1500,8 @@
     if (campaign) return campaign;
     const council = councilGoal(s);
     if (council) return council;
+    const rescue = rescueGoal(s);
+    if (rescue) return rescue;
     if (
       s.rebirths === 0 &&
       s.research.length === 0 &&
@@ -1520,6 +1760,49 @@
         id: councilPreparation.id,
         plan: councilPreparation.plan,
       };
+    // Optional fifth-chapter progress is a verified prefix, never a replacement for older chapters.
+    if (rescueUnlocked(s) && byId(D.RESCUE_ENERGY, raw.rescue?.energy)) {
+      s.rescue.energy = raw.rescue.energy;
+      for (const m of D.RESCUE_MISSIONS) {
+        const record = raw.rescue?.completed?.[s.rescue.completed.length];
+        if (
+          record?.id !== m.id ||
+          !byId(D.EXPEDITION_PLANS, record.plan) ||
+          !s.lore.some((r) => r.story === m.story) ||
+          (m.requiresBackupBerth && !s.rescue.berth)
+        )
+          break;
+        s.rescue.completed.push({ id: m.id, plan: record.plan });
+        if (m.id === "convoy-relay" && raw.rescue?.berth === true)
+          s.rescue.berth = true;
+      }
+      const m = rescueMission(s),
+        checks = raw.rescue?.checks;
+      if (
+        m &&
+        checks?.id === m.id &&
+        Array.isArray(checks.confirmed) &&
+        (!m.requiresBackupBerth || s.rescue.berth)
+      )
+        s.rescue.checks = {
+          id: m.id,
+          confirmed: [...new Set(checks.confirmed)].filter((id) =>
+            byId(D.RESCUE_CONFIRMATIONS, id),
+          ),
+        };
+      if (
+        m &&
+        raw.rescue?.preparation?.id === m.id &&
+        confirmedRescue(s, m.id) &&
+        byId(D.EXPEDITION_PLANS, raw.rescue.preparation.plan)
+      )
+        s.rescue.preparation = { id: m.id, plan: raw.rescue.preparation.plan };
+      s.rescue.protocol = !m && raw.rescue?.protocol === true;
+    }
+    s.lore = s.lore.filter((r) => {
+      const m = D.RESCUE_MISSIONS.find((item) => item.story === r.story);
+      return !m || s.rescue.completed.some((record) => record.id === m.id);
+    });
     s.journal = (Array.isArray(raw.journal) ? raw.journal : [])
       .filter((r) => typeof r?.text === "string")
       .slice(0, 12)
@@ -1576,7 +1859,8 @@
         m.chance === 1 &&
         !m.chapter &&
         !m.campaign &&
-        !m.council,
+        !m.council &&
+        !m.rescue,
     )
       ? raw.repeatId
       : "belt";
@@ -1590,18 +1874,27 @@
       const m = byId(D.MISSIONS, r?.id);
       return (
         m &&
-        (!(m.campaign || m.council) ||
+        (!storyMission(m) ||
           (s.chapter.includes("lighthouse") &&
-            (m.council ? councilMission(s) : campaignMission(s))?.id === m.id &&
+            (m.rescue
+              ? rescueMission(s)
+              : m.council
+                ? councilMission(s)
+                : campaignMission(s)
+            )?.id === m.id &&
             (!m.requiresPortFocus || s.council.priority) &&
             r.succeeded === true &&
-            byId(D.EXPEDITION_PLANS, r.plan)))
+            byId(D.EXPEDITION_PLANS, r.plan) &&
+            validRescueSnapshot(s, m, r)))
       );
     };
     const limits = (def) => ({
       seconds: Math.ceil(
         def.seconds *
-          (def.campaign || def.council
+          (def.rescue
+            ? Math.max(...D.RESCUE_ENERGY.map((e) => e.seconds))
+            : 1) *
+          (storyMission(def)
             ? Math.max(...D.EXPEDITION_PLANS.map((p) => p.seconds))
             : 1),
       ),
@@ -1609,10 +1902,13 @@
         4,
         def.samples +
           2 +
-          (def.council
+          (def.rescue
+            ? Math.max(...D.RESCUE_ENERGY.map((e) => e.bonusSamples))
+            : 0) +
+          (def.council || def.rescue
             ? Math.max(...D.PORT_FOCUSES.map((p) => p.bonusSamples))
             : 0) +
-          (def.campaign || def.council
+          (storyMission(def)
             ? Math.max(...D.EXPEDITION_PLANS.map((p) => p.samples))
             : 0),
       ),
@@ -1626,25 +1922,22 @@
         start: Math.min(s.clock, bounded(m.start)),
         end: Math.min(s.clock + max.seconds, bounded(m.end)),
         seconds: bounded(m.seconds, max.seconds),
-        diversion: bounded(
-          m.diversion,
-          def.campaign || def.council ? 0.5 : 0.4,
-        ),
+        diversion: bounded(m.diversion, storyMission(def) ? 0.5 : 0.4),
         chance: bounded(m.chance, 1),
         samples: bounded(m.samples, max.samples),
         dust: bounded(m.dust),
         succeeded: m.succeeded === true,
         module: byId(D.MODULES, m.module) ? m.module : null,
-        ...(def.campaign || def.council ? { plan: m.plan } : {}),
+        ...(storyMission(def) ? { plan: m.plan } : {}),
+        ...(def.rescue
+          ? { energy: m.energy, confirmations: [...m.confirmations] }
+          : {}),
       };
     }
     if (
       raw.result &&
       validCampaign(raw.result) &&
-      (!(
-        byId(D.MISSIONS, raw.result.id).campaign ||
-        byId(D.MISSIONS, raw.result.id).council
-      ) ||
+      (!storyMission(byId(D.MISSIONS, raw.result.id)) ||
         raw.result.story === byId(D.MISSIONS, raw.result.id).story)
     ) {
       const r = raw.result,
@@ -1661,12 +1954,16 @@
           !s.lore.some((entry) => entry.story === r.story)
             ? r.story || null
             : null,
-        ...(def.campaign || def.council ? { plan: r.plan } : {}),
+        ...(storyMission(def) ? { plan: r.plan } : {}),
+        ...(def.rescue
+          ? { energy: r.energy, confirmations: [...r.confirmations] }
+          : {}),
       };
     }
     if (s.mission || s.result) {
       s.campaign.preparation = null;
       s.council.preparation = null;
+      s.rescue.preparation = null;
     }
     if (raw.legacyArchive && typeof raw.legacyArchive === "object")
       s.legacyArchive = clone(raw.legacyArchive);
@@ -1740,6 +2037,14 @@
     campaignMission,
     councilMission,
     councilGoal,
+    rescueUnlocked,
+    rescueMission,
+    rescueGoal,
+    rescueEnergyOffer,
+    arrangeRescueEnergy,
+    confirmBackupBerth,
+    confirmRescue,
+    adoptKeeperProtocol,
     portFocusOffer,
     buildPortFocus,
     prepareMission,

@@ -7,7 +7,7 @@
   "use strict";
   const data = {
     VERSION: 32,
-    GAME_VERSION: "3.4.0-preview.1",
+    GAME_VERSION: "3.5.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -395,6 +395,115 @@
           "无人探针验证双向中继、备用泊位与交班规则，为三支等待的船队制定救援方案。",
       },
     ],
+    RESCUE_ENERGY: [
+      {
+        id: "rotation",
+        name: "轮换照明与储能",
+        samples: 0,
+        seconds: 1.15,
+        bonusSamples: 0,
+        detail: "按已有值班表轮换灯光与充电。无需样本，救援航程增加 15%。",
+        text: "两港错开照明与储能时段，守住供暖和育种所需的电力。慢一点的安排也有完整的救援航路。",
+      },
+      {
+        id: "arrays",
+        name: "转接空闲采集阵列",
+        samples: 6,
+        drones: 10,
+        seconds: 0.85,
+        bonusSamples: 0,
+        detail:
+          "需要 10 艘无人机和 6 份样本制作转接件。救援航程缩短 15%，设施与常态产量保留。",
+        text: "拾荒队用转接件接入空闲充电阵列，让救援船逐段补能。现有无人机继续工作。",
+      },
+      {
+        id: "observatory",
+        name: "回收观测站备用设备",
+        samples: 8,
+        seconds: 1,
+        bonusSamples: 2,
+        detail:
+          "使用 8 份样本改装备用设备，每队救援额外回收 2 份样本。原始观测与居民住所完整保留。",
+        text: "苇把观测记录交给两港保存，维修队只回收已停用的备用设备。留下的灯光仍能让植物休息。",
+      },
+    ],
+    RESCUE_CONFIRMATIONS: [
+      {
+        id: "observer",
+        name: "观测员确认窗口",
+        detail: "核对本段观测与暂停条件；窗口关闭时停在已验证的位置。",
+      },
+      {
+        id: "captain",
+        name: "船长确认出发",
+        detail: "船队知晓等待位置并同意本段出发，中央不能代替船长确认。",
+      },
+      {
+        id: "berth",
+        name: "目的港确认接待",
+        detail: "祁岳核对泊位、供暖与接班人。接待站准备好后才回应。",
+      },
+    ],
+    KEEPER_PROTOCOL:
+      "窗口由观测员确认，出发由船长确认，接待由目的港确认。中央保存原始记录、核验与警告；通信中断时，现场按共同认可的暂停条件等待。任何一方都可以暂停，不把失联当作同意。两港居民与抵达船长共同确认，轮班人员可以继续维护航路。",
+    RESCUE_MISSIONS: [
+      {
+        id: "convoy-relay",
+        name: "第一队 · 中继接引",
+        seconds: 240,
+        diversion: 0.3,
+        yieldSeconds: 210,
+        samples: 10,
+        chance: 1,
+        story: "relay-arrival",
+        unlockPort: 3,
+        rescue: true,
+        project: "lighthouse",
+        requiresStory: "handoff-plan",
+        requiresPortFocus: true,
+        research: "navigation",
+        equipment: { id: "scanner", level: 2 },
+        detail:
+          "接引等待名单上的第一队。阿遥在中继重复观测窗口，船长与灯九分别确认出发和接待。",
+      },
+      {
+        id: "convoy-berth",
+        name: "第二队 · 备用泊位",
+        seconds: 300,
+        diversion: 0.35,
+        yieldSeconds: 250,
+        samples: 12,
+        chance: 1,
+        story: "berth-arrival",
+        unlockPort: 3,
+        rescue: true,
+        project: "lighthouse",
+        requiresStory: "relay-arrival",
+        requiresPortFocus: true,
+        requiresBackupBerth: true,
+        equipment: { id: "nav", level: 2 },
+        detail:
+          "下一段窗口提前闭合。先安排核验过的备用泊位，待新窗口确认后逐段接回第二队。",
+      },
+      {
+        id: "convoy-light",
+        name: "第三队 · 三次灯光",
+        seconds: 330,
+        diversion: 0.35,
+        yieldSeconds: 270,
+        samples: 14,
+        chance: 1,
+        story: "light-arrival",
+        unlockPort: 3,
+        rescue: true,
+        project: "lighthouse",
+        requiresStory: "berth-arrival",
+        requiresPortFocus: true,
+        equipment: { id: "scanner", level: 2 },
+        detail:
+          "最后一队只能用灯光应答。保持距离，收到约定的三次回应，再传送新的窗口和泊位。",
+      },
+    ],
     EXPEDITION_PLANS: [
       {
         id: "calibrate",
@@ -675,6 +784,109 @@
         ],
       },
     },
+    RESCUE_STORIES: {
+      "relay-arrival": {
+        title: "每一段，都有人回应",
+        continuity: {
+          story: "handoff-plan",
+          choices: {
+            "joint-watch":
+              "上一班留下的值守名单，把阿遥和两港的接班人连在一起。",
+            "public-record": "公开的交接记录让每个船长都能检查自己的等待位置。",
+            backup: "上次演练保留的备用电源已经送到中继，暂停条件贴在它旁边。",
+          },
+        },
+        text: "静潮到来时，先前抵达的第一支船队留在港内参与接待。等待名单上还有三队，这次接回其中第一队。归航最初建议统一控制每条船的离港许可，可通信一断，现场就没有授权。你把决定拆成三份：观测员确认窗口，船长确认出发，目的港确认接待。阿遥在中继复述坐标，船长读回一遍，祁岳从灯九发出第三次确认。接引船按核验过的短线逐段停靠，没有一盏灯替所有人做决定。第一队安全入港，船长留下自己的应答记录。第二队下一段的窗口提前闭合，阿遥提出把船队安置在已经验证的备用泊位，等待下一次确认。",
+        choices: [
+          {
+            id: "watch",
+            name: "把应答交给下一班",
+            detail: "额外 8 份样本，接班记录永久保存。",
+            samples: 8,
+          },
+          {
+            id: "captains",
+            name: "让抵达船长参与核验",
+            detail: "惯性导航仪升 1 级；满级转为 8 份样本。",
+            module: "nav",
+            overflowSamples: 8,
+          },
+          {
+            id: "supply",
+            name: "先安置伤员与补给",
+            detail: "额外获得 180 秒产量的星尘。",
+            dustSeconds: 180,
+          },
+        ],
+      },
+      "berth-arrival": {
+        title: "等待也有一个地址",
+        continuity: {
+          story: "relay-arrival",
+          choices: {
+            watch: "接班人接过第一队的应答记录，知道什么时候应该停止。",
+            captains: "刚抵达的船长坐在观测台旁，用自己的航段记录核对新窗口。",
+            supply:
+              "灯九为伤员腾出的接待位置，让第二队能明确知道到达后的安排。",
+          },
+        },
+        text: "窗口关闭后，第二队在已核验的备用泊位停下。阿遥带着储能与值班组守在中继，祁岳先安排灯九接收需要照护的人。等待没有期限，也不因你离开而变成失败。新的短窗口出现后，观测员重新核对边界，船长自己确认出发，灯九检查泊位与接班人员后才回应。第二队依次越过短线，最后一条船读回接待地址。归航保存了关闭、等待和重新出发的三份记录：一次暂停，也是协议正确工作的结果。还有第三队，通信设备已经失效，只能亮起简单的灯。",
+        choices: [
+          {
+            id: "address",
+            name: "公开备用泊位地址",
+            detail: "额外 10 份样本，等待记录永久保存。",
+            samples: 10,
+          },
+          {
+            id: "care",
+            name: "先把下一班照护排好",
+            detail: "医疗舱电源升 1 级；满级转为 8 份样本。",
+            module: "medbay",
+            overflowSamples: 8,
+          },
+          {
+            id: "pause",
+            name: "保留关闭窗口的原始记录",
+            detail: "额外获得 210 秒产量的星尘。",
+            dustSeconds: 210,
+          },
+        ],
+      },
+      "light-arrival": {
+        title: "先来坐一会儿",
+        continuity: {
+          story: "berth-arrival",
+          choices: {
+            address: "备用泊位的公开地址给最后一队留下了能再次等待的位置。",
+            care: "照护和接班安排已就绪，灯九在回应之前核查了它们。",
+            pause: "上一段关闭窗口的记录提醒观测员，这次也不能凭愿望出发。",
+          },
+        },
+        text: "导航仪找到了第三队的轨道，却不能替代他们的出发意愿。你保持距离，按约定发出三次短脉冲。片刻后，对面也闪了三次。阿遥想起医院船，但她知道这次灯后面有活着的人，正在等待回答。观测员核验新窗口，船长用灯光确认，祁岳读出能接住他们的泊位。最后一条船停稳时，一个孩子举着空水瓶问能不能装满。阿遥说：『能。先来坐一会儿。』归航把等待名单上的三队全部标为安全抵达，先前入港的船队也结束了这一班值守。旧守灯协议仍需明确新的适用范围；两港居民和抵达船长一起等待你的最后核对。",
+        choices: [
+          {
+            id: "water",
+            name: "先把水和座位准备好",
+            detail: "额外 12 份样本，救援记录永久保存。",
+            samples: 12,
+          },
+          {
+            id: "signals",
+            name: "把灯光约定留给船长",
+            detail: "残骸透镜升 1 级；满级转为 8 份样本。",
+            module: "scanner",
+            overflowSamples: 8,
+          },
+          {
+            id: "repair",
+            name: "安排修船、补给与轮班",
+            detail: "额外获得 240 秒产量的星尘。",
+            dustSeconds: 240,
+          },
+        ],
+      },
+    },
     COUNCIL_STORIES: {
       "council-log": {
         title: "我们今天还能接住谁",
@@ -810,6 +1022,35 @@
       },
     ],
     LETTERS: [
+      {
+        id: "relay-duty",
+        from: "ayao",
+        story: "relay-arrival",
+        title: "中继里的下一班",
+        text: "今天读回坐标的人，明天也能把记录交给别人。我把每段暂停的位置标在值班表上。灯不是只交给一个人，它也交给下一班。",
+      },
+      {
+        id: "waiting-address",
+        from: "qiyue",
+        story: "berth-arrival",
+        title: "暂停的船也有泊位",
+        text: "我以前总想把每一段航程一次排完。今天我们确认窗口关闭，船队有了能安全等待的地址。等下一次打开时，我们重新问一遍：你准备好了么，我们接得住么。",
+      },
+      {
+        id: "living-light",
+        from: "ayao",
+        story: "light-arrival",
+        title: "灯后面的人",
+        text: "最后一队回应的时候，我想起禾。过去那一天没有改变，但今天有人抵达，有人问水，有人开始下一班。我想给他们留一张能坐下来的椅子。",
+      },
+      {
+        id: "shared-protocol",
+        from: "qiyue",
+        story: "light-arrival",
+        requiresProtocol: true,
+        title: "我们共同签名的规则",
+        text: "新守灯协议已经由两港和抵达船长确认。中央继续核验，现场有权暂停，下一班知道如何接替。等待名单清空了，接下来慢慢修船、补给，讨论我们要把这里建成什么样的家。",
+      },
       {
         id: "today",
         from: "ayao",
@@ -962,7 +1203,7 @@
       },
     ],
   };
-  data.MISSIONS.push(...data.COUNCIL_MISSIONS);
-  Object.assign(data.STORIES, data.COUNCIL_STORIES);
+  data.MISSIONS.push(...data.COUNCIL_MISSIONS, ...data.RESCUE_MISSIONS);
+  Object.assign(data.STORIES, data.COUNCIL_STORIES, data.RESCUE_STORIES);
   return Object.freeze(data);
 });

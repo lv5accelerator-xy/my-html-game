@@ -394,7 +394,7 @@
     const header = `<div class="section-title"><div><small>第四章 · ${m ? "当前安排" : "已完成"}</small><h2>谁的归航权</h2></div><span>准备 ${count} / 4</span></div>`;
     const archiveLink = `<button class="outline" ${action("nav", "explore")} data-goal-focus="route-archive">重读两港记录与人物来信 →</button>`;
     if (!m)
-      return `<section class="campaign-panel council-panel council-complete" aria-label="谁的归航权">${header}<h3>把承诺交给下一班。</h3><p>${focus.name}已建成。双向中继、备用泊位与暂停条件完成演练，所有记录永久保留。</p><p>第一支船队在港，另外三支船队安全等待。第五章《没有唯一灯塔》的正式救援将在后续版本开放；你可以继续生产与两港补给，离线不会导致剧情失败。</p>${archiveLink}</section>`;
+      return `<details class="campaign-panel council-panel council-complete campaign-complete" aria-label="谁的归航权" data-details-key="chapter-four"><summary data-focus="chapter-four">第四章已完成 · 展开两港准备记录</summary>${header}<h3>把承诺交给下一班。</h3><p>${focus.name}已建成。双向中继、备用泊位与暂停条件完成演练，所有记录永久保留。</p><p>第五章《没有唯一灯塔》的救援已开放，可以逐队确认并接引。你可以继续生产与两港补给，离线不会导致剧情失败。</p>${archiveLink}</details>`;
     const phases = [
       "双港会议与离港日志",
       "港口建设重点",
@@ -420,19 +420,53 @@
     )}</div>${state.samples < 18 ? prerequisiteButton(m.id) : ""}</article>`;
     return `<section class="campaign-panel council-panel" aria-label="谁的归航权">${header}<ol class="campaign-stages">${phases.map((p, i) => `<li ${i === count ? 'aria-current="step"' : ""}>${i < count ? "✓" : `0${i + 1}`} ${p}</li>`).join("")}</ol>${focusStatus}${building ? construction : preparedVoyage(m, state.council)}</section>`;
   }
+  function rescuePanel() {
+    if (!E.rescueUnlocked(state)) return "";
+    const m = E.rescueMission(state),
+      count = state.rescue.completed.length,
+      energy = D.RESCUE_ENERGY.find((e) => e.id === state.rescue.energy),
+      busy = Boolean(state.mission || state.result);
+    const header = `<div class="section-title"><div><small>第五章 · ${state.rescue.protocol ? "已完成" : m ? "当前接引" : "协议核对"}</small><h2>没有唯一灯塔</h2></div><span>安全抵达 ${count} / 3</span></div>`;
+    const stages = `<ol class="campaign-stages">${D.RESCUE_MISSIONS.map((item, i) => `<li ${i === count ? 'aria-current="step"' : ""}>${i < count ? "✓" : `0${i + 1}`} ${item.name}</li>`).join("")}</ol>`;
+    const archive = `<button class="outline" ${action("nav", "explore")} data-goal-focus="route-archive">重读救援记录与人物来信 →</button>`;
+    if (!m)
+      return `<section class="campaign-panel rescue-panel rescue-complete" aria-label="没有唯一灯塔">${header}${stages}<article id="keeper-protocol" tabindex="-1"><h3>${state.rescue.protocol ? "新守灯协议 · 已共同签署" : "最后一项：共同核对守灯协议"}</h3><p>先前抵达的船队结束这一班值守，等待名单上的三队全部安全入港。</p><p>${D.KEEPER_PROTOCOL}</p>${state.rescue.protocol ? `<p class="protocol-signed">✓ 等待名单已清空，交接记录永久归档。</p><p>修船、补给与轮班可以继续。第六章《给未来一个地址》将在后续版本开放，三种建港方向均保留结局入口。</p>${archive}` : `<p>核对后由两港居民和抵达船长共同签署，不消耗资源。</p><button class="primary" ${action("keeper-protocol")} ${busy ? "disabled" : ""}>共同确认新守灯协议</button>`}</article></section>`;
+    const power = energy
+      ? `<div class="port-focus-built" id="rescue-energy" tabindex="-1"><strong>救援供电 · ${energy.name}</strong><p>${energy.detail}</p></div>`
+      : `<article id="rescue-energy" tabindex="-1"><h3>先安排救援供电</h3><p>三种方案只作用于本章救援，确认后保留。轮换照明无需资源，所有方向都能接回三队。</p><div class="port-focus-grid">${D.RESCUE_ENERGY.map(
+          (e) => {
+            const offer = E.rescueEnergyOffer(state, e.id),
+              preview = E.missionPreview(
+                { ...state, rescue: { ...state.rescue, energy: e.id } },
+                m.id,
+                "relay",
+              );
+            return `<div class="port-focus-option"><h4>${e.name}</h4><p>${e.detail}</p><p class="focus-example">第一队 · 分段接续：${duration(preview.seconds)} · ${preview.samples} 样本</p>${offer.reason ? `<small>${offer.reason}</small>` : ""}<button class="outline" ${action("rescue-energy", e.id)} ${offer.available ? "" : "disabled"}>安排 · ${e.samples ? `${e.samples} 样本` : "无需资源"}</button></div>`;
+          },
+        ).join("")}</div></article>`;
+    const berth = m.requiresBackupBerth
+      ? `<article class="rescue-wait" id="rescue-berth" tabindex="-1"><h3>窗口关闭时，先给等待一个地址</h3><p>第二队停在核验过的备用泊位，由阿遥与轮班队照看。等待没有期限，离线不会导致失败。</p>${state.rescue.berth ? "<p>✓ 备用泊位和接班人已确认。核验下一窗口后再出发。</p>" : `<button class="outline" ${action("rescue-berth")} ${!energy || busy ? "disabled" : ""}>确认备用泊位与接班人</button>`}</article>`
+      : "";
+    const checks =
+      state.rescue.checks?.id === m.id ? state.rescue.checks.confirmed : [];
+    const confirmations = `<article id="rescue-checks" tabindex="-1"><h3>每队出发前，三方重新确认</h3><p>通信中断时停在已核验的位置。收到明确应答后再选择航前准备。</p><div class="rescue-confirmations">${D.RESCUE_CONFIRMATIONS.map((c) => `<div class="rescue-confirmation"><strong>${c.name}</strong><p>${c.detail}</p><button class="outline" ${action("rescue-check", c.id)} data-mission="${m.id}" ${!energy || busy || (m.requiresBackupBerth && !state.rescue.berth) || checks.includes(c.id) ? "disabled" : ""}>${checks.includes(c.id) ? "✓ 已确认" : "记录确认"}</button></div>`).join("")}</div><p role="status">本队三方应答：${checks.length} / 3 · 各队分别核对</p></article>`;
+    return `<section class="campaign-panel rescue-panel" aria-label="没有唯一灯塔">${header}${stages}${power}${berth}${confirmations}${preparedVoyage(m, state.rescue)}</section>`;
+  }
   function loadoutPanel() {
     if (!Object.values(state.modules).some((n) => n > 0)) return "";
     let m =
       E.campaignMission(state) ||
       E.councilMission(state) ||
+      E.rescueMission(state) ||
       D.MISSIONS.find((m) => m.id === state.repeatId);
     if (
       (state.mission || state.result)?.id === m.id &&
-      (m.campaign || m.council)
+      (m.campaign || m.council || m.rescue)
     ) {
       const stages = [
         ...D.MISSIONS.filter((m) => m.campaign),
         ...D.COUNCIL_MISSIONS,
+        ...D.RESCUE_MISSIONS,
       ];
       m =
         stages[stages.findIndex((item) => item.id === m.id) + 1] ||
@@ -463,8 +497,8 @@
     const archive = E.routeArchive(state);
     const sender = (id) => D.CHARACTERS.find((c) => c.id === id).name;
     return `<details class="route-archive" id="route-archive" tabindex="-1" data-details-key="lore"><summary data-focus="details-lore">航线与人物档案 · ${state.lore.length} 段故事</summary>
-      <p class="archive-current">当前：第${archive.chapter}章 · ${archive.title}${archive.complete ? " · 两港救援准备完成" : ""}</p>
-      <p>第一章 · 星港 ${state.starport} / 3　第二章 · 建设 ${state.chapter.length} / 3　第三章 · 交接 ${state.campaign.completed.length} / 3　第四章 · 准备 ${state.council.completed.length + (state.council.priority ? 1 : 0)} / 4</p>${archive.priority ? `<p>永久建设方向：${archive.priority}。所有救援与结局入口保留。</p>` : ""}
+      <p class="archive-current">当前：第${archive.chapter}章 · ${archive.title}${archive.complete ? " · 三队安全抵达，协议已签署" : ""}</p>
+      <p>第一章 · 星港 ${state.starport} / 3　第二章 · 建设 ${state.chapter.length} / 3　第三章 · 交接 ${state.campaign.completed.length} / 3　第四章 · 准备 ${state.council.completed.length + (state.council.priority ? 1 : 0)} / 4　第五章 · 救援 ${archive.rescued} / 3</p>${archive.priority ? `<p>永久建设方向：${archive.priority}。所有救援与结局入口保留。</p>` : ""}${archive.protocol ? `<h3>共同签署的守灯协议</h3><p>${archive.protocol}</p>` : ""}
       <h3>人物与来信</h3>${
         archive.characters
           .map(
@@ -485,9 +519,9 @@
   function explore() {
     const port = D.PORT[state.starport];
     return `<div class="page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${councilPanel()}${campaignPanel()}${chapterMap()}
+      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
-        .filter((m) => !m.chapter && !m.campaign && !m.council)
+        .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
           const p = E.missionPreview(state, m.id);
           return `<div class="mission-row" id="mission-${m.id}" tabindex="-1"><div><h3>${m.name}</h3><p>${m.detail}</p></div><div class="mission-metrics"><small>${duration(p.seconds)} · 分流 ${Math.round(p.diversion * 100)}%</small><p>成功率 ${Math.round(p.chance * 100)}%<br>成功回收 ${number(p.dust)} 星尘<br>${p.samples} 份样本</p></div><div class="row-action"><button class="${m.chance < 1 ? "" : "outline"}" ${action("mission", m.id)} ${state.mission || state.result ? "disabled" : ""}>${m.chance < 1 ? "风险派遣" : "安全派遣"}</button></div></div>`;
@@ -640,6 +674,7 @@
       state.chapter,
       state.campaign,
       state.council,
+      state.rescue,
       state.loadouts,
       state.samples,
       state.equipped,
@@ -836,6 +871,30 @@
           `${D.PORT_FOCUSES.find((p) => p.id === id).name}已建成，航程预览已更新。`,
         );
       }
+    } else if (kind === "rescue-energy") {
+      const offer = E.rescueEnergyOffer(state, id);
+      if (!offer?.available) return;
+      openDialog(
+        "安排本章救援供电？",
+        `<p>${offer.name}：${offer.detail}</p><p>本章统一使用此方案，确认后保存，使用 ${offer.samples} 份样本。三队均能安全抵达。</p><div class="dialog-actions"><button ${action("cancel")}>继续比较</button><button class="primary" ${action("confirm-rescue-energy", id)}>确认供电安排</button></div>`,
+      );
+      return;
+    } else if (kind === "confirm-rescue-energy") {
+      if (E.arrangeRescueEnergy(state, id)) {
+        closeDialog();
+        toast("救援供电已安排，每队出发前逐项确认应答。");
+      }
+    } else if (kind === "rescue-berth") {
+      if (E.confirmBackupBerth(state))
+        toast("备用泊位与接班人已确认，等待没有期限。");
+    } else if (kind === "rescue-check") {
+      if (E.confirmRescue(state, button.dataset.mission, id))
+        toast(
+          `${D.RESCUE_CONFIRMATIONS.find((c) => c.id === id).name}已记录。`,
+        );
+    } else if (kind === "keeper-protocol") {
+      if (E.adoptKeeperProtocol(state))
+        toast("新守灯协议已共同签署，等待名单清空。");
     } else if (kind === "module") {
       if (E.buildModule(state, id))
         toast(

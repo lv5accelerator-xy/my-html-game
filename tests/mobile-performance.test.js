@@ -382,6 +382,7 @@ async function main() {
     await page.click("#performance-button");
     await page.waitForTimeout(120);
     const beforeBackground = await page.evaluate(() => ({
+      at: Date.now(),
       dust: window.StellarOutpostCloudBridge.createSnapshot().dust,
       diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
       rate: window.StellarOutpostCloudBridge.getStarportDiagnostics().automaticRate,
@@ -410,17 +411,22 @@ async function main() {
     });
     await page.waitForTimeout(350);
     const resumed = await page.evaluate(() => ({
+      at: Date.now(),
       dust: window.StellarOutpostCloudBridge.createSnapshot().dust,
       diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
     }));
     const settledDust = resumed.dust - beforeBackground.dust;
+    // Browser scheduling can exceed the requested 700 + 350 ms on a busy runner.
+    // Compare against elapsed time, allowing one current-mode tick at each boundary.
+    const elapsedSeconds = (resumed.at - beforeBackground.at) / 1000;
+    const boundarySeconds = beforeBackground.diagnostics.gameTickInterval * 2 / 1000;
     assert.ok(
       settledDust > beforeBackground.rate * 0.65,
       "background production must include the paused interval after resume",
     );
     assert.ok(
-      settledDust < beforeBackground.rate * 1.4,
-      "background settlement must not duplicate production",
+      settledDust < beforeBackground.rate * (elapsedSeconds + boundarySeconds),
+      `background settlement must not duplicate production: gained=${settledDust}, rate=${beforeBackground.rate}, elapsed=${elapsedSeconds}`,
     );
     assert.equal(resumed.diagnostics.gameLoopScheduled, true);
     assert.equal(resumed.diagnostics.starfield.scheduled, true);

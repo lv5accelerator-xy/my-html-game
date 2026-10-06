@@ -1577,6 +1577,32 @@ p {
   cursor: pointer;
   color: var(--teal);
 }
+.rescue-confirmations {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.rescue-confirmation {
+  min-width: 0;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.rescue-wait {
+  padding: 20px;
+  margin: 24px 0;
+  border-left: 2px solid var(--amber);
+  background: var(--surface);
+}
+.protocol-signed {
+  color: var(--teal);
+}
+@media (max-width: 760px) {
+  .rescue-confirmations {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 760px) {
   .port-focus-grid,
   .loadout-grid,

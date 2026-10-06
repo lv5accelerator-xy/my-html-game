@@ -1347,6 +1347,12 @@ async function run() {
           assert.equal(completed.council.completed.length, 3);
           assert.equal(completed.lore.length, 11);
           assert.deepEqual(completed.lore.slice(0, 8), chapterFour.lore);
+          assert.equal(
+            await page.locator(".council-complete").getAttribute("open"),
+            null,
+          );
+          assert.ok(await page.locator(".rescue-panel").isVisible());
+          await page.locator('[data-focus="chapter-four"]').click();
           assert.match(
             await page.locator(".council-complete").innerText(),
             /离线不会导致剧情失败/,
@@ -1367,7 +1373,7 @@ async function run() {
             .click();
           assert.match(
             await page.locator(".archive-current").innerText(),
-            /第4章/,
+            /第5章/,
           );
           await page.locator('[data-focus="letter-next-watch"]').click();
           assert.match(
@@ -1475,6 +1481,309 @@ async function run() {
         await page.locator("#confirm-import").click();
         assert.deepEqual((await read(page)).loadouts, saved.loadouts);
         assert.deepEqual((await read(page)).mission, launched);
+      },
+    );
+    function rescueReady(focus = "reception") {
+      const s = E.sanitize(structuredClone(chapterFour), TIME);
+      const finish = (id) => {
+        assert.ok(E.prepareMission(s, id, "relay"));
+        assert.ok(E.startMission(s, id));
+        E.advance(s, s.lastAt + s.mission.seconds * 1000);
+        assert.ok(E.claimMission(s, D.STORIES[s.result.story].choices[0].id));
+      };
+      finish("port-council");
+      assert.ok(E.buildPortFocus(s, focus));
+      finish("old-observatory");
+      finish("shared-watch");
+      s.lastAt = TIME;
+      s.beacon.expiresAt = 0;
+      return s;
+    }
+    for (const [index, focus] of D.PORT_FOCUSES.entries()) {
+      const initial = rescueReady(focus.id),
+        energy = D.RESCUE_ENERGY[index];
+      delete initial.rescue; // Published v3.4 progress gets only optional empty rescue fields.
+      await scenario(
+        `chapter five ${focus.name}/${energy.name}: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump`,
+        { [S.KEY]: JSON.stringify(initial) },
+        async (page) => {
+          const loaded = await read(page);
+          for (const key of [
+            "dust",
+            "samples",
+            "cores",
+            "buildings",
+            "research",
+            "modules",
+            "lore",
+            "campaign",
+            "council",
+            "loadouts",
+          ])
+            assert.deepEqual(loaded[key], initial[key]);
+          await page.locator('#main [data-goal-focus="rescue-energy"]').click();
+          assert.equal(
+            await page.locator(".campaign-complete[open]").count(),
+            0,
+          );
+          assert.equal(await page.locator(".rescue-panel").count(), 1);
+          for (const width of [1280, 375]) {
+            await page.setViewportSize({ width, height: 900 });
+            await noOverflow(page);
+            if (screenshotDir && index === 0)
+              await page
+                .locator("#rescue-energy")
+                .screenshot({
+                  path: path.join(screenshotDir, `rescue-energy-${width}.png`),
+                });
+          }
+          await page.clock.runFor(5000);
+          const before = await read(page);
+          await page
+            .locator(`[data-action="rescue-energy"][data-id="${energy.id}"]`)
+            .click();
+          await noOverflow(page);
+          await page.keyboard.press("Escape");
+          assert.equal((await read(page)).rescue.energy, null);
+          assert.equal((await read(page)).samples, before.samples);
+          await page
+            .locator(`[data-action="rescue-energy"][data-id="${energy.id}"]`)
+            .click();
+          await page
+            .locator(
+              `[data-action="confirm-rescue-energy"][data-id="${energy.id}"]`,
+            )
+            .click();
+          assert.equal(
+            (await read(page)).samples,
+            before.samples - energy.samples,
+          );
+          const storyChoices = ["watch", "address", "water"];
+          for (const [i, m] of D.RESCUE_MISSIONS.entries()) {
+            if (m.requiresBackupBerth) {
+              assert.ok(
+                await page
+                  .locator(`[data-action="mission"][data-id="${m.id}"]`)
+                  .isDisabled(),
+              );
+              assert.ok(
+                await page
+                  .locator('[data-action="rescue-check"][data-id="captain"]')
+                  .isDisabled(),
+              );
+              const waiting = (await read(page)).rescue;
+              await page.clock.fastForward(8 * 3600 * 1000);
+              await page.locator('#dialog [data-action="return-next"]').click();
+              assert.deepEqual((await read(page)).rescue, waiting);
+              assert.match(
+                await page.locator("#rescue-berth").innerText(),
+                /等待没有期限/,
+              );
+              await page.locator('[data-action="rescue-berth"]').click();
+              assert.equal((await read(page)).rescue.berth, true);
+            }
+            assert.equal(
+              (await read(page)).rescue.checks,
+              null,
+              "each convoy needs fresh consent",
+            );
+            await page
+              .locator('[data-action="rescue-check"][data-id="captain"]')
+              .click();
+            assert.ok(
+              await page
+                .locator(`[data-action="mission"][data-id="${m.id}"]`)
+                .isDisabled(),
+            );
+            assert.ok(
+              await page
+                .locator('[data-action="prepare"][data-id="relay"]')
+                .isDisabled(),
+            );
+            await page.reload();
+            assert.deepEqual((await read(page)).rescue.checks.confirmed, [
+              "captain",
+            ]);
+            await page
+              .locator('#main [data-goal-focus="rescue-checks"]')
+              .click();
+            assert.equal(
+              await page.evaluate(() => document.activeElement.id),
+              "rescue-checks",
+            );
+            await page
+              .locator('[data-action="rescue-check"][data-id="observer"]')
+              .click();
+            await page
+              .locator('[data-action="rescue-check"][data-id="berth"]')
+              .click();
+            const plan = D.EXPEDITION_PLANS[i];
+            await page
+              .locator(`[data-action="prepare"][data-id="${plan.id}"]`)
+              .click();
+            const prepared = await read(page),
+              preview = E.missionPreview(prepared, m.id);
+            assert.equal(prepared.rescue.preparation.plan, plan.id);
+            for (const width of [1280, 375]) {
+              await page.setViewportSize({ width, height: 900 });
+              await noOverflow(page);
+              if (screenshotDir && index === 0 && i === 1) {
+                await page.locator("#rescue-berth").scrollIntoViewIfNeeded();
+                await page.clock.runFor(3500);
+                await page.screenshot({
+                  path: path.join(screenshotDir, `backup-consent-${width}.png`),
+                });
+              }
+            }
+            await page
+              .locator(`[data-action="mission"][data-id="${m.id}"]`)
+              .click();
+            const launched = (await read(page)).mission;
+            for (const key of ["seconds", "samples", "dust", "diversion"])
+              assert.equal(launched[key], preview[key]);
+            assert.equal(launched.confirmations.length, 3);
+            await page
+              .locator(`[data-action="equip"][data-id="${m.equipment.id}"]`)
+              .click();
+            await page.locator('#navigation [data-id="home"]').click();
+            assert.equal(
+              await page.locator("#next-goal-title").innerText(),
+              "等待当前航程归航",
+            );
+            await page.reload();
+            assert.deepEqual((await read(page)).mission, launched);
+            await page
+              .locator('#main [data-goal-focus="active-mission"]')
+              .click();
+            await page.clock.fastForward(8 * 3600 * 1000);
+            await page.locator('#dialog [data-action="return-next"]').click();
+            assert.equal((await read(page)).rescue.completed.length, i);
+            assert.equal((await read(page)).result.samples, launched.samples);
+            assert.match(
+              await page.locator("#report").innerText(),
+              new RegExp(D.STORIES[m.story].title),
+            );
+            await noOverflow(page);
+            await page
+              .locator(`[data-action="claim"][data-id="${storyChoices[i]}"]`)
+              .click();
+            assert.equal((await read(page)).rescue.completed.length, i + 1);
+            assert.equal((await read(page)).result, null);
+            await page
+              .locator(`[data-action="equip"][data-id="${m.equipment.id}"]`)
+              .click();
+          }
+          const rescued = await read(page);
+          assert.equal(rescued.rescue.protocol, false);
+          assert.match(
+            await page.locator("#keeper-protocol").innerText(),
+            /三队全部安全入港/,
+          );
+          await page.locator('[data-action="keeper-protocol"]').click();
+          const completed = await read(page);
+          assert.equal(completed.rescue.protocol, true);
+          assert.equal(completed.samples, rescued.samples);
+          assert.equal(
+            await page.locator('[data-action="keeper-protocol"]').count(),
+            0,
+          );
+          for (const width of [1280, 375]) {
+            await page.setViewportSize({ width, height: 900 });
+            await noOverflow(page);
+            if (screenshotDir && index === 0)
+              await page
+                .locator("#keeper-protocol")
+                .screenshot({
+                  path: path.join(
+                    screenshotDir,
+                    `protocol-signed-${width}.png`,
+                  ),
+                });
+          }
+          await page
+            .locator('.rescue-panel [data-goal-focus="route-archive"]')
+            .click();
+          assert.match(
+            await page.locator(".archive-current").innerText(),
+            /第5章.*三队安全抵达/,
+          );
+          await page.locator('[data-focus="letter-shared-protocol"]').click();
+          assert.match(
+            await page
+              .locator('[data-details-key="letter-shared-protocol"]')
+              .innerText(),
+            /等待名单清空/,
+          );
+          assert.equal((await read(page)).samples, completed.samples);
+          await page.locator("#settings-button").click();
+          const downloaded = page.waitForEvent("download");
+          await page.locator('[data-action="export"]').click();
+          const download = await downloaded,
+            source = await download.path(),
+            exported = JSON.parse(fs.readFileSync(source, "utf8"));
+          assert.deepEqual(exported.rescue, completed.rescue);
+          await page.keyboard.press("Escape");
+          await page.locator("#settings-button").click();
+          await page
+            .locator("#import-file")
+            .setInputFiles({
+              name: "rescue-record.json",
+              mimeType: "application/json",
+              buffer: Buffer.from(JSON.stringify(exported)),
+            });
+          await page.locator("#confirm-import").click();
+          assert.deepEqual((await read(page)).rescue, completed.rescue);
+          await page.locator('#navigation [data-id="jump"]').click();
+          await page.locator('[data-action="jump"]').click();
+          await page.locator('[data-action="confirm-jump"]').click();
+          await page.reload();
+          assert.deepEqual((await read(page)).rescue, completed.rescue);
+          assert.deepEqual((await read(page)).lore, completed.lore);
+        },
+      );
+    }
+    const scarce = rescueReady();
+    scarce.samples = 0;
+    scarce.buildings.drone = 1;
+    await scenario(
+      "rescue with no spare resources: paid options disabled, free rotation remains reachable, manual supply and safe waiting",
+      { [S.KEY]: JSON.stringify(scarce) },
+      async (page) => {
+        await page.locator('#main [data-goal-focus="rescue-energy"]').click();
+        assert.ok(
+          await page
+            .locator('[data-action="rescue-energy"][data-id="arrays"]')
+            .isDisabled(),
+        );
+        assert.ok(
+          await page
+            .locator('[data-action="rescue-energy"][data-id="observatory"]')
+            .isDisabled(),
+        );
+        assert.ok(
+          await page
+            .locator('[data-action="rescue-energy"][data-id="rotation"]')
+            .isEnabled(),
+        );
+        await page.setViewportSize({ width: 375, height: 900 });
+        await noOverflow(page);
+        await page
+          .locator('[data-action="rescue-energy"][data-id="rotation"]')
+          .click();
+        await page
+          .locator('[data-action="confirm-rescue-energy"][data-id="rotation"]')
+          .click();
+        assert.equal((await read(page)).samples, 0);
+        for (const c of D.RESCUE_CONFIRMATIONS)
+          await page
+            .locator(`[data-action="rescue-check"][data-id="${c.id}"]`)
+            .click();
+        await page.locator('[data-action="prepare"][data-id="relay"]').click();
+        await page
+          .locator('[data-action="mission"][data-id="convoy-relay"]')
+          .click();
+        assert.equal((await read(page)).mission.id, "convoy-relay");
+        await noOverflow(page);
       },
     );
     console.log(

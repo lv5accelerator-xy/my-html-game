@@ -1210,7 +1210,8 @@ test("all nine original choices, every port direction, preparation and new choic
           assert.deepEqual(s.lore.slice(0, 8), original);
           assert.deepEqual(s.campaign, campaign);
           assert.equal(s.run.choices, 2);
-          assert.ok(E.routeArchive(s).complete);
+          assert.equal(E.routeArchive(s).chapter, 5);
+          assert.equal(E.routeArchive(s).complete, false);
           assert.equal(E.routeArchive(s).letters.length, 8);
           assert.equal(E.routeArchive(s).priority, focus.name);
           assert.deepEqual(E.sanitize(s, s.lastAt), s);
@@ -1227,7 +1228,7 @@ test("port directions have distinct bounded effects on later voyages, never chan
     assert.ok(E.buildPortFocus(s, focus.id));
     const before = structuredClone(s);
     previews.push(E.missionPreview(s, "old-observatory", "relay"));
-    for (const m of D.MISSIONS.filter((m) => !m.council))
+    for (const m of D.MISSIONS.filter((m) => !m.council && !m.rescue))
       assert.deepEqual(
         E.missionPreview(s, m.id, "relay"),
         E.missionPreview(base, m.id, "relay"),
@@ -1414,19 +1415,334 @@ test("eight hours offline never choose port construction or council stories; com
     loadouts = structuredClone(s.loadouts);
   E.configure(s, { dispatch: true });
   E.advance(s, s.lastAt + 1000);
-  assert.equal(s.mission.id, "supply-run");
+  assert.equal(s.mission, null, "the new rescue waits for manual confirmation");
+  assert.ok(
+    E.startMission(s, "supply-run"),
+    "ordinary safe voyages remain playable",
+  );
   E.advance(s, s.lastAt + s.mission.seconds * 1000);
   assert.equal(s.result, null);
   assert.deepEqual(s.council, completed);
   assert.deepEqual(s.lore, lore);
   E.configure(s, { dispatch: false });
-  E.advance(s, s.lastAt + s.mission.seconds * 1000);
-  E.claimMission(s);
+  assert.equal(s.mission, null);
   s.run.dust = D.PRESTIGE_DUST;
   assert.ok(E.prestige(s));
   assert.deepEqual(s.council, completed);
   assert.deepEqual(s.lore, lore);
   assert.deepEqual(s.loadouts, loadouts);
   assert.deepEqual(E.sanitize(s, s.lastAt), s);
+});
+function fifthChapterReady(focus = "reception") {
+  const s = fourthChapterReady();
+  finishVoyage(s, "port-council");
+  assert.ok(E.buildPortFocus(s, focus));
+  finishVoyage(s, "old-observatory");
+  finishVoyage(s, "shared-watch");
+  return s;
+}
+function rescueChecks(s, id) {
+  for (const c of D.RESCUE_CONFIRMATIONS)
+    assert.ok(E.confirmRescue(s, id, c.id));
+}
+function finishRescue(s, m, plan = "relay", choice) {
+  if (m.requiresBackupBerth) assert.ok(E.confirmBackupBerth(s));
+  rescueChecks(s, m.id);
+  finishVoyage(s, m.id, plan, choice);
+}
+test("rescue requires the completed drill and manual energy; the resource-free plan works without ships, samples or lost records", () => {
+  const early = fourthChapterReady();
+  assert.equal(E.rescueUnlocked(early), false);
+  assert.equal(E.rescueMission(early), null);
+  assert.equal(E.arrangeRescueEnergy(early, "rotation"), false);
+  assert.equal(E.confirmRescue(early, "convoy-relay", "observer"), false);
+  assert.equal(E.adoptKeeperProtocol(early), false);
+  const s = fifthChapterReady();
+  s.samples = 0;
+  s.buildings.drone = 1;
+  const before = structuredClone(s),
+    rate = E.rawRate(s);
+  assert.equal(E.nextGoal(s).focus, "rescue-energy");
+  assert.equal(E.startMission(s, "convoy-relay"), false);
+  assert.equal(E.prepareMission(s, "convoy-relay", "relay"), false);
+  assert.equal(E.rescueEnergyOffer(s, "arrays").available, false);
+  assert.equal(E.rescueEnergyOffer(s, "observatory").available, false);
+  assert.ok(E.arrangeRescueEnergy(s, "rotation"));
+  assert.equal(E.arrangeRescueEnergy(s, "arrays"), false);
+  assert.equal(E.arrangeRescueEnergy(s, "rotation"), false);
+  assert.equal(E.rawRate(s), rate);
+  for (const key of [
+    "samples",
+    "cores",
+    "dust",
+    "buildings",
+    "research",
+    "lore",
+    "campaign",
+    "council",
+  ])
+    assert.deepEqual(s[key], before[key]);
+  assert.deepEqual(E.sanitize(s, s.lastAt), s);
+  for (const m of D.RESCUE_MISSIONS) finishRescue(s, m);
+  assert.ok(E.adoptKeeperProtocol(s));
+});
+test("every original choice, port direction, energy and preparation rescues three distinct teams with single rewards and unchanged prior chapters", () => {
+  for (const hospital of D.STORIES.hospital.choices)
+    for (const garden of D.STORIES.garden.choices)
+      for (const focus of D.PORT_FOCUSES)
+        for (const energy of D.RESCUE_ENERGY)
+          for (const plan of D.EXPEDITION_PLANS) {
+            const s = fifthChapterReady(focus.id);
+            s.lore[0].choice = hospital.id;
+            s.lore[1].choice = garden.id;
+            s.run.choices = 2;
+            const original = structuredClone(s.lore),
+              campaign = structuredClone(s.campaign),
+              council = structuredClone(s.council);
+            const samples = s.samples;
+            assert.ok(E.arrangeRescueEnergy(s, energy.id));
+            assert.equal(s.samples, samples - energy.samples);
+            for (const [i, m] of D.RESCUE_MISSIONS.entries()) {
+              assert.equal(E.rescueMission(s).id, m.id);
+              if (m.requiresBackupBerth) assert.ok(E.confirmBackupBerth(s));
+              rescueChecks(s, m.id);
+              assert.ok(E.prepareMission(s, m.id, plan.id));
+              const preview = E.missionPreview(s, m.id),
+                choice =
+                  D.STORIES[m.story].choices[D.EXPEDITION_PLANS.indexOf(plan)]
+                    .id;
+              assert.ok(E.startMission(s, m.id));
+              for (const key of ["seconds", "diversion", "samples", "dust"])
+                assert.equal(s.mission[key], preview[key]);
+              assert.equal(s.mission.energy, energy.id);
+              assert.equal(s.mission.confirmations.length, 3);
+              assert.deepEqual(E.sanitize(s, s.lastAt), s);
+              E.advance(s, s.lastAt + preview.seconds * 1000, {
+                offline: true,
+              });
+              const result = structuredClone(s.result);
+              assert.equal(s.rescue.completed.length, i);
+              assert.ok(E.claimMission(s, choice));
+              assert.equal(s.rescue.checks, null);
+              assert.equal(s.rescue.completed.length, i + 1);
+              const awarded = structuredClone(s);
+              s.result = result;
+              assert.equal(E.claimMission(s, choice), false);
+              assert.equal(E.sanitize(s, s.lastAt).result, null);
+              s.result = null;
+              assert.deepEqual(s, awarded);
+              assert.deepEqual(E.sanitize(s, s.lastAt), s);
+            }
+            assert.equal(E.rescueMission(s), null);
+            assert.equal(s.rescue.protocol, false);
+            assert.equal(E.nextGoal(s).focus, "keeper-protocol");
+            assert.equal(E.routeArchive(s).complete, false);
+            assert.ok(E.adoptKeeperProtocol(s));
+            const signed = structuredClone(s);
+            assert.equal(E.adoptKeeperProtocol(s), false);
+            assert.deepEqual(s, signed);
+            assert.equal(E.routeArchive(s).complete, true);
+            assert.equal(E.routeArchive(s).letters.length, 12);
+            assert.equal(s.lore.length, 14);
+            assert.deepEqual(s.lore.slice(0, 11), original);
+            assert.deepEqual(s.campaign, campaign);
+            assert.deepEqual(s.council, council);
+            assert.equal(s.run.choices, 2);
+            assert.match(
+              E.storyText(s, "light-arrival"),
+              new RegExp(energy.text),
+            );
+          }
+});
+test("three independent confirmations survive refresh, cannot be reused, and backup waiting has no offline deadline", () => {
+  let s = fifthChapterReady();
+  E.arrangeRescueEnergy(s, "rotation");
+  assert.equal(E.confirmRescue(s, "convoy-berth", "observer"), false);
+  assert.equal(E.confirmRescue(s, "convoy-relay", "missing"), false);
+  assert.ok(E.confirmRescue(s, "convoy-relay", "captain"));
+  assert.equal(E.confirmRescue(s, "convoy-relay", "captain"), false);
+  assert.equal(E.prepareMission(s, "convoy-relay", "relay"), false);
+  s = E.sanitize(s, s.lastAt);
+  assert.deepEqual(s.rescue.checks.confirmed, ["captain"]);
+  E.confirmRescue(s, "convoy-relay", "observer");
+  E.confirmRescue(s, "convoy-relay", "berth");
+  finishVoyage(s, "convoy-relay");
+  assert.equal(E.nextGoal(s).focus, "rescue-berth");
+  assert.equal(E.confirmRescue(s, "convoy-berth", "observer"), false);
+  assert.equal(E.startMission(s, "convoy-berth"), false);
+  E.configure(s, { dispatch: true });
+  const rescue = structuredClone(s.rescue),
+    lore = structuredClone(s.lore),
+    samples = s.samples;
+  E.advance(s, s.lastAt + 8 * 3600 * 1000, { offline: true });
+  assert.deepEqual(s.rescue, rescue);
+  assert.deepEqual(s.lore, lore);
+  assert.equal(s.samples, samples);
+  assert.equal(s.mission, null);
+  assert.ok(E.confirmBackupBerth(s));
+  assert.equal(E.confirmBackupBerth(s), false);
+  s = E.sanitize(s, s.lastAt);
+  assert.equal(s.rescue.berth, true);
+  assert.equal(E.nextGoal(s).focus, "rescue-checks");
+  assert.equal(s.rescue.checks, null);
+});
+test("long rescue snapshots and rewards survive all gear changes, reloads and eight-hour returns while remaining manual", () => {
+  for (const focus of D.PORT_FOCUSES) {
+    let s = fifthChapterReady(focus.id);
+    E.arrangeRescueEnergy(s, "rotation");
+    rescueChecks(s, "convoy-relay");
+    E.prepareMission(s, "convoy-relay", "supply");
+    E.equip(s, "nav");
+    assert.ok(E.startMission(s, "convoy-relay"));
+    const snapshot = structuredClone(s.mission);
+    assert.ok(
+      snapshot.seconds >
+        D.RESCUE_MISSIONS[0].seconds * (focus.id === "archive" ? 0.85 : 1),
+    );
+    E.equip(s, "scanner");
+    assert.equal(E.nextGoal(s).focus, "active-mission");
+    s = E.sanitize(s, s.lastAt);
+    assert.deepEqual(s.mission, snapshot);
+    E.configure(s, { dispatch: true });
+    E.advance(s, s.lastAt + 8 * 3600 * 1000, { offline: true });
+    assert.equal(s.result.samples, snapshot.samples);
+    assert.equal(s.result.dust, snapshot.dust);
+    assert.equal(s.result.story, "relay-arrival");
+    assert.equal(s.rescue.completed.length, 0);
+    assert.equal(E.adoptKeeperProtocol(s), false);
+    assert.deepEqual(E.sanitize(s, s.lastAt).result, s.result);
+    const pending = structuredClone(s.result);
+    E.advance(s, s.lastAt + 8 * 3600 * 1000, { offline: true });
+    assert.deepEqual(s.result, pending);
+    assert.ok(E.claimMission(s, "watch"));
+    assert.equal(s.rescue.completed.length, 1);
+  }
+});
+test("energy effects change rescue previews only; paid arrangements charge once and do not remove any buildings, modules or observations", () => {
+  const base = fifthChapterReady(),
+    metrics = [];
+  for (const energy of D.RESCUE_ENERGY) {
+    const s = structuredClone(base),
+      before = structuredClone(s);
+    assert.ok(E.arrangeRescueEnergy(s, energy.id));
+    assert.equal(s.samples, before.samples - energy.samples);
+    assert.equal(E.arrangeRescueEnergy(s, energy.id), false);
+    assert.equal(s.samples, before.samples - energy.samples);
+    for (const key of [
+      "buildings",
+      "modules",
+      "equipped",
+      "lore",
+      "chapter",
+      "campaign",
+      "council",
+    ])
+      assert.deepEqual(s[key], before[key]);
+    assert.equal(E.rawRate(s), E.rawRate(base));
+    for (const m of D.MISSIONS.filter((m) => !m.rescue))
+      assert.deepEqual(
+        E.missionPreview(s, m.id, "relay"),
+        E.missionPreview(base, m.id, "relay"),
+      );
+    const original = structuredClone(s);
+    metrics.push(E.missionPreview(s, "convoy-relay", "relay"));
+    E.routeArchive(s);
+    E.rescueEnergyOffer(s, energy.id);
+    E.nextGoal(s);
+    assert.deepEqual(s, original);
+  }
+  assert.ok(
+    metrics[0].seconds > metrics[2].seconds &&
+      metrics[2].seconds > metrics[1].seconds,
+  );
+  assert.equal(metrics[2].samples, metrics[0].samples + 2);
+  assert.equal(metrics[0].dust, metrics[1].dust);
+});
+test("invalid rescue records, consent snapshots and premature signatures cannot skip teams, duplicate rewards or erase valid earlier choices", () => {
+  const s = fifthChapterReady(),
+    defaults = structuredClone(s.rescue);
+  const fake = structuredClone(s);
+  fake.rescue = {
+    ...defaults,
+    energy: "unknown",
+    protocol: true,
+    berth: true,
+    completed: [{ id: "convoy-light", plan: "relay" }],
+  };
+  fake.lore.push({ story: "light-arrival", choice: "water" });
+  const clean = E.sanitize(fake, fake.lastAt);
+  assert.deepEqual(clean.rescue, defaults);
+  assert.deepEqual(clean.lore, s.lore);
+  E.arrangeRescueEnergy(s, "rotation");
+  rescueChecks(s, "convoy-relay");
+  E.prepareMission(s, "convoy-relay", "relay");
+  E.startMission(s, "convoy-relay");
+  for (const bad of [
+    [],
+    ["observer", "observer", "berth"],
+    ["observer", "captain", "unknown"],
+  ]) {
+    const invalid = structuredClone(s);
+    invalid.mission.confirmations = bad;
+    assert.equal(E.sanitize(invalid, invalid.lastAt).mission, null);
+  }
+  const invalidEnergy = structuredClone(s);
+  invalidEnergy.mission.energy = "arrays";
+  assert.equal(E.sanitize(invalidEnergy, invalidEnergy.lastAt).mission, null);
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  for (const bad of [[], ["observer", "captain", "captain"]]) {
+    const invalid = structuredClone(s);
+    invalid.result.confirmations = bad;
+    assert.equal(E.claimMission(invalid, "watch"), false);
+    assert.equal(E.sanitize(invalid, invalid.lastAt).result, null);
+  }
+  E.claimMission(s, "watch");
+  const skip = structuredClone(s);
+  skip.rescue.completed.push({ id: "convoy-berth", plan: "relay" });
+  skip.lore.push({ story: "berth-arrival", choice: "address" });
+  skip.rescue.protocol = true;
+  const truncated = E.sanitize(skip, skip.lastAt);
+  assert.equal(truncated.rescue.completed.length, 1);
+  assert.equal(truncated.rescue.protocol, false);
+  assert.deepEqual(truncated.lore, s.lore);
+});
+test("completed rescue, consent protocol and energy survive prestige and export/import; auto safe supply resumes only after signing", () => {
+  let s = fifthChapterReady("ecology");
+  E.arrangeRescueEnergy(s, "observatory");
+  for (const m of D.RESCUE_MISSIONS) finishRescue(s, m);
+  E.configure(s, { dispatch: true });
+  E.advance(s, s.lastAt + 1000);
+  assert.equal(s.mission, null);
+  assert.ok(E.adoptKeeperProtocol(s));
+  const rescue = structuredClone(s.rescue),
+    lore = structuredClone(s.lore);
+  E.advance(s, s.lastAt + 1000);
+  assert.equal(s.mission.id, "supply-run");
+  E.configure(s, { dispatch: false });
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  E.claimMission(s);
+  s.run.dust = D.PRESTIGE_DUST;
+  assert.ok(E.prestige(s));
+  assert.deepEqual(s.rescue, rescue);
+  assert.deepEqual(s.lore, lore);
+  const storage = memory();
+  S.save(storage, s);
+  s = S.restore(storage, JSON.stringify(s), s.lastAt);
+  assert.deepEqual(s.rescue, rescue);
+  assert.deepEqual(E.sanitize(s, s.lastAt), s);
+  assert.match(E.routeArchive(s).protocol, /失联当作同意/);
+});
+test("v3.4 ready, partially prepared, active and pending council saves acquire only optional rescue defaults", () => {
+  for (const stage of ["ready", "prepared", "active", "report", "complete"]) {
+    const s = stage === "complete" ? fifthChapterReady() : fourthChapterReady();
+    if (["prepared", "active", "report"].includes(stage))
+      E.prepareMission(s, "port-council", "supply");
+    if (["active", "report"].includes(stage)) E.startMission(s, "port-council");
+    if (stage === "report") E.advance(s, s.lastAt + s.mission.seconds * 1000);
+    const empty = structuredClone(s.rescue);
+    delete s.rescue;
+    assert.deepEqual(E.sanitize(s, s.lastAt), { ...s, rescue: empty });
+  }
+  assert.equal(D.VERSION, 32);
 });
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

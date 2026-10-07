@@ -1577,6 +1577,67 @@ p {
   cursor: pointer;
   color: var(--teal);
 }
+.ending-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.ending-option {
+  border: 1px solid var(--line);
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.ending-option button {
+  margin-top: auto;
+}
+.ending-option small,
+.epilogue-context {
+  color: var(--teal);
+}
+.epilogue-handoffs {
+  margin: 24px 0;
+}
+.epilogue-handoffs details {
+  border-top: 1px solid var(--line);
+  padding: 18px 0;
+}
+.epilogue-handoffs summary {
+  cursor: pointer;
+  color: var(--teal);
+}
+.ending-quote {
+  border-left: 3px solid var(--amber);
+  margin: 24px 0;
+  padding: 12px 18px;
+  color: var(--amber);
+  line-height: 1.8;
+}
+.ending-record {
+  max-width: 76ch;
+}
+.ending-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+@media (max-width: 650px) {
+  .ending-grid {
+    grid-template-columns: 1fr;
+  }
+  .ending-option {
+    padding: 16px;
+  }
+  .ending-actions {
+    flex-direction: column;
+  }
+  .ending-actions button {
+    width: 100%;
+  }
+}
 .rescue-confirmations {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

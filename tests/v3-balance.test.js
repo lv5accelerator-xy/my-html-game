@@ -326,6 +326,23 @@ function verify() {
           );
         assert.ok(fifth.samples >= 0 && fifth.cores >= 0);
         assert.ok(fifth.clock - start <= 20 * 60);
+        // All three endings branch from the same earned save without extra resources or timers.
+        for (const ending of D.ENDINGS) {
+          const sixth = structuredClone(fifth);
+          for (const h of D.EPILOGUE_HANDOFFS)
+            assert.ok(E.confirmEpilogue(sixth, h.id));
+          assert.ok(E.chooseEnding(sixth, ending.id));
+          for (const key of Object.keys(fifth).filter(
+            (k) => !["epilogue", "journal"].includes(k),
+          ))
+            assert.deepEqual(
+              sixth[key],
+              fifth[key],
+              `earned ending preserves ${key}`,
+            );
+          assert.equal(E.routeArchive(sixth).complete, true);
+          assert.ok(E.reachable(sixth, E.nextGoal(sixth).action));
+        }
         fifthChapterRows.push({
           preparation: plan.name,
           port: focus.name,
@@ -343,6 +360,9 @@ function verify() {
   console.table(thirdChapterRows);
   console.table(fourthChapterRows);
   console.table(fifthChapterRows);
+  console.log(
+    "v3 ending balance ok: 81 earned-save branches, zero added resource costs or wait timers, free play retained",
+  );
   return rows;
 }
 if (require.main === module) verify();

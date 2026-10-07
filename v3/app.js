@@ -429,8 +429,12 @@
     const header = `<div class="section-title"><div><small>第五章 · ${state.rescue.protocol ? "已完成" : m ? "当前接引" : "协议核对"}</small><h2>没有唯一灯塔</h2></div><span>安全抵达 ${count} / 3</span></div>`;
     const stages = `<ol class="campaign-stages">${D.RESCUE_MISSIONS.map((item, i) => `<li ${i === count ? 'aria-current="step"' : ""}>${i < count ? "✓" : `0${i + 1}`} ${item.name}</li>`).join("")}</ol>`;
     const archive = `<button class="outline" ${action("nav", "explore")} data-goal-focus="route-archive">重读救援记录与人物来信 →</button>`;
-    if (!m)
-      return `<section class="campaign-panel rescue-panel rescue-complete" aria-label="没有唯一灯塔">${header}${stages}<article id="keeper-protocol" tabindex="-1"><h3>${state.rescue.protocol ? "新守灯协议 · 已共同签署" : "最后一项：共同核对守灯协议"}</h3><p>先前抵达的船队结束这一班值守，等待名单上的三队全部安全入港。</p><p>${D.KEEPER_PROTOCOL}</p>${state.rescue.protocol ? `<p class="protocol-signed">✓ 等待名单已清空，交接记录永久归档。</p><p>修船、补给与轮班可以继续。第六章《给未来一个地址》将在后续版本开放，三种建港方向均保留结局入口。</p>${archive}` : `<p>核对后由两港居民和抵达船长共同签署，不消耗资源。</p><button class="primary" ${action("keeper-protocol")} ${busy ? "disabled" : ""}>共同确认新守灯协议</button>`}</article></section>`;
+    if (!m) {
+      const body = `${header}${stages}<article id="keeper-protocol" tabindex="-1"><h3>${state.rescue.protocol ? "新守灯协议 · 已共同签署" : "最后一项：共同核对守灯协议"}</h3><p>先前抵达的船队结束这一班值守，等待名单上的三队全部安全入港。</p><p>${D.KEEPER_PROTOCOL}</p>${state.rescue.protocol ? `<p class="protocol-signed">✓ 等待名单已清空，交接记录永久归档。</p><p>第六章《给未来一个地址》已开放。听完居民交接，再公开选择一个未来；所有建港方向均可抵达三种结局。</p>${archive}` : `<p>核对后由两港居民和抵达船长共同签署，不消耗资源。</p><button class="primary" ${action("keeper-protocol")} ${busy ? "disabled" : ""}>共同确认新守灯协议</button>`}</article>`;
+      return state.rescue.protocol
+        ? `<details class="campaign-panel rescue-panel rescue-complete campaign-complete" aria-label="没有唯一灯塔" data-details-key="chapter-five"><summary data-focus="chapter-five">第五章已完成 · 展开三队救援与协议</summary>${body}</details>`
+        : `<section class="campaign-panel rescue-panel rescue-complete" aria-label="没有唯一灯塔">${body}</section>`;
+    }
     const power = energy
       ? `<div class="port-focus-built" id="rescue-energy" tabindex="-1"><strong>救援供电 · ${energy.name}</strong><p>${energy.detail}</p></div>`
       : `<article id="rescue-energy" tabindex="-1"><h3>先安排救援供电</h3><p>三种方案只作用于本章救援，确认后保留。轮换照明无需资源，所有方向都能接回三队。</p><div class="port-focus-grid">${D.RESCUE_ENERGY.map(
@@ -451,6 +455,31 @@
       state.rescue.checks?.id === m.id ? state.rescue.checks.confirmed : [];
     const confirmations = `<article id="rescue-checks" tabindex="-1"><h3>每队出发前，三方重新确认</h3><p>通信中断时停在已核验的位置。收到明确应答后再选择航前准备。</p><div class="rescue-confirmations">${D.RESCUE_CONFIRMATIONS.map((c) => `<div class="rescue-confirmation"><strong>${c.name}</strong><p>${c.detail}</p><button class="outline" ${action("rescue-check", c.id)} data-mission="${m.id}" ${!energy || busy || (m.requiresBackupBerth && !state.rescue.berth) || checks.includes(c.id) ? "disabled" : ""}>${checks.includes(c.id) ? "✓ 已确认" : "记录确认"}</button></div>`).join("")}</div><p role="status">本队三方应答：${checks.length} / 3 · 各队分别核对</p></article>`;
     return `<section class="campaign-panel rescue-panel" aria-label="没有唯一灯塔">${header}${stages}${power}${berth}${confirmations}${preparedVoyage(m, state.rescue)}</section>`;
+  }
+  function endingText(ending) {
+    return `${ending.paragraphs.map((p) => `<p>${escape(p)}</p>`).join("")}<blockquote class="ending-quote">${escape(ending.quote)}</blockquote>`;
+  }
+  function epiloguePanel() {
+    if (!E.epilogueUnlocked(state)) return "";
+    const selected = D.ENDINGS.find((e) => e.id === state.epilogue.ending);
+    const supplyFocus = state.result
+      ? "report"
+      : state.mission
+        ? "active-mission"
+        : "mission-supply-run";
+    const supplyLabel = state.result
+      ? "查看归航报告"
+      : state.mission
+        ? "查看补给进度"
+        : "继续两港补给";
+    const endings = [...D.ENDINGS].sort(
+      (a, b) =>
+        Number(b.proposal === state.council.priority) -
+        Number(a.proposal === state.council.priority),
+    );
+    const choices = `<article id="ending-choices" tabindex="-1"><h3>${selected ? "公开尾声 · 可以重读，不会改写选择" : "这次会议，由你明确选择"}</h3><p>三个结局无需资源。先阅读尾声，再二次确认；确认后永久保留，不自动选择、不重复发奖。${selected ? "未选择的尾声仅供预览。" : "先前建设只影响提案顺序，所有选择均开放。"}</p><div class="ending-grid">${endings.map((e) => `<div class="ending-option"><small>${e.id === state.epilogue.ending ? "✓ 已选择" : e.proposal === state.council.priority ? "居民先提出的方案 · 不是默认选择" : "公开提案"}</small><h4>${e.title}</h4><p>${e.summary}</p><button class="outline" ${action("ending-preview", e.id)} ${!selected && !E.endingOffer(state, e.id).available ? "disabled" : ""}>${selected ? "重读尾声" : "阅读尾声与选择"}</button></div>`).join("")}</div></article>`;
+    const residents = `<div class="epilogue-handoffs">${D.EPILOGUE_HANDOFFS.map((h) => `<details id="epilogue-${h.id}" tabindex="-1" data-details-key="epilogue-${h.id}" ${!state.epilogue.confirmed.includes(h.id) ? "open" : ""}><summary>${state.epilogue.confirmed.includes(h.id) ? "✓ " : ""}${h.title}</summary>${h.paragraphs.map((p) => `<p>${escape(p)}</p>`).join("")}${state.epilogue.confirmed.includes(h.id) ? "<small>交接已保存 · 重读不发奖</small>" : `<button class="outline" ${action("epilogue-confirm", h.id)}>${h.label}</button>`}</details>`).join("")}</div>`;
+    return `<section class="campaign-panel epilogue-panel" aria-label="给未来一个地址"><div class="section-title"><div><small>第六章 · ${selected ? "主线已完成" : "共同交接"}</small><h2>给未来一个地址</h2></div><span>居民交接 ${state.epilogue.confirmed.length} / 3</span></div>${selected ? `<article class="ending-record" id="ending-record" tabindex="-1"><small>你的永久结局</small><h3>${selected.title}</h3>${endingText(selected)}<p class="protocol-signed">✓ 六章主线已完成。生产、舰装、自由探索与跃迁继续开放；结局与全部建设跨航次保留。</p><div class="ending-actions"><button class="primary" ${action("nav", "fleet")}>继续扩建舰队</button><button class="outline" ${action("nav", "explore")} data-goal-focus="${supplyFocus}">${supplyLabel}</button><button class="outline" ${action("nav", "explore")} data-goal-focus="route-archive">回顾完整航线</button></div></article>` : D.EPILOGUE_INTRO.map((p) => `<p>${escape(p)}</p>`).join("")}<p class="epilogue-context">${escape(E.epilogueContext(state))}</p>${residents}${choices}</section>`;
   }
   function loadoutPanel() {
     if (!Object.values(state.modules).some((n) => n > 0)) return "";
@@ -497,8 +526,9 @@
     const archive = E.routeArchive(state);
     const sender = (id) => D.CHARACTERS.find((c) => c.id === id).name;
     return `<details class="route-archive" id="route-archive" tabindex="-1" data-details-key="lore"><summary data-focus="details-lore">航线与人物档案 · ${state.lore.length} 段故事</summary>
-      <p class="archive-current">当前：第${archive.chapter}章 · ${archive.title}${archive.complete ? " · 三队安全抵达，协议已签署" : ""}</p>
+      <p class="archive-current">当前：第${archive.chapter}章 · ${archive.title}${archive.complete ? ` · 主线完成 · ${archive.ending.title}` : ""}</p>
       <p>第一章 · 星港 ${state.starport} / 3　第二章 · 建设 ${state.chapter.length} / 3　第三章 · 交接 ${state.campaign.completed.length} / 3　第四章 · 准备 ${state.council.completed.length + (state.council.priority ? 1 : 0)} / 4　第五章 · 救援 ${archive.rescued} / 3</p>${archive.priority ? `<p>永久建设方向：${archive.priority}。所有救援与结局入口保留。</p>` : ""}${archive.protocol ? `<h3>共同签署的守灯协议</h3><p>${archive.protocol}</p>` : ""}
+      ${archive.epilogueContext ? `<h3>第六章 · 居民交接 ${archive.handoffs.length} / 3</h3><p>${escape(archive.epilogueContext)}</p>${archive.handoffs.map((h) => `<details data-details-key="archive-handoff-${h.id}"><summary>${h.title} · 已记录</summary>${h.paragraphs.map((p) => `<p>${escape(p)}</p>`).join("")}</details>`).join("")}` : ""}${archive.ending ? `<article class="ending-record"><h3>永久结局 · ${archive.ending.title}</h3>${endingText(archive.ending)}<p>只读回顾，不消耗资源、不改写结局。</p></article>` : ""}
       <h3>人物与来信</h3>${
         archive.characters
           .map(
@@ -519,7 +549,7 @@
   function explore() {
     const port = D.PORT[state.starport];
     return `<div class="page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
+      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
         .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
@@ -675,6 +705,7 @@
       state.campaign,
       state.council,
       state.rescue,
+      state.epilogue,
       state.loadouts,
       state.samples,
       state.equipped,
@@ -722,7 +753,7 @@
         Array.from(
           $("#main").querySelectorAll("details[data-details-key]"),
         ).forEach((el) => {
-          el.open = openDetails.get(el.dataset.detailsKey) || false;
+          el.open = openDetails.get(el.dataset.detailsKey) ?? el.open;
         });
         if (focus) {
           const replacement = document.querySelector(
@@ -895,6 +926,21 @@
     } else if (kind === "keeper-protocol") {
       if (E.adoptKeeperProtocol(state))
         toast("新守灯协议已共同签署，等待名单清空。");
+    } else if (kind === "epilogue-confirm") {
+      if (E.confirmEpilogue(state, id)) toast("居民交接已保存，不消耗资源。");
+    } else if (kind === "ending-preview") {
+      const offer = E.endingOffer(state, id);
+      if (!offer || (!offer.available && !state.epilogue.ending)) return;
+      openDialog(
+        `${state.epilogue.ending ? "尾声重读" : "结局预览"} · ${offer.title}`,
+        `${endingText(offer)}<p>${state.epilogue.ending ? "此处仅为阅读，不会改写已经确认的结局。" : "这是永久结局，确认后不能改选。无需资源，不重置进度；结局后仍能自由游玩。"}</p><div class="dialog-actions"><button ${action("cancel")}>${state.epilogue.ending ? "返回星港" : "继续比较"}</button>${offer.available ? `<button class="primary" ${action("confirm-ending", id)}>确认结局 · ${offer.title}</button>` : ""}</div>`,
+      );
+      return;
+    } else if (kind === "confirm-ending") {
+      if (E.chooseEnding(state, id)) {
+        closeDialog();
+        toast("六章主线已完成。你的结局永久保留，星港仍然继续运转。");
+      }
     } else if (kind === "module") {
       if (E.buildModule(state, id))
         toast(

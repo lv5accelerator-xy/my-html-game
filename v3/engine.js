@@ -95,6 +95,7 @@
         preparation: null,
         protocol: false,
       },
+      epilogue: { confirmed: [], ending: null },
       records: [],
       beacon: { nextAt: 45, expiresAt: 0 },
       burstUntil: 0,
@@ -485,6 +486,87 @@
     log(s, `${offer.name}建成：${offer.text} 永久保留；所有救援航路仍然开放。`);
     return true;
   }
+  function epilogueUnlocked(s) {
+    return rescueUnlocked(s) && s.rescue.protocol && !rescueMission(s);
+  }
+  function confirmEpilogue(s, id) {
+    if (
+      !epilogueUnlocked(s) ||
+      s.epilogue.ending ||
+      !byId(D.EPILOGUE_HANDOFFS, id) ||
+      s.epilogue.confirmed.includes(id)
+    )
+      return false;
+    s.epilogue.confirmed.push(id);
+    log(s, `${byId(D.EPILOGUE_HANDOFFS, id).title}：交接记录已永久保存。`);
+    return true;
+  }
+  function endingOffer(s, id) {
+    const ending = byId(D.ENDINGS, id);
+    if (!ending) return null;
+    return {
+      ...ending,
+      available:
+        epilogueUnlocked(s) &&
+        !s.epilogue.ending &&
+        D.EPILOGUE_HANDOFFS.every((h) => s.epilogue.confirmed.includes(h.id)),
+    };
+  }
+  function chooseEnding(s, id) {
+    if (!endingOffer(s, id)?.available) return false;
+    s.epilogue.ending = id;
+    log(
+      s,
+      `第六章完成 · ${byId(D.ENDINGS, id).title}。结局永久归档，生产、补给与下一航次继续开放。`,
+    );
+    return true;
+  }
+  function epilogueContext(s) {
+    const hospital = s.lore.find((r) => r.story === "hospital")?.choice;
+    const garden = s.lore.find((r) => r.story === "garden")?.choice;
+    const memories = [
+      {
+        scrap:
+          "曾经拆解的医院船材料，如今由接班人维护；船体编号与核验记录没有被删掉。",
+        repair:
+          "曾经修复的同源备用电源，仍在中继工作；禾留下的记录交由家属确认。",
+        preserve:
+          "曾经保存的平安讯息，如今由阿遥决定保存与展示方式，来源与时间继续保留。",
+      }[hospital],
+      {
+        scrap:
+          "曾经回收的温室构件继续发挥作用，原地培育记录与下一季种苗仍有地址。",
+        repair: "曾经修复的集光阵，仍按植物需要提供光照。",
+        preserve: "曾经带回的幼苗，已经能够分株，留下了下一季的种子。",
+      }[garden],
+      {
+        reception: "接待员先提出共同星港的方案。",
+        archive: "独立审核员先提出守望港的方案。",
+        ecology: "园丁先提出携种远航的方案。",
+      }[s.council.priority],
+      "提案顺序来自你先前的建设；所有三种未来仍然开放，由这次会议明确选择。",
+    ];
+    return memories.filter(Boolean).join(" ");
+  }
+  function epilogueGoal(s) {
+    if (!epilogueUnlocked(s) || s.epilogue.ending || !reachable(s, "explore"))
+      return null;
+    const handoff = D.EPILOGUE_HANDOFFS.find(
+      (h) => !s.epilogue.confirmed.includes(h.id),
+    );
+    return {
+      title: handoff ? handoff.title : "为星港选择一个未来",
+      detail: handoff
+        ? "听完居民的后续安排，记录交接。无需资源，不会改变正在进行的补给。"
+        : "三份交接已经保存。公开阅读三个尾声，再明确确认一个永久结局。",
+      action: "explore",
+      label: handoff ? "查看居民交接" : "查看三个结局",
+      focus: handoff ? `epilogue-${handoff.id}` : "ending-choices",
+      value: s.epilogue.confirmed.length,
+      target: 3,
+      eta: 0,
+    };
+  }
   function routeArchive(s) {
     const chapter =
       s.starport < D.PORT.length
@@ -495,7 +577,9 @@
             ? 3
             : councilMission(s)
               ? 4
-              : 5;
+              : s.rescue.protocol
+                ? 6
+                : 5;
     return {
       chapter,
       title: [
@@ -504,8 +588,14 @@
         "白噪声海",
         "谁的归航权",
         "没有唯一灯塔",
+        "给未来一个地址",
       ][chapter - 1],
-      complete: chapter === 5 && s.rescue.protocol,
+      complete: chapter === 6 && Boolean(s.epilogue.ending),
+      ending: byId(D.ENDINGS, s.epilogue.ending) || null,
+      handoffs: D.EPILOGUE_HANDOFFS.filter((h) =>
+        s.epilogue.confirmed.includes(h.id),
+      ),
+      epilogueContext: epilogueUnlocked(s) ? epilogueContext(s) : null,
       rescued: s.rescue.completed.length,
       protocol: s.rescue.protocol ? D.KEEPER_PROTOCOL : null,
       priority: byId(D.PORT_FOCUSES, s.council.priority)?.name || null,
@@ -515,7 +605,8 @@
       letters: D.LETTERS.filter(
         (l) =>
           s.lore.some((r) => r.story === l.story) &&
-          (!l.requiresProtocol || s.rescue.protocol),
+          (!l.requiresProtocol || s.rescue.protocol) &&
+          (!l.requiresEnding || Boolean(s.epilogue.ending)),
       ).map((l) => {
         const prior =
           l.continuity && s.lore.find((r) => r.story === l.continuity.story);
@@ -1502,6 +1593,8 @@
     if (council) return council;
     const rescue = rescueGoal(s);
     if (rescue) return rescue;
+    const epilogue = epilogueGoal(s);
+    if (epilogue) return epilogue;
     if (
       s.rebirths === 0 &&
       s.research.length === 0 &&
@@ -1803,6 +1896,19 @@
       const m = D.RESCUE_MISSIONS.find((item) => item.story === r.story);
       return !m || s.rescue.completed.some((record) => record.id === m.id);
     });
+    // An optional continuation only: old saves retain every existing field and reward.
+    if (epilogueUnlocked(s)) {
+      s.epilogue.confirmed = [
+        ...new Set(
+          Array.isArray(raw.epilogue?.confirmed) ? raw.epilogue.confirmed : [],
+        ),
+      ].filter((id) => byId(D.EPILOGUE_HANDOFFS, id));
+      if (
+        D.EPILOGUE_HANDOFFS.every((h) => s.epilogue.confirmed.includes(h.id)) &&
+        byId(D.ENDINGS, raw.epilogue?.ending)
+      )
+        s.epilogue.ending = raw.epilogue.ending;
+    }
     s.journal = (Array.isArray(raw.journal) ? raw.journal : [])
       .filter((r) => typeof r?.text === "string")
       .slice(0, 12)
@@ -2045,6 +2151,12 @@
     confirmBackupBerth,
     confirmRescue,
     adoptKeeperProtocol,
+    epilogueUnlocked,
+    confirmEpilogue,
+    endingOffer,
+    chooseEnding,
+    epilogueContext,
+    epilogueGoal,
     portFocusOffer,
     buildPortFocus,
     prepareMission,

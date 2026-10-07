@@ -1541,7 +1541,8 @@ test("every original choice, port direction, energy and preparation rescues thre
             const signed = structuredClone(s);
             assert.equal(E.adoptKeeperProtocol(s), false);
             assert.deepEqual(s, signed);
-            assert.equal(E.routeArchive(s).complete, true);
+            assert.equal(E.routeArchive(s).chapter, 6);
+            assert.equal(E.routeArchive(s).complete, false);
             assert.equal(E.routeArchive(s).letters.length, 12);
             assert.equal(s.lore.length, 14);
             assert.deepEqual(s.lore.slice(0, 11), original);
@@ -1744,5 +1745,189 @@ test("v3.4 ready, partially prepared, active and pending council saves acquire o
     assert.deepEqual(E.sanitize(s, s.lastAt), { ...s, rescue: empty });
   }
   assert.equal(D.VERSION, 32);
+});
+function sixthChapterReady(
+  focus = "reception",
+  energy = "rotation",
+  plan = "relay",
+) {
+  const s = fifthChapterReady(focus);
+  assert.ok(E.arrangeRescueEnergy(s, energy));
+  for (const m of D.RESCUE_MISSIONS) finishRescue(s, m, plan);
+  assert.ok(E.adoptKeeperProtocol(s));
+  return s;
+}
+test("chapter six requires the signed rescue protocol; no time, offline production or automation chooses handoffs or endings", () => {
+  const early = fifthChapterReady();
+  assert.equal(E.epilogueUnlocked(early), false);
+  assert.equal(E.confirmEpilogue(early, "ayao"), false);
+  assert.equal(E.chooseEnding(early, "city"), false);
+  const s = sixthChapterReady();
+  const empty = structuredClone(s.epilogue);
+  E.configure(s, { dispatch: true });
+  E.advance(s, s.lastAt + D.OFFLINE_SECONDS * 1000, { offline: true });
+  assert.deepEqual(s.epilogue, empty);
+  assert.ok(
+    s.mission || s.result,
+    "ordinary safe supply remains available during the epilogue",
+  );
+  assert.equal(E.routeArchive(s).chapter, 6);
+  assert.equal(E.routeArchive(s).complete, false);
+  assert.equal(E.endingOffer(s, "city").available, false);
+});
+test("all original choices, port directions, energies and preparations reach every explicit ending at zero cost without hidden karma", () => {
+  let variants = 0;
+  for (const hospital of D.STORIES.hospital.choices)
+    for (const garden of D.STORIES.garden.choices)
+      for (const focus of D.PORT_FOCUSES)
+        for (const energy of D.RESCUE_ENERGY)
+          for (const plan of D.EXPEDITION_PLANS) {
+            const initial = sixthChapterReady(focus.id, energy.id, plan.id);
+            initial.lore[0].choice = hospital.id;
+            initial.lore[1].choice = garden.id;
+            initial.samples = initial.cores = initial.dust = 0;
+            const context = E.epilogueContext(initial);
+            assert.ok(context.length > 75);
+            assert.match(context, /所有三种未来仍然开放/);
+            for (const ending of D.ENDINGS) {
+              const s = structuredClone(initial),
+                original = structuredClone(s);
+              assert.ok(E.reachable(s, E.nextGoal(s).action));
+              assert.equal(E.chooseEnding(s, ending.id), false);
+              for (const h of [...D.EPILOGUE_HANDOFFS].reverse()) {
+                assert.ok(E.confirmEpilogue(s, h.id));
+                const confirmed = structuredClone(s);
+                assert.equal(E.confirmEpilogue(s, h.id), false);
+                assert.deepEqual(s, confirmed);
+                assert.deepEqual(E.sanitize(s, s.lastAt), s);
+              }
+              assert.equal(E.nextGoal(s).focus, "ending-choices");
+              assert.equal(E.endingOffer(s, ending.id).available, true);
+              assert.ok(E.chooseEnding(s, ending.id));
+              assert.deepEqual(E.sanitize(s, s.lastAt), s);
+              const finished = structuredClone(s);
+              for (const alternative of D.ENDINGS)
+                assert.equal(E.chooseEnding(s, alternative.id), false);
+              assert.deepEqual(
+                s,
+                finished,
+                "one irreversible ending, no repeated reward",
+              );
+              for (const key of Object.keys(original).filter(
+                (k) => !["epilogue", "journal"].includes(k),
+              ))
+                assert.deepEqual(
+                  s[key],
+                  original[key],
+                  `ending leaves ${key} intact`,
+                );
+              const archive = E.routeArchive(s);
+              assert.equal(archive.complete, true);
+              assert.equal(archive.ending.id, ending.id);
+              assert.equal(archive.handoffs.length, 3);
+              assert.equal(archive.letters.length, 15);
+              assert.ok(E.reachable(s, E.nextGoal(s).action));
+              assert.ok(E.missionOptions(s).some((m) => m.id === "supply-run"));
+              assert.deepEqual(
+                s,
+                finished,
+                "archive reading is side-effect free",
+              );
+              variants++;
+            }
+          }
+  assert.equal(variants, 729);
+});
+test("partial handoffs, permanent ending, old records and legacy archive survive restore and prestige; ordinary active voyages are unchanged", () => {
+  for (const ending of D.ENDINGS) {
+    let s = sixthChapterReady();
+    s.legacyArchive = {
+      version: 31,
+      expedition: { remaining: 44 },
+      season: { unclaimed: ["reward"] },
+    };
+    assert.ok(E.startMission(s, "supply-run"));
+    const mission = structuredClone(s.mission);
+    assert.ok(E.confirmEpilogue(s, "ayao"));
+    const storage = memory();
+    S.save(storage, s);
+    s = S.restore(storage, JSON.stringify(s), s.lastAt);
+    assert.deepEqual(s.epilogue.confirmed, ["ayao"]);
+    assert.deepEqual(s.mission, mission);
+    for (const id of ["qiyue", "wei"]) E.confirmEpilogue(s, id);
+    E.chooseEnding(s, ending.id);
+    assert.deepEqual(s.mission, mission);
+    const preserved = {
+      epilogue: structuredClone(s.epilogue),
+      rescue: structuredClone(s.rescue),
+      lore: structuredClone(s.lore),
+      legacyArchive: structuredClone(s.legacyArchive),
+    };
+    E.advance(s, s.lastAt + s.mission.seconds * 1000);
+    assert.ok(E.claimMission(s));
+    s.run.dust = D.PRESTIGE_DUST;
+    assert.ok(E.prestige(s));
+    s = S.restore(storage, JSON.stringify(s), s.lastAt);
+    for (const key of Object.keys(preserved))
+      assert.deepEqual(s[key], preserved[key]);
+    assert.ok(E.reachable(s, E.nextGoal(s).action));
+    E.chooseRoute(s, "industry");
+    E.addDust(s, 600);
+    assert.ok(E.startMission(s, "supply-run"));
+  }
+});
+test("malformed or premature final records cannot skip chapters, commit an ending early or inject archive text", () => {
+  for (const initial of [ready(), fifthChapterReady()]) {
+    initial.epilogue = {
+      confirmed: D.EPILOGUE_HANDOFFS.map((h) => h.id),
+      ending: "city",
+    };
+    assert.deepEqual(E.sanitize(initial, initial.lastAt).epilogue, {
+      confirmed: [],
+      ending: null,
+    });
+  }
+  const s = sixthChapterReady();
+  s.epilogue = { confirmed: ["ayao", "ayao", "bad", null], ending: "city" };
+  assert.deepEqual(E.sanitize(s, s.lastAt).epilogue, {
+    confirmed: ["ayao"],
+    ending: null,
+  });
+  s.epilogue = {
+    confirmed: D.EPILOGUE_HANDOFFS.map((h) => h.id),
+    ending: "<script>bad</script>",
+    quote: "injected",
+  };
+  const clean = E.sanitize(s, s.lastAt);
+  assert.equal(clean.epilogue.ending, null);
+  assert.equal(E.chooseEnding(clean, "invalid"), false);
+  assert.equal(E.confirmEpilogue(clean, "invalid"), false);
+  assert.equal(E.endingOffer(clean, "invalid"), null);
+  assert.deepEqual(E.sanitize(clean, clean.lastAt), clean);
+});
+test("v3.5 prepared, active, pending, partial-consent and protocol saves acquire only optional epilogue defaults", () => {
+  for (const stage of [
+    "ready",
+    "checks",
+    "prepared",
+    "active",
+    "report",
+    "complete",
+  ]) {
+    const s = stage === "complete" ? sixthChapterReady() : fifthChapterReady();
+    if (stage !== "complete") E.arrangeRescueEnergy(s, "rotation");
+    if (stage === "checks") E.confirmRescue(s, "convoy-relay", "captain");
+    if (["prepared", "active", "report"].includes(stage)) {
+      rescueChecks(s, "convoy-relay");
+      E.prepareMission(s, "convoy-relay", "supply");
+    }
+    if (["active", "report"].includes(stage)) E.startMission(s, "convoy-relay");
+    if (stage === "report") E.advance(s, s.lastAt + s.mission.seconds * 1000);
+    const empty = structuredClone(s.epilogue);
+    delete s.epilogue;
+    assert.deepEqual(E.sanitize(s, s.lastAt), { ...s, epilogue: empty });
+  }
+  assert.equal(D.VERSION, 32);
+  assert.equal(S.KEY, "stellarOutpostIdleSave_v3");
 });
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

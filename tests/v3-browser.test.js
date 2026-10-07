@@ -1531,11 +1531,9 @@ async function run() {
             await page.setViewportSize({ width, height: 900 });
             await noOverflow(page);
             if (screenshotDir && index === 0)
-              await page
-                .locator("#rescue-energy")
-                .screenshot({
-                  path: path.join(screenshotDir, `rescue-energy-${width}.png`),
-                });
+              await page.locator("#rescue-energy").screenshot({
+                path: path.join(screenshotDir, `rescue-energy-${width}.png`),
+              });
           }
           await page.clock.runFor(5000);
           const before = await read(page);
@@ -1687,25 +1685,22 @@ async function run() {
             await page.locator('[data-action="keeper-protocol"]').count(),
             0,
           );
+          assert.ok(await page.locator(".epilogue-panel").isVisible());
+          await page.locator('[data-focus="chapter-five"]').click();
           for (const width of [1280, 375]) {
             await page.setViewportSize({ width, height: 900 });
             await noOverflow(page);
             if (screenshotDir && index === 0)
-              await page
-                .locator("#keeper-protocol")
-                .screenshot({
-                  path: path.join(
-                    screenshotDir,
-                    `protocol-signed-${width}.png`,
-                  ),
-                });
+              await page.locator("#keeper-protocol").screenshot({
+                path: path.join(screenshotDir, `protocol-signed-${width}.png`),
+              });
           }
           await page
             .locator('.rescue-panel [data-goal-focus="route-archive"]')
             .click();
           assert.match(
             await page.locator(".archive-current").innerText(),
-            /第5章.*三队安全抵达/,
+            /第6章.*给未来一个地址/,
           );
           await page.locator('[data-focus="letter-shared-protocol"]').click();
           assert.match(
@@ -1724,13 +1719,11 @@ async function run() {
           assert.deepEqual(exported.rescue, completed.rescue);
           await page.keyboard.press("Escape");
           await page.locator("#settings-button").click();
-          await page
-            .locator("#import-file")
-            .setInputFiles({
-              name: "rescue-record.json",
-              mimeType: "application/json",
-              buffer: Buffer.from(JSON.stringify(exported)),
-            });
+          await page.locator("#import-file").setInputFiles({
+            name: "rescue-record.json",
+            mimeType: "application/json",
+            buffer: Buffer.from(JSON.stringify(exported)),
+          });
           await page.locator("#confirm-import").click();
           assert.deepEqual((await read(page)).rescue, completed.rescue);
           await page.locator('#navigation [data-id="jump"]').click();
@@ -1783,6 +1776,312 @@ async function run() {
           .locator('[data-action="mission"][data-id="convoy-relay"]')
           .click();
         assert.equal((await read(page)).mission.id, "convoy-relay");
+        await noOverflow(page);
+      },
+    );
+    function endingReady(focus, energy) {
+      const s = rescueReady(focus);
+      assert.ok(E.arrangeRescueEnergy(s, energy));
+      for (const m of D.RESCUE_MISSIONS) {
+        if (m.requiresBackupBerth) assert.ok(E.confirmBackupBerth(s));
+        for (const c of D.RESCUE_CONFIRMATIONS)
+          assert.ok(E.confirmRescue(s, m.id, c.id));
+        assert.ok(E.prepareMission(s, m.id, "relay"));
+        assert.ok(E.startMission(s, m.id));
+        E.advance(s, s.lastAt + s.mission.seconds * 1000);
+        assert.ok(E.claimMission(s, D.STORIES[m.story].choices[0].id));
+      }
+      assert.ok(E.adoptKeeperProtocol(s));
+      s.samples = s.cores = s.dust = 0;
+      s.lastAt = TIME;
+      s.legacyArchive = {
+        version: 31,
+        expedition: { remaining: 55 },
+        season: { unclaimed: ["reward"] },
+      };
+      return s;
+    }
+    for (const [index, focus] of D.PORT_FOCUSES.entries()) {
+      for (const ending of D.ENDINGS) {
+        const initial = endingReady(focus.id, D.RESCUE_ENERGY[index].id);
+        delete initial.epilogue; // Published v3.5 save, not a constructed v3.6 ending record.
+        await scenario(
+          `chapter six ${focus.name}/${ending.title}: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play`,
+          { [S.KEY]: JSON.stringify(initial) },
+          async (page) => {
+            const before = await read(page);
+            for (const key of [
+              "dust",
+              "cores",
+              "samples",
+              "buildings",
+              "research",
+              "rescue",
+              "lore",
+              "legacyArchive",
+            ])
+              assert.deepEqual(before[key], initial[key]);
+            await page
+              .locator('#main [data-goal-focus="epilogue-ayao"]')
+              .click();
+            assert.ok(await page.locator(".epilogue-panel").isVisible());
+            assert.equal(
+              await page
+                .locator('[data-details-key="chapter-five"]')
+                .getAttribute("open"),
+              null,
+            );
+            assert.match(
+              await page.locator("#epilogue-ayao").innerText(),
+              /禾没有回来/,
+            );
+            assert.equal(
+              await page
+                .locator('[data-action="ending-preview"]:disabled')
+                .count(),
+              3,
+            );
+            await page
+              .locator('[data-action="epilogue-confirm"][data-id="ayao"]')
+              .click();
+            assert.deepEqual((await read(page)).epilogue, {
+              confirmed: ["ayao"],
+              ending: null,
+            });
+            await page.reload();
+            await page
+              .locator('#main [data-goal-focus="epilogue-qiyue"]')
+              .click();
+            assert.deepEqual((await read(page)).epilogue.confirmed, ["ayao"]);
+            await page
+              .locator('[data-action="epilogue-confirm"][data-id="qiyue"]')
+              .click();
+            if (
+              (await page.locator("#epilogue-wei").getAttribute("open")) ===
+              null
+            )
+              await page.locator("#epilogue-wei summary").click();
+            assert.match(
+              await page.locator("#epilogue-wei").innerText(),
+              /苇没有回来/,
+            );
+            await page
+              .locator('[data-action="epilogue-confirm"][data-id="wei"]')
+              .click();
+            const handed = await read(page);
+            assert.equal(handed.epilogue.ending, null);
+            for (const key of [
+              "dust",
+              "cores",
+              "samples",
+              "buildings",
+              "research",
+              "rescue",
+              "lore",
+              "legacyArchive",
+            ])
+              assert.deepEqual(
+                handed[key],
+                initial[key],
+                "handoffs never charge or re-award old resources",
+              );
+            assert.equal(
+              await page
+                .locator('[data-action="ending-preview"]:enabled')
+                .count(),
+              3,
+            );
+            for (const width of [1280, 375]) {
+              await page.setViewportSize({ width, height: 900 });
+              await noOverflow(page);
+              await page
+                .locator(`#ending-choices [data-id="${ending.id}"]`)
+                .click();
+              assert.match(
+                await page.locator("dialog[open]").innerText(),
+                new RegExp(ending.quote),
+              );
+              await noOverflow(page);
+              assert.equal((await read(page)).epilogue.ending, null);
+              await page.keyboard.press("Escape");
+              assert.equal((await read(page)).epilogue.ending, null);
+            }
+            await page.reload();
+            await page
+              .locator('#main [data-goal-focus="ending-choices"]')
+              .click();
+            assert.equal((await read(page)).epilogue.ending, null);
+            await page.setViewportSize({ width: 1280, height: 900 });
+            if (screenshotDir && index === 0 && ending.id === "city") {
+              await page.clock.runFor(5000);
+              await page.locator("#ending-choices").screenshot({
+                path: path.join(screenshotDir, "ending-choices-desktop.png"),
+                animations: "disabled",
+              });
+            }
+            const beforeEnding = await read(page);
+            await page
+              .locator(`#ending-choices [data-id="${ending.id}"]`)
+              .click();
+            await page
+              .locator(`[data-action="confirm-ending"][data-id="${ending.id}"]`)
+              .click();
+            const finished = await read(page);
+            assert.equal(finished.epilogue.ending, ending.id);
+            for (const key of [
+              "dust",
+              "cores",
+              "samples",
+              "buildings",
+              "research",
+              "rescue",
+              "lore",
+              "legacyArchive",
+            ])
+              assert.deepEqual(finished[key], beforeEnding[key]);
+            assert.match(
+              await page.locator("#ending-record").innerText(),
+              new RegExp(ending.quote),
+            );
+            for (const alternative of D.ENDINGS) {
+              await page
+                .locator(`#ending-choices [data-id="${alternative.id}"]`)
+                .click();
+              assert.equal(
+                await page.locator('[data-action="confirm-ending"]').count(),
+                0,
+              );
+              await page.keyboard.press("Escape");
+              assert.deepEqual((await read(page)).epilogue, finished.epilogue);
+            }
+            await page.setViewportSize({ width: 375, height: 900 });
+            await noOverflow(page);
+            if (screenshotDir && index === 0 && ending.id === "city") {
+              await page.clock.runFor(3500);
+              await page.locator("#ending-record").screenshot({
+                path: path.join(screenshotDir, "ending-city-mobile.png"),
+                animations: "disabled",
+              });
+            }
+            await page
+              .locator('.ending-actions [data-goal-focus="route-archive"]')
+              .click();
+            assert.match(
+              await page.locator(".archive-current").innerText(),
+              new RegExp(`第6章.*主线完成.*${ending.title}`),
+            );
+            assert.equal(
+              await page
+                .locator('[data-details-key^="archive-handoff-"]')
+                .count(),
+              3,
+            );
+            assert.equal(
+              await page.locator('[data-focus^="letter-future-"]').count(),
+              3,
+            );
+            await page.locator('[data-focus="letter-future-seed"]').click();
+            assert.match(
+              await page
+                .locator('[data-details-key="letter-future-seed"]')
+                .innerText(),
+              /苇的种苗/,
+            );
+            assert.deepEqual((await read(page)).epilogue, finished.epilogue);
+            await page.locator("#settings-button").click();
+            const downloaded = page.waitForEvent("download");
+            await page.locator('[data-action="export"]').click();
+            const download = await downloaded;
+            const exported = JSON.parse(
+              fs.readFileSync(await download.path(), "utf8"),
+            );
+            assert.deepEqual(exported.epilogue, finished.epilogue);
+            await page.keyboard.press("Escape");
+            await page.locator("#settings-button").click();
+            await page.locator("#import-file").setInputFiles({
+              name: "ending-save.json",
+              mimeType: "application/json",
+              buffer: Buffer.from(JSON.stringify(exported)),
+            });
+            await page.locator("#confirm-import").click();
+            assert.deepEqual((await read(page)).epilogue, finished.epilogue);
+            await page.locator('#navigation [data-id="explore"]').click();
+            await page
+              .locator('.ending-actions [data-goal-focus="mission-supply-run"]')
+              .click();
+            await page
+              .locator('[data-action="mission"][data-id="supply-run"]')
+              .click();
+            const active = await read(page);
+            assert.equal(active.mission.id, "supply-run");
+            await page.clock.fastForward(active.mission.seconds * 1000 + 5000);
+            if (await page.locator("dialog[open]").count())
+              await page.locator('[data-action="return-next"]').click();
+            await page.locator('[data-action="claim"]').click();
+            assert.ok((await read(page)).samples > 0);
+            assert.deepEqual((await read(page)).epilogue, finished.epilogue);
+            await page.locator('#navigation [data-id="jump"]').click();
+            await page.locator('[data-action="jump"]').click();
+            await page.locator('[data-action="confirm-jump"]').click();
+            await page.reload();
+            assert.deepEqual((await read(page)).epilogue, finished.epilogue);
+            assert.deepEqual(
+              (await read(page)).legacyArchive,
+              initial.legacyArchive,
+            );
+            assert.ok(await page.locator("#next-goal-title").innerText());
+          },
+        );
+      }
+    }
+    const automaticEpilogue = endingReady("ecology", "rotation");
+    E.configure(automaticEpilogue, { dispatch: true });
+    assert.ok(E.startMission(automaticEpilogue, "supply-run"));
+    await scenario(
+      "chapter six during automatic supply: active voyage survives handoff, eight-hour absence never selects ending, manual continuation still reachable",
+      { [S.KEY]: JSON.stringify(automaticEpilogue) },
+      async (page) => {
+        await page.locator('#main [data-goal-focus="epilogue-ayao"]').click();
+        const mission = (await read(page)).mission;
+        await page
+          .locator('[data-action="epilogue-confirm"][data-id="ayao"]')
+          .click();
+        assert.deepEqual((await read(page)).mission, mission);
+        await page.clock.fastForward(D.OFFLINE_SECONDS * 1000);
+        if (await page.locator("dialog[open]").count())
+          await page.keyboard.press("Escape");
+        const resumed = await read(page);
+        assert.deepEqual(resumed.epilogue, {
+          confirmed: ["ayao"],
+          ending: null,
+        });
+        assert.ok(resumed.mission || resumed.result);
+        await page.reload();
+        assert.deepEqual((await read(page)).epilogue, resumed.epilogue);
+        if (await page.locator("dialog[open]").count())
+          await page.keyboard.press("Escape");
+        const goal = page.locator('#main [data-action="nav"]').first();
+        await goal.click();
+        assert.ok(await page.locator(".epilogue-panel").isVisible());
+        for (const h of D.EPILOGUE_HANDOFFS.filter((h) => h.id !== "ayao")) {
+          const details = page.locator(`#epilogue-${h.id}`);
+          if ((await details.getAttribute("open")) === null)
+            await details.locator("summary").click();
+          await page
+            .locator(`[data-action="epilogue-confirm"][data-id="${h.id}"]`)
+            .click();
+        }
+        const active = await read(page);
+        await page.locator('#ending-choices [data-id="watch"]').click();
+        await page.locator('[data-action="confirm-ending"]').focus();
+        await page.keyboard.press("Enter");
+        assert.equal((await read(page)).epilogue.ending, "watch");
+        assert.deepEqual((await read(page)).mission, active.mission);
+        const supplyFocus = active.result ? "report" : "active-mission";
+        await page
+          .locator(`.ending-actions [data-goal-focus="${supplyFocus}"]`)
+          .click();
+        assert.ok(await page.locator(`#${supplyFocus}`).isVisible());
         await noOverflow(page);
       },
     );

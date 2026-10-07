@@ -71,6 +71,7 @@
     buyMode = "1",
     signature = "",
     rebuilding = false,
+    recentStory = null,
     lastReturnReport = loaded.report?.seconds >= 60 ? loaded.report : null,
     absence = null,
     toastTimer,
@@ -268,7 +269,7 @@
       <div class="scan-area"><button class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
       <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2><h2 id="next-goal-title">${goal.title}</h2><p>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
       <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
-      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}`;
+      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
   }
   function routePanel() {
     const route = D.ROUTES.find((r) => r.id === state.run.route);
@@ -320,12 +321,26 @@
       }
       ${automation()}</div>`;
   }
+  function sceneLines(lines) {
+    return `<div class="scene-transcript">${lines.map((line) => `<div class="scene-line"><strong>${escape(line.speaker)}</strong><p>${escape(line.text)}</p></div>`).join("")}</div>`;
+  }
+  function sceneRecord(scene, key) {
+    if (!scene) return "";
+    return `<details class="story-scene" data-details-key="${key}"><summary data-focus="${key}">展开通信记录 · ${escape(scene.title)}</summary><p class="scene-location">${escape(scene.location)}</p>${sceneLines(scene.lines)}${scene.response.length ? `<h4>你的选择 · ${escape(scene.choice)}</h4>${sceneLines(scene.response)}` : ""}</details>`;
+  }
+  function sceneAfterword() {
+    if (!recentStory || state.mission || state.result) return "";
+    const scene = E.storyScene(state, recentStory);
+    if (!scene?.response.length) return "";
+    const goal = E.nextGoal(state);
+    return `<section class="scene-afterword" aria-label="选择回响"><span class="scene-location">选择回响 · ${escape(scene.choice)}</span><h2>${escape(scene.title)}</h2>${sceneLines(scene.response)}<div class="scene-actions"><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button><button class="text-button" ${action("scene-read", scene.id)}>重读完整通信</button><button class="text-button" ${action("scene-dismiss")}>收起回响</button></div></section>`;
+  }
   function missionReport() {
-    if (!state.result) return "";
+    if (!state.result) return sceneAfterword();
     const r = state.result,
       story = r.story && D.STORIES[r.story];
     return `<section class="report" id="report" tabindex="-1" aria-label="归航报告"><h2>${story ? story.title : D.MISSIONS.find((m) => m.id === r.id).name + " · 归航报告"}</h2><p>${story ? escape(E.storyText(state, r.story)) : r.succeeded ? "探索船安全归航，回收物已经送达。" : "裂隙干扰超出预期，探索船安全撤回，带回 1 份样本。"}</p><p>回收 ${number(r.dust)} 星尘 · ${r.samples} 份样本${r.module ? ` · 舰装「${D.MODULES.find((m) => m.id === r.module).name}」` : ""}</p>
-      ${story ? story.choices.map((c) => `<button class="story-choice" ${action("claim", c.id)}><strong>${c.name}</strong><small>${c.detail}</small></button>`).join("") : `<button class="primary" ${action("claim")}>收取回收物</button>`}</section>`;
+      ${story ? sceneRecord(E.storyScene(state, r.story), `report-scene-${r.story}`) : ""}${story ? story.choices.map((c) => `<button class="story-choice" ${action("claim", c.id)}><strong>${c.name}</strong><small>${c.detail}</small></button>`).join("") : `<button class="primary" ${action("claim")}>收取回收物</button>`}</section>`;
   }
   function chapterMap() {
     if (state.starport < D.PORT.length) return "";
@@ -529,7 +544,7 @@
       <p class="archive-current">当前：第${archive.chapter}章 · ${archive.title}${archive.complete ? ` · 主线完成 · ${archive.ending.title}` : ""}</p>
       <p>第一章 · 星港 ${state.starport} / 3　第二章 · 建设 ${state.chapter.length} / 3　第三章 · 交接 ${state.campaign.completed.length} / 3　第四章 · 准备 ${state.council.completed.length + (state.council.priority ? 1 : 0)} / 4　第五章 · 救援 ${archive.rescued} / 3</p>${archive.priority ? `<p>永久建设方向：${archive.priority}。所有救援与结局入口保留。</p>` : ""}${archive.protocol ? `<h3>共同签署的守灯协议</h3><p>${archive.protocol}</p>` : ""}
       ${archive.epilogueContext ? `<h3>第六章 · 居民交接 ${archive.handoffs.length} / 3</h3><p>${escape(archive.epilogueContext)}</p>${archive.handoffs.map((h) => `<details data-details-key="archive-handoff-${h.id}"><summary>${h.title} · 已记录</summary>${h.paragraphs.map((p) => `<p>${escape(p)}</p>`).join("")}</details>`).join("")}` : ""}${archive.ending ? `<article class="ending-record"><h3>永久结局 · ${archive.ending.title}</h3>${endingText(archive.ending)}<p>只读回顾，不消耗资源、不改写结局。</p></article>` : ""}
-      <h3>人物与来信</h3>${
+      ${archive.milestones.length ? `<h3>航站通信与建设记录</h3>${archive.milestones.map((scene) => sceneRecord(scene, `archive-scene-${scene.id}`)).join("")}` : ""}<h3>人物与来信</h3>${
         archive.characters
           .map(
             (c) =>
@@ -544,7 +559,7 @@
           .join("") ||
         '<p class="empty">回应第一段远方讯息后，人物档案会逐渐开放。</p>'
       }
-      <h3>你的航线选择</h3>${archive.entries.map((r) => `<details class="lore-entry" data-details-key="story-${r.story}"><summary data-focus="story-${r.story}">${r.title} · ${r.decision}</summary>${r.plan ? `<p>航前准备：${r.plan}</p>` : ""}<p>${escape(r.text)}</p><p>你的选择：${r.decision}。奖励已结算，重读保留原记录。</p></details>`).join("") || '<p class="empty">你的每一个决定，都将留在这里。</p>'}</details>`;
+      <h3>你的航线选择</h3>${archive.entries.map((r) => `<details class="lore-entry" id="story-${r.story}" tabindex="-1" data-details-key="story-${r.story}"><summary data-focus="story-${r.story}">${r.title} · ${r.decision}</summary>${r.plan ? `<p>航前准备：${r.plan}</p>` : ""}<p>${escape(r.text)}</p>${r.scene ? `<p class="scene-location">${escape(r.scene.location)}</p>${sceneLines(r.scene.lines)}<h4>选择回响 · ${escape(r.decision)}</h4>${sceneLines(r.scene.response)}` : ""}<p>你的选择：${r.decision}。奖励已结算，重读保留原记录。</p></details>`).join("") || '<p class="empty">你的每一个决定，都将留在这里。</p>'}</details>`;
   }
   function explore() {
     const port = D.PORT[state.starport];
@@ -690,6 +705,7 @@
     const next = JSON.stringify([
       page,
       buyMode,
+      recentStory,
       tiers,
       state.buildings,
       state.research,
@@ -776,6 +792,7 @@
       state = S.restore(storage, text);
       lastReturnReport = null;
       absence = null;
+      recentStory = null;
       blocked = false;
       page = "home";
       signature = "";
@@ -823,6 +840,15 @@
     const button = event.target.closest("[data-action]");
     if (!button || button.disabled) return;
     const { action: kind, id } = button.dataset;
+    if (kind === "scene-read") {
+      navigate("explore", `story-${id}`);
+      return;
+    }
+    if (kind === "scene-dismiss") {
+      recentStory = null;
+      render();
+      return;
+    }
     if (kind === "nav") {
       navigate(id, button.dataset.goalFocus);
       return;
@@ -873,13 +899,18 @@
         );
         return;
       }
-      E.startMission(state, id);
+      if (E.startMission(state, id)) recentStory = null;
     } else if (kind === "risk") {
-      E.startMission(state, id);
+      if (E.startMission(state, id)) recentStory = null;
       closeDialog();
     } else if (kind === "claim") {
-      E.claimMission(state, id || undefined);
-      toast("回收物已入库，发现会陪你继续航行。");
+      const story = state.result?.story;
+      if (E.claimMission(state, id || undefined)) {
+        recentStory = E.storyScene(state, story)?.response.length
+          ? story
+          : null;
+        toast("回收物已入库，发现会陪你继续航行。");
+      }
     } else if (kind === "equip") E.equip(state, id);
     else if (kind === "loadout-save") {
       if (E.saveLoadout(state, id))
@@ -964,6 +995,7 @@
       return;
     } else if (kind === "confirm-jump") {
       if (E.prestige(state)) {
+        recentStory = null;
         closeDialog();
         page = "fleet";
         toast("新的航次已开始，自动购买已启动。");
@@ -985,6 +1017,7 @@
         state = S.reset(storage);
         lastReturnReport = null;
         absence = null;
+        recentStory = null;
         blocked = false;
         page = "home";
         closeDialog();

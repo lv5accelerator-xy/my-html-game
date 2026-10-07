@@ -884,6 +884,60 @@ footer span + span:before {
 .report > p {
   margin: 12px 0 18px;
 }
+.story-scene {
+  margin: 24px 0;
+  border-block: 1px solid var(--line);
+  padding: 16px 0;
+}
+.story-scene summary {
+  color: var(--teal);
+}
+.scene-location {
+  color: var(--muted);
+  font-size: 13px;
+}
+.scene-transcript {
+  max-width: 780px;
+  margin: 20px 0;
+}
+.scene-line {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+.scene-line strong {
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 500;
+}
+.scene-line p {
+  margin: 0;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.scene-afterword {
+  border-left: 2px solid var(--teal);
+  background: var(--surface);
+  padding: 24px;
+  margin-bottom: 32px;
+}
+.scene-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+@media (max-width: 650px) {
+  .scene-line {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .scene-afterword {
+    padding: 18px;
+  }
+}
 .story-choice {
   display: block;
   width: 100%;

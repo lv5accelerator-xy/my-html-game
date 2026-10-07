@@ -1930,4 +1930,139 @@ test("v3.5 prepared, active, pending, partial-consent and protocol saves acquire
   assert.equal(D.VERSION, 32);
   assert.equal(S.KEY, "stellarOutpostIdleSave_v3");
 });
+test("early dialogue unlocks only after the actual event, with no future scenes or premature choice responses", () => {
+  const s = E.createState(1000, 42);
+  for (const id of [...Object.keys(D.NARRATIVE_SCENES), "unknown", "__proto__"])
+    assert.equal(E.storyScene(s, id), null);
+  assert.deepEqual(E.routeArchive(s).milestones, []);
+  E.addDust(s, 12);
+  E.buy(s, "drone");
+  assert.ok(E.storyScene(s, "awakening"));
+  assert.equal(E.storyScene(s, "hospital"), null);
+  E.addDust(s, 1000);
+  E.chooseRoute(s, "industry");
+  E.startMission(s, "wreck");
+  assert.equal(E.storyScene(s, "hospital"), null);
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  const before = structuredClone(s),
+    scene = E.storyScene(s, "hospital");
+  assert.equal(scene.pending, true);
+  assert.equal(scene.choice, null);
+  assert.deepEqual(scene.response, []);
+  assert.ok(scene.lines.some((line) => line.speaker === "禾 · 留存录音"));
+  assert.deepEqual(s, before);
+  const invalid = structuredClone(s);
+  invalid.result.succeeded = false;
+  assert.equal(E.storyScene(invalid, "hospital"), null);
+  invalid.result.succeeded = true;
+  invalid.result.id = "belt";
+  assert.equal(E.storyScene(invalid, "hospital"), null);
+});
+test("all original choices and every second-chapter reply have distinct read-only responses, retained continuity and event-gated construction scenes", () => {
+  const replies = new Map(
+    ["hospital", "garden", "relay", "nursery", "horizon"].map((id) => [
+      id,
+      new Set(),
+    ]),
+  );
+  for (const hospital of D.STORIES.hospital.choices)
+    for (const garden of D.STORIES.garden.choices)
+      for (let option = 0; option < 3; option++) {
+        const s = ready();
+        s.rebirths = 4;
+        s.cores = 30;
+        s.totalCores = 28;
+        s.samples = 100;
+        s.modules = { nav: 2, scanner: 2 };
+        s.equipped = ["nav", "scanner"];
+        s.research = ["navigation"];
+        for (const [mission, story, choice] of [
+          ["wreck", "hospital", hospital.id],
+          ["garden", "garden", garden.id],
+          ...D.PROJECTS.map((p) => [
+            p.mission,
+            p.story,
+            D.STORIES[p.story].choices[option].id,
+          ]),
+        ]) {
+          assert.ok(E.startMission(s, mission));
+          E.advance(s, s.lastAt + s.mission.seconds * 1000);
+          assert.equal(E.storyScene(s, story).pending, true);
+          assert.ok(E.claimMission(s, choice));
+          const before = structuredClone(s),
+            scene = E.storyScene(s, story);
+          assert.equal(
+            scene.choice,
+            D.STORIES[story].choices.find((c) => c.id === choice).name,
+          );
+          assert.equal(scene.pending, false);
+          assert.ok(scene.response.length);
+          replies.get(story).add(JSON.stringify(scene.response));
+          assert.equal(E.claimMission(s, choice), false);
+          E.routeArchive(s);
+          assert.deepEqual(s, before);
+          if (story === "hospital") {
+            assert.equal(E.storyScene(s, "port-lit"), null);
+            for (const stage of D.PORT) assert.ok(E.repairPort(s));
+            assert.ok(E.storyScene(s, "port-lit"));
+          }
+          const project = D.PROJECTS.find((p) => p.story === story);
+          if (project) {
+            assert.equal(E.storyScene(s, `${project.id}-built`), null);
+            assert.ok(E.buildProject(s, project.id));
+            assert.ok(E.storyScene(s, `${project.id}-built`));
+          }
+        }
+        assert.deepEqual(s.lore.slice(0, 2), [
+          { story: "hospital", choice: hospital.id },
+          { story: "garden", choice: garden.id },
+        ]);
+        const relay = E.storyScene(s, "relay"),
+          nursery = E.storyScene(s, "nursery"),
+          horizon = E.storyScene(s, "horizon");
+        assert.ok(
+          relay.lines.some(
+            (line) =>
+              line.text === D.STORIES.relay.continuity.choices[hospital.id],
+          ),
+        );
+        assert.ok(
+          nursery.lines.some(
+            (line) =>
+              line.text === D.STORIES.nursery.continuity.choices[garden.id],
+          ),
+        );
+        assert.equal(
+          horizon.lines.filter((line) => line.speaker === "航线回响").length,
+          2,
+        );
+        assert.equal(E.routeArchive(s).milestones.length, 5);
+        assert.deepEqual(E.sanitize(s, s.lastAt), s);
+      }
+  for (const responses of replies.values()) assert.equal(responses.size, 3);
+});
+test("historical dialogue is reconstructed from existing records across restores, endings and jumps, without a new saved field or mutable shared text", () => {
+  const s = sixthChapterReady();
+  for (const h of D.EPILOGUE_HANDOFFS) E.confirmEpilogue(s, h.id);
+  E.chooseEnding(s, "watch");
+  const before = structuredClone(s),
+    text = structuredClone(D.NARRATIVE_SCENES);
+  const archive = E.routeArchive(s);
+  archive.entries[0].scene.lines[0].text = "changed returned copy";
+  archive.entries[0].scene.response[0].speaker = "changed returned copy";
+  archive.milestones[0].lines.pop();
+  assert.deepEqual(D.NARRATIVE_SCENES, text);
+  assert.deepEqual(s, before);
+  const restored = S.restore(memory(), JSON.stringify(s), s.lastAt);
+  assert.deepEqual(restored, before);
+  assert.deepEqual(E.routeArchive(restored), E.routeArchive(s));
+  s.run.dust = D.PRESTIGE_DUST;
+  assert.ok(E.prestige(s));
+  assert.deepEqual(
+    E.routeArchive(s).milestones,
+    E.routeArchive(restored).milestones,
+  );
+  assert.deepEqual(E.routeArchive(s).entries, E.routeArchive(restored).entries);
+  assert.equal(D.VERSION, 32);
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

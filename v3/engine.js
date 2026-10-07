@@ -347,6 +347,55 @@
       D.MISSIONS.filter((m) => m.campaign)[s.campaign.completed.length] || null
     );
   }
+  function storyScene(s, id) {
+    // Scenes are read from existing progress; reading never writes a save or claims a reward.
+    const scene = Object.hasOwn(D.NARRATIVE_SCENES, id)
+      ? D.NARRATIVE_SCENES[id]
+      : null;
+    if (!scene) return null;
+    const story = D.STORIES[id];
+    const record =
+      story &&
+      s.lore.find((r) => r.story === id && byId(story.choices, r.choice));
+    const pending =
+      story &&
+      s.result?.story === id &&
+      s.result.succeeded === true &&
+      byId(D.MISSIONS, s.result.id)?.story === id;
+    const project = D.PROJECTS.find((p) => `${p.id}-built` === id);
+    const milestone =
+      id === "awakening"
+        ? s.buildings.drone > 0 || s.rebirths > 0 || s.lore.length > 0
+        : id === "port-lit"
+          ? s.starport === D.PORT.length
+          : project && s.chapter.includes(project.id);
+    if (!record && !pending && !milestone) return null;
+    const echoes = [];
+    const prior =
+      story?.continuity &&
+      s.lore.find((r) => r.story === story.continuity.story);
+    const context = prior && story.continuity.choices[prior.choice];
+    if (context) echoes.push({ speaker: "航线回响", text: context });
+    for (const echo of scene.echoes || []) {
+      const earlier = s.lore.find((r) => r.story === echo.story);
+      if (earlier && Object.hasOwn(echo.choices, earlier.choice))
+        echoes.push({
+          speaker: "航线回响",
+          text: echo.choices[earlier.choice],
+        });
+    }
+    const copyLines = (lines) =>
+      lines.map((line) => ({ speaker: line.speaker, text: line.text }));
+    return {
+      id,
+      title: scene.title,
+      location: scene.location,
+      pending: Boolean(pending && !record),
+      choice: record ? byId(story.choices, record.choice).name : null,
+      lines: copyLines([...echoes, ...scene.lines]),
+      response: copyLines(record ? scene.responses?.[record.choice] || [] : []),
+    };
+  }
   function prepareMission(s, id, plan) {
     const m = campaignMission(s) || councilMission(s) || rescueMission(s);
     if (
@@ -596,6 +645,13 @@
         s.epilogue.confirmed.includes(h.id),
       ),
       epilogueContext: epilogueUnlocked(s) ? epilogueContext(s) : null,
+      milestones: [
+        "awakening",
+        "port-lit",
+        ...D.PROJECTS.map((p) => `${p.id}-built`),
+      ]
+        .map((id) => storyScene(s, id))
+        .filter(Boolean),
       rescued: s.rescue.completed.length,
       protocol: s.rescue.protocol ? D.KEEPER_PROTOCOL : null,
       priority: byId(D.PORT_FOCUSES, s.council.priority)?.name || null,
@@ -631,6 +687,7 @@
           title: D.STORIES[r.story].title,
           text: storyText(s, r.story),
           decision: byId(D.STORIES[r.story].choices, r.choice).name,
+          scene: storyScene(s, r.story),
           plan: record && byId(D.EXPEDITION_PLANS, record.plan).name,
         };
       }),
@@ -2140,6 +2197,7 @@
     missionLock,
     missionPreview,
     storyText,
+    storyScene,
     campaignMission,
     councilMission,
     councilGoal,

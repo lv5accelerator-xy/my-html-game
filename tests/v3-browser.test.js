@@ -2085,6 +2085,181 @@ async function run() {
         await noOverflow(page);
       },
     );
+    for (let option = 0; option < 3; option++) {
+      const initial = ready();
+      initial.rebirths = 4;
+      initial.cores = 30;
+      initial.totalCores = 28;
+      initial.samples = 100;
+      initial.modules = { nav: 2, scanner: 2 };
+      initial.equipped = ["nav", "scanner"];
+      initial.research = ["navigation"];
+      await scenario(
+        `first two chapters dialogue path ${option + 1}: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards`,
+        { [S.KEY]: JSON.stringify(initial) },
+        async (page) => {
+          const opening = page.locator('[data-details-key="home-awakening"]');
+          const beforeOpening = await read(page);
+          await opening.locator("summary").focus();
+          await page.keyboard.press("Enter");
+          assert.match(await opening.innerText(), /暂时只是一个名字/);
+          assert.deepEqual(await read(page), beforeOpening);
+          await page.locator('#navigation [data-id="explore"]').click();
+          assert.equal(
+            await page
+              .locator('[data-details-key="archive-scene-port-lit"]')
+              .count(),
+            0,
+          );
+          assert.equal(await page.locator("#story-relay").count(), 0);
+          for (const [mission, story] of [
+            ["wreck", "hospital"],
+            ["garden", "garden"],
+            ...D.PROJECTS.map((p) => [p.mission, p.story]),
+          ]) {
+            const button = page.locator(
+              `[data-action="mission"][data-id="${mission}"]`,
+            );
+            await button.click();
+            const active = await read(page);
+            assert.equal(active.mission.id, mission);
+            await page.clock.fastForward(active.mission.seconds * 1000 + 5000);
+            if (await page.locator("dialog[open]").count())
+              await page.locator('[data-action="return-next"]').click();
+            const pending = await read(page);
+            const dialogue = page.locator(
+              `#report [data-details-key="report-scene-${story}"]`,
+            );
+            assert.equal(await dialogue.getAttribute("open"), null);
+            await dialogue.locator("summary").focus();
+            await page.keyboard.press("Enter");
+            assert.ok(await dialogue.locator(".scene-transcript").isVisible());
+            const scene = E.storyScene(pending, story);
+            for (const line of scene.lines)
+              assert.ok((await dialogue.innerText()).includes(line.text));
+            assert.equal(await dialogue.locator("h4").count(), 0);
+            assert.deepEqual(await read(page), pending);
+            for (const width of [1280, 375]) {
+              await page.setViewportSize({ width, height: 900 });
+              await noOverflow(page);
+            }
+            await page.setViewportSize({ width: 1280, height: 900 });
+            if (screenshotDir && option === 1 && story === "hospital")
+              await page
+                .locator("#report")
+                .screenshot({
+                  path: path.join(screenshotDir, "dialogue-desktop.png"),
+                  animations: "disabled",
+                });
+            const choice = D.STORIES[story].choices[option];
+            await page
+              .locator(`[data-action="claim"][data-id="${choice.id}"]`)
+              .click();
+            const claimed = await read(page),
+              response = E.storyScene(claimed, story);
+            assert.equal(claimed.result, null);
+            assert.equal(claimed.lore.at(-1).choice, choice.id);
+            assert.equal(
+              await page.locator('[data-action="claim"]').count(),
+              0,
+            );
+            for (const line of response.response)
+              assert.ok(
+                (await page.locator(".scene-afterword").innerText()).includes(
+                  line.text,
+                ),
+              );
+            await page.locator('[data-action="scene-read"]').focus();
+            await page.keyboard.press("Enter");
+            assert.equal(
+              await page.evaluate(() => document.activeElement.id),
+              `story-${story}`,
+            );
+            const archiveEntry = page.locator(`#story-${story}`);
+            assert.notEqual(await archiveEntry.getAttribute("open"), null);
+            assert.ok(
+              await archiveEntry
+                .locator(".scene-transcript")
+                .first()
+                .isVisible(),
+            );
+            for (const line of response.response)
+              assert.ok((await archiveEntry.innerText()).includes(line.text));
+            assert.deepEqual(await read(page), claimed);
+            await page.setViewportSize({ width: 375, height: 900 });
+            await noOverflow(page);
+            await page.locator('[data-action="scene-dismiss"]').click();
+            assert.deepEqual(await read(page), claimed);
+            await page.reload();
+            assert.deepEqual(await read(page), claimed);
+            await page.locator('#navigation [data-id="explore"]').click();
+            assert.equal(await page.locator(".scene-afterword").count(), 0);
+            await page.locator("#route-archive > summary").click();
+            await page.locator(`#story-${story} > summary`).click();
+            assert.ok(
+              (await page.locator(`#story-${story}`).innerText()).includes(
+                response.response[0].text,
+              ),
+            );
+            assert.deepEqual(await read(page), claimed);
+              if (screenshotDir && option === 1 && story === "hospital")
+                await page.locator(`#story-${story}`).screenshot({
+                  path: path.join(screenshotDir, "dialogue-mobile.png"),
+                  animations: "disabled",
+                });
+            if (story === "hospital") {
+              for (const stage of D.PORT)
+                await page.locator('[data-action="port"]').click();
+              assert.equal((await read(page)).starport, 3);
+              assert.equal(
+                await page
+                  .locator('[data-details-key="archive-scene-port-lit"]')
+                  .count(),
+                1,
+              );
+            }
+            const project = D.PROJECTS.find((p) => p.story === story);
+            if (project) {
+              assert.equal(
+                await page
+                  .locator(
+                    `[data-details-key="archive-scene-${project.id}-built"]`,
+                  )
+                  .count(),
+                0,
+              );
+              await page
+                .locator(`[data-action="project"][data-id="${project.id}"]`)
+                .click();
+              const built = await read(page);
+              const record = page.locator(
+                `[data-details-key="archive-scene-${project.id}-built"]`,
+              );
+              await record.locator("summary").click();
+              assert.ok(await record.locator(".scene-transcript").isVisible());
+              assert.deepEqual(await read(page), built);
+              await noOverflow(page);
+            }
+          }
+          assert.equal((await read(page)).lore.length, 5);
+          assert.equal((await read(page)).chapter.length, 3);
+          await page.locator('#navigation [data-id="home"]').click();
+          await page
+            .locator('#main [data-goal-focus="mission-white-noise"]')
+            .click();
+          assert.equal(
+            await page.evaluate(() => document.activeElement.id),
+            "mission-white-noise",
+          );
+          assert.ok(
+            await page
+              .locator('[data-action="prepare"][data-mission="white-noise"]')
+              .first()
+              .isEnabled(),
+          );
+        },
+      );
+    }
     console.log(
       `v3 browser ok: ${checks} complete flows; identity/content/assets/console checked in every flow`,
     );

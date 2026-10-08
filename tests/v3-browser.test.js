@@ -2145,12 +2145,10 @@ async function run() {
             }
             await page.setViewportSize({ width: 1280, height: 900 });
             if (screenshotDir && option === 1 && story === "hospital")
-              await page
-                .locator("#report")
-                .screenshot({
-                  path: path.join(screenshotDir, "dialogue-desktop.png"),
-                  animations: "disabled",
-                });
+              await page.locator("#report").screenshot({
+                path: path.join(screenshotDir, "dialogue-desktop.png"),
+                animations: "disabled",
+              });
             const choice = D.STORIES[story].choices[option];
             await page
               .locator(`[data-action="claim"][data-id="${choice.id}"]`)
@@ -2202,11 +2200,11 @@ async function run() {
               ),
             );
             assert.deepEqual(await read(page), claimed);
-              if (screenshotDir && option === 1 && story === "hospital")
-                await page.locator(`#story-${story}`).screenshot({
-                  path: path.join(screenshotDir, "dialogue-mobile.png"),
-                  animations: "disabled",
-                });
+            if (screenshotDir && option === 1 && story === "hospital")
+              await page.locator(`#story-${story}`).screenshot({
+                path: path.join(screenshotDir, "dialogue-mobile.png"),
+                animations: "disabled",
+              });
             if (story === "hospital") {
               for (const stage of D.PORT)
                 await page.locator('[data-action="port"]').click();
@@ -2257,6 +2255,213 @@ async function run() {
               .first()
               .isEnabled(),
           );
+        },
+      );
+    }
+    for (const [option, focus] of D.PORT_FOCUSES.entries()) {
+      const initial = structuredClone(chapterThree);
+      initial.samples = 100;
+      initial.lore[0].choice = D.STORIES.hospital.choices[option].id;
+      initial.lore[1].choice = D.STORIES.garden.choices[(option + 1) % 3].id;
+      await scenario(
+        `middle chapters ${focus.id}: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation`,
+        { [S.KEY]: JSON.stringify(initial) },
+        async (page) => {
+          const missions = [
+            ...D.MISSIONS.filter((m) => m.campaign),
+            ...D.COUNCIL_MISSIONS,
+          ];
+          for (const [i, mission] of missions.entries()) {
+            const home = page.locator('#navigation [data-id="home"]');
+            if (await home.isEnabled()) await home.click();
+            await page
+              .locator(`#main [data-goal-focus="mission-${mission.id}"]`)
+              .click();
+            assert.equal(
+              await page.locator(`#story-${mission.story}`).count(),
+              0,
+            );
+            const plan = D.EXPEDITION_PLANS[(option + i) % 3];
+            await page
+              .locator(
+                `[data-action="prepare"][data-mission="${mission.id}"][data-id="${plan.id}"]`,
+              )
+              .click();
+            await page
+              .locator(`[data-action="mission"][data-id="${mission.id}"]`)
+              .click();
+            const active = await read(page);
+            assert.equal(active.mission.plan, plan.id);
+            assert.equal(
+              await page.locator(`#story-${mission.story}`).count(),
+              0,
+            );
+            await page.clock.fastForward(active.mission.seconds * 1000 + 5000);
+            if (await page.locator("dialog[open]").count())
+              await page.locator('[data-action="return-next"]').click();
+            const pending = await read(page),
+              scene = E.storyScene(pending, mission.story);
+            const dialogue = page.locator(
+              `#report [data-details-key="report-scene-${mission.story}"]`,
+            );
+            assert.equal(await dialogue.getAttribute("open"), null);
+            await dialogue.locator("summary").focus();
+            await page.keyboard.press("Enter");
+            assert.ok(await dialogue.locator(".scene-transcript").isVisible());
+            assert.ok(
+              (await dialogue.innerText()).includes(
+                `${plan.name}：${plan.report}`,
+              ),
+            );
+            for (const line of scene.lines)
+              assert.ok((await dialogue.innerText()).includes(line.text));
+            assert.equal(await dialogue.locator("h4").count(), 0);
+            assert.deepEqual(await read(page), pending);
+            for (const width of [1280, 375]) {
+              await page.setViewportSize({ width, height: 900 });
+              await noOverflow(page);
+            }
+            await page.setViewportSize({ width: 1280, height: 900 });
+            if (
+              screenshotDir &&
+              option === 0 &&
+              mission.story === "council-log"
+            ) {
+              await dialogue.evaluate((el) =>
+                el.scrollIntoView({ block: "start" }),
+              );
+              await page.screenshot({
+                path: path.join(screenshotDir, "middle-desktop.png"),
+                animations: "disabled",
+              });
+            }
+            const choice = D.STORIES[mission.story].choices[(option + i) % 3];
+            await page
+              .locator(`[data-action="claim"][data-id="${choice.id}"]`)
+              .click();
+            const claimed = await read(page),
+              response = E.storyScene(claimed, mission.story);
+            assert.equal(claimed.lore.at(-1).choice, choice.id);
+            assert.equal(claimed.result, null);
+            for (const line of response.response)
+              assert.ok(
+                (await page.locator(".scene-afterword").innerText()).includes(
+                  line.text,
+                ),
+              );
+            await page.locator('[data-action="scene-read"]').focus();
+            await page.keyboard.press("Enter");
+            assert.equal(
+              await page.evaluate(() => document.activeElement.id),
+              `story-${mission.story}`,
+            );
+            const entry = page.locator(`#story-${mission.story}`);
+            assert.notEqual(await entry.getAttribute("open"), null);
+            assert.ok(
+              await entry.locator(".scene-transcript").first().isVisible(),
+            );
+            assert.ok(
+              (await entry.innerText()).includes(
+                `${plan.name}：${plan.report}`,
+              ),
+            );
+            for (const line of response.response)
+              assert.ok((await entry.innerText()).includes(line.text));
+            assert.deepEqual(await read(page), claimed);
+            if (mission.id === "port-council") {
+              for (const p of D.PORT_FOCUSES)
+                assert.equal(
+                  await page
+                    .locator(
+                      `[data-details-key="archive-scene-port-${p.id}-built"]`,
+                    )
+                    .count(),
+                  0,
+                );
+              await page
+                .locator(`[data-action="port-focus"][data-id="${focus.id}"]`)
+                .click();
+              await page
+                .locator(
+                  `[data-action="confirm-port-focus"][data-id="${focus.id}"]`,
+                )
+                .click();
+              const built = await read(page);
+              assert.equal(built.council.priority, focus.id);
+              assert.equal(built.samples, claimed.samples - focus.samples);
+              const construction = page.locator(
+                `[data-details-key="archive-scene-port-${focus.id}-built"]`,
+              );
+              await construction.locator("summary").focus();
+              await page.keyboard.press("Enter");
+              assert.ok(
+                await construction.locator(".scene-transcript").isVisible(),
+              );
+              for (const p of D.PORT_FOCUSES)
+                assert.equal(
+                  await page
+                    .locator(
+                      `[data-details-key="archive-scene-port-${p.id}-built"]`,
+                    )
+                    .count(),
+                  p.id === focus.id ? 1 : 0,
+                );
+              assert.deepEqual(await read(page), built);
+            }
+            const saved = await read(page);
+            await page.reload();
+            assert.deepEqual(await read(page), saved);
+            await page.locator('#navigation [data-id="explore"]').click();
+            assert.equal(await page.locator(".scene-afterword").count(), 0);
+            await page.locator("#route-archive > summary").click();
+            await page.locator(`#story-${mission.story} > summary`).click();
+            const reread = page.locator(`#story-${mission.story}`);
+            assert.ok(
+              (await reread.innerText()).includes(response.response[0].text),
+            );
+            assert.ok(
+              (await reread.innerText()).includes(
+                `${plan.name}：${plan.report}`,
+              ),
+            );
+            if (mission.requiresPortFocus)
+              assert.ok(
+                (await reread.innerText()).includes(
+                  `${focus.name}：${focus.text}`,
+                ),
+              );
+            assert.deepEqual(await read(page), saved);
+            await page.setViewportSize({ width: 375, height: 900 });
+            await noOverflow(page);
+            if (
+              screenshotDir &&
+              option === 0 &&
+              mission.story === "handoff-plan"
+            ) {
+              await reread.evaluate((el) =>
+                el.scrollIntoView({ block: "start" }),
+              );
+              await page.screenshot({
+                path: path.join(screenshotDir, "middle-mobile.png"),
+                animations: "disabled",
+              });
+            }
+            await page.setViewportSize({ width: 1280, height: 900 });
+          }
+          const completed = await read(page);
+          assert.equal(completed.campaign.completed.length, 3);
+          assert.equal(completed.council.completed.length, 3);
+          assert.deepEqual(completed.rescue.completed, []);
+          assert.equal(completed.rescue.protocol, false);
+          await page.locator('#navigation [data-id="home"]').click();
+          await page.locator('#main [data-goal-focus="rescue-energy"]').click();
+          assert.equal(
+            await page.evaluate(() => document.activeElement.id),
+            "rescue-energy",
+          );
+          assert.ok(await page.locator(".rescue-panel").isVisible());
+          assert.deepEqual(await read(page), completed);
+          await noOverflow(page);
         },
       );
     }

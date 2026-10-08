@@ -363,12 +363,17 @@
       s.result.succeeded === true &&
       byId(D.MISSIONS, s.result.id)?.story === id;
     const project = D.PROJECTS.find((p) => `${p.id}-built` === id);
+    const portFocus = D.PORT_FOCUSES.find((p) => `port-${p.id}-built` === id);
     const milestone =
       id === "awakening"
         ? s.buildings.drone > 0 || s.rebirths > 0 || s.lore.length > 0
         : id === "port-lit"
           ? s.starport === D.PORT.length
-          : project && s.chapter.includes(project.id);
+          : project
+            ? s.chapter.includes(project.id)
+            : portFocus &&
+              s.council.priority === portFocus.id &&
+              s.council.completed[0]?.id === "port-council";
     if (!record && !pending && !milestone) return null;
     const echoes = [];
     const prior =
@@ -376,6 +381,27 @@
       s.lore.find((r) => r.story === story.continuity.story);
     const context = prior && story.continuity.choices[prior.choice];
     if (context) echoes.push({ speaker: "航线回响", text: context });
+    const mission = D.MISSIONS.find((m) => storyMission(m) && m.story === id);
+    const voyage =
+      mission &&
+      (record
+        ? missionTrack(s, mission).completed.find((r) => r.id === mission.id)
+        : pending
+          ? s.result
+          : null);
+    const plan = voyage && byId(D.EXPEDITION_PLANS, voyage.plan);
+    if (plan)
+      echoes.push({
+        speaker: "航前方案",
+        text: `${plan.name}：${plan.report}`,
+      });
+    const focus =
+      mission?.requiresPortFocus && byId(D.PORT_FOCUSES, s.council.priority);
+    if (focus)
+      echoes.push({
+        speaker: "港务回响",
+        text: `${focus.name}：${focus.text}`,
+      });
     for (const echo of scene.echoes || []) {
       const earlier = s.lore.find((r) => r.story === echo.story);
       if (earlier && Object.hasOwn(echo.choices, earlier.choice))
@@ -649,6 +675,7 @@
         "awakening",
         "port-lit",
         ...D.PROJECTS.map((p) => `${p.id}-built`),
+        ...D.PORT_FOCUSES.map((p) => `port-${p.id}-built`),
       ]
         .map((id) => storyScene(s, id))
         .filter(Boolean),

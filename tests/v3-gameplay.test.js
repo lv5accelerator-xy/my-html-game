@@ -2065,4 +2065,163 @@ test("historical dialogue is reconstructed from existing records across restores
   assert.deepEqual(E.routeArchive(s).entries, E.routeArchive(restored).entries);
   assert.equal(D.VERSION, 32);
 });
+test("middle dialogue waits for actual reports and port construction; preparation and rehearsal do not finish the later rescue", () => {
+  const s = thirdChapterReady();
+  for (const id of Object.keys(D.MIDDLE_SCENES))
+    assert.equal(E.storyScene(s, id), null);
+  assert.ok(E.prepareMission(s, "white-noise", "supply"));
+  assert.equal(E.storyScene(s, "observations"), null);
+  assert.ok(E.startMission(s, "white-noise"));
+  assert.equal(E.storyScene(s, "observations"), null);
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  const pending = E.storyScene(s, "observations");
+  assert.equal(pending.pending, true);
+  assert.equal(pending.choice, null);
+  assert.deepEqual(pending.response, []);
+  assert.ok(
+    pending.lines.some(
+      (l) =>
+        l.speaker === "航前方案" &&
+        l.text.includes(D.EXPEDITION_PLANS.find((p) => p.id === "supply").name),
+    ),
+  );
+  const premature = fourthChapterReady();
+  premature.council.priority = "archive";
+  assert.equal(E.storyScene(premature, "port-archive-built"), null);
+  for (const focus of D.PORT_FOCUSES) {
+    const port = fourthChapterReady();
+    finishVoyage(port, "port-council");
+    for (const p of D.PORT_FOCUSES)
+      assert.equal(E.storyScene(port, `port-${p.id}-built`), null);
+    assert.ok(E.buildPortFocus(port, focus.id));
+    for (const p of D.PORT_FOCUSES)
+      assert.equal(
+        Boolean(E.storyScene(port, `port-${p.id}-built`)),
+        p.id === focus.id,
+      );
+    assert.equal(E.routeArchive(port).milestones.length, 6);
+    finishVoyage(port, "old-observatory");
+    finishVoyage(port, "shared-watch");
+    assert.deepEqual(port.rescue.completed, []);
+    assert.equal(port.rescue.protocol, false);
+    assert.equal(E.nextGoal(port).focus, "rescue-energy");
+  }
+});
+test("all middle replies retain actual voyage plans, old decisions and the built port through reading, restoring and jumps", () => {
+  const missions = [
+    ...D.MISSIONS.filter((m) => m.campaign),
+    ...D.COUNCIL_MISSIONS,
+  ];
+  const responses = new Map(missions.map((m) => [m.story, new Set()]));
+  const config = structuredClone(D.NARRATIVE_SCENES);
+  for (const hospital of D.STORIES.hospital.choices)
+    for (const garden of D.STORIES.garden.choices)
+      for (const focus of D.PORT_FOCUSES)
+        for (let planIndex = 0; planIndex < 3; planIndex++)
+          for (let option = 0; option < 3; option++) {
+            let s = thirdChapterReady();
+            s.lore[0].choice = hospital.id;
+            s.lore[1].choice = garden.id;
+            for (const [i, m] of missions.entries()) {
+              if (m.requiresPortFocus && !s.council.priority)
+                assert.ok(E.buildPortFocus(s, focus.id));
+              const plan = D.EXPEDITION_PLANS[(planIndex + i) % 3];
+              assert.ok(E.prepareMission(s, m.id, plan.id));
+              assert.ok(E.startMission(s, m.id));
+              E.advance(s, s.lastAt + s.mission.seconds * 1000, {
+                offline: true,
+              });
+              const report = structuredClone(s);
+              s = S.restore(memory(), JSON.stringify(s), s.lastAt);
+              assert.deepEqual(s, report);
+              const pending = E.storyScene(s, m.story);
+              assert.equal(pending.pending, true);
+              assert.deepEqual(pending.response, []);
+              assert.ok(
+                pending.lines.some(
+                  (l) =>
+                    l.speaker === "航前方案" &&
+                    l.text === `${plan.name}：${plan.report}`,
+                ),
+              );
+              const choice = D.STORIES[m.story].choices[option];
+              assert.ok(E.claimMission(s, choice.id));
+              const claimed = structuredClone(s),
+                scene = E.storyScene(s, m.story);
+              assert.equal(scene.choice, choice.name);
+              assert.equal(scene.pending, false);
+              assert.equal(scene.response.length, 2);
+              responses.get(m.story).add(JSON.stringify(scene.response));
+              for (const echo of D.MIDDLE_SCENES[m.story].echoes || []) {
+                const oldChoice = s.lore.find(
+                  (r) => r.story === echo.story,
+                ).choice;
+                assert.ok(
+                  scene.lines.some((l) => l.text === echo.choices[oldChoice]),
+                );
+              }
+              assert.equal(
+                scene.lines.some((l) => l.speaker === "港务回响"),
+                Boolean(m.requiresPortFocus),
+              );
+              if (m.requiresPortFocus)
+                assert.ok(
+                  scene.lines.some(
+                    (l) => l.text === `${focus.name}：${focus.text}`,
+                  ),
+                );
+              assert.equal(E.claimMission(s, choice.id), false);
+              E.routeArchive(s);
+              assert.deepEqual(s, claimed);
+              s = S.restore(memory(), JSON.stringify(s), s.lastAt);
+              assert.deepEqual(s, claimed);
+              assert.deepEqual(E.storyScene(s, m.story), scene);
+              const next = missions[i + 1];
+              if (next && !next.requiresPortFocus)
+                E.prepareMission(
+                  s,
+                  next.id,
+                  D.EXPEDITION_PLANS[(planIndex + i + 1) % 3].id,
+                );
+              assert.deepEqual(
+                E.storyScene(s, m.story),
+                scene,
+                "a new preparation cannot rewrite the completed voyage",
+              );
+            }
+            const archive = E.routeArchive(s);
+            s.run.dust = D.PRESTIGE_DUST;
+            assert.ok(E.prestige(s));
+            assert.deepEqual(E.routeArchive(s).entries, archive.entries);
+            assert.deepEqual(E.routeArchive(s).milestones, archive.milestones);
+          }
+  for (const replies of responses.values()) assert.equal(replies.size, 3);
+  assert.deepEqual(D.NARRATIVE_SCENES, config);
+  assert.equal(D.VERSION, 32);
+});
+test("older choice-only archives do not invent a voyage plan, and a duplicate pending result cannot replace recorded history", () => {
+  const s = fourthChapterReady();
+  const original = E.storyScene(s, "observations");
+  s.campaign.preparation = { id: "white-noise", plan: "supply" };
+  s.result = {
+    id: "white-noise",
+    story: "observations",
+    succeeded: true,
+    plan: "calibrate",
+  };
+  assert.deepEqual(E.storyScene(s, "observations"), original);
+  s.campaign.completed = [];
+  const before = structuredClone(s),
+    scene = E.storyScene(s, "observations");
+  assert.equal(scene.pending, false);
+  assert.ok(scene.response.length);
+  assert.equal(
+    scene.lines.some((l) => l.speaker === "航前方案"),
+    false,
+  );
+  scene.lines[0].text = "modified local copy";
+  scene.response.pop();
+  assert.deepEqual(s, before);
+  assert.deepEqual(E.storyScene(s, "observations").response, original.response);
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

@@ -70,7 +70,9 @@ async function run() {
     page.on("response", (r) => {
       if (r.status() >= 400) badResponses.push(`${r.status()} ${r.url()}`);
     });
-    await page.clock.install({ time: TIME });
+    // The installed clock advances between RPCs. Start before the target so
+    // pausing never tries to move backwards; the app still starts at exact TIME.
+    await page.clock.install({ time: TIME - 60_000 });
     await page.clock.pauseAt(TIME);
     if (initial)
       await context.addInitScript((items) => {

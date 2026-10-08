@@ -260,12 +260,20 @@ async function main() {
     await page.locator("#command-page-tab").click();
     assert.match(await page.locator("#atlas-next-title").textContent(), /下一条缺失记录/);
     await page.locator("#rebuild-hub > summary").click();
+    const rebuildSaveButton = await page.locator("[data-rebuild-save='slot-1']").elementHandle();
+    await page.waitForTimeout(1600);
+    assert.equal(await rebuildSaveButton.evaluate((button) => button.isConnected), true,
+      "background renders must retain the rebuild save button");
     await page.locator("[data-rebuild-save='slot-1']").click();
     const recordedRebuild = await page.evaluate(() =>
       window.StellarOutpostCloudBridge.getRebuildDiagnostics(),
     );
     assert.equal(recordedRebuild.activePlan.id, "slot-1");
     assert.equal(recordedRebuild.activePlan.buildingTargets.drone, 1200);
+    await page.waitForTimeout(1600);
+    assert.equal(await rebuildSaveButton.evaluate((button) => button.isConnected), true,
+      "recording a plan and refreshing procurement must retain the same button");
+    assert.equal(await rebuildSaveButton.textContent(), "覆盖记录");
     await page.locator("#command-secondary-plans > summary").click();
     await page.locator(".batch-secondary > summary").filter({ hasText: "其他航程建议" }).click();
     const focusRoutes = page.locator("#focus-route-list .focus-route");

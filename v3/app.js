@@ -110,6 +110,13 @@
     dialog.close();
   }
   dialog.addEventListener("close", () => {
+    // A queued close event must not replace focus chosen after dismissal.
+    const active = document.activeElement;
+    if (dialog.open || (
+      active?.isConnected && active !== document.body &&
+      active !== document.documentElement && !dialog.contains(active) &&
+      !active.disabled && active.getClientRects().length
+    )) return;
     const replacement =
       dialogOrigin?.dataset.focus &&
       document.querySelector(

@@ -70,7 +70,9 @@ async function run() {
     page.on("response", (r) => {
       if (r.status() >= 400) badResponses.push(`${r.status()} ${r.url()}`);
     });
-    await page.clock.install({ time: TIME });
+    // The installed clock advances between RPCs. Start before the target so
+    // pausing never tries to move backwards; the app still starts at exact TIME.
+    await page.clock.install({ time: TIME - 60_000 });
     await page.clock.pauseAt(TIME);
     if (initial)
       await context.addInitScript((items) => {
@@ -97,6 +99,35 @@ async function run() {
   const read = (page) =>
     page.evaluate((key) => JSON.parse(localStorage.getItem(key)), S.KEY);
   try {
+    await scenario(
+      "dialog close preserves newer keyboard focus after native close delivery",
+      { [S.KEY]: JSON.stringify(ready()) },
+      async (page) => {
+        const before = await read(page);
+        await page.locator("#settings-button").click();
+        assert.ok(await page.locator("#dialog[open]").isVisible());
+        // Native close is queued. Move focus in the same task to exercise the
+        // real event ordering deterministically, without waits or retries.
+        const focus = await page.evaluate(() => new Promise((resolve) => {
+          const dialog = document.querySelector("#dialog");
+          const summary = document.querySelector(
+            '[data-details-key="home-awakening"] > summary',
+          );
+          dialog.addEventListener("close", () => resolve({
+            retained: document.activeElement === summary,
+            activeId: document.activeElement.id,
+          }), { once: true });
+          dialog.close();
+          summary.focus();
+        }));
+        assert.equal(focus.retained, true, JSON.stringify(focus));
+        await page.keyboard.press("Enter");
+        assert.ok(await page.locator(
+          '[data-details-key="home-awakening"] .scene-transcript',
+        ).isVisible());
+        assert.deepEqual(await read(page), before);
+      },
+    );
     await scenario(
       "new save: readable goal, three initial controls, 1280/375 layout, scans and passive production",
       null,

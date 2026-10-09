@@ -11081,9 +11081,18 @@
     if (state.activePage === "command") renderRebuild();
   }
 
+  const rebuildPlanCards = new Map();
+
   function renderRebuild() {
     const active = getActiveRebuildPlan();
-    elements.rebuildPlanList.innerHTML = state.rebuild.plans.map((plan) => {
+    const planIds = new Set(state.rebuild.plans.map((plan) => plan.id));
+    for (const [id, card] of rebuildPlanCards) {
+      if (!planIds.has(id)) {
+        card.remove();
+        rebuildPlanCards.delete(id);
+      }
+    }
+    state.rebuild.plans.forEach((plan) => {
       const saved = plan.savedAt > 0;
       const unitTotal = Object.values(plan.buildingTargets).reduce(
         (total, amount) => total + amount,
@@ -11096,15 +11105,38 @@
         const missing = Math.max(0, (plan.buildingTargets[building.id] || 0) - owned);
         return safeAdd(sum, missing ? buildingCost(building, owned, missing) : 0);
       }, 0);
-      return `<article class="rebuild-plan${isActive ? " active" : ""}">
-        <div><small>${isActive ? "当前方案" : saved ? "已记录" : "空白方案"}</small><strong>${plan.name}</strong><span>${saved ? `${formatNumber(unitTotal, 0)} 座设施 · ${plan.upgradeOrder.length} 项研究` : "记录当前舰队与研究"}</span></div>
-        <em>${saved ? `${formatNumber(progress.complete, 0)} / ${formatNumber(progress.total, 0)}` : "—"}</em>
-        <button type="button" class="secondary-button" data-rebuild-save="${plan.id}">${saved ? "覆盖记录" : "记录当前"}</button>
-        <button type="button" data-rebuild-activate="${plan.id}" ${saved && !isActive ? "" : "disabled"}>${isActive ? "已启用" : "使用方案"}</button>
-        ${saved ? `<p>记录的作业：${(plan.operationIds || []).map((id) => OPERATIONS_JOBS.find((job) => job.id === id)?.name).filter(Boolean).join("、") || "暂无"}。按原输入消耗执行。</p><button type="button" data-v2-action="operations">安排作业</button>` : ""}
-        ${saved ? `<p>建筑采购尚需约 ${formatNumber(procurement)} 星尘，缺口 ${formatNumber(Math.max(0, procurement - state.dust))}（不含研究）。记录的舰队配装 ${Number(plan.fleetPreset || 0) + 1}、远征配装 ${Number(plan.expeditionPreset || 0) + 1}；换装仍需在对应页面确认并支付原有费用。</p><button type="button" data-v2-action="combat">舰队配装</button><button type="button" data-v2-action="expedition">远征配装</button>` : ""}
-      </article>`;
-    }).join("");
+      let card = rebuildPlanCards.get(plan.id);
+      if (!card) {
+        card = document.createElement("article");
+        card.className = "rebuild-plan";
+        card.innerHTML = `<div><small></small><strong></strong><span></span></div>
+          <em></em>
+          <button type="button" class="secondary-button" data-rebuild-save></button>
+          <button type="button" data-rebuild-activate></button>
+          <p data-rebuild-jobs></p><button type="button" data-v2-action="operations">安排作业</button>
+          <p data-rebuild-procurement></p><button type="button" data-v2-action="combat">舰队配装</button><button type="button" data-v2-action="expedition">远征配装</button>`;
+        card.querySelector("[data-rebuild-save]").dataset.rebuildSave = plan.id;
+        card.querySelector("[data-rebuild-activate]").dataset.rebuildActivate = plan.id;
+        rebuildPlanCards.set(plan.id, card);
+        elements.rebuildPlanList.appendChild(card);
+      }
+      // Keep the clickable nodes alive while production and procurement figures refresh.
+      const updateText = (selector, text) => {
+        const node = card.querySelector(selector);
+        if (node.textContent !== text) node.textContent = text;
+      };
+      card.classList.toggle("active", isActive);
+      updateText("small", isActive ? "当前方案" : saved ? "已记录" : "空白方案");
+      updateText("strong", plan.name);
+      updateText("span", saved ? `${formatNumber(unitTotal, 0)} 座设施 · ${plan.upgradeOrder.length} 项研究` : "记录当前舰队与研究");
+      updateText("em", saved ? `${formatNumber(progress.complete, 0)} / ${formatNumber(progress.total, 0)}` : "—");
+      updateText("[data-rebuild-save]", saved ? "覆盖记录" : "记录当前");
+      updateText("[data-rebuild-activate]", isActive ? "已启用" : "使用方案");
+      card.querySelector("[data-rebuild-activate]").disabled = !saved || isActive;
+      updateText("[data-rebuild-jobs]", `记录的作业：${(plan.operationIds || []).map((id) => OPERATIONS_JOBS.find((job) => job.id === id)?.name).filter(Boolean).join("、") || "暂无"}。按原输入消耗执行。`);
+      updateText("[data-rebuild-procurement]", `建筑采购尚需约 ${formatNumber(procurement)} 星尘，缺口 ${formatNumber(Math.max(0, procurement - state.dust))}（不含研究）。记录的舰队配装 ${Number(plan.fleetPreset || 0) + 1}、远征配装 ${Number(plan.expeditionPreset || 0) + 1}；换装仍需在对应页面确认并支付原有费用。`);
+      card.querySelectorAll("p, [data-v2-action]").forEach((node) => { node.hidden = !saved; });
+    });
     elements.rebuildToggle.disabled = !active;
     elements.rebuildToggle.textContent = state.rebuild.autoEnabled ? "暂停自动重建" : "启用自动重建";
     elements.rebuildStatus.textContent = !active

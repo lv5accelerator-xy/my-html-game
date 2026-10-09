@@ -1,5 +1,7 @@
 <h1 align="center">星港拾荒者</h1>
 
+开发约定见 [AGENTS.md](AGENTS.md)，环境和任务交接见 [CODEX_HANDOFF.md](CODEX_HANDOFF.md)；统一验证入口为 `node scripts/check.cjs`（需配置 Playwright）。
+
 <p align="center">
   一款以深空回收、舰队自动化和多层轮回为核心的中文挂机游戏。
 </p>

@@ -381,18 +381,20 @@ async function main() {
 
     await page.click("#performance-button");
     await page.waitForTimeout(120);
-    const beforeBackground = await page.evaluate(() => ({
-      at: Date.now(),
-      dust: window.StellarOutpostCloudBridge.createSnapshot().dust,
-      diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
-      rate: window.StellarOutpostCloudBridge.getStarportDiagnostics().automaticRate,
-    }));
-    await page.evaluate(() => {
+    const beforeBackground = await page.evaluate(() => {
+      const bridge = window.StellarOutpostCloudBridge;
+      const before = {
+        dust: bridge.createSnapshot().dust,
+        diagnostics: bridge.getPerformanceDiagnostics(),
+        rate: bridge.getStarportDiagnostics().automaticRate,
+      };
       Object.defineProperty(document, "hidden", {
         configurable: true,
         get: () => true,
       });
+      before.at = Date.now();
       document.dispatchEvent(new Event("visibilitychange"));
+      return before;
     });
     await page.waitForTimeout(700);
     const hidden = await page.evaluate(
@@ -402,31 +404,45 @@ async function main() {
     assert.equal(hidden.gameLoopScheduled, false, "background game timer must stop");
     assert.equal(hidden.starfield.scheduled, false, "background starfield must stop");
 
-    await page.evaluate(() => {
+    const backgroundSettlement = await page.evaluate(() => {
       Object.defineProperty(document, "hidden", {
         configurable: true,
         get: () => false,
       });
+      const at = Date.now();
       document.dispatchEvent(new Event("visibilitychange"));
+      // Capture synchronous offline settlement before the resumed timer can run.
+      return {
+        at,
+        dust: window.StellarOutpostCloudBridge.createSnapshot().dust,
+        foregroundRate: window.StellarOutpostCloudBridge.getProductionDiagnostics().total,
+      };
     });
     await page.waitForTimeout(350);
     const resumed = await page.evaluate(() => ({
       at: Date.now(),
       dust: window.StellarOutpostCloudBridge.createSnapshot().dust,
       diagnostics: window.StellarOutpostCloudBridge.getPerformanceDiagnostics(),
+      foregroundRate: window.StellarOutpostCloudBridge.getProductionDiagnostics().total,
     }));
     const settledDust = resumed.dust - beforeBackground.dust;
-    // Browser scheduling can exceed the requested 700 + 350 ms on a busy runner.
-    // Compare against elapsed time, allowing one current-mode tick at each boundary.
-    const elapsedSeconds = (resumed.at - beforeBackground.at) / 1000;
+    // Offline excludes temporary boosts; foreground may include them. Measure
+    // the two phases separately rather than bounding both by the offline rate.
+    const backgroundSeconds = (backgroundSettlement.at - beforeBackground.at) / 1000;
+    const backgroundGain = backgroundSettlement.dust - beforeBackground.dust;
+    const expectedBackground = beforeBackground.rate * backgroundSeconds;
+    assert.ok(Math.abs(backgroundGain - expectedBackground) <= beforeBackground.rate * 0.03,
+      `background must settle exactly once: gained=${backgroundGain}, expected=${expectedBackground}`);
+    const elapsedSeconds = (resumed.at - backgroundSettlement.at) / 1000;
+    const foregroundRate = Math.max(backgroundSettlement.foregroundRate, resumed.foregroundRate);
     const boundarySeconds = beforeBackground.diagnostics.gameTickInterval * 2 / 1000;
     assert.ok(
       settledDust > beforeBackground.rate * 0.65,
       "background production must include the paused interval after resume",
     );
     assert.ok(
-      settledDust < beforeBackground.rate * (elapsedSeconds + boundarySeconds),
-      `background settlement must not duplicate production: gained=${settledDust}, rate=${beforeBackground.rate}, elapsed=${elapsedSeconds}`,
+      resumed.dust - backgroundSettlement.dust < foregroundRate * (elapsedSeconds + boundarySeconds),
+      `resumed foreground must not duplicate production: gained=${resumed.dust - backgroundSettlement.dust}, rate=${foregroundRate}, elapsed=${elapsedSeconds}`,
     );
     assert.equal(resumed.diagnostics.gameLoopScheduled, true);
     assert.equal(resumed.diagnostics.starfield.scheduled, true);

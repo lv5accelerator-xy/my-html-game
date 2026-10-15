@@ -7,7 +7,7 @@
   "use strict";
   const data = {
     VERSION: 32,
-    GAME_VERSION: "3.8.0-preview.1",
+    GAME_VERSION: "3.9.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -2018,6 +2018,205 @@
         ],
       },
     },
+    ARCHIVE_CHAPTERS: [
+      { number: 1, title: "最后一盏灯", stories: ["hospital", "garden"], milestones: ["awakening", "port-lit"] },
+      { number: 2, title: "远航星图", stories: ["relay", "nursery", "horizon"], milestones: ["relay-built", "nursery-built", "lighthouse-built"] },
+      { number: 3, title: "白噪声海", stories: ["observations", "beacon", "arrival"], milestones: [] },
+      { number: 4, title: "谁的归航权", stories: ["council-log", "tide-record", "handoff-plan"], milestones: ["port-reception-built", "port-ecology-built", "port-archive-built"] },
+      { number: 5, title: "没有唯一灯塔", stories: ["relay-arrival", "berth-arrival", "light-arrival"], milestones: ["rescue-power", "backup-berth", "keeper-signed"] },
+      { number: 6, title: "给未来一个地址", stories: [], milestones: ["future-meeting", "epilogue-ayao", "epilogue-qiyue", "epilogue-wei", "ending-city", "ending-watch", "ending-voyage"] },
+    ],
+    LATE_SCENES: {
+      "rescue-power": {
+        title: "把灯交给下一班",
+        location: "第五章 · 已确认的救援供电记录",
+        lines: [
+          { speaker: "维修员", text: "中继的用电表已经重算。旧设备各自需要多少电、什么时候停下来，都会交给下一班。" },
+          { speaker: "祁岳", text: "把改动的设备和不动的设备都列清楚。接待区的供暖、居民的住处、原始观测记录，已经有人逐项核对。" },
+          { speaker: "阿遥", text: "我把供电安排带到中继。换班的人看过同一份表，知道哪盏灯该在什么时候亮。" },
+          { speaker: "归航", text: "供电方案已登记。每支船队仍需分别确认窗口、出发意愿与目的港接待。" },
+        ],
+      },
+      "relay-arrival": {
+        title: "每一段，都有人回应",
+        location: "第五章 · 第一队归航通信",
+        lines: [
+          { speaker: "阿遥", text: "归航星港，这里是中继。观测员已经读回边界，我把窗口和暂停条件再发一遍。" },
+          { speaker: "第一队船长", text: "本船收到。我们核对过等待地址，愿意在这个窗口出发。下一段若关闭，就停在标出的泊位。" },
+          { speaker: "祁岳", text: "灯九接待端收到。铺位、供暖和接班人都在清单上，船到这里会有人接。" },
+          { speaker: "归航", text: "三份应答分别留档。中央继续核验，现场可以按共同确认的条件暂停。" },
+          { speaker: "第一队船长", text: "最后一艘已经停稳。我们带来的工具可以先卸到接待区，再留一位船员和下一班一起核对。" },
+          { speaker: "阿遥", text: "收到。第二队那一段窗口关闭了，我们先把他们安置到备用泊位，再重新看下一段。" },
+        ],
+        responses: {
+          watch: [
+            { speaker: "你", text: "把这次应答和暂停条件一起交给下一班。" },
+            { speaker: "阿遥", text: "已经交到接班人的手上。他们会重新询问下一队，不会把这队的同意抄过去。" },
+          ],
+          captains: [
+            { speaker: "你", text: "请抵达船长和我们一起核对下一段记录。" },
+            { speaker: "第一队船长", text: "我带着本船的原始航段来。设备有偏差的地方，也会写在旁边。" },
+          ],
+          supply: [
+            { speaker: "你", text: "先让需要照护的人坐下来，把补给送到接待端。" },
+            { speaker: "祁岳", text: "接待员已经分好工作。下一队收到的地址，会写清补水和照护在哪里。" },
+          ],
+        },
+      },
+      "backup-berth": {
+        title: "暂停时，也有人接班",
+        location: "第五章 · 已确认的备用泊位与轮班记录",
+        lines: [
+          { speaker: "第二队船长", text: "我们停在你们给出的泊位。现在的窗口已经关闭，船上愿意等下一次核验。" },
+          { speaker: "阿遥", text: "收到。我和值班组在中继，补给位置和接班人的频道都已经发给你。" },
+          { speaker: "祁岳", text: "灯九会保留接待安排。新的窗口出现后，我们重新确认，不沿用上一队的应答。" },
+          { speaker: "归航", text: "等待地址与负责人已登记。名单上的船队持续保留，下一步由你手动接续。" },
+        ],
+      },
+      "berth-arrival": {
+        title: "等待也有一个地址",
+        location: "第五章 · 第二队归航通信",
+        lines: [
+          { speaker: "阿遥", text: "第二队，中继读到了新的短窗口。先核对它的边界，上一段关闭的记录仍保留。" },
+          { speaker: "第二队船长", text: "边界读回一致。本船准备完毕，确认沿这段短线出发。" },
+          { speaker: "祁岳", text: "灯九核对完毕。泊位和照护班都能接替，请在最后一个交接点再读回一次地址。" },
+          { speaker: "第二队船长", text: "最后一条船已经进港。等着的时候，我们知道补给在哪，也知道下一次应该联系谁。" },
+          { speaker: "归航", text: "关闭、等待和重新出发分别归档。第二队安全抵达。" },
+          { speaker: "阿遥", text: "第三队的通信器坏了。导航仪看得到它，下一步还要等他们自己的回应。" },
+        ],
+        responses: {
+          address: [
+            { speaker: "你", text: "把核验过的备用地址交给沿线航站。" },
+            { speaker: "第二队船长", text: "请把联系频道也留下。后来的人在那里等待时，能知道有人会回答。" },
+          ],
+          care: [
+            { speaker: "你", text: "先把下一班照护排好，再接最后一队。" },
+            { speaker: "祁岳", text: "照护班已经完成交接。我们会在目的港应答前，再检查一遍接待能力。" },
+          ],
+          pause: [
+            { speaker: "你", text: "把窗口关闭时的原始观测一并保留。" },
+            { speaker: "归航", text: "记录附有来源与核验边界。下一班可以据此判断什么时候需要暂停。" },
+          ],
+        },
+      },
+      "light-arrival": {
+        title: "先来坐一会儿",
+        location: "第五章 · 第三队归航通信",
+        echoes: [
+          { story: "hospital", choices: {
+            scrap: "禾留下的船体编号仍在拆解记录里。这一次，灯后的船员自己回应了交接请求。",
+            repair: "中继的备用电源来自当年修复过的设备。阿遥等待眼前船队的确认，母亲的旧录音保留原来的时间。",
+            preserve: "禾的平安讯息仍由家属确认保存。眼前的三声灯光，是活着的船员此时发来的回应。",
+          } },
+        ],
+        lines: [
+          { speaker: "归航", text: "导航仪确认第三队的轨道。通信器没有应答，需要继续等待现场确认。" },
+          { speaker: "你", text: "保持距离，按约定发三声短脉冲。让他们准备好以后再回答。" },
+          { speaker: "航路记录", text: "远处的信号灯亮了三下。观测员读回窗口，船长用灯光确认，灯九回应接待地址。" },
+          { speaker: "祁岳", text: "最后一艘停稳了。接待区已经交班，修船和补水都有负责人。" },
+          { speaker: "来船的孩子", text: "这里能把水壶装满吗？" },
+          { speaker: "阿遥", text: "能。先来坐一会儿。" },
+          { speaker: "归航", text: "等待名单上的三队安全抵达。共同协议仍需由两港居民和船长核对签署。" },
+        ],
+        responses: {
+          water: [
+            { speaker: "你", text: "把水和座位准备好，今天值班的人也轮流休息。" },
+            { speaker: "阿遥", text: "第一杯水已经递过去了。来接班的人会知道这里还剩多少物资。" },
+          ],
+          signals: [
+            { speaker: "你", text: "把三声灯光的约定留给船长和交接点。" },
+            { speaker: "第三队船长", text: "我会带着这份记录。通信器坏了以后，我们仍然有办法明确回答。" },
+          ],
+          repair: [
+            { speaker: "你", text: "安排修船、补给和轮班，让救援在这里交完。" },
+            { speaker: "祁岳", text: "维护表已经有人接过去。下一次接引，能够从这些核对过的记录开始。" },
+          ],
+        },
+      },
+      "keeper-signed": {
+        title: "每段航路都有负责人",
+        location: "第五章 · 共同守灯协议会议",
+        lines: [
+          { speaker: "祁岳", text: "观测员确认窗口，船长确认出发，目的港确认接待。哪一方还没有准备好，都能提出暂停。" },
+          { speaker: "第一队船长", text: "请留下每次暂停的理由和等待地址。后来接班的人也能核查。" },
+          { speaker: "阿遥", text: "通信中断时，现场照共同约定等待。重新联络后，再把三份应答逐项问一遍。" },
+          { speaker: "归航", text: "中央保存原始资料，继续核验与预警。失联不作为同意记录。" },
+          { speaker: "你", text: "把两港、船长和轮班人员的名字写在各自的责任旁边，让下一班能接着维护。" },
+          { speaker: "会议记录", text: "三队的完整交接已送达会议。签署仍由玩家手动确认，阅读会议通信不会签署协议。" },
+        ],
+      },
+      "future-meeting": {
+        title: "没有被警报打断的会议",
+        location: "第六章 · 共同交接",
+        lines: [
+          { speaker: "阿遥", text: "今天的会议没有紧急呼叫。接待频道有下一班守着，我可以把自己的交接说完。" },
+          { speaker: "祁岳", text: "维护表有人试着独立走过一遍。我的名字留在观测班里，其他工作也有接替的人。" },
+          { speaker: "园丁", text: "种苗可以分株了。留下和带走的每一份，都能附上来源和照料地址。" },
+          { speaker: "归航", text: "三份居民交接等待记录。之后由你阅读各项提案，明确确认星港的未来。" },
+        ],
+      },
+      "epilogue-ayao": {
+        title: "阿遥 · 从等待到回应",
+        location: "第六章 · 通信员的交接",
+        lines: [
+          { speaker: "阿遥", text: "我把接收器从独立求助频段上拆下来了。母亲的留言有原始时间和来源，家属确认的副本留在档案里。" },
+          { speaker: "你", text: "接收器以后放在哪里？" },
+          { speaker: "阿遥", text: "放在家里。我会留着它，也会去上通信员的课。今天频道另一头的人，还在等我们回答。" },
+          { speaker: "归航", text: "禾的声音属于历史录音。阿遥的通信训练和下一班接待，是现在的安排。" },
+        ],
+      },
+      "epilogue-qiyue": {
+        title: "祁岳 · 可以交出去的班表",
+        location: "第六章 · 维护员的交接",
+        lines: [
+          { speaker: "祁岳", text: "这张表由别人按顺序核对过了。原始观测、暂停条件、备用联系点，都能找到。" },
+          { speaker: "接班维护员", text: "供暖和接待端已经签完。我知道哪一项需要再问你，也知道哪些可以自己处理。" },
+          { speaker: "祁岳", text: "我还会为新的航段做观测。我希望不值班的时候，也有人能把船安全接回来。" },
+          { speaker: "你", text: "这一班交给他们。下一次需要核验时，我们再一起看新的记录。" },
+        ],
+      },
+      "epilogue-wei": {
+        title: "苇 · 两个地址的春天",
+        location: "第六章 · 种苗与照料者的交接",
+        lines: [
+          { speaker: "园丁", text: "第一批分株已经登记。留在星港的和送出去的，都写上苇的名字、来源和照料地址。" },
+          { speaker: "你", text: "窗前也能坐人了。" },
+          { speaker: "园丁", text: "椅子昨天搬进来了。交班以后可以坐一会儿，灯会照着植物需要的时段亮。" },
+          { speaker: "航路记录", text: "苇的旧留言仍保留原来的来源与时间。幼苗的后代由新的照料者接手。" },
+        ],
+      },
+      "ending-city": {
+        title: "归航之城 · 下一班先回答",
+        location: "第六章 · 归航之城尾声",
+        lines: [
+          { speaker: "阿遥", text: "这是今天的最后一份交接。下一班已经读过容量、窗口和暂停条件。" },
+          { speaker: "你", text: "那我先到窗前坐一会儿。" },
+          { speaker: "归航", text: "下班指令已确认。三号泊位收到来船的交接请求。" },
+          { speaker: "接班通信员", text: "这里是归航星港。请报告位置，我们会与你确认下一段航路。" },
+          { speaker: "航路记录", text: "你还没有起身，另一个人已经接起频道。窗前的灯按植物需要的时段亮着。" },
+        ],
+      },
+      "ending-watch": {
+        title: "守望之港 · 为你保留交接时间",
+        location: "第六章 · 守望之港尾声",
+        lines: [
+          { speaker: "接班维护员", text: "这一班的独立观测和检修已经核对。接待区确认了补水点与备用等待位置。" },
+          { speaker: "祁岳", text: "收到，我把这次带回来的原始资料交给你们。" },
+          { speaker: "接班通信员", text: "这里是归航星港。我们为你保留了交接时间。" },
+          { speaker: "航路记录", text: "一年后的维护员能够独立接班。育种舱窗前换过椅子，桌上多了一封外地的培育报告。" },
+        ],
+      },
+      "ending-voyage": {
+        title: "携种远航 · 两个地址都有春天",
+        location: "第六章 · 携种远航尾声",
+        lines: [
+          { speaker: "你", text: "这里是远航一号。地面复核完成，第一批实验苗已经发芽。" },
+          { speaker: "阿遥 · 远程通信", text: "星港收到。接待区刚完成交班，新来的船正在补水，我把这段录音一起发给你。" },
+          { speaker: "归航 · 船上副本", text: "种植站与星港分别保留照料记录。沿线的航路与补给状态持续核验。" },
+          { speaker: "航路记录", text: "第二个生长季，土地上的树苗长出新叶。另一些后代仍在星港窗前，由留守的人照顾。" },
+        ],
+      },
+    },
     EPILOGUE_INTRO: [
       "数周后，港务会议终于没有被紧急警报打断。人们知道异常潮汐仍可能回来，也知道什么时候暂停、在哪里等待，以及怎样重新核验航路。今天要决定的，不是谁独自守完下一班，而是谁能接过这座星港。",
       "一位新抵达的园丁带来了异地培育报告，勘察队也带回了探针核验的宜居轨道资料。接待、守望或远航，都有参与的人和可执行的安排。先听完三份交接，再共同选择星港的未来。没有隐藏善恶分数，过去的建设不会锁住任何结局。",
@@ -2203,6 +2402,7 @@
   data.MISSIONS.push(...data.COUNCIL_MISSIONS, ...data.RESCUE_MISSIONS);
   data.LETTERS.push(...data.EPILOGUE_LETTERS);
   Object.assign(data.NARRATIVE_SCENES, data.MIDDLE_SCENES);
+  Object.assign(data.NARRATIVE_SCENES, data.LATE_SCENES);
   Object.assign(data.STORIES, data.COUNCIL_STORIES, data.RESCUE_STORIES);
   return Object.freeze(data);
 });

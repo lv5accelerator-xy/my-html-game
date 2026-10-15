@@ -70,7 +70,8 @@ async function run() {
     page.on("response", (r) => {
       if (r.status() >= 400) badResponses.push(`${r.status()} ${r.url()}`);
     });
-    await page.clock.install({ time: TIME });
+    // Start before the target so the advancing clock never pauses in the past.
+    await page.clock.install({ time: TIME - 60_000 });
     await page.clock.pauseAt(TIME);
     if (initial)
       await context.addInitScript((items) => {
@@ -96,7 +97,26 @@ async function run() {
   }
   const read = (page) =>
     page.evaluate((key) => JSON.parse(localStorage.getItem(key)), S.KEY);
+  const openArchiveRecord = async (page, selector) => {
+    const chapter = await page.locator(selector).evaluate((node) => node.closest(".archive-chapter").id);
+    await page.locator(`#route-archive .archive-nav [data-goal-focus="${chapter}"]`).click();
+  };
   try {
+    await scenario("native dialog close keeps the newer keyboard reading focus", { [S.KEY]: JSON.stringify(ready()) }, async (page) => {
+      const before = await read(page);
+      await page.locator("#settings-button").click();
+      const retained = await page.evaluate(() => new Promise((resolve) => {
+        const dialog = document.querySelector("#dialog");
+        const summary = document.querySelector('[data-details-key="home-awakening"] > summary');
+        dialog.addEventListener("close", () => resolve(document.activeElement === summary), { once: true });
+        dialog.close();
+        summary.focus();
+      }));
+      assert.equal(retained, true);
+      await page.keyboard.press("Enter");
+      assert.ok(await page.locator('[data-details-key="home-awakening"] .scene-transcript').isVisible());
+      assert.deepEqual(await read(page), before);
+    });
     await scenario(
       "new save: readable goal, three initial controls, 1280/375 layout, scans and passive production",
       null,
@@ -1053,11 +1073,13 @@ async function run() {
           await page.locator(".archive-current").innerText(),
           /第四章|第4章/,
         );
+        await openArchiveRecord(page, '[data-focus="letter-receipt"]');
         await page.locator('[data-focus="letter-receipt"]').click();
         assert.match(
           await page.locator('[data-details-key="letter-receipt"]').innerText(),
           /平安讯息/,
         );
+        await openArchiveRecord(page, '[data-focus="letter-handoff"]');
         await page.locator('[data-focus="letter-handoff"]').click();
         assert.match(
           await page.locator('[data-details-key="letter-handoff"]').innerText(),
@@ -1076,8 +1098,7 @@ async function run() {
         );
         if (screenshotDir)
           await page
-            .locator(".character-file")
-            .filter({ hasText: "祁岳" })
+            .locator('[data-details-key="letter-handoff"]')
             .screenshot({
               path: path.join(screenshotDir, "qiyue-letter-mobile.png"),
             });
@@ -1375,7 +1396,8 @@ async function run() {
             await page.locator(".archive-current").innerText(),
             /第5章/,
           );
-          await page.locator('[data-focus="letter-next-watch"]').click();
+          await openArchiveRecord(page, '[data-focus="letter-next-watch"]');
+        await page.locator('[data-focus="letter-next-watch"]').click();
           assert.match(
             await page
               .locator('[data-details-key="letter-next-watch"]')
@@ -1702,7 +1724,8 @@ async function run() {
             await page.locator(".archive-current").innerText(),
             /第6章.*给未来一个地址/,
           );
-          await page.locator('[data-focus="letter-shared-protocol"]').click();
+          await openArchiveRecord(page, '[data-focus="letter-shared-protocol"]');
+        await page.locator('[data-focus="letter-shared-protocol"]').click();
           assert.match(
             await page
               .locator('[data-details-key="letter-shared-protocol"]')
@@ -1980,7 +2003,8 @@ async function run() {
               await page.locator('[data-focus^="letter-future-"]').count(),
               3,
             );
-            await page.locator('[data-focus="letter-future-seed"]').click();
+            await openArchiveRecord(page, '[data-focus="letter-future-seed"]');
+        await page.locator('[data-focus="letter-future-seed"]').click();
             assert.match(
               await page
                 .locator('[data-details-key="letter-future-seed"]')
@@ -2193,6 +2217,7 @@ async function run() {
             await page.locator('#navigation [data-id="explore"]').click();
             assert.equal(await page.locator(".scene-afterword").count(), 0);
             await page.locator("#route-archive > summary").click();
+            await openArchiveRecord(page, `#story-${story}`);
             await page.locator(`#story-${story} > summary`).click();
             assert.ok(
               (await page.locator(`#story-${story}`).innerText()).includes(
@@ -2233,7 +2258,8 @@ async function run() {
               const record = page.locator(
                 `[data-details-key="archive-scene-${project.id}-built"]`,
               );
-              await record.locator("summary").click();
+              await openArchiveRecord(page, `[data-details-key="archive-scene-${project.id}-built"]`);
+            await record.locator("summary").click();
               assert.ok(await record.locator(".scene-transcript").isVisible());
               assert.deepEqual(await read(page), built);
               await noOverflow(page);
@@ -2392,7 +2418,8 @@ async function run() {
               const construction = page.locator(
                 `[data-details-key="archive-scene-port-${focus.id}-built"]`,
               );
-              await construction.locator("summary").focus();
+              await openArchiveRecord(page, `[data-details-key="archive-scene-port-${focus.id}-built"]`);
+            await construction.locator("summary").focus();
               await page.keyboard.press("Enter");
               assert.ok(
                 await construction.locator(".scene-transcript").isVisible(),
@@ -2414,6 +2441,7 @@ async function run() {
             await page.locator('#navigation [data-id="explore"]').click();
             assert.equal(await page.locator(".scene-afterword").count(), 0);
             await page.locator("#route-archive > summary").click();
+            await openArchiveRecord(page, `#story-${mission.story}`);
             await page.locator(`#story-${mission.story} > summary`).click();
             const reread = page.locator(`#story-${mission.story}`);
             assert.ok(
@@ -2464,6 +2492,159 @@ async function run() {
           await noOverflow(page);
         },
       );
+    }
+    for (const [index, focus] of D.PORT_FOCUSES.entries()) {
+      const energy = D.RESCUE_ENERGY[index];
+      await scenario(`rescue dialogue ${focus.name}/${energy.name}: live replies, actual plans, safe waiting, chapter navigation and read-only reload`, { [S.KEY]: JSON.stringify(rescueReady(focus.id)) }, async (page) => {
+        await page.locator('#navigation [data-id="explore"]').click();
+        assert.equal(await page.locator('[data-details-key="rescue-power-scene"]').count(), 0);
+        await page.locator(`[data-action="rescue-energy"][data-id="${energy.id}"]`).click();
+        await page.locator(`[data-action="confirm-rescue-energy"][data-id="${energy.id}"]`).click();
+        await page.locator('[data-details-key="rescue-power-scene"] > summary').click();
+        assert.ok((await page.locator('[data-details-key="rescue-power-scene"]').innerText()).includes(energy.name));
+        for (const [i, m] of D.RESCUE_MISSIONS.entries()) {
+          const plan = D.EXPEDITION_PLANS[(index + i) % 3], choice = D.STORIES[m.story].choices[index];
+          await page.setViewportSize({ width: i ? 375 : 1280, height: 900 });
+          assert.equal(await page.locator(`[data-details-key="report-scene-${m.story}"]`).count(), 0);
+          if (m.requiresBackupBerth) {
+            const waiting = (await read(page)).rescue;
+            await page.clock.fastForward(8 * 3600 * 1000);
+            await page.locator('#dialog [data-action="return-next"]').click();
+            assert.deepEqual((await read(page)).rescue, waiting);
+            await page.locator('[data-action="rescue-berth"]').click();
+            const before = await read(page);
+            await page.locator('[data-details-key="backup-berth-scene"] > summary').click();
+            assert.ok(await page.locator('[data-details-key="backup-berth-scene"] .scene-transcript').isVisible());
+            assert.deepEqual(await read(page), before);
+          }
+          for (const c of D.RESCUE_CONFIRMATIONS)
+            await page.locator(`[data-action="rescue-check"][data-id="${c.id}"]`).click();
+          await page.locator(`[data-action="prepare"][data-mission="${m.id}"][data-id="${plan.id}"]`).click();
+          await page.locator(`[data-action="mission"][data-id="${m.id}"]`).click();
+          const active = await read(page);
+          assert.equal(active.mission.plan, plan.id);
+          assert.equal(active.mission.energy, energy.id);
+          await page.clock.fastForward(active.mission.seconds * 1000);
+          await page.locator('#dialog [data-action="return-next"]').click();
+          await page.locator("#report").waitFor();
+          const pending = await read(page), expected = E.storyScene(pending, m.story);
+          const summary = page.locator(`[data-details-key="report-scene-${m.story}"] > summary`);
+          await summary.focus();
+          await page.keyboard.press("Enter");
+          assert.ok(await page.locator(`[data-details-key="report-scene-${m.story}"] .scene-transcript`).isVisible());
+          const text = await page.locator(`#report`).innerText();
+          for (const line of expected.lines) assert.ok(text.includes(line.text));
+          assert.deepEqual(await read(page), pending);
+          await noOverflow(page);
+          if (screenshotDir && index === 1 && i === 2)
+            await page.locator("#report").screenshot({ path: path.join(screenshotDir, "v3.9-rescue-mobile.png"), animations: "disabled" });
+          await page.locator(`[data-action="claim"][data-id="${choice.id}"]`).click();
+          const claimed = await read(page), response = E.storyScene(claimed, m.story);
+          assert.equal(await page.locator(".scene-afterword").count(), 1);
+          for (const line of response.response) assert.ok((await page.locator(".scene-afterword").innerText()).includes(line.text));
+          await page.locator('[data-action="scene-read"]').click();
+          assert.equal(await page.evaluate(() => document.activeElement.id), `story-${m.story}`);
+          assert.ok(await page.locator(`#story-${m.story} .scene-transcript`).first().isVisible());
+          assert.deepEqual(await read(page), claimed);
+          await page.reload();
+          assert.deepEqual(await read(page), claimed);
+          await page.locator('#navigation [data-id="explore"]').click();
+          await page.locator("#route-archive > summary").click();
+          await openArchiveRecord(page, `#story-${m.story}`);
+          await page.locator(`#story-${m.story} > summary`).click();
+          assert.ok((await page.locator(`#story-${m.story}`).innerText()).includes(plan.name));
+          assert.ok((await page.locator(`#story-${m.story}`).innerText()).includes(energy.name));
+          for (const line of response.response) assert.ok((await page.locator(`#story-${m.story}`).innerText()).includes(line.text));
+          assert.deepEqual(await read(page), claimed);
+        }
+        assert.equal(await page.locator('[data-details-key="archive-scene-keeper-signed"]').count(), 0);
+        const before = await read(page);
+        await page.locator('[data-details-key="keeper-scene"] > summary').click();
+        assert.deepEqual(await read(page), before);
+        assert.equal(before.rescue.protocol, false);
+        await page.locator('[data-action="keeper-protocol"]').click();
+        const signed = await read(page);
+        assert.equal(signed.rescue.protocol, true);
+        assert.deepEqual(signed.epilogue, { confirmed: [], ending: null });
+        await openArchiveRecord(page, '[data-details-key="archive-scene-keeper-signed"]');
+        await page.locator('[data-details-key="archive-scene-keeper-signed"] > summary').click();
+        assert.ok(await page.locator('[data-details-key="archive-scene-keeper-signed"] .scene-transcript').isVisible());
+        assert.deepEqual(await read(page), signed);
+        assert.equal(await page.locator('#route-archive [data-action="claim"]').count(), 0);
+        await noOverflow(page);
+      });
+      await scenario(`finale dialogue ${focus.name}: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending`, { [S.KEY]: JSON.stringify(endingReady(focus.id, energy.id)) }, async (page) => {
+        await page.locator('#navigation [data-id="explore"]').click();
+        for (const h of D.EPILOGUE_HANDOFFS) {
+          const before = await read(page);
+          const record = page.locator(`[data-details-key="epilogue-scene-${h.id}"]`);
+          await record.locator("summary").click();
+          assert.ok(await record.locator(".scene-transcript").isVisible());
+          assert.deepEqual(await read(page), before);
+          assert.equal(await page.locator(`[data-details-key="archive-handoff-${h.id}"]`).count(), 0);
+          await page.locator(`[data-action="epilogue-confirm"][data-id="${h.id}"]`).click();
+          assert.equal(await page.locator(`[data-details-key="archive-handoff-${h.id}"]`).count(), 1);
+        }
+        const ready = await read(page);
+        for (const ending of D.ENDINGS) {
+          await page.locator(`[data-action="ending-preview"][data-id="${ending.id}"]`).click();
+          const record = page.locator(`#dialog [data-details-key="preview-ending-${ending.id}"]`);
+          await record.locator("summary").focus();
+          await page.keyboard.press("Enter");
+          assert.ok(await record.locator(".scene-transcript").isVisible());
+          assert.deepEqual(await read(page), ready);
+          await page.keyboard.press("Escape");
+          assert.equal((await read(page)).epilogue.ending, null);
+          assert.equal(await page.locator('[data-details-key^="archive-ending-"]').count(), 0);
+        }
+        await page.reload();
+        assert.deepEqual(await read(page), ready);
+        await page.locator('#navigation [data-id="explore"]').click();
+        const ending = D.ENDINGS[(index + 1) % 3];
+        await page.locator(`[data-action="ending-preview"][data-id="${ending.id}"]`).click();
+        await page.locator(`[data-action="confirm-ending"][data-id="${ending.id}"]`).click();
+        const ended = await read(page);
+        assert.equal(ended.epilogue.ending, ending.id);
+        await page.locator('.ending-actions [data-goal-focus="route-archive"]').click();
+        assert.equal(await page.locator(".archive-chapter").count(), 6);
+        for (let n = 1; n <= 5; n++) assert.equal(await page.locator(`#archive-chapter-${n}`).getAttribute("open"), null);
+        for (let n = 1; n <= 6; n++) {
+          await page.locator(`#route-archive .archive-nav [data-goal-focus="archive-chapter-${n}"]`).click();
+          assert.equal(await page.evaluate(() => document.activeElement.id), `archive-chapter-${n}`);
+          assert.notEqual(await page.locator(`#archive-chapter-${n}`).getAttribute("open"), null);
+          assert.deepEqual(await read(page), ended);
+        }
+        assert.equal(await page.locator('[data-details-key^="archive-ending-"]').count(), 1);
+        await page.locator(`[data-details-key="archive-ending-${ending.id}"] > summary`).click();
+        assert.ok(await page.locator(`[data-details-key="archive-ending-${ending.id}"] .scene-transcript`).isVisible());
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          await noOverflow(page);
+        }
+        assert.deepEqual(await read(page), ended);
+        const summary = await page.locator("#archive-chapter-6 > summary").elementHandle();
+        await page.clock.runFor(1000);
+        assert.equal(await summary.evaluate((node) => node.isConnected), true, "income refresh retains the chapter summary being read");
+        assert.deepEqual((await read(page)).epilogue, ended.epilogue);
+        await page.clock.runFor(4000); // Reach the real five-second autosave before comparing a reload.
+        const memory = await read(page);
+        assert.equal(memory.lastAt, await page.evaluate(() => Date.now()));
+        if (screenshotDir && index === 0) {
+          await page.setViewportSize({ width: 1280, height: 900 });
+          for (let n = 1; n <= 5; n++) await page.locator(`#archive-chapter-${n} > summary`).click();
+          await page.locator("#route-archive").screenshot({ path: path.join(screenshotDir, "v3.9-archive-desktop.png"), animations: "disabled" });
+        }
+        await page.reload();
+        assert.deepEqual(await read(page), memory);
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator('.ending-actions [data-goal-focus="route-archive"]').click();
+        await openArchiveRecord(page, "#story-hospital");
+        await page.locator("#story-hospital > summary").click();
+        assert.ok(await page.locator("#story-hospital .scene-transcript").first().isVisible());
+        assert.deepEqual(await read(page), memory);
+        assert.equal((await read(page)).epilogue.ending, ending.id);
+        assert.equal(await page.locator('#route-archive [data-action="claim"]').count(), 0);
+      });
     }
     console.log(
       `v3 browser ok: ${checks} complete flows; identity/content/assets/console checked in every flow`,

@@ -408,7 +408,11 @@ async function main() {
       save.lastSeen = Date.now();
       bridge.applySnapshot(save);
     });
-    await page.waitForTimeout(260);
+    // Observe a completed real game-loop action rather than racing one 250ms tick.
+    await page.waitForFunction(() =>
+      window.StellarOutpostCloudBridge.getOperationsDiagnostics().totalActions >= 1,
+      undefined, { timeout: 5000, polling: 100 },
+    );
     const processedOperation = await page.evaluate(() =>
       window.StellarOutpostCloudBridge.getOperationsDiagnostics(),
     );

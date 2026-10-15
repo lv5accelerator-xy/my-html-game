@@ -347,7 +347,7 @@
       D.MISSIONS.filter((m) => m.campaign)[s.campaign.completed.length] || null
     );
   }
-  function storyScene(s, id) {
+  function storyScene(s, id, { preview = false } = {}) {
     // Scenes are read from existing progress; reading never writes a save or claims a reward.
     const scene = Object.hasOwn(D.NARRATIVE_SCENES, id)
       ? D.NARRATIVE_SCENES[id]
@@ -364,6 +364,17 @@
       byId(D.MISSIONS, s.result.id)?.story === id;
     const project = D.PROJECTS.find((p) => `${p.id}-built` === id);
     const portFocus = D.PORT_FOCUSES.find((p) => `port-${p.id}-built` === id);
+    const handoff = D.EPILOGUE_HANDOFFS.find((h) => `epilogue-${h.id}` === id);
+    const ending = D.ENDINGS.find((e) => `ending-${e.id}` === id);
+    const finalChapter = epilogueUnlocked(s);
+    const lateMilestone =
+      id === "rescue-power" ? rescueUnlocked(s) && Boolean(s.rescue.energy)
+      : id === "backup-berth" ? rescueUnlocked(s) && s.rescue.berth
+      : id === "keeper-signed" ? s.rescue.protocol || (preview && rescueUnlocked(s) && s.rescue.completed.length === D.RESCUE_MISSIONS.length)
+      : id === "future-meeting" ? finalChapter
+      : handoff ? finalChapter && (s.epilogue.confirmed.includes(handoff.id) || preview)
+      : ending ? finalChapter && (s.epilogue.ending === ending.id || (preview && s.epilogue.confirmed.length === D.EPILOGUE_HANDOFFS.length))
+      : false;
     const milestone =
       id === "awakening"
         ? s.buildings.drone > 0 || s.rebirths > 0 || s.lore.length > 0
@@ -374,7 +385,7 @@
             : portFocus &&
               s.council.priority === portFocus.id &&
               s.council.completed[0]?.id === "port-council";
-    if (!record && !pending && !milestone) return null;
+    if (!record && !pending && !milestone && !lateMilestone) return null;
     const echoes = [];
     const prior =
       story?.continuity &&
@@ -402,6 +413,17 @@
         speaker: "港务回响",
         text: `${focus.name}：${focus.text}`,
       });
+    // Supply cannot change after confirmation. Old completed voyages may lack
+    // an energy snapshot, but retain their confirmed shared supply arrangement.
+    const energy = byId(D.RESCUE_ENERGY,
+      mission?.rescue ? voyage?.energy || s.rescue.energy
+      : id === "rescue-power" ? s.rescue.energy : null);
+    if (energy)
+      echoes.push({ speaker: "供电记录", text: `${energy.name}：${energy.text}` });
+    if (mission?.rescue && voyage?.confirmations)
+      echoes.push({ speaker: "出航应答", text: voyage.confirmations.map((key) => byId(D.RESCUE_CONFIRMATIONS, key).name).join("、") });
+    if (id === "future-meeting" || handoff || ending)
+      echoes.push({ speaker: "共同交接", text: epilogueContext(s) });
     for (const echo of scene.echoes || []) {
       const earlier = s.lore.find((r) => r.story === echo.story);
       if (earlier && Object.hasOwn(echo.choices, earlier.choice))
@@ -655,7 +677,7 @@
               : s.rescue.protocol
                 ? 6
                 : 5;
-    return {
+    const archive = {
       chapter,
       title: [
         "最后一盏灯",
@@ -676,6 +698,7 @@
         "port-lit",
         ...D.PROJECTS.map((p) => `${p.id}-built`),
         ...D.PORT_FOCUSES.map((p) => `port-${p.id}-built`),
+        ...D.ARCHIVE_CHAPTERS.filter((c) => c.number >= 5).flatMap((c) => c.milestones),
       ]
         .map((id) => storyScene(s, id))
         .filter(Boolean),
@@ -719,6 +742,15 @@
         };
       }),
     };
+    archive.chapters = D.ARCHIVE_CHAPTERS.filter((c) => c.number <= chapter).map((c) => ({
+      number: c.number,
+      title: c.title,
+      current: c.number === chapter,
+      entries: archive.entries.filter((r) => c.stories.includes(r.story)),
+      milestones: archive.milestones.filter((scene) => c.milestones.includes(scene.id)),
+      letters: archive.letters.filter((letter) => letter.requiresEnding ? c.number === 6 : c.stories.includes(letter.story)),
+    }));
+    return archive;
   }
   function missionLock(s, id) {
     const m = byId(D.MISSIONS, id);

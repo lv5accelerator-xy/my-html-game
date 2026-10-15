@@ -2224,4 +2224,161 @@ test("older choice-only archives do not invent a voyage plan, and a duplicate pe
   assert.deepEqual(s, before);
   assert.deepEqual(E.storyScene(s, "observations").response, original.response);
 });
+test("late communications require actual power, waiting, rescue reports, protocol and resident records", () => {
+  const s = fifthChapterReady();
+  for (const id of Object.keys(D.LATE_SCENES)) {
+    assert.equal(E.storyScene(s, id), null, id);
+    assert.equal(E.storyScene(s, id, { preview: true }), null, id);
+  }
+  assert.ok(E.arrangeRescueEnergy(s, "rotation"));
+  assert.ok(E.storyScene(s, "rescue-power"));
+  assert.equal(E.storyScene(s, "backup-berth"), null);
+  assert.equal(E.storyScene(s, "relay-arrival"), null);
+  finishRescue(s, D.RESCUE_MISSIONS[0]);
+  assert.equal(E.storyScene(s, "backup-berth"), null);
+  assert.ok(E.confirmBackupBerth(s));
+  assert.ok(E.storyScene(s, "backup-berth"));
+  rescueChecks(s, D.RESCUE_MISSIONS[1].id);
+  finishVoyage(s, D.RESCUE_MISSIONS[1].id);
+  assert.equal(E.storyScene(s, "keeper-signed", { preview: true }), null);
+  finishRescue(s, D.RESCUE_MISSIONS[2]);
+  const before = structuredClone(s);
+  assert.ok(E.storyScene(s, "keeper-signed", { preview: true }));
+  assert.equal(E.storyScene(s, "keeper-signed"), null);
+  assert.equal(E.storyScene(s, "future-meeting"), null);
+  assert.deepEqual(s, before);
+  assert.ok(E.adoptKeeperProtocol(s));
+  assert.ok(E.storyScene(s, "keeper-signed"));
+  assert.ok(E.storyScene(s, "future-meeting"));
+  for (const h of D.EPILOGUE_HANDOFFS) {
+    assert.equal(E.storyScene(s, `epilogue-${h.id}`), null);
+    assert.ok(E.storyScene(s, `epilogue-${h.id}`, { preview: true }));
+  }
+  assert.ok(E.confirmEpilogue(s, "ayao"));
+  assert.ok(E.storyScene(s, "epilogue-ayao"));
+  assert.equal(E.storyScene(s, "epilogue-qiyue"), null);
+});
+test("every rescue reply retains its actual supply, voyage plan, port and original memories without reading or claiming twice", () => {
+  const replies = new Map(D.RESCUE_MISSIONS.map((m) => [m.story, new Set()]));
+  for (const h of D.STORIES.hospital.choices) for (const g of D.STORIES.garden.choices)
+    for (const focus of D.PORT_FOCUSES) for (const energy of D.RESCUE_ENERGY) for (const plan of D.EXPEDITION_PLANS) {
+      let s = fifthChapterReady(focus.id);
+      s.lore.find((r) => r.story === "hospital").choice = h.id;
+      s.lore.find((r) => r.story === "garden").choice = g.id;
+      assert.ok(E.arrangeRescueEnergy(s, energy.id));
+      for (const m of D.RESCUE_MISSIONS) {
+        if (m.requiresBackupBerth) assert.ok(E.confirmBackupBerth(s));
+        rescueChecks(s, m.id);
+        assert.ok(E.prepareMission(s, m.id, plan.id));
+        assert.ok(E.startMission(s, m.id));
+        assert.equal(E.storyScene(s, m.story), null);
+        E.advance(s, s.lastAt + s.mission.seconds * 1000, { offline: true });
+        const before = structuredClone(s), scene = E.storyScene(s, m.story);
+        assert.equal(scene.pending, true);
+        assert.deepEqual(scene.response, []);
+        for (const name of [plan.name, energy.name, focus.name])
+          assert.ok(scene.lines.some((line) => line.text.includes(name)), name);
+        assert.ok(scene.lines.some((line) => line.speaker === "出航应答"));
+        assert.deepEqual(s, before);
+        for (const choice of D.STORIES[m.story].choices) {
+          const variant = structuredClone(s);
+          assert.ok(E.claimMission(variant, choice.id));
+          const claimed = structuredClone(variant), response = E.storyScene(variant, m.story);
+          assert.equal(response.choice, choice.name);
+          assert.equal(response.response.length, 2);
+          replies.get(m.story).add(JSON.stringify(response.response));
+          assert.ok(response.lines.some((line) => line.text.includes(energy.name)));
+          assert.ok(response.lines.some((line) => line.text.includes(plan.name)));
+          E.routeArchive(variant);
+          assert.deepEqual(variant, claimed);
+          assert.equal(E.claimMission(variant, choice.id), false);
+          const restored = E.sanitize(JSON.parse(JSON.stringify(variant)), variant.lastAt);
+          assert.deepEqual(E.storyScene(restored, m.story), response);
+        }
+        assert.ok(E.claimMission(s, D.STORIES[m.story].choices[0].id));
+      }
+      const light = E.storyScene(s, "light-arrival");
+      assert.ok(light.lines.some((line) => line.text === D.LATE_SCENES["light-arrival"].echoes[0].choices[h.id]));
+    }
+  for (const responses of replies.values()) assert.equal(responses.size, 3);
+});
+test("finale previews cannot commit a future, and the archive contains only confirmed residents and the chosen ending", () => {
+  for (const focus of D.PORT_FOCUSES) {
+    const s = sixthChapterReady(focus.id);
+    for (const ending of D.ENDINGS)
+      assert.equal(E.storyScene(s, `ending-${ending.id}`, { preview: true }), null);
+    for (const h of D.EPILOGUE_HANDOFFS) assert.ok(E.confirmEpilogue(s, h.id));
+    const before = structuredClone(s);
+    for (const ending of D.ENDINGS) {
+      assert.ok(E.storyScene(s, `ending-${ending.id}`, { preview: true }));
+      assert.equal(E.storyScene(s, `ending-${ending.id}`), null);
+    }
+    assert.deepEqual(s, before);
+    assert.equal(E.routeArchive(s).milestones.filter((scene) => scene.id.startsWith("ending-")).length, 0);
+    for (const ending of D.ENDINGS) {
+      const chosen = structuredClone(s);
+      assert.ok(E.chooseEnding(chosen, ending.id));
+      const stable = structuredClone(chosen);
+      assert.deepEqual(E.routeArchive(chosen).milestones.filter((scene) => scene.id.startsWith("ending-")).map((scene) => scene.id), [`ending-${ending.id}`]);
+      for (const other of D.ENDINGS) assert.ok(E.storyScene(chosen, `ending-${other.id}`, { preview: true }));
+      assert.deepEqual(chosen, stable);
+      const restored = E.sanitize(JSON.parse(JSON.stringify(chosen)), chosen.lastAt);
+      assert.deepEqual(E.routeArchive(restored), E.routeArchive(chosen));
+      chosen.run.dust = D.PRESTIGE_DUST;
+      assert.ok(E.prestige(chosen));
+      assert.equal(chosen.epilogue.ending, ending.id);
+      assert.ok(E.storyScene(chosen, `ending-${ending.id}`));
+    }
+  }
+});
+test("chapter archives partition known records and letters exactly once and keep future chapters out", () => {
+  const early = E.createState(1000, 42);
+  assert.deepEqual(E.routeArchive(early).chapters.map((c) => c.number), [1]);
+  const s = sixthChapterReady();
+  for (const h of D.EPILOGUE_HANDOFFS) assert.ok(E.confirmEpilogue(s, h.id));
+  assert.ok(E.chooseEnding(s, "city"));
+  const before = structuredClone(s), a = E.routeArchive(s);
+  const sorted = (rows, key) => rows.map((r) => r[key]).sort();
+  assert.deepEqual(sorted(a.chapters.flatMap((c) => c.entries), "story"), sorted(a.entries, "story"));
+  assert.deepEqual(sorted(a.chapters.flatMap((c) => c.milestones), "id"), sorted(a.milestones, "id"));
+  assert.deepEqual(sorted(a.chapters.flatMap((c) => c.letters), "id"), sorted(a.letters, "id"));
+  assert.equal(a.chapters.filter((c) => c.current).length, 1);
+  assert.equal(a.chapters.at(-1).number, 6);
+  assert.equal(a.chapters.at(-1).letters.length, 3);
+  assert.deepEqual(s, before);
+});
+test("historical rescue dialogue does not guess a missing voyage plan or replace a completed choice with a duplicate report", () => {
+  const s = fifthChapterReady();
+  assert.ok(E.arrangeRescueEnergy(s, "rotation"));
+  finishRescue(s, D.RESCUE_MISSIONS[0], "calibrate", "captains");
+  const original = E.storyScene(s, "relay-arrival");
+  s.result = { id: "convoy-relay", story: "relay-arrival", succeeded: true, plan: "supply", energy: "arrays" };
+  assert.deepEqual(E.storyScene(s, "relay-arrival"), original);
+  s.result = null;
+  s.rescue.completed = [];
+  const old = E.storyScene(s, "relay-arrival");
+  assert.equal(old.lines.some((line) => line.speaker === "航前方案"), false);
+  assert.equal(old.lines.some((line) => line.speaker === "出航应答"), false);
+  assert.ok(old.lines.some((line) => line.text.includes(D.RESCUE_ENERGY[0].name)));
+  const copy = structuredClone(old);
+  old.lines[0].text = "mutated local read";
+  old.response.pop();
+  assert.deepEqual(E.storyScene(s, "relay-arrival"), copy);
+});
+test("preview mode never bypasses early story or milestone gates, and pending rescue dialogue requires the matching successful report", () => {
+  const s = fifthChapterReady();
+  for (const id of ["berth-arrival", "light-arrival", "backup-berth", "future-meeting", "epilogue-ayao", "ending-city"])
+    assert.equal(E.storyScene(s, id, { preview: true }), null);
+  assert.ok(E.arrangeRescueEnergy(s, "rotation"));
+  rescueChecks(s, "convoy-relay");
+  assert.ok(E.prepareMission(s, "convoy-relay", "relay"));
+  assert.ok(E.startMission(s, "convoy-relay"));
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  assert.ok(E.storyScene(s, "relay-arrival"));
+  s.result.succeeded = false;
+  assert.equal(E.storyScene(s, "relay-arrival", { preview: true }), null);
+  s.result.succeeded = true;
+  s.result.id = "convoy-berth";
+  assert.equal(E.storyScene(s, "relay-arrival", { preview: true }), null);
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

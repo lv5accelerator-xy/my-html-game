@@ -19,7 +19,7 @@
       return {
         size: ["normal", "large", "larger"].includes(raw?.size) ? raw.size : "normal",
         anchor: typeof raw?.anchor === "string" && /^[a-z0-9-]{1,100}$/.test(raw.anchor) ? raw.anchor : null,
-        offset: Math.min(600, Math.max(-600, Number(raw?.offset) || 0)),
+        offset: Math.min(600, Math.max(-100000, Number(raw?.offset) || 0)),
         open: Object.fromEntries(Object.entries(raw?.open && typeof raw.open === "object" ? raw.open : {}).filter(([key, value]) => /^[a-z0-9-]{1,100}$/.test(key) && typeof value === "boolean").slice(0, 150)),
       };
     } catch (_) { return { size: "normal", anchor: null, offset: 0, open: {} }; }

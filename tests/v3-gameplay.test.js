@@ -2455,6 +2455,8 @@ test("reading preferences survive reload independently, reject malformed values,
   const before = storage.getItem(S.KEY);
   assert.ok(S.saveReading(storage, { size: "larger", anchor: "story-hospital", offset: 80, open: { lore: true, "archive-chapter-1": true } }));
   assert.deepEqual(S.reading(storage), { size: "larger", anchor: "story-hospital", offset: 80, open: { lore: true, "archive-chapter-1": true } });
+  assert.ok(S.saveReading(storage, {size:"larger",anchor:"story-hospital",offset:-5000,open:{lore:true}}));
+  assert.equal(S.reading(storage).offset,-5000,"long transcript position is retained");
   storage.setItem(S.UI_KEY, '{"size":"huge","anchor":"<script>","offset":99999,"open":{"bad<script>":true,"lore":"yes"}}');
   assert.deepEqual(S.reading(storage), {size:"normal",anchor:null,offset:600,open:{}});
   storage.setItem(S.UI_KEY, "broken");

@@ -2733,11 +2733,12 @@ async function run() {
       await openDetails(page, "#route-archive");
       await page.locator('#route-archive [data-goal-focus="archive-chapter-1"]').click();
       await page.locator('#story-hospital > summary').click();
-      await page.locator('#story-hospital').evaluate(el=>window.scrollBy(0,el.getBoundingClientRect().top-100));
+      await page.locator('#story-hospital').evaluate(el=>window.scrollBy(0,el.getBoundingClientRect().top+700));
       await page.clock.runFor(250);
       await page.evaluate(()=>window.dispatchEvent(new Event("pagehide")));
       const preferences=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),S.UI_KEY);
       assert.equal(preferences.anchor,"story-hospital");
+      assert.ok(preferences.offset < -600,"persist a point deep inside the long transcript");
       await page.reload();
       assert.equal(await page.locator("html").getAttribute("data-reading-size"),"larger");
       await page.locator('[data-action="nav"][data-id="explore"]').first().click();

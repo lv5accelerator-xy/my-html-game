@@ -1,4 +1,67 @@
 /* Locked concept: inky slate, amber actions, teal progress, open rails and rows. */
+:root[data-reading-size="large"] { font-size: 17px; }
+:root[data-reading-size="larger"] { font-size: 19px; }
+:root[data-reading-size="large"] #main p, :root[data-reading-size="larger"] #main p,
+:root[data-reading-size="large"] #dialog p, :root[data-reading-size="larger"] #dialog p { font-size: 1rem; line-height: 1.9; }
+:root[data-reading-size="large"] .story-scene summary, :root[data-reading-size="larger"] .story-scene summary,
+:root[data-reading-size="large"] .lore-entry summary, :root[data-reading-size="larger"] .lore-entry summary { font-size: 1rem; }
+.reading-settings { border: 1px solid var(--line); padding: 16px; margin: 22px 0; }
+.reading-settings > div { display: flex; gap: 10px; flex-wrap: wrap; }
+.reading-settings button[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); background: var(--surface); }
+.reading-settings p { margin: 12px 0 0; font-size: .85rem; color: var(--muted); }
+.report .report-summary { font-size: 1.1rem; color: var(--text); max-width: 46em; }
+.report-reward { color: var(--amber); font-weight: 600; }
+.report-next { color: var(--teal); }
+.report-discovery { margin: 20px 0; padding: 16px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.report-discovery summary { cursor: pointer; color: var(--teal); }
+.report-discovery p { max-width: 46em; }
+.archive-reading-actions { display: flex; gap: 12px; flex-wrap: wrap; padding: 18px 0; }
+.starport-overview { margin-top: 36px; padding: 28px 0; border-top: 1px solid var(--line); }
+.starport-overview .section-title { align-items: baseline; flex-wrap: wrap; gap: 12px; }
+.starport-overview .section-title > span { color: var(--muted); font-size: .85rem; }
+.port-atlas { display: grid; grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr); align-items: center; gap: 28px; padding: 16px 24px; background: #0c171e; border: 1px solid var(--line); }
+.port-atlas svg { display: block; width: 100%; max-height: 300px; }
+.atlas-orbit { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 4 6; }
+.atlas-node { fill: none; stroke: #61717c; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.atlas-node circle { fill: var(--bg); stroke: var(--line); }
+.atlas-node.is-built { stroke: var(--teal); }
+.atlas-node.is-built circle { stroke: var(--teal); fill: #112d2a; }
+[data-port-focus="reception"] [data-port-node="hub"].is-built { stroke: var(--amber); }
+[data-port-focus="reception"] [data-port-node="hub"].is-built circle { stroke: var(--amber); fill: #30291d; }
+[data-port-focus="ecology"] [data-port-node="nursery"].is-built { stroke: #b6da9b; }
+[data-port-focus="ecology"] [data-port-node="nursery"].is-built circle { stroke: #b6da9b; fill: #1c3021; }
+[data-port-focus="archive"] [data-port-node="relay"].is-built { stroke: #a8c9f0; }
+[data-port-focus="archive"] [data-port-node="relay"].is-built circle { stroke: #a8c9f0; fill: #172b40; }
+.atlas-arrivals { fill: var(--amber); }
+.atlas-caption strong { font-size: 1.2rem; font-weight: 500; color: var(--amber); }
+.atlas-caption p { color: var(--muted); line-height: 1.85; }
+.atlas-legend { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 16px 0; }
+.atlas-legend button { display: inline-flex; align-items: center; gap: 9px; text-align: left; min-height: 44px; padding: 10px 0; }
+.atlas-legend small { color: var(--muted); font-size: .75rem; }
+.atlas-dot { flex: 0 0 7px; height: 7px; border: 1px solid var(--muted); border-radius: 50%; }
+.atlas-dot.is-built { background: var(--teal); border-color: var(--teal); }
+.resident-requests { margin: 24px 0 40px; border-top: 1px solid var(--teal); padding-top: 24px; }
+.resident-requests > p { color: var(--muted); max-width: 48em; }
+.resident-request { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px; border-bottom: 1px solid var(--line); padding: 24px 0; }
+.resident-request h3 { margin: 4px 0 12px; font-size: 1.15rem; font-weight: 500; }
+.resident-request > div > small { color: var(--teal); }
+.resident-request p { line-height: 1.85; max-width: 44em; }
+.resident-request-actions { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 12px; }
+.resident-request-actions > small { font-size: .8rem; color: var(--muted); }
+.resident-request-actions button { text-align: left; }
+.resident-collection { color: var(--amber); }
+.resident-request details summary { cursor: pointer; color: var(--teal); }
+@media (max-width: 760px) {
+  .port-atlas { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 4px; }
+  .atlas-legend { gap: 0 16px; }
+  .atlas-legend button { flex: 1 0 calc(50% - 16px); font-size: .85rem; flex-wrap: wrap; }
+  .atlas-legend small { flex-basis: 100%; margin-left: 16px; }
+  .resident-request { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .resident-request-actions { align-items: stretch; }
+  .reading-settings button, .archive-reading-actions button { min-height: 44px; }
+  .report .story-choice { min-height: 52px; padding: 16px; }
+  #dialog { max-height: calc(100dvh - 32px); }
+}
 :root {
   color-scheme: dark;
   --bg: #080f15;

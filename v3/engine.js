@@ -96,6 +96,7 @@
         protocol: false,
       },
       epilogue: { confirmed: [], ending: null },
+      afterword: { active: null, ready: false, completed: [] },
       records: [],
       beacon: { nextAt: 45, expiresAt: 0 },
       burstUntil: 0,
@@ -948,6 +949,44 @@
     );
     return true;
   }
+  function residentRequests(s) {
+    if (!s.epilogue.ending) return [];
+    return D.RESIDENT_REQUESTS.map((request) => {
+      const record = s.afterword.completed.find((r) => r.id === request.id);
+      return { ...clone(request), record: record ? clone(record) : null,
+        active: s.afterword.active === request.id,
+        ready: s.afterword.active === request.id && s.afterword.ready,
+        available: !record && !s.afterword.active && !s.mission && !s.result };
+    });
+  }
+  function acceptResidentRequest(s, id) {
+    const offer = residentRequests(s).find((r) => r.id === id);
+    if (!offer?.available) return false;
+    s.afterword.active = id;
+    s.afterword.ready = false;
+    // Keep this one return manual, so the player's delivery cannot be auto-claimed.
+    s.automation.dispatch = false;
+    log(s, `${offer.from}的委托：${offer.title}。下次两港补给归航后，再一起留下回信。`);
+    return true;
+  }
+  function completeResidentRequest(s, id, reply) {
+    const offer = residentRequests(s).find((r) => r.id === id);
+    if (!offer?.ready || !offer.replies.some((r) => r.id === reply)) return false;
+    s.afterword.completed.push({ id, reply });
+    s.afterword.active = null;
+    s.afterword.ready = false;
+    log(s, `${offer.title}已归档，收藏「${offer.collection}」。`);
+    return true;
+  }
+  function residentGoal(s) {
+    if (!s.epilogue.ending || !s.afterword.active) return null;
+    const request = byId(D.RESIDENT_REQUESTS, s.afterword.active);
+    return { title: `${request.from}的委托 · ${request.title}`,
+      detail: s.afterword.ready ? "补给已交接。回到居民委托，选择你要留下的回信。" : "完成一次两港补给并领取报告。没有期限，可以继续生产或稍后回来。",
+      action: "explore", label: s.afterword.ready ? "留下回信" : s.mission ? "查看补给进度" : "前往两港补给",
+      focus: s.afterword.ready ? "resident-requests" : s.mission ? "active-mission" : "mission-supply-run",
+      value: s.afterword.ready ? 1 : 0, target: 1, eta: s.afterword.ready ? 0 : s.mission ? Math.max(0, s.mission.end - s.clock) : null };
+  }
   function claimMission(s, choiceId, source = "manual") {
     const r = s.result;
     if (!r) return false;
@@ -1016,6 +1055,8 @@
           "等待名单上的三队全部抵达。请共同核对守灯协议，中央与现场各自承担可确认的责任。",
         );
     }
+    if (r.id === "supply-run" && r.succeeded && s.afterword.active)
+      s.afterword.ready = true;
     s.result = null;
     return true;
   }
@@ -1711,6 +1752,8 @@
     if (rescue) return rescue;
     const epilogue = epilogueGoal(s);
     if (epilogue) return epilogue;
+    const resident = residentGoal(s);
+    if (resident) return resident;
     if (
       s.rebirths === 0 &&
       s.research.length === 0 &&
@@ -2025,6 +2068,18 @@
       )
         s.epilogue.ending = raw.epilogue.ending;
     }
+    if (s.epilogue.ending) {
+      const records = Array.isArray(raw.afterword?.completed) ? raw.afterword.completed : [];
+      for (const request of D.RESIDENT_REQUESTS) {
+        const record = records.find((r) => r?.id === request.id && request.replies.some((reply) => reply.id === r.reply));
+        if (record) s.afterword.completed.push({ id: request.id, reply: record.reply });
+      }
+      const active = byId(D.RESIDENT_REQUESTS, raw.afterword?.active);
+      if (active && !s.afterword.completed.some((r) => r.id === active.id)) {
+        s.afterword.active = active.id;
+        s.afterword.ready = raw.afterword.ready === true;
+      }
+    }
     s.journal = (Array.isArray(raw.journal) ? raw.journal : [])
       .filter((r) => typeof r?.text === "string")
       .slice(0, 12)
@@ -2274,6 +2329,10 @@
     chooseEnding,
     epilogueContext,
     epilogueGoal,
+    residentRequests,
+    acceptResidentRequest,
+    completeResidentRequest,
+    residentGoal,
     portFocusOffer,
     buildPortFocus,
     prepareMission,

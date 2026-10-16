@@ -88,7 +88,7 @@
     const anchor = visible.findLast((el) => el.getBoundingClientRect().top <= 160) || visible[0];
     if (!anchor) return;
     reading.anchor = anchor.id;
-    reading.offset = Math.min(600, Math.max(-600, anchor.getBoundingClientRect().top));
+    reading.offset = Math.min(600, Math.max(-100000, anchor.getBoundingClientRect().top));
     S.saveReading(storage, reading);
   }
   document.addEventListener("toggle", (event) => {

@@ -26,8 +26,13 @@ jobs:
       - name: Install isolated browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
       - name: Verify systems and browser flows
         env:
           CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
         run: node scripts/check.cjs
+      - name: Verify v3 flows in WebKit
+        env:
+          CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
+          V3_BROWSER_ENGINE: webkit
+        run: node tests/v3-browser.test.js

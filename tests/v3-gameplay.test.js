@@ -2381,4 +2381,85 @@ test("preview mode never bypasses early story or milestone gates, and pending re
   s.result.id = "convoy-berth";
   assert.equal(E.storyScene(s, "relay-arrival", { preview: true }), null);
 });
+function completedMainStory(ending = "city") {
+  const s = sixthChapterReady();
+  for (const h of D.EPILOGUE_HANDOFFS) assert.ok(E.confirmEpilogue(s, h.id));
+  assert.ok(E.chooseEnding(s, ending));
+  return s;
+}
+test("resident requests require a confirmed ending, an idle ship and a fresh delivery after accepting", () => {
+  for (const s of [ready(), sixthChapterReady()]) {
+    assert.deepEqual(E.residentRequests(s), []);
+    assert.equal(E.acceptResidentRequest(s, "seeds"), false);
+  }
+  const s = completedMainStory();
+  assert.ok(E.startMission(s, "supply-run"));
+  assert.equal(E.acceptResidentRequest(s, "seeds"), false);
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  assert.equal(E.acceptResidentRequest(s, "seeds"), false);
+  E.claimMission(s);
+  assert.ok(E.acceptResidentRequest(s, "seeds"));
+  assert.equal(E.completeResidentRequest(s, "seeds", "shared"), false);
+  assert.equal(E.acceptResidentRequest(s, "chart"), false);
+  assert.ok(E.startMission(s, "belt"));
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  E.claimMission(s);
+  assert.equal(s.afterword.ready, false, "unrelated return does not complete delivery");
+});
+test("all endings and resident replies keep old rewards unchanged and award each collection only once", () => {
+  for (const ending of D.ENDINGS) for (const option of [0, 1]) {
+    let s = completedMainStory(ending.id);
+    const old = JSON.stringify([s.epilogue, s.lore, s.chapter, s.rescue]);
+    for (const request of D.RESIDENT_REQUESTS) {
+      assert.ok(E.acceptResidentRequest(s, request.id));
+      assert.equal(s.automation.dispatch, false);
+      assert.ok(E.startMission(s, "supply-run"));
+      const active = structuredClone(s.mission);
+      s = E.sanitize(s, s.lastAt);
+      assert.deepEqual(s.mission, active);
+      E.advance(s, s.lastAt + 8 * 3600_000, { offline: true });
+      assert.equal(s.afterword.ready, false, "offline time does not make a reply");
+      assert.ok(E.claimMission(s));
+      assert.equal(s.afterword.ready, true);
+      const resources = [s.dust, s.samples, s.cores, s.totalCores];
+      const reply = request.replies[option].id;
+      assert.ok(E.completeResidentRequest(s, request.id, reply));
+      assert.deepEqual([s.dust, s.samples, s.cores, s.totalCores], resources);
+      assert.equal(E.completeResidentRequest(s, request.id, reply), false);
+      assert.equal(E.acceptResidentRequest(s, request.id), false);
+      s = E.sanitize(s, s.lastAt);
+    }
+    assert.equal(s.afterword.completed.length, 3);
+    assert.equal(JSON.stringify([s.epilogue, s.lore, s.chapter, s.rescue]), old);
+    const before = JSON.stringify(s);
+    const offers = E.residentRequests(s); offers[0].replies[0].text = "changed";
+    assert.equal(JSON.stringify(s), before, "reading is observational");
+    s.run.dust = D.PRESTIGE_DUST;
+    assert.ok(E.prestige(s));
+    assert.equal(E.sanitize(s, s.lastAt).afterword.completed.length, 3);
+  }
+});
+test("resident progress sanitizes unknown and duplicate replies, and legacy v3.9 saves gain only the optional field", () => {
+  for (const old of [ready(), fifthChapterReady(), completedMainStory()]) {
+    delete old.afterword;
+    assert.deepEqual(E.sanitize(old, old.lastAt), { ...old, afterword: { active: null, ready: false, completed: [] } });
+  }
+  let s = completedMainStory();
+  s.afterword = { active: "seeds", ready: true, completed: [{id:"seeds",reply:"shared"},{id:"seeds",reply:"season"},{id:"chart",reply:"bad"},{id:"bad",reply:"shared"}] };
+  assert.deepEqual(E.sanitize(s, s.lastAt).afterword, { active: null, ready: false, completed: [{ id: "seeds", reply: "shared" }] });
+  s = ready(); s.afterword = { active: "chart", ready: true, completed: [{id:"seeds",reply:"shared"}] };
+  assert.deepEqual(E.sanitize(s, s.lastAt).afterword, { active: null, ready: false, completed: [] });
+});
+test("reading preferences survive reload independently, reject malformed values, and never damage game records", () => {
+  const storage = memory({ [S.KEY]: JSON.stringify(ready()) });
+  const before = storage.getItem(S.KEY);
+  assert.ok(S.saveReading(storage, { size: "larger", anchor: "story-hospital", offset: 80, open: { lore: true, "archive-chapter-1": true } }));
+  assert.deepEqual(S.reading(storage), { size: "larger", anchor: "story-hospital", offset: 80, open: { lore: true, "archive-chapter-1": true } });
+  storage.setItem(S.UI_KEY, '{"size":"huge","anchor":"<script>","offset":99999,"open":{"bad<script>":true,"lore":"yes"}}');
+  assert.deepEqual(S.reading(storage), {size:"normal",anchor:null,offset:600,open:{}});
+  storage.setItem(S.UI_KEY, "broken");
+  assert.equal(S.reading(storage).size, "normal");
+  assert.equal(storage.getItem(S.KEY), before);
+  assert.equal(S.saveReading({ setItem() { throw Error("full"); } }, {}), false);
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

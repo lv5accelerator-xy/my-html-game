@@ -12,6 +12,22 @@
   const LEGACY_KEY = "stellarOutpostIdleSave_v1";
   const LEGACY_BACKUP = "stellarOutpostIdleSave_v31_backup_before_v3";
   const BACKUP = "stellarOutpostIdleSave_v3_before_restore";
+  const UI_KEY = "stellarOutpostIdle_v3_reading";
+  function reading(storage) {
+    try {
+      const raw = JSON.parse(storage.getItem(UI_KEY) || "null");
+      return {
+        size: ["normal", "large", "larger"].includes(raw?.size) ? raw.size : "normal",
+        anchor: typeof raw?.anchor === "string" && /^[a-z0-9-]{1,100}$/.test(raw.anchor) ? raw.anchor : null,
+        offset: Math.min(600, Math.max(-600, Number(raw?.offset) || 0)),
+        open: Object.fromEntries(Object.entries(raw?.open && typeof raw.open === "object" ? raw.open : {}).filter(([key, value]) => /^[a-z0-9-]{1,100}$/.test(key) && typeof value === "boolean").slice(0, 150)),
+      };
+    } catch (_) { return { size: "normal", anchor: null, offset: 0, open: {} }; }
+  }
+  function saveReading(storage, preferences) {
+    try { storage.setItem(UI_KEY, JSON.stringify(preferences)); return true; }
+    catch (_) { return false; }
+  }
   function load(storage, now = Date.now()) {
     try {
       const text = storage.getItem(KEY);
@@ -70,6 +86,9 @@
     LEGACY_KEY,
     LEGACY_BACKUP,
     BACKUP,
+    UI_KEY,
+    reading,
+    saveReading,
     load,
     save,
     restore,

@@ -65,6 +65,8 @@
     };
   }
   const loaded = S.load(storage);
+  const reading = S.reading(storage);
+  document.documentElement.dataset.readingSize = reading.size;
   let state = loaded.state,
     blocked = Boolean(loaded.error),
     page = "home",
@@ -78,6 +80,30 @@
     dialogOrigin,
     wasVisible = !document.hidden;
   const dialog = $("#dialog");
+  let readingTimer;
+  function rememberReading() {
+    const archive = $("#route-archive");
+    if (!archive?.open) return;
+    const visible = [...archive.querySelectorAll("[data-read-anchor]")].filter((el) => el.getClientRects().length && el.getBoundingClientRect().top < innerHeight && el.getBoundingClientRect().bottom > 0);
+    const anchor = visible.findLast((el) => el.getBoundingClientRect().top <= 160) || visible[0];
+    if (!anchor) return;
+    reading.anchor = anchor.id;
+    reading.offset = Math.min(600, Math.max(-600, anchor.getBoundingClientRect().top));
+    S.saveReading(storage, reading);
+  }
+  document.addEventListener("toggle", (event) => {
+    const el = event.target;
+    if (rebuilding || !el.matches?.("#route-archive, #route-archive details[data-details-key]")) return;
+    if (el._readingOpen === el.open) return;
+    el._readingOpen = el.open;
+    reading.open[el.dataset.detailsKey] = el.open;
+    if (el.open && el.id) { reading.anchor = el.id; reading.offset = 100; }
+    S.saveReading(storage, reading);
+  }, true);
+  window.addEventListener("scroll", () => {
+    clearTimeout(readingTimer);
+    readingTimer = setTimeout(rememberReading, 200);
+  }, { passive: true });
   function toast(message) {
     $("#toast").textContent = message;
     $("#toast").classList.add("visible");
@@ -179,6 +205,7 @@
     openDialog(
       "航站设置",
       `<p>进度保存在这台设备。跃迁不会清除舰装、故事、航站修复和永久能力。</p>${blocked ? '<p class="save-warning">自动保存已暂停。请先导出记录，再恢复备份或重新启航。</p>' : ""}
+      <fieldset class="reading-settings"><legend>阅读字号</legend><div>${[["normal", "标准"], ["large", "大字"], ["larger", "特大"]].map(([id, label]) => `<button class="outline" ${action("reading-size", id)} aria-pressed="${reading.size === id}">${label}</button>`).join("")}</div><p>仅改变这台设备的显示，航线进度独立保存。</p></fieldset>
       <div class="settings-links"><button ${action("export")}>导出航线记录</button><button ${action("import")}>导入记录</button><input id="import-file" type="file" accept=".json,application/json" hidden>${backup ? `<button ${action("backup")}>恢复上次备份</button>` : ""}</div>
       ${state.legacyArchive ? "<p>继承的旧航站记录已完整封存。原版的远征和活动奖励可在旧版继续处理。</p>" : ""}
       <div class="settings-links"><a href="../">返回旧版航站</a><button ${action("legacy")}>继承本机旧航站</button><button ${action("reset")}>重新启航</button></div>
@@ -217,6 +244,18 @@
       destination?.focus({ preventScroll: true });
       destination?.scrollIntoView({ block: "center", behavior: "instant" });
     }
+  }
+  function starportOverview() {
+    if (!state.starport) return "";
+    const focus = D.PORT_FOCUSES.find((p) => p.id === state.council.priority);
+    const nodes = [
+      { id: "hub", name: "归航中枢", x: 300, y: 160, live: state.starport === 3, status: `修复 ${state.starport}/3`, target: "port-panel", shape: "M-40-20h80v40h-80zM-15-40h30v80h-30z" },
+      { id: "relay", name: "共鸣中继", x: 110, y: 68, live: state.chapter.includes("relay"), target: "project-relay", shape: "M0-22v44M-20-14a25 25 0 0 0 0 28M20-14a25 25 0 0 1 0 28M-10 22h20" },
+      { id: "nursery", name: "育种舱", x: 110, y: 250, live: state.chapter.includes("nursery"), target: "project-nursery", shape: "M-28 18v-28l28-18 28 18v28zM0 17v-25M0 4q-22-24-15-20M0 0q22-24 15-20" },
+      { id: "lighthouse", name: "远航灯塔", x: 490, y: 68, live: state.chapter.includes("lighthouse"), target: "project-lighthouse", shape: "M-18 22h36L10-18h-20zM-26-24h52M0-34v10" },
+      { id: "berth", name: "备用泊位", x: 490, y: 250, live: state.rescue.berth, target: state.rescue.completed.length === 3 ? "route-archive" : "rescue-berth", shape: "M-30-6h60M-30 8h60M-30-14v36M30-14v36M-9-22h18v18H-9z" },
+    ];
+    return `<section class="starport-overview" id="starport-overview" aria-label="星港总览"><div class="section-title"><h2>归航星港</h2><span>${state.epilogue.ending ? "居民开始新的日常" : `已接回 ${state.rescue.completed.length} / 3 支救援船队`}</span></div><div class="port-atlas" data-port-focus="${focus?.id || "none"}"><svg viewBox="0 0 600 310" role="img" aria-label="星港建设示意图，亮起的节点表示已完成建设"><path class="atlas-orbit" d="M110 68 300 160 490 68M110 250 300 160 490 250"/>${nodes.map((n) => `<g transform="translate(${n.x} ${n.y})" class="atlas-node ${n.live ? "is-built" : ""}" data-port-node="${n.id}" data-built="${n.live}"><circle r="42"/><path d="${n.shape}"/></g>`).join("")}<g class="atlas-arrivals" aria-hidden="true">${state.rescue.completed.map((_, i) => `<path d="M${268 + i * 32} 235l8-12 8 12-8-3z"/>`).join("")}</g></svg><div class="atlas-caption"><strong>${focus ? focus.name : "第一束光已接通"}</strong><p>${focus ? focus.id === "reception" ? "轮班接待区与候泊联络围绕中枢展开。" : focus.id === "ecology" ? "两港种植记录在育种舱汇合，灯光按植物需要轮换。" : "每一段航路与交接记录都能找到来源。" : "每一次修复和建设，都会在这张图上留下变化。"}</p></div></div><div class="atlas-legend">${nodes.map((n) => `<button class="text-button" ${action("nav", "explore")} data-goal-focus="${n.live || n.id === "hub" ? n.target : "route-archive"}"><span class="atlas-dot ${n.live ? "is-built" : ""}"></span>${n.name}<small>${n.status || (n.live ? "已建成" : "待建设")}</small></button>`).join("")}</div>${state.epilogue.ending ? `<button class="outline" ${action("nav", "explore")} data-goal-focus="resident-requests">看看居民的新委托</button>` : ""}</section>`;
   }
   function quote(id) {
     return E.purchasePreview(
@@ -276,7 +315,7 @@
       <div class="scan-area"><button class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
       <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2><h2 id="next-goal-title">${goal.title}</h2><p>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
       <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
-      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
+      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${starportOverview()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
   }
   function routePanel() {
     const route = D.ROUTES.find((r) => r.id === state.run.route);
@@ -346,7 +385,9 @@
     if (!state.result) return sceneAfterword();
     const r = state.result,
       story = r.story && D.STORIES[r.story];
-    return `<section class="report" id="report" tabindex="-1" aria-label="归航报告"><h2>${story ? story.title : D.MISSIONS.find((m) => m.id === r.id).name + " · 归航报告"}</h2><p>${story ? escape(E.storyText(state, r.story)) : r.succeeded ? "探索船安全归航，回收物已经送达。" : "裂隙干扰超出预期，探索船安全撤回，带回 1 份样本。"}</p><p>回收 ${number(r.dust)} 星尘 · ${r.samples} 份样本${r.module ? ` · 舰装「${D.MODULES.find((m) => m.id === r.module).name}」` : ""}</p>
+    const text = story ? E.storyText(state, r.story) : r.succeeded ? "探索船安全归航，回收物已经送达。" : "裂隙干扰超出预期，探索船安全撤回，带回 1 份样本。";
+    const summary = text.split(/(?<=[。！？])/)[0];
+    return `<section class="report" id="report" tabindex="-1" aria-label="归航报告"><h2>${story ? story.title : D.MISSIONS.find((m) => m.id === r.id).name + " · 归航报告"}</h2><p class="report-summary">${escape(summary)}</p><p class="report-reward">回收 ${number(r.dust)} 星尘 · ${r.samples} 份样本${r.module ? ` · 舰装「${D.MODULES.find((m) => m.id === r.module).name}」` : ""}</p><p class="report-next">${story ? "下一步：阅读发现并选择回应，领取后永久记录。" : state.afterword.active && r.id === "supply-run" ? "下一步：领取补给，再回居民委托留下回信。" : "下一步：领取回收物，继续当前航线。"}</p>${story ? `<details class="report-discovery" data-details-key="report-discovery-${r.story}"><summary>阅读完整发现</summary><p>${escape(text)}</p></details>` : ""}
       ${story ? sceneRecord(E.storyScene(state, r.story), `report-scene-${r.story}`) : ""}${story ? story.choices.map((c) => `<button class="story-choice" ${action("claim", c.id)}><strong>${c.name}</strong><small>${c.detail}</small></button>`).join("") : `<button class="primary" ${action("claim")}>收取回收物</button>`}</section>`;
   }
   function chapterMap() {
@@ -556,17 +597,26 @@
         : "";
       return `<details class="archive-chapter" id="archive-chapter-${c.number}" tabindex="-1" data-details-key="archive-chapter-${c.number}" ${c.current ? "open" : ""}><summary data-focus="archive-chapter-${c.number}">第${c.number}章 · ${c.title}<small>${c.entries.length + c.milestones.length} 份记录 · ${c.letters.length} 封来信${c.current ? " · 当前" : ""}</small></summary>${c.entries.map(entry).join("")}${milestones.map((scene) => sceneRecord(scene, `archive-scene-${scene.id}`)).join("")}${finale}${c.letters.length ? `<h3>本章人物来信</h3>${c.letters.map(letter).join("")}` : ""}${!c.entries.length && !c.milestones.length ? '<p class="empty">本章已归档记录会显示在这里。待领取通信请先在归航报告中阅读。</p>' : ""}</details>`;
     }).join("");
-    return `<details class="route-archive" id="route-archive" tabindex="-1" data-details-key="lore"><summary data-focus="details-lore">航线与人物档案 · ${state.lore.length} 段故事</summary>
+    return `<details class="route-archive" id="route-archive" tabindex="-1" data-details-key="lore"><summary data-focus="details-lore">航线与人物档案 · ${state.lore.length} 段故事</summary><div class="archive-reading-actions"><button class="outline" ${action("archive-current")}>返回当前章节</button><button class="text-button" ${action("archive-resume")}>继续上次阅读</button></div>
       <p class="archive-current">当前：第${archive.chapter}章 · ${archive.title}${archive.complete ? ` · 主线完成 · ${archive.ending.title}` : ""}</p>
       <p>第一章 · 星港 ${state.starport} / 3　第二章 · 建设 ${state.chapter.length} / 3　第三章 · 交接 ${state.campaign.completed.length} / 3　第四章 · 准备 ${state.council.completed.length + (state.council.priority ? 1 : 0)} / 4　第五章 · 救援 ${archive.rescued} / 3</p>${archive.priority ? `<p>永久建设方向：${archive.priority}。所有救援与结局入口保留。</p>` : ""}
       <div class="archive-nav" role="navigation" aria-label="章节档案">${archive.chapters.map((c) => `<button class="outline" ${action("nav", "explore")} data-goal-focus="archive-chapter-${c.number}">第${c.number}章${c.current ? " · 当前" : ""}</button>`).join("")}</div>
       <details class="archive-people" data-details-key="archive-people"><summary data-focus="archive-people">已联系的人物 · ${archive.characters.length}</summary>${archive.characters.map((c) => `<article class="character-file"><h4>${c.name} <small>${c.role}</small></h4><p>${escape(c.text)}</p></article>`).join("") || '<p class="empty">回应远方讯息后，人物档案逐渐开放。</p>'}</details>
       ${chapters}</details>`;
   }
+  function residentPanel() {
+    const requests = E.residentRequests(state);
+    if (!requests.length) return "";
+    const ending = D.ENDINGS.find((e) => e.id === state.epilogue.ending);
+    return `<section class="resident-requests" id="resident-requests" tabindex="-1" aria-label="居民委托"><div class="section-title"><h2>星港的下一封信</h2><span>收藏 ${state.afterword.completed.length} / ${requests.length}</span></div><p>${ending.title}之后，日常继续。接下委托、完成一趟两港安全补给，再亲手留下回信。没有期限，收藏与回复跨航次保留。</p>${requests.map((r) => {
+      const reply = r.record && r.replies.find((x) => x.id === r.record.reply);
+      return `<article class="resident-request" id="resident-${r.id}"><div><small>${r.from}</small><h3>${r.title}</h3><p>${r.record ? escape(reply.text) : r.ready ? r.arrival : r.brief}</p></div><div class="resident-request-actions">${r.record ? `<p class="resident-collection">已收藏 · ${r.collection}</p><details data-details-key="resident-letter-${r.id}"><summary>重读回信</summary><p>${escape(reply.label)}</p><p>${escape(reply.text)}</p><small>你的星港 · ${ending.title}；${D.PORT_FOCUSES.find((p) => p.id === state.council.priority)?.name || "共同建设"}</small></details>` : r.ready ? r.replies.map((x) => `<button class="outline" ${action("resident-reply", r.id)} data-reply="${x.id}">${x.label}</button>`).join("") : r.active ? `<p>已接下 · ${state.mission ? "等待本次补给归航" : "请派遣两港补给并领取报告"}</p><button class="outline" ${action("nav", "explore")} data-goal-focus="${state.result ? "report" : state.mission ? "active-mission" : "mission-supply-run"}">前往补给交接</button>` : `<button class="outline" ${action("resident-accept", r.id)} ${r.available ? "" : "disabled"}>接下委托</button><small>同一时间接一份；先处理当前航程。接下后暂停自动派遣。</small>`}</div></article>`;
+    }).join("")}</section>`;
+  }
   function explore() {
     const port = D.PORT[state.starport];
     return `<div class="page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
+      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
         .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
@@ -724,6 +774,7 @@
       state.council,
       state.rescue,
       state.epilogue,
+      state.afterword,
       state.loadouts,
       state.samples,
       state.equipped,
@@ -771,7 +822,13 @@
         Array.from(
           $("#main").querySelectorAll("details[data-details-key]"),
         ).forEach((el) => {
-          el.open = openDetails.get(el.dataset.detailsKey) ?? el.open;
+          const inArchive = el.matches("#route-archive, #route-archive details");
+          el.open = openDetails.get(el.dataset.detailsKey) ?? (inArchive ? reading.open[el.dataset.detailsKey] : undefined) ?? el.open;
+          if (inArchive) {
+            if (!el.id) el.id = `read-${el.dataset.detailsKey}`;
+            el.dataset.readAnchor = "";
+            el._readingOpen = el.open;
+          }
         });
         if (focus) {
           const replacement = document.querySelector(
@@ -842,6 +899,22 @@
     const button = event.target.closest("[data-action]");
     if (!button || button.disabled) return;
     const { action: kind, id } = button.dataset;
+    if (kind === "reading-size") {
+      if (!["normal", "large", "larger"].includes(id)) return;
+      reading.size = id;
+      document.documentElement.dataset.readingSize = id;
+      S.saveReading(storage, reading);
+      dialog.querySelectorAll('[data-action="reading-size"]').forEach((el) => el.setAttribute("aria-pressed", String(el.dataset.id === id)));
+      return;
+    }
+    if (kind === "archive-current" || kind === "archive-resume") {
+      const anchor = reading.anchor, offset = reading.offset;
+      const target = kind === "archive-resume" && anchor && document.getElementById(anchor)?.closest("#route-archive") ? anchor : `archive-chapter-${E.routeArchive(state).chapter}`;
+      navigate("explore", target);
+      if (kind === "archive-resume" && target === anchor)
+        window.scrollBy({ top: document.getElementById(target).getBoundingClientRect().top - offset, behavior: "instant" });
+      return;
+    }
     if (kind === "scene-read") {
       navigate("explore", `story-${id}`);
       return;
@@ -913,6 +986,9 @@
           : null;
         toast("回收物已入库，发现会陪你继续航行。");
       }
+    } else if (kind === "resident-accept") E.acceptResidentRequest(state, id);
+    else if (kind === "resident-reply") {
+      if (E.completeResidentRequest(state, id, button.dataset.reply)) toast("回信与收藏已归档。星港的日常还会继续。");
     } else if (kind === "equip") E.equip(state, id);
     else if (kind === "loadout-save") {
       if (E.saveLoadout(state, id))
@@ -1073,7 +1149,7 @@
   else if (lastReturnReport) showReturn();
   if (loaded.report?.seconds > 0 && !blocked) save();
   setInterval(() => {
-    const offline = document.hidden || Date.now() - state.lastAt > 30000;
+    const offline = !wasVisible || Date.now() - state.lastAt > 30000;
     const report = E.advance(state, Date.now(), {
       offline,
       active: !offline,
@@ -1088,7 +1164,9 @@
     render();
   }, 250);
   setInterval(save, 5000);
-  document.addEventListener("visibilitychange", () => {
+  function syncVisibility(visible) {
+    if (visible === wasVisible) { save(); return; }
+    rememberReading();
     state.beacon.expiresAt = 0;
     const report = E.advance(state, Date.now(), {
       offline: !wasVisible,
@@ -1104,7 +1182,7 @@
         if (!dialog.open) showReturn(summary);
       }
     }
-    wasVisible = !document.hidden;
+    wasVisible = visible;
     if (!wasVisible)
       absence = {
         before: E.progressSnapshot(state),
@@ -1119,8 +1197,13 @@
       };
     save();
     render();
+  }
+  document.addEventListener("visibilitychange", () => syncVisibility(!document.hidden));
+  window.addEventListener("pagehide", () => syncVisibility(false));
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted || !wasVisible) syncVisibility(!document.hidden);
   });
-  window.addEventListener("beforeunload", save);
+  window.addEventListener("beforeunload", () => { rememberReading(); save(); });
   window.addEventListener("storage", (event) => {
     if (event.key !== S.KEY) return;
     blocked = true;

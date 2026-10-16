@@ -6,7 +6,7 @@ const assert = require("node:assert/strict"),
 const E = require("../v3/engine.js"),
   S = require("../v3/storage.js"),
   D = require("../v3/data.js");
-const { chromium } = require(process.env.CODEX_PLAYWRIGHT_PATH || "playwright");
+const { chromium, webkit } = require(process.env.CODEX_PLAYWRIGHT_PATH || "playwright");
 const root = path.resolve(__dirname, ".."),
   TIME = Date.UTC(2026, 9, 5, 12);
 const server = http.createServer((request, response) => {
@@ -47,7 +47,7 @@ function ready() {
 async function run() {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const url = `http://127.0.0.1:${server.address().port}/v3/`;
-  const browser = await chromium.launch({
+  const browser = await (process.env.V3_BROWSER_ENGINE === "webkit" ? webkit : chromium).launch({
     headless: true,
     executablePath: process.env.CODEX_CHROMIUM_PATH || undefined,
   });
@@ -55,6 +55,7 @@ async function run() {
   if (screenshotDir) fs.mkdirSync(screenshotDir, { recursive: true });
   let checks = 0;
   async function scenario(name, initial, check) {
+    if (process.env.V3_TEST_FILTER && !name.includes(process.env.V3_TEST_FILTER)) return;
     const context = await browser.newContext({
       viewport: { width: 1280, height: 900 },
       acceptDownloads: true,
@@ -97,9 +98,20 @@ async function run() {
   }
   const read = (page) =>
     page.evaluate((key) => JSON.parse(localStorage.getItem(key)), S.KEY);
+  const reportText = async (page) => {
+    const discovery = page.locator("#report .report-discovery");
+    if (await discovery.count() && !(await discovery.evaluate((node) => node.open)))
+      await discovery.locator("summary").click();
+    return page.locator("#report").innerText();
+  };
   const openArchiveRecord = async (page, selector) => {
+    await openDetails(page, "#route-archive");
     const chapter = await page.locator(selector).evaluate((node) => node.closest(".archive-chapter").id);
     await page.locator(`#route-archive .archive-nav [data-goal-focus="${chapter}"]`).click();
+  };
+  const openDetails = async (page, selector) => {
+    if (!(await page.locator(selector).evaluate(node => node.open)))
+      await page.locator(`${selector} > summary`).click();
   };
   try {
     await scenario("native dialog close keeps the newer keyboard reading focus", { [S.KEY]: JSON.stringify(ready()) }, async (page) => {
@@ -780,7 +792,7 @@ async function run() {
           assert.equal(s.mission.id, id);
           await page.clock.fastForward((s.mission.end - s.clock) * 1000);
           await page.locator('#dialog [data-action="return-next"]').click();
-          assert.match(await page.locator("#report").innerText(), text);
+          assert.match(await reportText(page), text);
           await page
             .locator(`[data-action="claim"][data-id="${choice}"]`)
             .click();
@@ -832,7 +844,7 @@ async function run() {
         );
         await page.locator('#dialog [data-action="return-next"]').click();
         assert.match(
-          await page.locator("#report").innerText(),
+          await reportText(page),
           /阿遥站在观测窗前/,
         );
         assert.equal(
@@ -987,10 +999,10 @@ async function run() {
         await page.clock.fastForward((s.mission.end - s.clock) * 1000);
         await page.locator('#dialog [data-action="return-next"]').click();
         assert.match(
-          await page.locator("#report").innerText(),
+          await reportText(page),
           /先校验安全航线|优先校验安全航线/,
         );
-        assert.match(await page.locator("#report").innerText(), /等待稍长/);
+        assert.match(await reportText(page), /等待稍长/);
         await page.locator('[data-action="claim"][data-id="share"]').click();
         await page.setViewportSize({ width: 375, height: 900 });
         await page
@@ -1014,7 +1026,7 @@ async function run() {
           const current = await read(page);
           await page.clock.fastForward(current.mission.seconds * 1000);
           await page.locator('#dialog [data-action="return-next"]').click();
-          assert.match(await page.locator("#report").innerText(), text);
+          assert.match(await reportText(page), text);
           assert.equal(
             (await read(page)).campaign.completed.length,
             id === "false-beacon" ? 1 : 2,
@@ -1255,7 +1267,7 @@ async function run() {
           await page.clock.fastForward(current.mission.seconds * 1000);
           await page.locator('#dialog [data-action="return-next"]').click();
           assert.match(
-            await page.locator("#report").innerText(),
+            await reportText(page),
             /禾继续照顾伤员/,
           );
           await page
@@ -1340,7 +1352,7 @@ async function run() {
           );
           await page.locator('#dialog [data-action="return-next"]').click();
           assert.match(
-            await page.locator("#report").innerText(),
+            await reportText(page),
             /植物经历过的明暗/,
           );
           await page
@@ -1357,7 +1369,7 @@ async function run() {
           await page.locator('#dialog [data-action="return-next"]').click();
           assert.equal((await read(page)).council.completed.length, 2);
           assert.match(
-            await page.locator("#report").innerText(),
+            await reportText(page),
             /把自己的名字写进第一班/,
           );
           await noOverflow(page);
@@ -1680,7 +1692,7 @@ async function run() {
             assert.equal((await read(page)).rescue.completed.length, i);
             assert.equal((await read(page)).result.samples, launched.samples);
             assert.match(
-              await page.locator("#report").innerText(),
+              await reportText(page),
               new RegExp(D.STORIES[m.story].title),
             );
             await noOverflow(page);
@@ -2216,9 +2228,9 @@ async function run() {
             assert.deepEqual(await read(page), claimed);
             await page.locator('#navigation [data-id="explore"]').click();
             assert.equal(await page.locator(".scene-afterword").count(), 0);
-            await page.locator("#route-archive > summary").click();
+            await openDetails(page, "#route-archive");
             await openArchiveRecord(page, `#story-${story}`);
-            await page.locator(`#story-${story} > summary`).click();
+            await openDetails(page, `#story-${story}`);
             assert.ok(
               (await page.locator(`#story-${story}`).innerText()).includes(
                 response.response[0].text,
@@ -2440,9 +2452,9 @@ async function run() {
             assert.deepEqual(await read(page), saved);
             await page.locator('#navigation [data-id="explore"]').click();
             assert.equal(await page.locator(".scene-afterword").count(), 0);
-            await page.locator("#route-archive > summary").click();
+            await openDetails(page, "#route-archive");
             await openArchiveRecord(page, `#story-${mission.story}`);
-            await page.locator(`#story-${mission.story} > summary`).click();
+            await openDetails(page, `#story-${mission.story}`);
             const reread = page.locator(`#story-${mission.story}`);
             assert.ok(
               (await reread.innerText()).includes(response.response[0].text),
@@ -2549,9 +2561,9 @@ async function run() {
           await page.reload();
           assert.deepEqual(await read(page), claimed);
           await page.locator('#navigation [data-id="explore"]').click();
-          await page.locator("#route-archive > summary").click();
+          await openDetails(page, "#route-archive");
           await openArchiveRecord(page, `#story-${m.story}`);
-          await page.locator(`#story-${m.story} > summary`).click();
+          await openDetails(page, `#story-${m.story}`);
           assert.ok((await page.locator(`#story-${m.story}`).innerText()).includes(plan.name));
           assert.ok((await page.locator(`#story-${m.story}`).innerText()).includes(energy.name));
           for (const line of response.response) assert.ok((await page.locator(`#story-${m.story}`).innerText()).includes(line.text));
@@ -2646,6 +2658,139 @@ async function run() {
         assert.equal(await page.locator('#route-archive [data-action="claim"]').count(), 0);
       });
     }
+    const finishedStory = (focus = "reception", ending = "city") => {
+      const s = endingReady(focus, "rotation");
+      for (const h of D.EPILOGUE_HANDOFFS) assert.ok(E.confirmEpilogue(s, h.id));
+      assert.ok(E.chooseEnding(s, ending));
+      return s;
+    };
+    for (const [index, focus] of D.PORT_FOCUSES.entries()) {
+      const initial = finishedStory(focus.id, D.ENDINGS[index].id);
+      await scenario(`v3.10 ${focus.name}: real starport, three fresh resident deliveries, choices, collections and reload`, { [S.KEY]: JSON.stringify(initial) }, async (page) => {
+        const before = await read(page);
+        assert.equal(await page.locator(".port-atlas").getAttribute("data-port-focus"), focus.id);
+        assert.equal(await page.locator('.atlas-node[data-built="true"]').count(), 5);
+        assert.equal(await page.locator(".atlas-arrivals path").count(), 3);
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({width,height:900}); await noOverflow(page);
+          if (screenshotDir && index === 1 && width === 1280) await page.locator("#starport-overview").screenshot({path:path.join(screenshotDir,"v3.10-starport-desktop.png")});
+        }
+        await page.locator('#starport-overview [data-goal-focus="resident-requests"]').click();
+        for (const request of D.RESIDENT_REQUESTS) {
+          await page.locator(`[data-action="resident-accept"][data-id="${request.id}"]`).click();
+          assert.equal((await read(page)).afterword.active, request.id);
+          assert.equal(await page.locator('[data-action="resident-reply"]').count(), 0);
+          await page.reload();
+          await page.locator('#main [data-goal-focus="mission-supply-run"]').click();
+          await page.locator('[data-action="mission"][data-id="supply-run"]').click();
+          const launched = await read(page);
+          await page.clock.fastForward(launched.mission.seconds * 1000);
+          if (await page.locator('#dialog[open] [data-action="return-next"]').count()) await page.locator('#dialog [data-action="return-next"]').click();
+          await page.locator('[data-action="claim"]').click();
+          assert.equal((await read(page)).afterword.ready, true);
+          const resources = await read(page);
+          if (screenshotDir && index === 1 && request.id === "seeds") await page.locator("#resident-seeds").screenshot({path:path.join(screenshotDir,"v3.10-residents-mobile.png")});
+          await page.locator(`[data-action="resident-reply"][data-id="${request.id}"][data-reply="${request.replies[index % 2].id}"]`).click();
+          const completed = await read(page);
+          assert.deepEqual([completed.dust,completed.cores,completed.samples],[resources.dust,resources.cores,resources.samples]);
+          assert.equal(completed.afterword.completed.at(-1).id,request.id);
+        }
+        const saved=await read(page);
+        for (const key of ["epilogue","rescue","lore","chapter","legacyArchive"]) assert.deepEqual(saved[key],before[key]);
+        assert.equal(saved.afterword.completed.length,3);
+        await page.reload();
+        assert.deepEqual((await read(page)).afterword,saved.afterword);
+        await page.locator('#starport-overview [data-goal-focus="resident-requests"]').click();
+        assert.equal(await page.locator('[data-action="resident-accept"]:enabled').count(),0);
+        assert.equal(await page.locator('.resident-collection').count(),3);
+        await noOverflow(page);
+      });
+    }
+    const partialPort=ready();partialPort.starport=1;partialPort.cores=100;partialPort.totalCores=100;partialPort.samples=100;
+    await scenario("v3.10 starport only lights actual construction and changes immediately after repair",{[S.KEY]:JSON.stringify(partialPort)},async(page)=>{
+      assert.equal(await page.locator('.atlas-node[data-built="true"]').count(),0);
+      assert.match(await page.locator('.atlas-legend').innerText(),/修复 1\/3/);
+      await page.locator('.atlas-legend [data-goal-focus="port-panel"]').click();
+      await page.locator('[data-action="port"]').click();
+      await page.locator('[data-action="port"]').click();
+      await page.locator('#navigation [data-id="home"]').click();
+      assert.equal(await page.locator('.atlas-node[data-built="true"]').count(),1);
+      assert.equal(await page.locator('[data-port-node="hub"]').getAttribute("data-built"),"true");
+      assert.equal(await page.locator('.atlas-arrivals path').count(),0);
+      await page.setViewportSize({width:375,height:900});await noOverflow(page);
+    });
+    const readingSave=finishedStory();
+    await scenario("v3.10 reading: persisted sizes, archive anchor/offset, current chapter and independent save", {[S.KEY]:JSON.stringify(readingSave)}, async(page)=>{
+      const before=await read(page);
+      await page.setViewportSize({width:375,height:900});
+      await page.locator("#settings-button").click();
+      await page.locator('[data-action="reading-size"][data-id="larger"]').click();
+      assert.equal(await page.locator("html").getAttribute("data-reading-size"),"larger");
+      assert.equal(await page.locator("html").evaluate(el=>getComputedStyle(el).fontSize),"19px");
+      assert.deepEqual(await read(page),before);
+      await page.keyboard.press("Escape");
+      await page.locator('[data-action="nav"][data-id="explore"]').first().click();
+      await openDetails(page, "#route-archive");
+      await page.locator('#route-archive [data-goal-focus="archive-chapter-1"]').click();
+      await page.locator('#story-hospital > summary').click();
+      await page.locator('#story-hospital').evaluate(el=>window.scrollBy(0,el.getBoundingClientRect().top-100));
+      await page.clock.runFor(250);
+      await page.evaluate(()=>window.dispatchEvent(new Event("pagehide")));
+      const preferences=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),S.UI_KEY);
+      assert.equal(preferences.anchor,"story-hospital");
+      await page.reload();
+      assert.equal(await page.locator("html").getAttribute("data-reading-size"),"larger");
+      await page.locator('[data-action="nav"][data-id="explore"]').first().click();
+      assert.ok(await page.locator('#story-hospital').evaluate(el=>el.open));
+      await page.locator('[data-action="archive-resume"]').click();
+      assert.equal(await page.evaluate(()=>document.activeElement.id),"story-hospital");
+      assert.ok(Math.abs(await page.locator('#story-hospital').evaluate(el=>el.getBoundingClientRect().top)-preferences.offset)<8);
+      await page.locator('[data-action="archive-current"]').click();
+      assert.equal(await page.evaluate(()=>document.activeElement.id),"archive-chapter-6");
+      if(screenshotDir) await page.screenshot({path:path.join(screenshotDir,"v3.10-reading-mobile.png")});
+      await noOverflow(page);
+    });
+    await scenario("v3.10 page cache lifecycle: hidden/pagehide overlap, restored page, single offline settlement and saved voyage",{[S.KEY]:JSON.stringify(readingSave)},async(page)=>{
+      const before=await read(page);
+      await page.evaluate(()=>{
+        Object.defineProperty(document,"hidden",{configurable:true,get:()=>true});
+        document.dispatchEvent(new Event("visibilitychange"));
+        window.dispatchEvent(new Event("pagehide"));
+      });
+      await page.clock.fastForward(120000);
+      await page.evaluate(()=>{
+        Object.defineProperty(document,"hidden",{configurable:true,get:()=>false});
+        window.dispatchEvent(new PageTransitionEvent("pageshow",{persisted:true}));
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      const after=await read(page), expected=E.sanitize(before,TIME);
+      E.advance(expected,TIME+120000,{offline:true});
+      assert.equal(after.dust,expected.dust);
+      assert.equal(after.timing.offlineSeconds-before.timing.offlineSeconds,120);
+      assert.equal(after.clock-before.clock,120);
+      assert.deepEqual(after.afterword,before.afterword);
+      assert.deepEqual(after.epilogue,before.epilogue);
+      await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent("pageshow",{persisted:true})));
+      assert.deepEqual(await read(page),after);
+      await page.reload();
+      assert.equal((await read(page)).dust,after.dust);
+    });
+    const reportSave=ready();
+    assert.ok(E.startMission(reportSave,"wreck"));
+    E.advance(reportSave,reportSave.lastAt+reportSave.mission.seconds*1000);
+    reportSave.lastAt=TIME;
+    await scenario("v3.10 report summary: full discovery is optional, choices visible and reading does not claim rewards",{[S.KEY]:JSON.stringify(reportSave)},async(page)=>{
+      await page.locator('#main [data-goal-focus="report"]').click();
+      const before=await read(page);
+      assert.equal(await page.locator(".report-discovery").evaluate(el=>el.open),false);
+      assert.match(await page.locator(".report-next").innerText(),/下一步/);
+      assert.ok(await page.locator('[data-action="claim"]').first().isVisible());
+      await page.locator('.report-discovery > summary').click();
+      assert.ok((await page.locator('.report-discovery p').innerText()).length>(await page.locator('.report-summary').innerText()).length);
+      assert.deepEqual(await read(page),before);
+      await page.setViewportSize({width:375,height:900});await noOverflow(page);
+      if(screenshotDir) await page.locator('#report').screenshot({path:path.join(screenshotDir,"v3.10-report-mobile.png")});
+    });
     console.log(
       `v3 browser ok: ${checks} complete flows; identity/content/assets/console checked in every flow`,
     );

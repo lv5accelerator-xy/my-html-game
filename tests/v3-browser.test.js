@@ -46,7 +46,7 @@ function ready() {
 }
 async function run() {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  const url = `http://127.0.0.1:${server.address().port}/v3/`;
+  const url = process.env.V3_TEST_URL || `http://127.0.0.1:${server.address().port}/v3/`;
   const browser = await (process.env.V3_BROWSER_ENGINE === "webkit" ? webkit : chromium).launch({
     headless: true,
     executablePath: process.env.CODEX_CHROMIUM_PATH || undefined,
@@ -85,6 +85,7 @@ async function run() {
     try {
       assert.match(await page.title(), /拾荒航线/);
       assert.equal(page.url(), url);
+      assert.equal(await page.evaluate(() => SalvageData.GAME_VERSION), D.GAME_VERSION);
       assert.ok(await page.locator("#main").innerText());
       await check(page, context);
       assert.deepEqual(errors, [], "runtime errors");
@@ -2791,6 +2792,155 @@ async function run() {
       assert.deepEqual(await read(page),before);
       await page.setViewportSize({width:375,height:900});await noOverflow(page);
       if(screenshotDir) await page.locator('#report').screenshot({path:path.join(screenshotDir,"v3.10-report-mobile.png")});
+    });
+    const backupEnvelope = (text, kind = "manual", label = "测试航线") => JSON.stringify({ version: 1, createdAt: TIME - 1000, kind, label, text });
+    await scenario("v3.11 manual backups: escaped labels, independent rotation, reload and mobile settings", { [S.KEY]: JSON.stringify(ready()) }, async(page) => {
+      await page.locator("#settings-button").click();
+      const before = await read(page);
+      for (let i = 0; i < 4; i++) {
+        await page.locator("#backup-label").fill(i === 3 ? '<img src=x onerror="alert(1)">' : `跃迁前-${i}`);
+        await page.locator('[data-action="checkpoint"]').click();
+        await page.clock.fastForward(1000);
+      }
+      assert.equal(await page.locator('.backup-list li').count(), 4, "three manual plus one automatic");
+      assert.ok(await page.locator('.backup-list').getByText('<img src=x onerror="alert(1)">', {exact:true}).isVisible());
+      assert.equal(await page.locator("#dialog-body img").count(), 0);
+      assert.equal((await read(page)).cores, before.cores);
+      assert.match(await page.locator('.backup-list').innerText(), /跃迁前-1/);
+      assert.doesNotMatch(await page.locator('.backup-list').innerText(), /跃迁前-0/);
+      await page.reload();
+      await page.locator("#settings-button").click();
+      assert.equal(await page.locator('.backup-list li').count(), 4);
+      await page.setViewportSize({width:375,height:900});
+      await page.locator('[data-action="reading-size"][data-id="larger"]').click();
+      await noOverflow(page);
+      assert.equal(await page.locator("#dialog").evaluate(el => el.scrollWidth > el.clientWidth), false);
+      assert.ok(await page.locator('[data-action="checkpoint"]').evaluate(el => el.getBoundingClientRect().height >= 44));
+      if (screenshotDir) { await page.locator('.backup-list li').first().scrollIntoViewIfNeeded(); await page.screenshot({path:path.join(screenshotDir,"v3.11-backups-mobile.png")}); }
+    });
+    await scenario("v3.11 import preview: comparison and cancel are read-only; malformed and future files do not replace data", {[S.KEY]:JSON.stringify(readingSave)}, async(page) => {
+      const before = await read(page);
+      await page.locator("#settings-button").click();
+      await page.locator("#import-file").setInputFiles({name:"older.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(ready()))});
+      await page.locator('#confirm-import').waitFor();
+      assert.match(await page.locator('#dialog-title').innerText(), /恢复前预览/);
+      assert.match(await page.locator('.restore-preview').innerText(), /星港修复|故事结局|星尘/);
+      assert.ok(readingSave.epilogue.ending);
+      assert.match(await page.locator('.restore-preview').innerText(), new RegExp(D.ENDINGS.find(item => item.id === readingSave.epilogue.ending).title));
+      assert.match(await page.locator('.restore-warnings').innerText(), /永久进度|结局/);
+      assert.deepEqual(await read(page), before);
+      if (screenshotDir) await page.screenshot({path:path.join(screenshotDir,"v3.11-preview-desktop.png")});
+      await page.setViewportSize({width:375,height:900});
+      await noOverflow(page);
+      assert.equal(await page.locator("#dialog").evaluate(el => el.scrollWidth > el.clientWidth), false);
+      if (screenshotDir) await page.screenshot({path:path.join(screenshotDir,"v3.11-preview-mobile.png")});
+      await page.locator('#dialog [data-action="cancel"]').click();
+      assert.deepEqual(await read(page), before);
+      for (const [text, message] of [["{invalid", /文件未能读取/], ['{"schema":"salvage-orbit","version":99}', /当前航线版本/]]) {
+        await page.locator("#settings-button").click();
+        await page.locator("#import-file").setInputFiles({name:"invalid.json",mimeType:"application/json",buffer:Buffer.from(text)});
+        await page.locator('#toast').filter({hasText:message}).waitFor();
+        assert.equal(await page.locator('#confirm-import').count(),0);
+        assert.deepEqual(await read(page),before);
+        await page.keyboard.press("Escape");
+      }
+    });
+    await scenario("v3.11 backup restore: confirmation tolerates own autosaves, preserves live progress and pending report without rewards", {
+      [S.KEY]:JSON.stringify(readingSave), [S.BACKUP_PREFIX+"kept-0"]:backupEnvelope(JSON.stringify(reportSave)),
+    }, async(page) => {
+      await page.locator("#settings-button").click();
+      await page.locator('[data-action="backup"][data-id="kept-0"]').click();
+      assert.match(await page.locator('#dialog-body').innerText(), /待领取报告/);
+      await page.clock.fastForward(12000);
+      const before = await read(page);
+      await page.locator('#confirm-backup').click();
+      const after = await read(page);
+      assert.equal(after.dust,reportSave.dust);
+      assert.equal(after.samples,reportSave.samples);
+      assert.deepEqual(after.result,reportSave.result);
+      assert.deepEqual(after.lore,reportSave.lore);
+      assert.equal(after.lastAt,TIME+12000);
+      const entries = await page.evaluate(() => SalvageStorage.backups(localStorage).entries);
+      assert.ok(entries.some(entry => entry.kind === "restore" && JSON.parse(entry.text).clock >= before.clock));
+      await page.reload();
+      assert.deepEqual((await read(page)).result, reportSave.result);
+      await page.locator('#main [data-goal-focus="report"]').click();
+      assert.ok(await page.locator('[data-action="claim"]').first().isVisible());
+    });
+    await scenario("v3.11 damaged save recovery: raw export, invalid backup export and confirmed recovery keep original bytes", {
+      [S.KEY]:"{corrupt",[S.BACKUP]:JSON.stringify(ready()),[S.BACKUP_PREFIX+"kept-0"]:"{damaged-envelope",
+    },async(page)=>{
+      let downloading=page.waitForEvent("download");
+      await page.locator('#dialog [data-action="raw-export"]').click();
+      assert.equal(fs.readFileSync(await (await downloading).path(),"utf8"),"{corrupt");
+      await page.locator('[data-action="settings"]').click();
+      assert.ok(await page.locator('[data-action="backup"][data-id="kept-0"]').isDisabled());
+      downloading=page.waitForEvent("download");
+      await page.locator('[data-action="backup-export"][data-id="kept-0"]').click();
+      assert.equal(fs.readFileSync(await (await downloading).path(),"utf8"),"{damaged-envelope");
+      await page.locator('[data-action="backup"][data-id="previous"]').click();
+      assert.match(await page.locator('.restore-warnings').innerText(),/原文/);
+      assert.equal(await page.evaluate(key=>localStorage.getItem(key),S.KEY),"{corrupt");
+      await page.locator('#confirm-backup').click();
+      assert.equal((await read(page)).dust,ready().dust);
+      assert.equal(await page.evaluate(key=>localStorage.getItem(key),S.BACKUP),"{corrupt");
+      await page.clock.fastForward(6000);
+      assert.ok((await read(page)).dust>ready().dust);
+    });
+    await scenario("v3.11 quota failure: preview may open but unsuccessful backup never overwrites the current save", {[S.KEY]:JSON.stringify(ready())},async(page)=>{
+      const before = await read(page);
+      await page.locator("#settings-button").click();
+      await page.locator("#import-file").setInputFiles({name:"new.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(E.createState(TIME)))});
+      await page.locator('#confirm-import').waitFor();
+      await page.evaluate(prefix=>{
+        const original=Storage.prototype.setItem;
+        Storage.prototype.setItem=function(key,value){if(key.startsWith(prefix)) throw new DOMException("full","QuotaExceededError");return original.call(this,key,value);};
+      },S.BACKUP_PREFIX);
+      await page.locator('#confirm-import').click();
+      assert.match(await page.locator('#toast').innerText(),/未能接续/);
+      assert.deepEqual(await read(page),before);
+      assert.ok(await page.locator('#confirm-import').isEnabled(), "failed confirmation can be retried");
+      assert.ok(await page.locator('#dialog').evaluate(el=>el.open));
+    });
+    await scenario("v3.11 other-window update invalidates restore preview and pauses autosave without overwriting newer progress", {[S.KEY]:JSON.stringify(ready())},async(page,context)=>{
+      await page.locator("#settings-button").click();
+      await page.locator("#import-file").setInputFiles({name:"new.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(E.createState(TIME)))});
+      await page.locator('#confirm-import').waitFor();
+      const other=await context.newPage();
+      await other.goto(url);
+      const changed=ready();changed.dust=67890;changed.lastAt=TIME;
+      const text=JSON.stringify(changed);
+      await other.evaluate(({key,text})=>localStorage.setItem(key,text),{key:S.KEY,text});
+      await other.close();
+      await page.locator('#reload-game').waitFor();
+      assert.equal(await page.locator('#confirm-import').count(),0);
+      await page.clock.fastForward(10000);
+      assert.equal(await page.evaluate(key=>localStorage.getItem(key),S.KEY),text);
+      await page.locator('#reload-game').click();
+      assert.ok((await read(page)).dust>=changed.dust);
+    });
+    await scenario("v3.11 historical single backup: restore requires preview and cancellation preserves the current primary", {[S.KEY]:JSON.stringify(ready()),[S.BACKUP]:JSON.stringify(E.createState(TIME))},async(page)=>{
+      const before=await read(page);
+      await page.locator("#settings-button").click();
+      await page.locator('[data-action="backup"][data-id="previous"]').click();
+      assert.ok(await page.locator('#confirm-backup').isVisible());
+      assert.deepEqual(await read(page),before);
+      await page.keyboard.press("Escape");
+      assert.deepEqual(await read(page),before);
+    });
+    await scenario("v3.11 failed primary write preserves the selected historical recovery source for another attempt", {[S.KEY]:JSON.stringify(ready()),[S.BACKUP]:JSON.stringify(E.createState(TIME))},async(page)=>{
+      const original=await page.evaluate(key=>localStorage.getItem(key),S.KEY), target=await page.evaluate(key=>localStorage.getItem(key),S.BACKUP);
+      await page.locator("#settings-button").click();
+      await page.locator('[data-action="backup"][data-id="previous"]').click();
+      await page.evaluate(key=>{
+        const original=Storage.prototype.setItem;
+        Storage.prototype.setItem=function(name,value){if(name===key) throw new DOMException("full","QuotaExceededError");return original.call(this,name,value);};
+      },S.KEY);
+      await page.locator('#confirm-backup').click();
+      assert.match(await page.locator('#toast').innerText(),/未能接续/);
+      assert.equal(await page.evaluate(key=>localStorage.getItem(key),S.KEY),original);
+      const entries=await page.evaluate(()=>SalvageStorage.backups(localStorage).entries);
+      assert.ok(entries.some(entry=>entry.valid&&entry.text===target),"the recovery source is still recoverable");
     });
     console.log(
       `v3 browser ok: ${checks} complete flows; identity/content/assets/console checked in every flow`,

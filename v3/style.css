@@ -1185,6 +1185,32 @@ dialog button {
 .save-warning {
   color: var(--amber);
 }
+.backup-panel { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 22px; }
+.backup-panel h3 { font-size: 18px; }
+.backup-panel > p, .backup-panel label { color: var(--muted); font-size: 13px; }
+.backup-create { display: flex; align-items: stretch; gap: 10px; margin: 8px 0 18px; }
+.backup-create input { flex: 1; min-width: 0; width: 100%; border: 1px solid var(--line); border-radius: 4px; padding: 10px; background: var(--surface); color: var(--text); font: inherit; }
+.backup-create button { flex-shrink: 0; }
+.backup-list { list-style: none; padding: 0; margin: 0; }
+.backup-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-top: 1px solid var(--line); }
+.backup-list strong { font-weight: 500; overflow-wrap: anywhere; }
+.backup-list small { display: block; color: var(--muted); font-size: 12px; }
+.backup-list p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.backup-actions { display: flex; flex-shrink: 0; flex-direction: column; gap: 6px; }
+.backup-panel button { min-height: 44px; font-size: 13px; }
+.restore-preview { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+.restore-preview caption { text-align: left; color: var(--muted); margin-bottom: 10px; }
+.restore-preview th, .restore-preview td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; font-weight: 400; }
+.restore-preview thead th { color: var(--muted); }
+.restore-preview th:first-child { width: 30%; }
+.restore-preview td:last-child { color: var(--teal); }
+.restore-warnings { padding-left: 20px; color: var(--amber); font-size: 14px; }
+.restore-warnings li + li { margin-top: 8px; }
+@media (max-width: 600px) {
+  .backup-create, .backup-list li { flex-direction: column; align-items: stretch; }
+  .backup-actions { flex-direction: row; flex-wrap: wrap; }
+  .restore-preview th, .restore-preview td { padding: 10px 5px; }
+}
 #toast {
   position: fixed;
   bottom: 62px;

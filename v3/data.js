@@ -7,7 +7,7 @@
   "use strict";
   const data = {
     VERSION: 32,
-    GAME_VERSION: "3.10.0-preview.2",
+    GAME_VERSION: "3.11.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,

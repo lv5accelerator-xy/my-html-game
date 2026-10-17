@@ -69,6 +69,9 @@
   document.documentElement.dataset.readingSize = reading.size;
   let state = loaded.state,
     blocked = Boolean(loaded.error),
+    persistedText = loaded.source,
+    conflicted = false,
+    backupWarningShown = false,
     page = "home",
     buyMode = "1",
     signature = "",
@@ -116,8 +119,13 @@
   function save() {
     if (blocked) return false;
     try {
-      S.save(storage, state);
-      $("#save-label").textContent = "自动保存";
+      const result = S.save(storage, state, Date.now(), { expected: persistedText });
+      persistedText = JSON.stringify(state);
+      $("#save-label").textContent = result.backupError ? "已保存 · 备份未更新" : "自动保存";
+      if (result.backupError && !backupWarningShown) {
+        backupWarningShown = true;
+        toast("当前进度已保存，但自动备份未能更新。请导出记录留存。");
+      }
       return true;
     } catch (error) {
       blocked = true;
@@ -182,31 +190,38 @@
         closeDialog();
     }
   });
-  function exportSave() {
+  function downloadText(text, name) {
     const link = document.createElement("a"),
       url = URL.createObjectURL(
-        new Blob([JSON.stringify(state, null, 2)], {
+        new Blob([text], {
           type: "application/json",
         }),
       );
     link.href = url;
-    link.download = `拾荒航线-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `${name}-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast("航线记录已导出。");
   }
+  function exportSave() { downloadText(JSON.stringify(state, null, 2), "拾荒航线"); }
+  const savedDate = (value) => value ? new Date(value).toLocaleString("zh-CN", { hour12: false }) : "时间未记录";
+  const endingName = (id) => D.ENDINGS.find(item => item.id === id)?.title || "未确认";
+  function backupPanel() {
+    const result = S.backups(storage);
+    const names = { auto: "自动备份", manual: "手动备份", restore: "恢复前", reset: "重新启航前", previous: "旧备份" };
+    return `<section class="backup-panel" aria-labelledby="backup-heading"><h3 id="backup-heading">航线备份</h3>
+      <p>每 5 分钟留存一份，保留最近 3 份自动备份；另保留最近 3 份手动／恢复前备份。仅在本机保存，换设备请导出 JSON 后导入。</p>
+      <label for="backup-label">备份备注（可选）</label><div class="backup-create"><input id="backup-label" maxlength="40" placeholder="例如：下一次跃迁前"><button ${action("checkpoint")} ${blocked ? "disabled" : ""}>保存手动备份</button></div>
+      ${result.error ? `<p class="save-warning">备份暂不可读取：${escape(result.error)}。请先导出当前记录。</p>` : result.entries.length ? `<ol class="backup-list">${result.entries.map(entry => `<li><div><strong>${escape(entry.label || names[entry.kind] || "备份")}</strong><small>${escape(names[entry.kind])} · ${escape(savedDate(entry.createdAt || entry.summary?.savedAt))}</small><p>${entry.valid ? `第 ${entry.summary.chapter} 章 · 跃迁 ${number(entry.summary.rebirths)} 次 · ${entry.summary.lore.length} 份决定${entry.summary.ending ? ` · ${escape(endingName(entry.summary.ending))}` : ""}` : "暂不能接续，原文仍可导出"}</p></div><div class="backup-actions"><button class="outline" ${action("backup", entry.id)} ${!entry.valid || conflicted ? "disabled" : ""}>预览恢复</button><button class="text-button" ${action("backup-export", entry.id)}>导出原文</button></div></li>`).join("")}</ol>` : '<p class="backup-empty">还没有备份。可先保存一份手动备份，或等待下一次自动保存。</p>'}
+      <p><small>轮换会替换同组最旧记录；重要节点请另外导出。自动备份不会替换手动备份，旧版航站存档不参与轮换。</small></p></section>`;
+  }
   function settings() {
-    let backup = false;
-    try {
-      backup = Boolean(storage.getItem(S.BACKUP));
-    } catch (_) {
-      /* Error shown below. */
-    }
     openDialog(
       "航站设置",
       `<p>进度保存在这台设备。跃迁不会清除舰装、故事、航站修复和永久能力。</p>${blocked ? '<p class="save-warning">自动保存已暂停。请先导出记录，再恢复备份或重新启航。</p>' : ""}
       <fieldset class="reading-settings"><legend>阅读字号</legend><div>${[["normal", "标准"], ["large", "大字"], ["larger", "特大"]].map(([id, label]) => `<button class="outline" ${action("reading-size", id)} aria-pressed="${reading.size === id}">${label}</button>`).join("")}</div><p>仅改变这台设备的显示，航线进度独立保存。</p></fieldset>
-      <div class="settings-links"><button ${action("export")}>导出航线记录</button><button ${action("import")}>导入记录</button><input id="import-file" type="file" accept=".json,application/json" hidden>${backup ? `<button ${action("backup")}>恢复上次备份</button>` : ""}</div>
+      <div class="settings-links"><button ${action("export")}>导出当前航线</button><button ${action("raw-export")}>导出本机原始记录</button><button ${action("import")} ${conflicted ? "disabled" : ""}>导入记录</button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
+      ${backupPanel()}
       ${state.legacyArchive ? "<p>继承的旧航站记录已完整封存。原版的远征和活动奖励可在旧版继续处理。</p>" : ""}
       <div class="settings-links"><a href="../">返回旧版航站</a><button ${action("legacy")}>继承本机旧航站</button><button ${action("reset")}>重新启航</button></div>
       <details class="timing-panel"><summary>本机航线用时</summary><p>前台用时按页面可见的秒数记录；航线用时包含已结算的离线时间。${state.timing.late ? "从本版本接续后开始记录，历史用时不补写。" : "记录从这条新航线启航时开始。"} 记录随导出文件保存。</p><p data-timing-total></p><table><caption>${state.timing.late ? "本版本首次记录" : "首次抵达"}</caption><thead><tr><th scope="col">节点</th><th scope="col">前台用时</th><th scope="col">航线用时</th></tr></thead><tbody>${[
@@ -848,11 +863,17 @@
   }
   function importText(text) {
     try {
-      state = S.restore(storage, text);
+      if (conflicted) throw new Error("另一窗口正在运行，请先接续最新进度。");
+      state = S.restore(storage, text, Date.now(), {
+        expected: persistedText, ...(!blocked ? { snapshot: JSON.stringify(state) } : {}),
+      });
+      persistedText = JSON.stringify(state);
       lastReturnReport = null;
       absence = null;
       recentStory = null;
       blocked = false;
+      backupWarningShown = false;
+      $("#save-label").textContent = "自动保存";
       page = "home";
       signature = "";
       closeDialog();
@@ -861,6 +882,40 @@
     } catch (error) {
       toast(`未能接续：${error.message}`);
     }
+  }
+  function previewRestore(text, source, confirmId = "confirm-import") {
+    if (conflicted) throw new Error("另一窗口正在运行，请先接续最新进度。");
+    const incoming = S.inspect(text), next = incoming.summary, current = S.summarize(state);
+    const warnings = [];
+    if (blocked) warnings.push("本机记录未正常载入，下表当前一栏不能代表原记录。原文将先备份，建议另外导出原文。");
+    else {
+      if (next.savedAt < current.savedAt) warnings.push("所选记录的保存时间更早，之后的进度不会合并。");
+      if (next.chapter < current.chapter || next.lore.length < current.lore.length || next.starport < current.starport || next.rebirths < current.rebirths || next.residents < current.residents)
+        warnings.push("部分永久进度将回到所选记录，请核对章节、修复、跃迁和回信。");
+      if (next.ending !== current.ending || current.lore.some(item => next.lore.some(other => item.story === other.story && item.choice !== other.choice)))
+        warnings.push("故事选择或结局与当前记录不同，接续后以所选记录为准。");
+    }
+    if (incoming.legacy) warnings.push("这是旧版航站记录，将按迁移规则接入；不覆盖旧版原存档，也不连接旧版云端。");
+    const rows = [
+      ["保存时间", savedDate(current.savedAt), savedDate(next.savedAt)],
+      ["主线章节", `第 ${current.chapter} 章`, `第 ${next.chapter} 章`],
+      ["星港修复", `${current.starport} / ${D.PORT.length}`, `${next.starport} / ${D.PORT.length}`],
+      ["跃迁 / 决定 / 回信", `${current.rebirths} / ${current.lore.length} / ${current.residents}`, `${next.rebirths} / ${next.lore.length} / ${next.residents}`],
+      ["故事结局", endingName(current.ending), endingName(next.ending)],
+      ["星尘", number(current.dust), number(next.dust)],
+      ["样本 / 星核", `${number(current.samples)} / ${number(current.cores)}`, `${number(next.samples)} / ${number(next.cores)}`],
+    ];
+    openDialog("恢复前预览", `<p>来源：${escape(source)}。预览不会发奖或改写进度。</p>
+      <table class="restore-preview"><caption>当前航线与所选记录对照</caption><thead><tr><th scope="col">项目</th><th scope="col">当前${blocked ? "（未载入）" : ""}</th><th scope="col">接续后</th></tr></thead><tbody>${rows.map(([name, before, after]) => `<tr><th scope="row">${escape(name)}</th><td>${blocked ? "—" : escape(before)}</td><td>${escape(after)}</td></tr>`).join("")}</tbody></table>
+      ${warnings.length ? `<ul class="restore-warnings">${warnings.map(warning => `<li>${escape(warning)}</li>`).join("")}</ul>` : ""}
+      <p>接续会完整替换，不叠加资源。当前记录先经备份校验，备份失败就停止；从确认时刻继续，不补算导入前的离线收益。${next.pending ? "有一份待领取报告，会继续等待手动安排。" : next.mission ? "正在进行的航程按原剩余时间继续。" : ""}</p>
+      <div class="dialog-actions"><button ${action("cancel")}>取消</button><button class="primary" id="${confirmId}">确认接续记录</button></div>`);
+    const confirm = document.getElementById(confirmId);
+    confirm.addEventListener("click", () => {
+      confirm.disabled = true;
+      importText(text);
+      if (dialog.open) confirm.disabled = false;
+    });
   }
   document.addEventListener("change", async (event) => {
     const target = event.target;
@@ -872,15 +927,7 @@
       }
       try {
         const text = await file.text();
-        const raw = JSON.parse(text);
-        raw.schema ? E.sanitize(raw) : E.migrateLegacy(raw);
-        openDialog(
-          "接续这条航线？",
-          `<p>当前航线会先备份，再接续所选记录。旧版航站会继续保留。</p><div class="dialog-actions"><button ${action("cancel")}>取消</button><button class="primary" id="confirm-import">接续记录</button></div>`,
-        );
-        $("#confirm-import").addEventListener("click", () => importText(text), {
-          once: true,
-        });
+        previewRestore(text, file.name);
       } catch (error) {
         toast(`文件未能读取：${error.message}`);
       }
@@ -899,6 +946,7 @@
     const button = event.target.closest("[data-action]");
     if (!button || button.disabled) return;
     const { action: kind, id } = button.dataset;
+    if (kind === "settings") { settings(); return; }
     if (kind === "reading-size") {
       if (!["normal", "large", "larger"].includes(id)) return;
       reading.size = id;
@@ -1081,6 +1129,21 @@
     } else if (kind === "export") {
       exportSave();
       return;
+    } else if (kind === "raw-export" || kind === "backup-export") {
+      try {
+        const text = kind === "raw-export" ? storage.getItem(S.KEY) : S.readBackup(storage, id)?.text;
+        if (text === null || text === undefined) toast("还没有可导出的本机记录。");
+        else downloadText(text, kind === "raw-export" ? "拾荒航线-本机原文" : "拾荒航线-备份原文");
+      } catch (error) { toast(`未能导出：${error.message}`); }
+      return;
+    } else if (kind === "checkpoint") {
+      if (blocked || !save()) return;
+      try {
+        S.checkpoint(storage, JSON.stringify(state), "manual", $("#backup-label")?.value || "");
+        settings();
+        toast("手动备份已保存并通过写入校验。");
+      } catch (error) { toast(`备份未能完成：${error.message}。当前进度未被替换。`); }
+      return;
     } else if (kind === "import") {
       $("#import-file").click();
       return;
@@ -1092,7 +1155,9 @@
       return;
     } else if (kind === "confirm-reset") {
       try {
-        state = S.reset(storage);
+        if (conflicted) throw new Error("另一窗口正在运行");
+        state = S.reset(storage, Date.now(), { expected: persistedText, ...(!blocked ? { snapshot: JSON.stringify(state) } : {}) });
+        persistedText = JSON.stringify(state);
         lastReturnReport = null;
         absence = null;
         recentStory = null;
@@ -1105,8 +1170,9 @@
       }
     } else if (kind === "backup") {
       try {
-        const text = storage.getItem(S.BACKUP);
-        if (text) importText(text);
+        const entry = S.readBackup(storage, id || "previous");
+        if (entry) previewRestore(entry.text, entry.label || "本机备份", "confirm-backup");
+        else toast("这份备份已变化，请重新打开设置。");
       } catch (error) {
         toast(error.message);
       }
@@ -1118,14 +1184,7 @@
           toast("这台设备上还没有旧航站记录。");
           return;
         }
-        E.migrateLegacy(JSON.parse(text));
-        openDialog(
-          "继承旧航站？",
-          `<p>星尘、星核、跃迁次数和匹配的设施会接入这条航线。旧研究、远征和未领取奖励完整封存，仍可回旧版继续。</p><p>当前航线会先备份；旧版原记录保持可用。</p><div class="dialog-actions"><button ${action("cancel")}>继续当前航线</button><button class="primary" id="confirm-legacy">继承航站</button></div>`,
-        );
-        $("#confirm-legacy").addEventListener("click", () => importText(text), {
-          once: true,
-        });
+        previewRestore(text, "本机旧航站（完整旧记录仍会封存）", "confirm-legacy");
       } catch (error) {
         toast(`旧记录未能读取：${error.message}`);
       }
@@ -1139,7 +1198,7 @@
     $("#save-label").textContent = "保存已暂停";
     openDialog(
       "记录暂未能接续",
-      `<p>${escape(loaded.error)}</p><p>原记录仍保留在本机。自动保存已经暂停，请在设置中恢复备份、导入记录或导出当前航线。</p>`,
+      `<p>${escape(loaded.error)}</p><p>原记录仍保留在本机，自动保存已经暂停。可先导出原文，再进入设置检查备份或导入记录。</p><div class="dialog-actions"><button ${action("raw-export")}>导出本机原始记录</button><button ${action("settings")}>查看备份与设置</button></div>`,
     );
   } else if (loaded.legacy)
     openDialog(
@@ -1205,7 +1264,8 @@
   });
   window.addEventListener("beforeunload", () => { rememberReading(); save(); });
   window.addEventListener("storage", (event) => {
-    if (event.key !== S.KEY) return;
+    if (event.key !== S.KEY && event.key !== null) return;
+    conflicted = true;
     blocked = true;
     $("#save-label").textContent = "另一窗口正在运行";
     openDialog(

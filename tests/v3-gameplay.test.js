@@ -2464,4 +2464,137 @@ test("reading preferences survive reload independently, reject malformed values,
   assert.equal(storage.getItem(S.KEY), before);
   assert.equal(S.saveReading({ setItem() { throw Error("full"); } }, {}), false);
 });
+test("v3.11 restore inspection is read-only, bounded, and does not simulate offline rewards", () => {
+  const s = ready();
+  assert.ok(E.startMission(s, "wreck"));
+  const original = JSON.stringify(s);
+  const preview = S.inspect(original, s.lastAt + 8 * 3600 * 1000);
+  assert.deepEqual(preview.state, s);
+  assert.equal(preview.summary.mission, "wreck");
+  assert.equal(preview.summary.dust, s.dust);
+  assert.equal(JSON.stringify(s), original);
+  for (const text of ["{broken", '{"schema":"salvage-orbit","version":99}', "x".repeat(S.MAX_TEXT_BYTES + 1)])
+    assert.throws(() => S.inspect(text));
+});
+test("v3.11 manual and automatic slots rotate independently without touching primary, v2 or reading records", () => {
+  const s = ready(), original = JSON.stringify(s);
+  const store = memory({ [S.KEY]: original, [S.LEGACY_KEY]: "v2", [S.UI_KEY]: "reading" });
+  for (let i = 0; i < 5; i++) S.checkpoint(store, original, "manual", `节点-${i}`, i < 3 ? 1000 : 500);
+  for (let i = 0; i < 7; i++) S.checkpoint(store, original, "auto", "", 2000 + i);
+  const entries = S.backups(store, 4000).entries;
+  assert.equal(entries.length, 6);
+  assert.deepEqual(entries.filter(entry => entry.kind === "manual").map(entry => entry.label), ["节点-4", "节点-3", "节点-2"]);
+  assert.equal(entries.filter(entry => entry.kind === "auto").length, 3);
+  assert.ok(entries.every(entry => entry.valid && entry.text === original));
+  assert.equal(store.getItem(S.KEY), original);
+  assert.equal(store.getItem(S.LEGACY_KEY), "v2");
+  assert.equal(store.getItem(S.UI_KEY), "reading");
+  assert.throws(() => S.readBackup(store, "../v2"), /未知/);
+});
+test("v3.11 periodic backups keep the preceding primary snapshot and only rotate every five minutes", () => {
+  const store = memory(), s = ready();
+  S.save(store, s, 1000);
+  const first = S.backups(store, 1000).entries[0].text;
+  s.dust += 10;
+  S.save(store, s, 2000);
+  assert.equal(S.backups(store, 2000).entries.length, 1);
+  const previous = store.getItem(S.KEY);
+  s.dust += 20;
+  S.save(store, s, 1000 + S.BACKUP_INTERVAL);
+  assert.deepEqual(S.backups(store, 1000 + S.BACKUP_INTERVAL).entries.map(entry => entry.text), [previous, first]);
+});
+test("v3.11 backup quota failures do not stop ordinary saving, but restore and reset require verified backups", () => {
+  const original = JSON.stringify(ready()), target = JSON.stringify(E.createState(1000));
+  for (const failure of ["history", "previous", "primary", "silent"]) {
+    const store = memory({ [S.KEY]: original }), set = store.setItem;
+    store.setItem = (key, value) => {
+      if (failure === "silent" && key.startsWith(S.BACKUP_PREFIX)) return;
+      if ((failure === "history" && key.startsWith(S.BACKUP_PREFIX)) || (failure === "previous" && key === S.BACKUP) || (failure === "primary" && key === S.KEY)) throw Error("QuotaExceededError");
+      set(key, value);
+    };
+    assert.throws(() => S.restore(store, target, 2000), /Quota|校验/);
+    assert.equal(store.getItem(S.KEY), original);
+    assert.throws(() => S.reset(store, 2000), /Quota|校验/);
+    assert.equal(store.getItem(S.KEY), original);
+  }
+  const store = memory({ [S.KEY]: original }), set = store.setItem;
+  const writes = [];
+  store.setItem = (key, value) => { writes.push(key); if (key.startsWith(S.BACKUP_PREFIX)) throw Error("full"); set(key, value); };
+  const s = ready(); s.dust += 50;
+  assert.match(S.save(store, s, 2000).backupError, /full/);
+  assert.equal(JSON.parse(store.getItem(S.KEY)).dust, s.dust);
+  assert.equal(writes[0], S.KEY, "primary gets available quota before optional backups");
+});
+test("v3.11 damaged and future backups remain exportable and a successful recovery preserves the damaged source", () => {
+  const good = JSON.stringify(ready());
+  for (const bad of ["{broken", '{"schema":"salvage-orbit","version":99}']) {
+    const store = memory({ [S.KEY]: bad, [S.BACKUP]: good, [S.BACKUP_PREFIX + "kept-0"]: "{bad envelope" });
+    const entries = S.backups(store, 2000).entries;
+    assert.equal(entries.find(entry => entry.id === "previous").valid, true);
+    assert.equal(entries.find(entry => entry.id === "kept-0").text, "{bad envelope");
+    assert.equal(entries.find(entry => entry.id === "kept-0").valid, false);
+    const restored = S.restore(store, good, 2000, { expected: bad });
+    assert.equal(restored.dust, ready().dust);
+    assert.equal(store.getItem(S.BACKUP), bad);
+    assert.ok(S.backups(store, 2000).entries.some(entry => entry.text === bad && !entry.valid));
+  }
+});
+test("v3.11 expected-source guards reject a changed primary, including changes during backup writes", () => {
+  const original = JSON.stringify(ready()), incoming = JSON.stringify(E.createState(1000)), newer = "another window";
+  for (const operation of [store => S.save(store, ready(), 2000, { expected: original }), store => S.restore(store, incoming, 2000, { expected: original }), store => S.reset(store, 2000, { expected: original })]) {
+    const store = memory({ [S.KEY]: newer });
+    assert.throws(() => operation(store), /窗口|变化/);
+    assert.equal(store.getItem(S.KEY), newer);
+    assert.equal(S.backups(store).entries.length, 0);
+  }
+  for (const operation of [store => S.save(store, ready(), 2000), store => S.restore(store, incoming, 2000), store => S.reset(store, 2000)]) {
+    const store = memory({ [S.KEY]: original }), set = store.setItem;
+    store.setItem = (key, value) => { set(key, value); if (key.startsWith(S.BACKUP_PREFIX)) set(S.KEY, newer); };
+    assert.throws(() => operation(store), /窗口/);
+    assert.equal(store.getItem(S.KEY), newer);
+  }
+});
+test("v3.11 restoring keeps the latest in-memory snapshot as well as the exact primary original", () => {
+  const s = ready(), original = JSON.stringify(s), store = memory({ [S.KEY]: original });
+  E.advance(s, 6000);
+  const snapshot = JSON.stringify(s);
+  const target = E.createState(1000);
+  const restored = S.restore(store, JSON.stringify(target), 10000, { expected: original, snapshot });
+  assert.deepEqual(restored, { ...target, lastAt: 10000 });
+  assert.equal(store.getItem(S.BACKUP), original);
+  assert.ok(S.backups(store, 10000).entries.some(entry => entry.text === snapshot && entry.kind === "restore"));
+  assert.deepEqual(S.readBackup(store, "previous", 10000).text, original);
+});
+test("v3.11 restart preserves v2, original migration backup, preferences and the recoverable prior voyage", () => {
+  const original = JSON.stringify(ready()), store = memory({ [S.KEY]: original, [S.LEGACY_KEY]: "v2", [S.LEGACY_BACKUP]: "first", [S.UI_KEY]: "reading" });
+  const fresh = S.reset(store, 5000, { expected: original });
+  assert.deepEqual(fresh, E.createState(5000));
+  assert.ok(S.backups(store, 5000).entries.some(entry => entry.kind === "reset" && entry.text === original));
+  assert.equal(store.getItem(S.LEGACY_KEY), "v2");
+  assert.equal(store.getItem(S.LEGACY_BACKUP), "first");
+  assert.equal(store.getItem(S.UI_KEY), "reading");
+});
+test("v3.11 backup listing handles unavailable storage and keeps the historical single-backup entry without duplication", () => {
+  const unavailable = { getItem() { throw Error("unavailable"); } };
+  assert.match(S.backups(unavailable).error, /unavailable/);
+  const original = JSON.stringify(ready()), store = memory({ [S.BACKUP]: original });
+  assert.equal(S.backups(store).entries[0].id, "previous");
+  S.checkpoint(store, original, "restore", "", 2000);
+  assert.equal(S.backups(store).entries.length, 1);
+  assert.equal(D.VERSION, 32);
+});
+test("v3.11 a failed recovery never rotates away its chosen oldest or historical single-backup source", () => {
+  const current = JSON.stringify(ready()), target = JSON.stringify(E.createState(1000));
+  for (const source of ["kept-0", "previous"]) {
+    const store = memory({ [S.KEY]: current });
+    for (let i = 0; i < 3; i++) S.checkpoint(store, source === "kept-0" && i === 0 ? target : current, "manual", `记录-${i}`, 1000 + i);
+    if (source === "previous") store.setItem(S.BACKUP, target);
+    const selected = S.readBackup(store, source, 2000).text;
+    const set = store.setItem;
+    store.setItem = (key, value) => { if (key === S.KEY) throw Error("QuotaExceededError"); set(key, value); };
+    assert.throws(() => S.restore(store, selected, 2000, { expected: current }), /Quota/);
+    assert.equal(store.getItem(S.KEY), current);
+    assert.ok(S.backups(store, 2000).entries.some(entry => entry.valid && entry.text === target), source);
+  }
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

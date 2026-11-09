@@ -115,6 +115,50 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    for(const ending of D.ENDINGS) {
+      const fixture=E.sanitize(structuredClone(require('./fixtures/v316-earned.json')[ending.id]),TIME);
+      E.configure(fixture,{enabled:false,dispatch:false});fixture.lastAt=TIME;
+      await scenario(`v3.19 ${ending.title}: live scheduling, real escrow, construction credit, alternate voyage and locked terms`,{[S.KEY]:JSON.stringify(fixture)},async page=>{
+        await page.locator('#navigation [data-id="explore"]').click();
+        for(const focus of D.HARBOR_FOCUSES) {
+          await page.locator(`[data-action="harbor-focus"][data-id="${focus.id}"]`).click();
+          await page.locator('[data-action="harbor-accept"]').first().click();
+          const t=(await read(page)).management.active;
+          await page.locator(`[data-action="harbor-focus"][data-id="${focus.id==='production'?'reception':'production'}"]`).click();
+          assert.deepEqual((await read(page)).management.active,t);
+          if(focus.id==='production') {
+            await page.locator('[data-action="harbor-reserve"]').click();
+            assert.ok((await read(page)).automation.reserve>=t.dustCost);
+            await page.locator('#navigation [data-id="fleet"]').click();
+            const s=await read(page),cost=E.buildingCost(s,'drone');
+            if(cost>s.dust) await page.clock.runFor((E.incomeEta(s,cost-s.dust)+1)*1000);
+            await page.locator('[data-buy-id="drone"]').click();
+            assert.ok((await read(page)).management.active.plan.credit>0);
+            await page.locator('#navigation [data-id="explore"]').click();
+          } else if(focus.id==='reception') {
+            await page.locator('[data-action="harbor-pack"]').click();
+            const packed=(await read(page)).management.active;assert.equal(packed.plan.packedDust,t.dustCost);assert.equal(packed.plan.packedSamples,t.samplesCost);
+            await page.reload();await page.locator('#navigation [data-id="explore"]').click();
+            assert.deepEqual((await read(page)).management.active.plan,packed.plan);
+          } else {
+            await page.locator('#mission-belt [data-action="mission"]').click();
+            const m=(await read(page)).mission;assert.equal(m.harborOrder,t.serial);
+            await page.clock.runFor(m.seconds*1000+1000);
+            await page.locator('#report [data-action="claim"]').click();
+            assert.equal((await read(page)).management.active.trips,1);
+          }
+          await page.clock.runFor((t.workSeconds+1)*1000);
+          assert.match(await page.locator('#harbor-schedule').innerText(),/当前可用生产/);
+          await page.locator('[data-action="harbor-deliver"]').click();
+          assert.equal((await read(page)).management.active,null);
+        }
+        for(const width of [1280,375]) {
+          await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+          if(screenshotDir && ending.id==='city') await page.locator('#harbor-management').screenshot({path:path.join(screenshotDir,`v319-schedule-${width}.png`)});
+        }
+        const done=await read(page);assert.equal(done.management.stats.deliveries,3);assert.equal(done.epilogue.ending,ending.id);assert.deepEqual(done.lore,fixture.lore);
+      });
+    }
     for(const chain of D.SECTORS) {
       const fixture=structuredClone(require('./fixtures/v316-earned.json').city);
       E.configure(fixture,{enabled:false,dispatch:false}); fixture.lastAt=TIME;

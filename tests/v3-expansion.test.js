@@ -374,4 +374,57 @@ test('v3.18 invalid investigation recovery cannot duplicate nodes, conflict with
   assert.equal(E.sanitize(s,s.lastAt).atlas.nodes.length,1);
 });
 
+test('v3.19 three focus strategies spend real resources, freeze terms and use distinct preparation paths',()=>{
+  for(const focus of D.HARBOR_FOCUSES) {
+    let s=E.sanitize(structuredClone(require('./fixtures/v316-earned.json').city),1e15);E.configure(s,{enabled:false,dispatch:false});
+    E.setHarborFocus(s,focus.id);const offer=E.harborOffers(s)[0];assert.ok(E.acceptHarborNeed(s,offer.id,offer.terms.serial));
+    const t=s.management.active,terms=structuredClone(t);E.setHarborFocus(s,focus.id==='production'?'reception':'production');assert.deepEqual(s.management.active,terms);
+    if(focus.id==='production') {
+      const cost=E.buildingCost(s,'drone');E.advance(s,s.lastAt+(E.incomeEta(s,Math.max(0,cost-s.dust))||0)*1000);
+      assert.ok(E.buy(s,'drone'));assert.ok(t.plan.credit>0 && t.plan.credit<=t.productionGoal*t.plan.workshopCap);
+    } else if(focus.id==='reception') {
+      const dust=s.dust,samples=s.samples;assert.ok(E.packHarborNeed(s,t.serial));assert.equal(s.dust,dust-t.dustCost);assert.equal(s.samples,samples-t.samplesCost);
+      assert.equal(E.packHarborNeed(s,t.serial),false);s=E.sanitize(s,s.lastAt);assert.deepEqual(s.management.active.plan,t.plan);
+    } else {
+      assert.ok(E.startMission(s,'belt'));assert.equal(s.mission.harborOrder,t.serial);
+      E.advance(s,s.lastAt+s.mission.seconds*1000);s=E.sanitize(s,s.lastAt);assert.ok(E.claimMission(s));assert.equal(s.management.active.trips,1);
+    }
+    E.advance(s,s.lastAt+500000);const ready=E.harborStatus(s);assert.ok(ready.available);const dust=s.dust,samples=s.samples;
+    assert.ok(E.deliverHarborNeed(s,t.serial));assert.equal(s.dust,dust-ready.dustLeft);assert.equal(s.samples,samples-ready.samplesLeft);assert.equal(E.deliverHarborNeed(s,t.serial),false);
+    assert.equal(s.epilogue.ending,'city');assert.deepEqual(s.lore,require('./fixtures/v316-earned.json').city.lore);
+  }
+});
+test('v3.19 all endings continue eight real deliveries and finite construction without injected resources',()=>{
+  for(const ending of D.ENDINGS) {
+    let s=E.sanitize(structuredClone(require('./fixtures/v316-earned.json')[ending.id]),1e15);E.configure(s,{enabled:false,dispatch:false});
+    const start=s.clock;
+    for(let i=0;i<8;i++) {
+      E.setHarborFocus(s,D.HARBOR_FOCUSES[i%3].id);
+      const missing=D.HARBOR_PROJECTS.filter(p=>!s.management.counts[p.need]);
+      const offers=E.harborOffers(s),o=offers.find(n=>missing.some(p=>p.need===n.id))||offers[0];
+      assert.ok(E.acceptHarborNeed(s,o.id,o.terms.serial));
+      const t=s.management.active;
+      if(t.focus==='reception') E.packHarborNeed(s,t.serial);
+      if(t.focus==='exploration') {assert.ok(E.startMission(s,'belt'));E.advance(s,s.lastAt+s.mission.seconds*1000);assert.ok(E.claimMission(s));}
+      E.advance(s,s.lastAt+Math.ceil(t.workSeconds+1)*1000,{offline:true});
+      assert.ok(E.deliverHarborNeed(s,t.serial));
+      for(const p of D.HARBOR_PROJECTS) {const o=E.harborProjectOffer(s,p.id);if(o.available) assert.ok(E.buildHarborProject(s,p.id,o.level));}
+      s=E.sanitize(JSON.parse(JSON.stringify(s)),s.lastAt);
+    }
+    assert.equal(s.management.stats.deliveries,8);assert.ok(Object.values(s.management.projects).reduce((a,b)=>a+b,0)>=3);assert.equal(s.epilogue.ending,ending.id);
+    console.log(`v3.19 earned ${ending.id}: 8 deliveries, ${Object.values(s.management.projects).reduce((a,b)=>a+b,0)} phases, ${s.clock-start}s, zero resource injection`);
+  }
+});
+test('v3.19 legacy tasks stay unchanged; escrow and alternatives reject corrupt state; budget does not make decisions',()=>{
+  for(const {state} of require('./fixtures/v316-saves.json').states) {
+    const clean=E.sanitize(state,state.lastAt);if(clean.management.active) assert.equal(clean.management.active.plan,undefined);
+  }
+  const s=completed();E.setHarborFocus(s,'reception');const o=E.harborOffers(s)[0];E.acceptHarborNeed(s,o.id,o.terms.serial);E.packHarborNeed(s,o.terms.serial);
+  const original=structuredClone(s);for(const patch of [{packedDust:1e100},{packedSamples:-1},{mode:'production'},{alternates:['fracture']},{careFactor:0},{workshopCap:1}]) {
+    const bad=structuredClone(s);Object.assign(bad.management.active.plan,patch);const clean=E.sanitize(bad,bad.lastAt);assert.equal(clean.management.active,null);assert.equal(clean.dust,s.dust);assert.equal(clean.epilogue.ending,s.epilogue.ending);
+  }
+  assert.ok(E.reserveHarborNeed(s));E.advance(s,s.lastAt+8*3600000,{offline:true});assert.equal(s.management.cycle,original.management.cycle);assert.ok(s.management.active);
+  assert.ok(E.harborSchedule(s).projects.every(p=>p.dustGap>=0 && p.samplesGap>=0));
+});
+
 console.log(`v3 expansion ok: ${checks} behavioral checks`);

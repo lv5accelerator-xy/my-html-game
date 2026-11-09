@@ -1,0 +1,10 @@
+{"command": ["node", "scripts/check.cjs"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "start": 1794257000.318468, "env": {"PATH": "/workspace/scratch/starport-tools/node_modules/node/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback", "CODEX_PLAYWRIGHT_PATH": "/workspace/scratch/starport-tools/node_modules/playwright", "CODEX_CHROMIUM_PATH": "/usr/bin/chromium", "V3_BROWSER_ENGINE": null, "V3_TEST_FILTER": null, "V3_SCREENSHOT_DIR": "/workspace/scratch/starport-audit/screenshots"}}
+CHECK_RESULT: {"command":"node --check game.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check game-math.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check cloud-save.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v2-systems.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check legacy-systems.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/data.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/engine.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/storage.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/app.js","exit":0,"signal":null,"error":null}

@@ -257,7 +257,9 @@
     while (count > 0 && buildingCost(s, id, count) > available) count--;
     if (!count) return 0;
     const previous = s.buildings[id];
-    s.dust = Math.max(0, s.dust - buildingCost(s, id, count));
+    const spent = buildingCost(s,id,count);
+    s.dust = Math.max(0, s.dust - spent);
+    creditHarborWork(s,spent);
     s.buildings[id] += count;
     if (id === "drone") recordTiming(s, "drone", source);
     for (const level of D.MILESTONES)
@@ -276,6 +278,7 @@
     )
       return false;
     s.dust -= item.cost;
+    creditHarborWork(s,item.cost);
     s.research.push(id);
     recordTiming(s, "research", source);
     log(s, `完成研究：${item.name}。`);
@@ -955,7 +958,7 @@
         : {}),
     };
     const order = s.management.active;
-    if (s.epilogue.ending && order && order.mission === id) s.mission.harborOrder = order.serial;
+    if (s.epilogue.ending && order && (order.mission === id || order.plan?.alternates.includes(id))) s.mission.harborOrder = order.serial;
     const encounter = succeeded && rollEncounter(s, m);
     if (encounter) s.mission.encounter = encounter;
     if (storyMission(m)) track.preparation = null;
@@ -1101,6 +1104,37 @@
   }
   function cleanEquipment(items) { return [...new Set(Array.isArray(items)?items:[])].filter(id=>byId(D.MODULES,id)).slice(0,2); }
 
+  function creditHarborWork(s, spent) {
+    const task=s.management.active, plan=task?.plan;
+    if(!plan || plan.mode!=='production') return;
+    const credit=Math.min(Math.max(0,task.productionGoal*plan.workshopCap-plan.credit),spent);
+    plan.credit+=credit; task.produced=Math.min(task.productionGoal,task.produced+credit);
+  }
+  function packHarborNeed(s,serial) {
+    const task=s.management.active, plan=task?.plan;
+    if(!plan || plan.mode!=='reception' || task.serial!==Number(serial)) return false;
+    const dust=Math.min(s.dust,Math.max(0,task.dustCost-plan.packedDust));
+    const samples=Math.min(s.samples,Math.max(0,task.samplesCost-plan.packedSamples));
+    if(!dust && !samples) return false;
+    s.dust-=dust;s.samples-=samples;plan.packedDust+=dust;plan.packedSamples+=samples;
+    log(s,'居民值班组已把实际交付资源预装入库，不再被自动购买使用。');return true;
+  }
+  function reserveHarborNeed(s) {
+    const t=harborStatus(s);
+    if(!t || !capability(s,'planning')) return false;
+    configure(s,{reserve:Math.max(s.automation.reserve,t.dustLeft)});return true;
+  }
+  function harborSchedule(s) {
+    if(!s.epilogue.ending) return null;
+    const task=harborStatus(s), rate=productionRate(s);
+    let productionEta=task ? Math.max(task.preparationLeft,incomeEta(s,Math.max(0,task.productionGoal-task.produced)) ?? Infinity,incomeEta(s,Math.max(0,task.dustLeft-s.dust)) ?? Infinity) : 0;
+    if(task?.plan?.mode==="reception" && task.dustLeft===0 && task.samplesLeft===0) productionEta=Math.min(productionEta,task.preparationLeft);
+    const mission=task && !missionLock(s,task.mission) ? missionPreview(s,task.mission) : missionPreview(s,'belt');
+    return {rate,task:task ? {id:task.id,dustLeft:task.dustLeft,samplesLeft:task.samplesLeft,productionEta:Number.isFinite(productionEta)?productionEta:null,
+      explorationSeconds:mission.seconds*Math.max(0,task.tripsRequired-task.trips),explorationDust:mission.dust,explorationSamples:mission.samples} : null,
+      projects:D.HARBOR_PROJECTS.map(p=>{const o=harborProjectOffer(s,p.id);return {id:p.id,level:o.level,dustGap:Math.max(0,o.dustCost-s.dust),samplesGap:Math.max(0,o.samplesCost-s.samples),eta:incomeEta(s,Math.max(0,o.dustCost-s.dust)),reason:o.reason};})};
+  }
+
   function harborTerms(s, id) {
     const need = byId(D.HARBOR_NEEDS, id), focus = byId(D.HARBOR_FOCUSES, s.management.focus);
     if (!s.epilogue.ending || !need) return null;
@@ -1111,6 +1145,10 @@
     const work = need.seconds * focus.work * (["food", "energy", "cargo"].includes(id) ? 1 - level("supply-network") * .1 : 1);
     return { id, serial: s.management.cycle + 1, focus: focus.id, acceptedClock: s.clock,
       dustCost, samplesCost, workSeconds: Math.max(30, Math.ceil(work)), productionGoal: Math.min(250000, Math.max(600, Math.ceil(rawRate(s) * work))), produced: 0,
+      plan:{mode:focus.id,credit:0,packedDust:0,packedSamples:0,
+        alternates:focus.id === "exploration" ? ["belt", "supply-run"] : [],
+        careFactor:Math.max(.35,.6-(level("public-berths")+level("habitat"))*.025),
+        workshopCap:Math.min(.5,.35+level("repair-dock")*.05)},
       mission: need.mission, tripsRequired: Math.max(1, (tier > 0 ? 2 : 1) + focus.trips - (["routes", "comms"].includes(id) && level("route-station") >= 2 ? 1 : 0)), trips: 0 };
   }
   function harborOffers(s) {
@@ -1133,17 +1171,20 @@
   function harborStatus(s) {
     const task = s.management.active;
     if (!s.epilogue.ending || !task) return null;
-    const preparationLeft = Math.max(0, task.acceptedClock + task.workSeconds - s.clock);
-    const workReady = (task.produced >= task.productionGoal && preparationLeft === 0) || task.trips >= task.tripsRequired;
+    const dustLeft=Math.max(0,task.dustCost-(task.plan?.packedDust || 0)), samplesLeft=Math.max(0,task.samplesCost-(task.plan?.packedSamples || 0));
+    const prepacked=task.plan?.mode==="reception" && dustLeft===0 && samplesLeft===0;
+    const preparationLeft=Math.max(0,task.acceptedClock+Math.ceil(task.workSeconds*(prepacked?task.plan.careFactor:1))-s.clock);
+    const careReady=task.plan?.mode === "reception" && dustLeft===0 && samplesLeft===0 && s.clock>=task.acceptedClock+Math.ceil(task.workSeconds*task.plan.careFactor);
+    const workReady = careReady || (task.produced >= task.productionGoal && preparationLeft === 0) || task.trips >= task.tripsRequired;
     const reason = !workReady ? `完成指定补给，或港内生产与筹备（还需 ${preparationLeft} 秒筹备）`
-      : s.samples < task.samplesCost ? `还需 ${task.samplesCost - s.samples} 份样本，可安全探索取得`
-      : s.dust < task.dustCost ? `还需 ${Math.ceil(task.dustCost - s.dust)} 星尘；自动购买预算可保留交付费用` : "";
-    return { ...clone(task), ...clone(byId(D.HARBOR_NEEDS, task.id)), preparationLeft, workReady, available: !reason, reason };
+      : s.samples < samplesLeft ? `还需 ${samplesLeft - s.samples} 份样本，可安全探索取得`
+      : s.dust < dustLeft ? `还需 ${Math.ceil(dustLeft - s.dust)} 星尘；自动购买预算可保留交付费用` : "";
+    return { ...clone(task), ...clone(byId(D.HARBOR_NEEDS, task.id)), preparationLeft, workReady, dustLeft, samplesLeft, careReady, available: !reason, reason };
   }
   function deliverHarborNeed(s, serial) {
     const task = harborStatus(s);
     if (!task?.available || task.serial !== Number(serial)) return false;
-    s.dust -= task.dustCost; s.samples -= task.samplesCost;
+    s.dust -= task.dustLeft; s.samples -= task.samplesLeft;
     const h = s.management;
     h.cycle++; h.stats.deliveries++;
     h.stats.dustSpent = bounded(h.stats.dustSpent + task.dustCost);
@@ -1182,8 +1223,8 @@
     const task = harborStatus(s);
     const base = { action: "explore", focus: "harbor-management", value: 0, target: 1, eta: 0 };
     if (!task) return { ...base, title: "规划归航星港的下一班", detail: "接下一份居民需求，安排生产或航线；交付后推进有限工程与居民回信。", label: "查看港务经营" };
-    if (s.samples < task.samplesCost) return { ...base, title: `${task.name} · 收集交付样本`, detail: `需要 ${task.samplesCost} 份样本，现有 ${s.samples}；普通安全探索可以补足。`, label: "安排安全回收", focus: s.mission ? "active-mission" : "mission-belt", value: s.samples, target: task.samplesCost, eta: null };
-    return { ...base, title: `${task.name} · ${task.available ? "可以交付" : "正在准备"}`, detail: task.reason || "交付将扣除已列明资源，回信、经营统计与下一轮目标会保存。", label: task.available ? "完成交付" : "查看需求进度", value: task.workReady ? 1 : task.produced / task.productionGoal, eta: task.workReady ? incomeEta(s, Math.max(0, task.dustCost - s.dust)) : Math.max(task.preparationLeft, incomeEta(s, Math.max(0, task.productionGoal - task.produced)) || 0) };
+    if (s.samples < task.samplesLeft) return { ...base, title: `${task.name} · 收集交付样本`, detail: `尚需 ${task.samplesLeft} 份样本，现有 ${s.samples}；普通安全探索可以补足。`, label: "安排安全回收", focus: s.mission ? "active-mission" : "mission-belt", value: s.samples, target: Math.max(1,task.samplesLeft), eta: null };
+    return { ...base, title: `${task.name} · ${task.available ? "可以交付" : "正在准备"}`, detail: task.reason || "交付将扣除已列明资源，回信、经营统计与下一轮目标会保存。", label: task.available ? "完成交付" : "查看需求进度", value: task.workReady ? 1 : task.produced / task.productionGoal, eta: task.workReady ? incomeEta(s, Math.max(0, task.dustLeft - s.dust)) : Math.max(task.preparationLeft, incomeEta(s, Math.max(0, task.productionGoal - task.produced)) || 0) };
   }
   function residentRequests(s) {
     if (!s.epilogue.ending) return [];
@@ -1294,7 +1335,7 @@
     if (r.id === "supply-run" && r.succeeded && s.afterword.active)
       s.afterword.ready = true;
     const order = s.management.active;
-    if (s.epilogue.ending && order && r.harborOrder === order.serial && r.id === order.mission && r.succeeded) {
+    if (s.epilogue.ending && order && r.harborOrder === order.serial && (r.id === order.mission || order.plan?.alternates.includes(r.id)) && r.succeeded) {
       order.trips = Math.min(order.tripsRequired, order.trips + 1);
       s.management.stats.voyages = integer(s.management.stats.voyages + 1, 1e9);
     }
@@ -2511,6 +2552,16 @@
         h.active = { id: a.id, serial: a.serial, focus: a.focus, acceptedClock: a.acceptedClock, dustCost: a.dustCost, samplesCost: a.samplesCost,
           workSeconds: a.workSeconds ?? 0, productionGoal: a.productionGoal, produced: bounded(a.produced, a.productionGoal), mission: a.mission, tripsRequired: a.tripsRequired, trips: integer(a.trips, a.tripsRequired) };
     }
+    if(s.management.active && raw.management.active.plan) {
+      const t=s.management.active, p=raw.management.active.plan;
+      if(p.mode===t.focus && Number.isFinite(p.credit) && p.credit>=0 && p.credit<=t.productionGoal*.5 &&
+        Number.isFinite(p.packedDust) && p.packedDust>=0 && p.packedDust<=t.dustCost && Number.isInteger(p.packedSamples) && p.packedSamples>=0 && p.packedSamples<=t.samplesCost &&
+        Number.isFinite(p.careFactor) && p.careFactor>=.35 && p.careFactor<=.6 && Number.isFinite(p.workshopCap) && p.workshopCap>=.35 && p.workshopCap<=.5 &&
+        Array.isArray(p.alternates) && JSON.stringify(p.alternates)===JSON.stringify(p.mode==='exploration'?['belt','supply-run']:[]) &&
+        (p.mode==='reception' || (!p.packedDust && !p.packedSamples)) && (p.mode==='production' || !p.credit))
+        t.plan={mode:p.mode,credit:p.credit,packedDust:p.packedDust,packedSamples:p.packedSamples,alternates:[...p.alternates],careFactor:p.careFactor,workshopCap:p.workshopCap};
+      else s.management.active=null;
+    }
     const encounters = raw.encounters;
     if (encounters && typeof encounters === "object") {
       s.encounters.serial = integer(encounters.serial, 1e9);
@@ -2621,7 +2672,7 @@
     }
     const order = s.management.active;
     for (const [clean, saved] of [[s.mission, raw.mission], [s.result, raw.result]]) {
-      if (clean && order && saved?.harborOrder === order.serial && clean.id === order.mission && (!s.mission || s.mission.start >= order.acceptedClock)) clean.harborOrder = order.serial;
+      if (clean && order && saved?.harborOrder === order.serial && (clean.id === order.mission || order.plan?.alternates.includes(clean.id)) && (!s.mission || s.mission.start >= order.acceptedClock)) clean.harborOrder = order.serial;
     }
     if (s.mission && !s.encounters.pending) {
       const event = cleanEncounter(raw.mission?.encounter, s);
@@ -2756,6 +2807,7 @@
     portFacilities,
     portActivity,
     surveyCount, surveyPreview, setSurveyPriority, startSurvey, claimSurvey, surveyGoal,
+    harborSchedule, packHarborNeed, reserveHarborNeed,
     harborTerms,
     harborOffers,
     setHarborFocus,

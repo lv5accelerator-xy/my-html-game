@@ -1707,6 +1707,13 @@
       target: project.samples,
     };
   }
+  function onboarding(s) {
+    if (s.rebirths > 0 || s.timing?.events.prestige) return null;
+    const steps = [s.lastScanClock >= 0 || s.dust > 0 || s.buildings.drone > 0,
+      s.buildings.drone > 0, s.run.routeChosen, s.discoveries > 0 || s.lore.length > 0];
+    return { completed: steps.filter(Boolean).length, total: 5,
+      feedback: !steps[0] ? "扫描信标开始回收" : !steps[1] ? "扫描已收到 · 下一步建造无人机" : !steps[2] ? "无人机已生产 · 下一步选择航线" : !steps[3] ? "航线已确认 · 扩建并完成首次探索" : "首次归航已记录 · 积累能量，准备首次跃迁" };
+  }
   function nextGoal(s) {
     if (s.result)
       return {
@@ -1738,6 +1745,7 @@
         detail: "工业、回收、探索各有专长。本航次只需要选择一次。",
         action: "fleet",
         label: "选择航线",
+        focus: "route-choices",
         value: 0,
         target: 1,
         eta: 0,
@@ -1794,6 +1802,7 @@
         detail: "分流 20% 产量进行安全探索，带回第一段故事。",
         action: "explore",
         label: "派遣探索",
+        focus: "mission-wreck",
         value: 0,
         target: 1,
         eta: 0,
@@ -1804,6 +1813,7 @@
         detail: "舰队仍在生产。归航后，你将决定第一段故事的去向。",
         action: "explore",
         label: "查看航程",
+        focus: "active-mission",
         value: Math.max(0, s.clock - s.mission.start),
         target: s.mission.seconds,
         eta: Math.max(0, s.mission.end - s.clock),
@@ -1830,6 +1840,7 @@
           detail: `收集 ${stage.samples} 份样本与 ${stage.cores} 星核，修复你的归航之地。`,
           action: "explore",
           label: "修复航站",
+          focus: "port-panel",
           value: s.samples,
           target: stage.samples,
           eta: s.samples >= stage.samples ? 0 : null,
@@ -2356,6 +2367,7 @@
     prestige,
     reachable,
     nextGoal,
+    onboarding,
     milestone,
   });
 });

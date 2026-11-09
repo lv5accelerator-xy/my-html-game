@@ -1852,3 +1852,18 @@ p {
     max-width: 100%;
   }
 }
+
+/* v3.12: one objective per page; stable native controls during rule ticks. */
+.current-goal { display:flex; gap:16px; align-items:center; justify-content:space-between; padding:16px 20px; margin-bottom:20px; border-left:3px solid #7ed6c1; background:#142029; }
+.current-goal strong { display:block; color:#edbb75; }
+.current-goal p { margin:4px 0; }
+.current-goal button { flex-shrink:0; }
+.guide-feedback { color:#7ed6c1; font-size:.85rem; }
+.goal-rail { min-height:380px; }
+@media(max-width:600px) {
+  .current-goal { padding:12px; gap:10px; flex-wrap:wrap; }
+  .current-goal p { font-size:.85rem; }
+  .current-goal button { width:100%; }
+  .row-action button, .control-row input, .control-row select { min-height:44px; }
+  .goal-rail { min-height:0; }
+}

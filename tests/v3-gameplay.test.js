@@ -2597,4 +2597,23 @@ test("v3.11 a failed recovery never rotates away its chosen oldest or historical
     assert.ok(S.backups(store, 2000).entries.some(entry => entry.valid && entry.text === target), source);
   }
 });
+test("v3.12 progressive guide derives completion from existing progress and never restarts veterans", () => {
+  const s = E.createState(0);
+  assert.equal(E.onboarding(s).completed, 0);
+  E.scan(s); assert.equal(E.onboarding(s).completed, 1);
+  s.dust = 12; E.buy(s, "drone"); assert.equal(E.onboarding(s).completed, 2);
+  E.chooseRoute(s, "explore"); assert.equal(E.onboarding(s).completed, 3);
+  s.discoveries = 1; assert.equal(E.onboarding(s).completed, 4);
+  s.rebirths = 1; assert.equal(E.onboarding(s), null);
+  assert.equal(E.onboarding(E.sanitize(s, s.lastAt)), null);
+});
+test("v3.12 core-loop objectives point to route, voyage and report controls", () => {
+  const s = ready(); s.run.routeChosen = false;
+  assert.equal(E.nextGoal(s).focus, "route-choices");
+  E.chooseRoute(s, "explore"); s.research = ["laser"];
+  assert.equal(E.nextGoal(s).focus, "mission-wreck");
+  E.startMission(s, "wreck"); assert.equal(E.nextGoal(s).focus, "active-mission");
+  E.advance(s, s.lastAt + s.mission.seconds * 1000);
+  assert.equal(E.nextGoal(s).focus, "report");
+});
 console.log(`v3 gameplay ok: ${checks} behavioral checks`);

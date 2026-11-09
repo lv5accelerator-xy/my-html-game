@@ -115,6 +115,21 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    await scenario("v3.12 automation retains live buttons, drafts and focus at desktop and phone widths", { [S.KEY]: JSON.stringify({ ...ready(), rebirths: 4, automation: { enabled: true, policy: "balanced", reserve: 0, research: false, dispatch: false } }) }, async page => {
+      await page.locator('#navigation [data-id="fleet"]').click();
+      for (const width of [1280, 375]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.locator('[data-config="reserve"]').fill("123");
+        await page.evaluate(() => { window.retainedInput = document.activeElement; window.retainedBuy = document.querySelector('[data-buy-id="drone"]'); });
+        await page.clock.runFor(1500);
+        assert.ok(await page.evaluate(() => retainedInput === document.activeElement && retainedInput.isConnected && retainedBuy.isConnected && retainedBuy === document.querySelector('[data-buy-id="drone"]')));
+        assert.equal(await page.locator('[data-config="reserve"]').inputValue(), "123");
+        assert.equal(await page.locator('.current-goal').count(), 1);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      }
+      await page.locator('[data-buy-id="drone"]').click();
+      assert.match(await page.locator('#toast').innerText(), /建造/);
+    });
     await scenario("native dialog close keeps the newer keyboard reading focus", { [S.KEY]: JSON.stringify(ready()) }, async (page) => {
       const before = await read(page);
       await page.locator("#settings-button").click();

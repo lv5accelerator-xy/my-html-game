@@ -322,13 +322,21 @@
       absence.totals[key] += report[key] || 0;
     absence.totals.capped ||= report.capped;
   }
+  function tutorialFeedback() {
+    const guide = E.onboarding(state);
+    return guide ? `<p class="guide-feedback">启航 ${guide.completed} / ${guide.total} · ${guide.feedback}</p>` : "";
+  }
+  function currentGoal() {
+    const g = E.nextGoal(state);
+    return `<aside class="current-goal" aria-label="当前主要目标"><div><small>当前目标</small><strong>${g.title}</strong><p>${g.detail}</p><small data-goal-eta></small></div><button class="outline" ${action("current-goal")}>${g.label} →</button></aside>`;
+  }
   function home() {
     const goal = E.nextGoal(state),
       recent = state.journal.slice(0, 3);
     return `${lastReturnReport ? `<section class="return-banner"><div><strong>上次归航简报</strong><p>${duration(lastReturnReport.seconds)} · 探索归航 ${lastReturnReport.missionsCompleted} 次</p></div><button class="outline" ${action("return-report")}>查看简报</button></section>` : ""}<div class="home-layout"><section class="scene" aria-label="归航航站"><div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
       <button class="beacon-button" ${action("beacon")} ${state.beacon.expiresAt ? "" : "hidden"}>捕获金色信标<small>剩余 <span data-beacon-seconds>15</span> 秒</small></button>
       <div class="scan-area"><button class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
-      <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2><h2 id="next-goal-title">${goal.title}</h2><p>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
+      <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
       <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
       ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${starportOverview()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
   }
@@ -337,7 +345,7 @@
     if (state.run.routeChosen)
       return `<div class="route-active"><h3>${route.name} · ${route.subtitle}</h3><p>${route.detail} 跃迁后可以重选。</p></div>`;
     if (!state.buildings.drone) return "";
-    return `<div class="section-title"><h2>这一航次，向哪里去？</h2><small>只选一次</small></div><div class="route-choices">${D.ROUTES.map((r) => `<div class="route-option"><h3>${r.name}</h3><p>${r.detail}</p><button class="outline" ${action("route", r.id)}>选择</button></div>`).join("")}</div>`;
+    return `<div class="section-title"><h2>这一航次，向哪里去？</h2><small>只选一次</small></div><div class="route-choices" id="route-choices" tabindex="-1">${D.ROUTES.map((r) => `<div class="route-option"><h3>${r.name}</h3><p>${r.detail}</p><button class="outline" ${action("route", r.id)}>选择</button></div>`).join("")}</div>`;
   }
   function automation() {
     if (!E.capability(state, "autoBuy"))
@@ -718,7 +726,7 @@
         (goal.eta === 0
           ? "现在可以处理"
           : goal.eta === null
-            ? "扫描信标，继续积累星尘"
+            ? `还需扫描约 ${Math.ceil(Math.max(0, goal.target - goal.value) / E.scanValue(state))} 次，或先启动生产`
             : `按现有舰队，约 ${duration(goal.eta)}`);
     document.querySelectorAll("[data-goal-value]").forEach((el) => {
       el.textContent = number(Math.min(goal.value, goal.target));
@@ -761,6 +769,41 @@
           : "";
       }
     }
+  }
+  // Reconcile native DOM locally by stable identity. Unchanged controls remain
+  // connected across automation ticks; focused form drafts are not overwritten.
+  function patchContent(parent, html) {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const key = (n) => n.nodeType === 1 ? n.id || n.dataset.focus || n.dataset.detailsKey || "" : "";
+    const compatible = (a, b) => a.nodeType === b.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && key(a) === key(b)));
+    function sync(host, fresh) {
+      const previous = [...host.childNodes], used = new Set();
+      let cursor = host.firstChild;
+      for (const next of [...fresh.childNodes]) {
+        const id = key(next);
+        const node = previous.find(n => !used.has(n) && compatible(n, next) && (id || n.nodeType !== 1 || n.className === next.className));
+        if (!node) {
+          host.insertBefore(next, cursor);
+          continue;
+        }
+        used.add(node);
+        if (node !== cursor) host.insertBefore(node, cursor);
+        if (node.nodeType !== 1) {
+          if (node.nodeValue !== next.nodeValue) node.nodeValue = next.nodeValue;
+        } else {
+          const editing = node === document.activeElement && node.matches("input,textarea,select");
+          const keep = name => (node.tagName === "DETAILS" && name === "open") || (editing && ["value", "checked", "selected"].includes(name));
+          for (const attr of [...node.attributes]) if (!keep(attr.name) && !next.hasAttribute(attr.name)) node.removeAttribute(attr.name);
+          for (const attr of [...next.attributes]) if (!keep(attr.name) && node.getAttribute(attr.name) !== attr.value) node.setAttribute(attr.name, attr.value);
+          if (!editing && node.matches('input[type="checkbox"]')) node.checked = next.checked;
+          sync(node, next);
+        }
+        cursor = node.nextSibling;
+      }
+      for (const node of previous) if (!used.has(node)) node.remove();
+    }
+    sync(parent, template.content);
   }
   function render() {
     if (rebuilding) return;
@@ -821,7 +864,7 @@
       // edited, so preserve it without committing a budget or entering render twice.
       rebuilding = true;
       try {
-        $("#navigation").innerHTML = [
+        patchContent($("#navigation"), [
           ["home", "航站"],
           ["fleet", "舰队"],
           ["explore", "探索"],
@@ -832,8 +875,8 @@
             ([id, label]) =>
               `<button ${action("nav", id)} class="${page === id ? "active" : ""}" ${page === id ? 'disabled aria-current="page"' : id === "fleet" && !state.buildings.drone && page === "home" ? 'disabled title="从下一个目标启动舰队"' : ""}>${icon(id)}${label}</button>`,
           )
-          .join("");
-        $("#main").innerHTML = { home, fleet, explore, jump }[page]();
+          .join(""));
+        patchContent($("#main"), (page === "home" ? "" : currentGoal()) + { home, fleet, explore, jump }[page]());
         Array.from(
           $("#main").querySelectorAll("details[data-details-key]"),
         ).forEach((el) => {
@@ -845,7 +888,7 @@
             el._readingOpen = el.open;
           }
         });
-        if (focus) {
+        if (focus && !active?.isConnected) {
           const replacement = document.querySelector(
             `[data-focus="${CSS.escape(focus)}"]`,
           );
@@ -972,6 +1015,11 @@
       render();
       return;
     }
+    if (kind === "current-goal") {
+      const goal = E.nextGoal(state);
+      navigate(goal.action, goal.focus);
+      return;
+    }
     if (kind === "nav") {
       navigate(id, button.dataset.goalFocus);
       return;
@@ -1007,9 +1055,9 @@
       if (count)
         toast(`建造 ${count} 艘${D.BUILDINGS.find((b) => b.id === id).name}。`);
     } else if (kind === "mode") buyMode = id;
-    else if (kind === "route") E.chooseRoute(state, id);
-    else if (kind === "research") E.research(state, id);
-    else if (kind === "beacon") E.claimBeacon(state);
+    else if (kind === "route") { if (E.chooseRoute(state, id)) toast("航线已确认，当前目标已更新。"); }
+    else if (kind === "research") { if (E.research(state, id)) toast(`研究完成：${D.RESEARCH.find(r => r.id === id).name}。`); }
+    else if (kind === "beacon") { const gain = E.claimBeacon(state); if (gain) toast(`信标补给 +${number(gain)} 星尘。`); }
     else if (kind === "prepare")
       E.prepareMission(state, button.dataset.mission, id);
     else if (kind === "mission") {
@@ -1022,9 +1070,9 @@
         );
         return;
       }
-      if (E.startMission(state, id)) recentStory = null;
+      if (E.startMission(state, id)) { recentStory = null; toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
     } else if (kind === "risk") {
-      if (E.startMission(state, id)) recentStory = null;
+      if (E.startMission(state, id)) { recentStory = null; toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
       closeDialog();
     } else if (kind === "claim") {
       const story = state.result?.story;
@@ -1032,7 +1080,7 @@
         recentStory = E.storyScene(state, story)?.response.length
           ? story
           : null;
-        toast("回收物已入库，发现会陪你继续航行。");
+        toast(story ? "重要发现已永久归档，故事奖励已入库。" : "探索回收物已入库，当前目标已更新。");
       }
     } else if (kind === "resident-accept") E.acceptResidentRequest(state, id);
     else if (kind === "resident-reply") {

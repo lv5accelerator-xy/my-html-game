@@ -1785,6 +1785,35 @@
       target: project.samples,
     };
   }
+  function portFacilities(s) {
+    const focus = byId(D.PORT_FOCUSES, s.council.priority);
+    return D.PORT_REGIONS.map(region => {
+      const live = region.id === "hub" ? s.starport === 3
+        : region.id === "docking" ? s.starport >= 2
+        : region.id === "berth" ? s.rescue.berth
+        : region.id === "focus" ? Boolean(focus) : s.chapter.includes(region.id);
+      const sceneId = region.id === "hub" ? "port-lit"
+        : region.id === "docking" ? "port-lit"
+        : region.id === "berth" ? "backup-berth"
+        : region.id === "focus" ? `port-${focus?.id}-built` : `${region.id}-built`;
+      const record = storyScene(s, sceneId);
+      const benefits = { hub: "永久保留修复，星港建成后开放远航星图。", docking: "稳定停泊区与归航接驳已恢复。",
+        relay: "全舰队产量 ×1.05。", nursery: "每次成功探索多1份样本。", lighthouse: "所有探索航程 ×0.9。",
+        berth: "第二队使用已验证的安全等待泊位；等待没有期限。", focus: focus?.detail || "尚未选择港务建设方向。" };
+      return { ...clone(region), live, kind: ["docking", "focus"].includes(region.id) ? "extension" : "core",
+        name: region.id === "focus" && focus ? focus.name : region.name,
+        status: region.id === "hub" ? `修复 ${s.starport}/3` : live ? "已建成" : "待建设",
+        benefit: live ? benefits[region.id] : "此区域尚未生效，完成实际工程后才会点亮。",
+        record: record ? { id: sceneId, title: record.title } : null,
+        target: (region.id === "berth" && s.rescue.completed.length === 3) || (region.id === "focus" && focus) ? "route-archive" : region.target };
+    });
+  }
+  function portActivity(s) {
+    const firstConvoy = s.campaign.completed.length === D.MISSIONS.filter(m => m.campaign).length;
+    return { firstConvoy, rescued: s.rescue.completed.length,
+      residents: firstConvoy || s.rescue.completed.length > 0,
+      transport: s.epilogue.ending === "voyage" ? "两处地址保持补给联络" : s.epilogue.ending ? "居民按共同值班表接待来船" : firstConvoy ? "第一支船队参与两港交接" : "等待实际船队抵达" };
+  }
   function onboarding(s) {
     if (s.rebirths > 0 || s.timing?.events.prestige) return null;
     const steps = [s.lastScanClock >= 0 || s.dust > 0 || s.buildings.drone > 0,
@@ -2476,6 +2505,8 @@
     reachable,
     nextGoal,
     onboarding,
+    portFacilities,
+    portActivity,
     milestone,
   });
 });

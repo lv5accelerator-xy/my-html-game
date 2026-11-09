@@ -1877,3 +1877,17 @@ p {
 .voyage-comparison p { color:#7ed6c1; margin:6px 0; font-size:.8rem; }
 .voyage-comparison small { display:block; overflow-wrap:anywhere; }
 @media(max-width:600px) { .voyage-comparison { max-width:100%; } }
+
+.atlas-node[role="button"], .atlas-extension { cursor:pointer; outline:none; }
+.atlas-node[role="button"]:focus circle, .atlas-extension:focus circle { stroke:#fff; stroke-width:3; }
+.atlas-extension circle { fill:#101b23; stroke:#52646c; stroke-dasharray:4 4; }
+.atlas-extension path { fill:none; stroke:#6e838a; stroke-width:2; }
+.atlas-extension.is-built circle { stroke:#7ed6c1; stroke-dasharray:none; }
+.atlas-extension.is-built path, .atlas-regular-arrival path, .atlas-residents { stroke:#edbb75; fill:none; }
+.atlas-regular-arrival path { fill:#edbb75; }
+.atlas-node.is-built circle { animation:port-light 4s ease-in-out infinite alternate; }
+@keyframes port-light { to { stroke-opacity:.55; } }
+.facility-controls { display:flex; gap:4px 12px; flex-wrap:wrap; border-top:1px solid #293b44; }
+.facility-controls button { min-height:44px; }
+.port-activity { color:#7ed6c1; font-size:.85rem; }
+@media(prefers-reduced-motion:reduce) { .port-atlas * { animation:none !important; transition:none !important; } }

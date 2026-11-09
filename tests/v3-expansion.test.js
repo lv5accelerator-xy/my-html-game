@@ -109,4 +109,24 @@ test('v3.14 saved loadout comparison uses the actual plan and switching never re
   E.applyLoadout(state, 'voyage'); assert.deepEqual(state.mission, locked);
   assert.deepEqual(E.sanitize(state, state.lastAt).loadouts, state.loadouts);
 });
+test('v3.15 all facilities and resident activity derive only from actual story/build progress', () => {
+  const s = ready();
+  assert.equal(E.portFacilities(s).filter(n => n.live).length, 0);
+  assert.equal(E.portActivity(s).residents, false);
+  s.starport = 1; assert.equal(E.portFacilities(s).find(n => n.id === 'hub').status, '修复 1/3');
+  s.starport = 2; assert.ok(E.portFacilities(s).find(n => n.id === 'docking').live);
+  assert.equal(E.portFacilities(s).find(n => n.id === 'hub').live, false);
+  for (const ending of D.ENDINGS) {
+    const done = completed(ending.id); const before = structuredClone(done);
+    assert.equal(E.portFacilities(done).filter(n => n.live).length, 7);
+    assert.equal(E.portActivity(done).firstConvoy, true);
+    assert.equal(E.portActivity(done).rescued, 3);
+    assert.equal(E.portActivity(done).residents, true);
+    assert.deepEqual(done, before);
+    assert.deepEqual(E.portFacilities(E.sanitize(done, done.lastAt)), E.portFacilities(done));
+    done.run.dust = D.PRESTIGE_DUST; E.prestige(done);
+    assert.deepEqual(E.portFacilities(done), E.portFacilities(before));
+    assert.deepEqual(E.portActivity(done), E.portActivity(before));
+  }
+});
 console.log(`v3 expansion ok: ${checks} behavioral checks`);

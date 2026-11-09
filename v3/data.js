@@ -7,7 +7,7 @@
   "use strict";
   const data = {
     VERSION: 32,
-    GAME_VERSION: "3.14.0-preview.1",
+    GAME_VERSION: "3.15.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -2764,6 +2764,64 @@
         text: "远航灯塔亮起，另一端也传来回应。那些曾只属于一个人的归航坐标，成为了两座航站之间的路。第二章「远航星图」完成。",
       },
     ],
+    PORT_REGIONS: [
+  {
+    "id": "hub",
+    "name": "归航中枢",
+    "x": 300,
+    "y": 160,
+    "target": "port-panel",
+    "shape": "M-40-20h80v40h-80zM-15-40h30v80h-30z"
+  },
+  {
+    "id": "relay",
+    "name": "共鸣中继",
+    "x": 110,
+    "y": 68,
+    "target": "project-relay",
+    "shape": "M0-22v44M-20-14a25 25 0 0 0 0 28M20-14a25 25 0 0 1 0 28M-10 22h20"
+  },
+  {
+    "id": "nursery",
+    "name": "育种舱",
+    "x": 110,
+    "y": 250,
+    "target": "project-nursery",
+    "shape": "M-28 18v-28l28-18 28 18v28zM0 17v-25M0 4q-22-24-15-20M0 0q22-24 15-20"
+  },
+  {
+    "id": "lighthouse",
+    "name": "远航灯塔",
+    "x": 490,
+    "y": 68,
+    "target": "project-lighthouse",
+    "shape": "M-18 22h36L10-18h-20zM-26-24h52M0-34v10"
+  },
+  {
+    "id": "berth",
+    "name": "备用泊位",
+    "x": 490,
+    "y": 250,
+    "target": "rescue-berth",
+    "shape": "M-30-6h60M-30 8h60M-30-14v36M30-14v36M-9-22h18v18H-9z"
+  },
+  {
+    "id": "docking",
+    "name": "停泊区",
+    "x": 300,
+    "y": 45,
+    "target": "port-panel",
+    "shape": "M-16-9h32v18h-32zM-9 0h18"
+  },
+  {
+    "id": "focus",
+    "name": "港务建设",
+    "x": 300,
+    "y": 285,
+    "target": "port-focus",
+    "shape": "M-18 0l18-15L18 0 0 15z"
+  }
+],
     PORT: [
       {
         name: "重新点亮通信塔",

@@ -263,15 +263,19 @@
   function starportOverview() {
     if (!state.starport) return "";
     const focus = D.PORT_FOCUSES.find((p) => p.id === state.council.priority);
-    const nodes = [
-      { id: "hub", name: "归航中枢", x: 300, y: 160, live: state.starport === 3, status: `修复 ${state.starport}/3`, target: "port-panel", shape: "M-40-20h80v40h-80zM-15-40h30v80h-30z" },
-      { id: "relay", name: "共鸣中继", x: 110, y: 68, live: state.chapter.includes("relay"), target: "project-relay", shape: "M0-22v44M-20-14a25 25 0 0 0 0 28M20-14a25 25 0 0 1 0 28M-10 22h20" },
-      { id: "nursery", name: "育种舱", x: 110, y: 250, live: state.chapter.includes("nursery"), target: "project-nursery", shape: "M-28 18v-28l28-18 28 18v28zM0 17v-25M0 4q-22-24-15-20M0 0q22-24 15-20" },
-      { id: "lighthouse", name: "远航灯塔", x: 490, y: 68, live: state.chapter.includes("lighthouse"), target: "project-lighthouse", shape: "M-18 22h36L10-18h-20zM-26-24h52M0-34v10" },
-      { id: "berth", name: "备用泊位", x: 490, y: 250, live: state.rescue.berth, target: state.rescue.completed.length === 3 ? "route-archive" : "rescue-berth", shape: "M-30-6h60M-30 8h60M-30-14v36M30-14v36M-9-22h18v18H-9z" },
-    ];
-    return `<section class="starport-overview" id="starport-overview" aria-label="星港总览"><div class="section-title"><h2>归航星港</h2><span>${state.epilogue.ending ? "居民开始新的日常" : `已接回 ${state.rescue.completed.length} / 3 支救援船队`}</span></div><div class="port-atlas" data-port-focus="${focus?.id || "none"}"><svg viewBox="0 0 600 310" role="img" aria-label="星港建设示意图，亮起的节点表示已完成建设"><path class="atlas-orbit" d="M110 68 300 160 490 68M110 250 300 160 490 250"/>${nodes.map((n) => `<g transform="translate(${n.x} ${n.y})" class="atlas-node ${n.live ? "is-built" : ""}" data-port-node="${n.id}" data-built="${n.live}"><circle r="42"/><path d="${n.shape}"/></g>`).join("")}<g class="atlas-arrivals" aria-hidden="true">${state.rescue.completed.map((_, i) => `<path d="M${268 + i * 32} 235l8-12 8 12-8-3z"/>`).join("")}</g></svg><div class="atlas-caption"><strong>${focus ? focus.name : "第一束光已接通"}</strong><p>${focus ? focus.id === "reception" ? "轮班接待区与候泊联络围绕中枢展开。" : focus.id === "ecology" ? "两港种植记录在育种舱汇合，灯光按植物需要轮换。" : "每一段航路与交接记录都能找到来源。" : "每一次修复和建设，都会在这张图上留下变化。"}</p></div></div><div class="atlas-legend">${nodes.map((n) => `<button class="text-button" ${action("nav", "explore")} data-goal-focus="${n.live || n.id === "hub" ? n.target : "route-archive"}"><span class="atlas-dot ${n.live ? "is-built" : ""}"></span>${n.name}<small>${n.status || (n.live ? "已建成" : "待建设")}</small></button>`).join("")}</div>${state.epilogue.ending ? `<button class="outline" ${action("nav", "explore")} data-goal-focus="resident-requests">看看居民的新委托</button>` : ""}</section>`;
+    const facilities = E.portFacilities(state), nodes = facilities.filter(n => n.kind === "core"), activity = E.portActivity(state);
+    return `<section class="starport-overview" id="starport-overview" aria-label="星港总览"><div class="section-title"><h2>归航星港</h2><span>${state.epilogue.ending ? "居民开始新的日常" : `已接回 ${state.rescue.completed.length} / 3 支救援船队`}</span></div><div class="port-atlas" data-port-focus="${focus?.id || "none"}"><svg viewBox="0 0 600 310" role="group" aria-label="星港建设示意图，亮起的节点表示已完成建设"><path class="atlas-orbit" d="M110 68 300 160 490 68M110 250 300 160 490 250"/>${nodes.map((n) => `<g transform="translate(${n.x} ${n.y})" class="atlas-node ${n.live ? "is-built" : ""}" data-port-node="${n.id}" data-built="${n.live}" ${action("port-region", n.id)} role="button" tabindex="0" aria-label="${n.name} · ${n.status}"><title>${n.name} · ${n.status}</title><circle r="42"/><path d="${n.shape}"/></g>`).join("")}${facilities.filter(n => n.kind === "extension").map(n => `<g class="atlas-extension ${n.live ? "is-built" : ""}" transform="translate(${n.x} ${n.y})" data-facility="${n.id}" data-built="${n.live}" ${action("port-region", n.id)} role="button" tabindex="0" aria-label="${n.name} · ${n.status}"><title>${n.name} · ${n.status}</title><circle r="22"/><path d="${n.shape}"/></g>`).join("")}${activity.firstConvoy ? '<g class="atlas-regular-arrival" aria-label="第三章第一支船队已抵达"><path d="M239 235l8-12 8 12-8-3z"/></g>' : ""}${activity.residents ? '<g class="atlas-residents" aria-label="已抵达居民的共同值班"><circle cx="280" cy="191" r="3"/><circle cx="290" cy="195" r="3"/><path d="M280 196v7M290 200v7"/></g>' : ""}<g class="atlas-arrivals" aria-hidden="true">${state.rescue.completed.map((_, i) => `<path d="M${268 + i * 32} 235l8-12 8 12-8-3z"/>`).join("")}</g></svg><div class="atlas-caption"><strong>${focus ? focus.name : "第一束光已接通"}</strong><p>${focus ? focus.id === "reception" ? "轮班接待区与候泊联络围绕中枢展开。" : focus.id === "ecology" ? "两港种植记录在育种舱汇合，灯光按植物需要轮换。" : "每一段航路与交接记录都能找到来源。" : "每一次修复和建设，都会在这张图上留下变化。"}</p></div></div><div class="atlas-legend">${nodes.map((n) => `<button class="text-button" ${action("nav", "explore")} data-goal-focus="${n.live || n.id === "hub" ? n.target : "route-archive"}"><span class="atlas-dot ${n.live ? "is-built" : ""}"></span>${n.name}<small>${n.status || (n.live ? "已建成" : "待建设")}</small></button>`).join("")}</div><div class="facility-controls">${facilities.map(n => `<button class="text-button" ${action("port-region", n.id)}>查看${n.name}状态</button>`).join("")}</div><p class="port-activity">${activity.transport} · 已到港船队 ${Number(activity.firstConvoy) + activity.rescued} 支</p>${state.epilogue.ending ? `<button class="outline" ${action("nav", "explore")} data-goal-focus="resident-requests">看看居民的新委托</button>` : ""}</section>`;
   }
+  function showPortRegion(id) {
+    const region = E.portFacilities(state).find(n => n.id === id);
+    if (!region) return;
+    const goal = E.nextGoal(state);
+    openDialog(`${region.name} · ${region.status}`, `<p>${escape(region.benefit)}</p><p>已完成建设：${region.live ? escape(region.name) : "本区域尚未完工"}</p><p>对应剧情：${region.record ? escape(region.record.title) : "尚无可归档的已完成记录"}</p><p>下一项可达工作：${escape(goal.title)}。${escape(goal.detail)}</p><div class="dialog-actions"><button ${action("region-go", region.target)}>查看对应工程</button>${region.record ? `<button ${action("region-go", `read-archive-scene-${region.record.id}`)}>重读剧情记录</button>` : ""}<button class="primary" ${action("region-next")}>${goal.label}</button></div>`);
+  }
+  document.addEventListener("keydown", event => {
+    const region = event.target.closest?.('g[data-action="port-region"]');
+    if (region && ["Enter", " "].includes(event.key)) { event.preventDefault(); showPortRegion(region.dataset.id); }
+  });
   function quote(id) {
     return E.purchasePreview(
       state,
@@ -1031,6 +1035,12 @@
     if (kind === "scene-dismiss") {
       recentStory = null;
       render();
+      return;
+    }
+    if (kind === "port-region") { showPortRegion(id); return; }
+    if (kind === "region-go" || kind === "region-next") {
+      const goal = E.nextGoal(state);
+      closeDialog(); navigate(kind === "region-next" ? goal.action : "explore", kind === "region-next" ? goal.focus : id);
       return;
     }
     if (kind === "current-goal") {

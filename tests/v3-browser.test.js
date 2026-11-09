@@ -136,6 +136,25 @@ async function run() {
         await page.reload(); assert.deepEqual((await read(page)).mission, snapshot);
       });
     }
+    {
+      const fixture = require("./helpers/v3-fixtures.cjs").completed("voyage", TIME); fixture.lastAt = TIME;
+      await scenario("v3.15 live SVG facilities, keyboard details, resident arrivals and reduced motion", { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          assert.equal(await page.locator('[data-facility="docking"]').getAttribute('data-built'), 'true');
+          assert.equal(await page.locator('.atlas-regular-arrival path').count(), 1);
+          assert.equal(await page.locator('.atlas-arrivals path').count(), 3);
+          await page.locator('[data-port-node="relay"]').focus(); await page.keyboard.press('Enter');
+          assert.match(await page.locator('#dialog-body').innerText(), /全舰队产量 ×1.05/);
+          await page.locator('#dialog-close').click();
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+          if (screenshotDir) await page.locator('#starport-overview').screenshot({path:path.join(screenshotDir, `v3.15-port-${width}.png`)});
+        }
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        assert.equal(await page.locator('[data-port-node="relay"] circle').evaluate(el => getComputedStyle(el).animationName), 'none');
+        await page.reload(); assert.equal(await page.locator('.atlas-arrivals path').count(), 3);
+      });
+    }
     for (const def of D.ENCOUNTERS) {
       const fixture = require("./helpers/v3-fixtures.cjs").encounterReady(def.id, TIME);
       fixture.lastAt = TIME; fixture.samples = 10;

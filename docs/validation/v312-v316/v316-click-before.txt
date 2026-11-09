@@ -1,0 +1,13 @@
+2026-11-09T16:13:19Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js
+AssertionError [ERR_ASSERTION]: automation keeps the live button label node
+    at /workspace/starport-v316/tests/v3-browser.test.js:308:16
+    at async scenario (/workspace/starport-v316/tests/v3-browser.test.js:90:7)
+    at async run (/workspace/starport-v316/tests/v3-browser.test.js:300:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+EXIT=1

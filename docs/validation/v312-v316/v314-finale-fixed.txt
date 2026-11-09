@@ -1,0 +1,6 @@
+2026-11-09T15:29:22Z sha=4d8c720b96abb2ebbdd943a3d399b65080a67f78 command=node tests/v3-browser.test.js
+ok 1 - finale dialogue 接待扩容: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending
+ok 2 - finale dialogue 生态补给: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending
+ok 3 - finale dialogue 档案校准: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending
+v3 browser ok: 3 complete flows; identity/content/assets/console checked in every flow
+EXIT=0

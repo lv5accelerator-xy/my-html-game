@@ -1,0 +1,4 @@
+2026-11-09T16:06:04Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js
+ok 1 - v3.16 damaged identifier restore retains real equipment/story and renders exploration safely
+v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow
+EXIT=0

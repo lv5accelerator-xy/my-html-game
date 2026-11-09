@@ -1,0 +1,557 @@
+{
+  "note": "Runs before milestone commit tested the working tree on the logged parent SHA. Final 28-file source manifest maps the exact final runtime/tests; filtered runs are only targeted checks, never full-suite passes. Assertion calls count executed node:assert operations, not distinct behaviors.",
+  "runtime": {
+    "node": "22.23.4",
+    "playwright": "1.55.0",
+    "chromium": "151.0.7922.173",
+    "cloud": true
+  },
+  "runs": [
+    {
+      "name": "baseline-unprepared",
+      "first_line": "Set CODEX_PLAYWRIGHT_PATH to an installed Playwright module before running browser checks.",
+      "exit": 1,
+      "filter": null,
+      "results": [],
+      "assertion_calls": null,
+      "evidence": "baseline-unprepared.txt",
+      "sha256": "68d70b3142b9de9e880e4f5e717922ac74c820354d73515e57a8b069ec9272c2"
+    },
+    {
+      "name": "baseline",
+      "first_line": "CHECK_RESULT: {\"command\":\"node --check game.js\",\"exit\":0,\"signal\":null,\"error\":null}",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 browser ok: 64 complete flows; identity/content/assets/console checked in every flow",
+        "v3 gameplay ok: 84 behavioral checks",
+        "RESULT: 9 syntax checks, 15 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": null,
+      "evidence": "baseline.txt",
+      "sha256": "be74f28f9f3e0daf7a3e39d082f273f81860a39a2af18ea770afa24b6a90975f"
+    },
+    {
+      "name": "v312-full",
+      "first_line": "2026-11-09T15:16:35Z sha=508456827a798eaf48397511a5c408371c4665c3 command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 browser ok: 65 complete flows; identity/content/assets/console checked in every flow",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 15 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": null,
+      "evidence": "v312-full.txt",
+      "sha256": "607b2dd276c1518beb0e3710fcbc549893f533a3f94030adf7a1a61b35ec42bd"
+    },
+    {
+      "name": "v312-rules",
+      "first_line": "2026-11-09T15:16:28Z sha=508456827a798eaf48397511a5c408371c4665c3 command=node tests/v3-gameplay.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 gameplay ok: 86 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v312-rules.txt",
+      "sha256": "a8860cf3d29566dc8b4d6ad537fda5b1097b57537c5f496fd24f6711ea50409c"
+    },
+    {
+      "name": "v313-full",
+      "first_line": "2026-11-09T15:21:10Z sha=05d5d861e714e9fcbae442619726942795ecccdd command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 browser ok: 77 complete flows; identity/content/assets/console checked in every flow",
+        "v3 expansion ok: 15 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 16 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": null,
+      "evidence": "v313-full.txt",
+      "sha256": "1a69ce9e182006aac55ca7f8023721c80517cfcc59d8cd7360543a3ea54eeee3"
+    },
+    {
+      "name": "v313-old-rules",
+      "first_line": "2026-11-09T15:21:03Z sha=05d5d861e714e9fcbae442619726942795ecccdd command=node tests/v3-gameplay.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 gameplay ok: 86 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v313-old-rules.txt",
+      "sha256": "1f76cc9ac4cbaa94ce3675b670e7398730619c50bbe7316aab04b2edb17378bd"
+    },
+    {
+      "name": "v313-rules",
+      "first_line": "2026-11-09T15:21:03Z sha=05d5d861e714e9fcbae442619726942795ecccdd command=node tests/v3-expansion.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 expansion ok: 15 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v313-rules.txt",
+      "sha256": "cb84bab57e4d9f8bd9aa32700c86c92a8a4d952681fcb0310501978fa0192205"
+    },
+    {
+      "name": "v314-browser-fixed",
+      "first_line": "2026-11-09T15:26:53Z sha=4d8c720b96abb2ebbdd943a3d399b65080a67f78 command=node tests/v3-browser.test.js",
+      "exit": 1,
+      "filter": null,
+      "results": [],
+      "assertion_calls": null,
+      "evidence": "v314-browser-fixed.txt",
+      "sha256": "bacec4c37016d1124a8c922e90ed676a51fd0223203920fd4eec76fc0cbf1ee2"
+    },
+    {
+      "name": "v314-expansion",
+      "first_line": "2026-11-09T15:24:51Z sha=4d8c720b96abb2ebbdd943a3d399b65080a67f78 command=node tests/v3-expansion.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 expansion ok: 18 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v314-expansion.txt",
+      "sha256": "8004894864a53fdfc1145d7c17bccd08acf6976ed9e8b9004bc935fcafc5765b"
+    },
+    {
+      "name": "v314-finale-fixed",
+      "first_line": "2026-11-09T15:29:22Z sha=4d8c720b96abb2ebbdd943a3d399b65080a67f78 command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "finale dialogue",
+      "results": [
+        "v3 browser ok: 3 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v314-finale-fixed.txt",
+      "sha256": "ca78cd4713383a64d2904e1b5d9245eb901584fd118ee386a157be3b38cb9e5a"
+    },
+    {
+      "name": "v314-full-fixed",
+      "first_line": "2026-11-09T15:29:50Z sha=4d8c720b96abb2ebbdd943a3d399b65080a67f78 command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 browser ok: 78 complete flows; identity/content/assets/console checked in every flow",
+        "v3 expansion ok: 18 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 16 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": null,
+      "evidence": "v314-full-fixed.txt",
+      "sha256": "e6f312ecfe4e498108d4e8dceb9a4215fee73ec5c6e404075ccb03547fd63969"
+    },
+    {
+      "name": "v314-full",
+      "first_line": "2026-11-09T15:24:58Z sha=4d8c720b96abb2ebbdd943a3d399b65080a67f78 command=node scripts/check.cjs",
+      "exit": 1,
+      "filter": null,
+      "results": [
+        "v3 expansion ok: 18 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 16 test scripts, 1 failed checks."
+      ],
+      "assertion_calls": null,
+      "evidence": "v314-full.txt",
+      "sha256": "6c62347043ee15739e51f8ec031589858e1d71be683da272396f87361b61abff"
+    },
+    {
+      "name": "v314-rules",
+      "first_line": "2026-11-09T15:24:51Z sha=4d8c720b96abb2ebbdd943a3d399b65080a67f78 command=node tests/v3-gameplay.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 gameplay ok: 86 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v314-rules.txt",
+      "sha256": "3bb41b2ce3296d1624bcd2b59a05757cb208ffc996756d8b78028d877e1a5413"
+    },
+    {
+      "name": "v315-full",
+      "first_line": "2026-11-09T15:33:56Z sha=068d1507375265f284ed14c5c7ce722cc6f3039b command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 browser ok: 79 complete flows; identity/content/assets/console checked in every flow",
+        "v3 expansion ok: 19 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 16 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": null,
+      "evidence": "v315-full.txt",
+      "sha256": "12fa9157631ea4bb9eb13f38ad8ebdc60ae424030587f77ee26966fae993d802"
+    },
+    {
+      "name": "v315-rules",
+      "first_line": "2026-11-09T15:33:55Z sha=068d1507375265f284ed14c5c7ce722cc6f3039b command=node tests/v3-expansion.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 expansion ok: 19 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v315-rules.txt",
+      "sha256": "37fcc785be91d8f84005a4dfd6a841d3c6d648fc69c26c33ab0daea44d6da68c"
+    },
+    {
+      "name": "v316-balance",
+      "first_line": "2026-11-09T15:38:03Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-balance.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3.16 earned management city: 21 deliveries, 15 construction stages in 615s; zero resource injection",
+        "v3.16 earned management watch: 21 deliveries, 15 construction stages in 615s; zero resource injection",
+        "v3.16 earned management voyage: 21 deliveries, 15 construction stages in 615s; zero resource injection"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-balance.txt",
+      "sha256": "165aa91dd7fe4ae551ad5a9f6e7f5a5162c929f3bbd403e38a08bef8e4f702fe"
+    },
+    {
+      "name": "v316-browser",
+      "first_line": "2026-11-09T15:39:13Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "v3.16",
+      "results": [
+        "v3 browser ok: 4 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-browser.txt",
+      "sha256": "ebb99c33f72e5fa7d0efea3476e08a6270b79c6c15686fb643c3b24245f899db"
+    },
+    {
+      "name": "v316-compatibility",
+      "first_line": "2026-11-09T15:38:02Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-compatibility.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-compatibility.txt",
+      "sha256": "720a1ff9362228fc5a12bc3255cd06db0cb84037513f6a94579601a659299d47"
+    },
+    {
+      "name": "v316-final-full",
+      "first_line": "2026-11-09T15:48:51Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3.16 earned management city: 42 deliveries, 15 construction stages in 5385s; zero resource injection",
+        "v3.16 earned management watch: 42 deliveries, 15 construction stages in 5385s; zero resource injection",
+        "v3.16 earned management voyage: 42 deliveries, 15 construction stages in 5385s; zero resource injection",
+        "v3 browser ok: 83 complete flows; identity/content/assets/console checked in every flow",
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration",
+        "v3 expansion ok: 30 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 17 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": {
+        "passed": 175366,
+        "failed": 0
+      },
+      "evidence": "v316-final-full.txt",
+      "sha256": "b3adc0726f3ae478c52f0b53dacd2419b4e5636cbbf6a6e7c1d3114fef425ac1"
+    },
+    {
+      "name": "v316-full",
+      "first_line": "2026-11-09T15:41:41Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node scripts/check.cjs",
+      "exit": 1,
+      "filter": null,
+      "results": [
+        "v3.16 earned management city: 21 deliveries, 15 construction stages in 615s; zero resource injection",
+        "v3.16 earned management watch: 21 deliveries, 15 construction stages in 615s; zero resource injection",
+        "v3.16 earned management voyage: 21 deliveries, 15 construction stages in 615s; zero resource injection",
+        "v3 browser ok: 83 complete flows; identity/content/assets/console checked in every flow",
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 17 test scripts, 1 failed checks."
+      ],
+      "assertion_calls": {
+        "passed": 174988,
+        "failed": 1
+      },
+      "evidence": "v316-full.txt",
+      "sha256": "70cd11ff180b9e353e52f320279e71606d62bda737d44caf657f3c2861f993ee"
+    },
+    {
+      "name": "v316-goal-browser",
+      "first_line": "2026-11-09T15:53:41Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "new save: readable goal",
+      "results": [
+        "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-goal-browser.txt",
+      "sha256": "c36b5343c58cd0da449bc470983ec39a5841b9edc6339707b8b92976696d0b15"
+    },
+    {
+      "name": "v316-goal-rules",
+      "first_line": "2026-11-09T15:53:40Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-expansion.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 expansion ok: 32 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-goal-rules.txt",
+      "sha256": "d7536d1ec7299e753974adaaa36770ef8722e736196992f93f29b75c3d6ccebe"
+    },
+    {
+      "name": "v316-old-rules",
+      "first_line": "2026-11-09T15:38:27Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-gameplay.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 gameplay ok: 86 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-old-rules.txt",
+      "sha256": "f66ba67cd9bbba861a38478aa8e51fd2d4c2822ae3b1e57a32ef30eae227575e"
+    },
+    {
+      "name": "v316-release-full",
+      "first_line": "2026-11-09T15:54:07Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3.16 earned management city: 42 deliveries, 15 construction stages in 5385s; zero resource injection",
+        "v3.16 earned management watch: 42 deliveries, 15 construction stages in 5385s; zero resource injection",
+        "v3.16 earned management voyage: 42 deliveries, 15 construction stages in 5385s; zero resource injection",
+        "v3 browser ok: 83 complete flows; identity/content/assets/console checked in every flow",
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration",
+        "v3 expansion ok: 32 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 17 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": {
+        "passed": 175551,
+        "failed": 0
+      },
+      "evidence": "v316-release-full.txt",
+      "sha256": "cd023ae016339f498be06b15c977403c47ff02b0138523647cda5a8c8bf8328c"
+    },
+    {
+      "name": "v316-rules-fixed",
+      "first_line": "2026-11-09T15:38:27Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-expansion.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 expansion ok: 27 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-rules-fixed.txt",
+      "sha256": "af37d1fc6f28046e91c8f769f6fdbb0f4f5f20ce178ec71c725ebde34023aa40"
+    },
+    {
+      "name": "v316-rules",
+      "first_line": "2026-11-09T15:38:02Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-expansion.test.js",
+      "exit": 1,
+      "filter": null,
+      "results": [],
+      "assertion_calls": null,
+      "evidence": "v316-rules.txt",
+      "sha256": "9031ccf14863d3e06d107fa43a5f418cc4ed37b6a2584253cdc430680b7934b9"
+    },
+    {
+      "name": "v316-tuned-balance",
+      "first_line": "2026-11-09T15:47:15Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-balance.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3.16 earned management city: 42 deliveries, 15 construction stages in 5385s; zero resource injection",
+        "v3.16 earned management watch: 42 deliveries, 15 construction stages in 5385s; zero resource injection",
+        "v3.16 earned management voyage: 42 deliveries, 15 construction stages in 5385s; zero resource injection"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-tuned-balance.txt",
+      "sha256": "3c9ec1e40a2c8effe2ccf5a265c56247fea7c4e546f8732c1a7873c6315d3ad9"
+    },
+    {
+      "name": "v316-tuned-browser",
+      "first_line": "2026-11-09T15:47:22Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "v3.16",
+      "results": [
+        "v3 browser ok: 4 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-tuned-browser.txt",
+      "sha256": "943bd491292ac0d03a25254756d5c84a92d58ed7c6220a95a5284dce9ed29ea2"
+    },
+    {
+      "name": "v316-tuned-compat",
+      "first_line": "2026-11-09T15:48:38Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-compatibility.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-tuned-compat.txt",
+      "sha256": "c8afbaeb16469971e0a0f8940a93238c74af0aa519689f9c7ecb31a7954c1eff"
+    },
+    {
+      "name": "v316-tuned-rules",
+      "first_line": "2026-11-09T15:47:14Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-expansion.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 expansion ok: 30 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-tuned-rules.txt",
+      "sha256": "6386454172f9d91d061665b64296568018e38e6dd51f4f0c41347f4508c59998"
+    },
+    {
+      "name": "webkit-install",
+      "first_line": "Downloading Webkit 26.0 (playwright build v2203)\u001b[2m from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2203/webkit-debian-13.zip\u001b[22m",
+      "exit": 1,
+      "filter": null,
+      "results": [],
+      "assertion_calls": null,
+      "evidence": "webkit-install.txt",
+      "sha256": "404d4d54d15c9a1a120edbcff8e9a90fb5620b91b7ba2926011c04ef6410410d"
+    },
+    {
+      "name": "v316-boundary-full",
+      "first_line": "2026-11-09T16:14:36Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node scripts/check.cjs",
+      "exit": 1,
+      "filter": null,
+      "results": [
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration",
+        "v3 expansion ok: 33 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 17 test scripts, 1 failed checks."
+      ],
+      "assertion_calls": {
+        "passed": 171368,
+        "failed": 1
+      },
+      "evidence": "v316-boundary-full.txt",
+      "sha256": "0f3c397a9d4b316168e86e0138fa54c99c9993549b785c6e7c670ff5c632e85d"
+    },
+    {
+      "name": "v316-click-after",
+      "first_line": "2026-11-09T16:13:33Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "v3.12 automation",
+      "results": [
+        "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-click-after.txt",
+      "sha256": "8b0d0b1ebe44459be7ba15c0175097ec6b15f8afadbb9f8ff31c4a82e5566577"
+    },
+    {
+      "name": "v316-click-before",
+      "first_line": "2026-11-09T16:13:19Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js",
+      "exit": 1,
+      "filter": "v3.12 automation",
+      "results": [],
+      "assertion_calls": null,
+      "evidence": "v316-click-before.txt",
+      "sha256": "f858a2fb8cba5c104eb430687d35790c7013fb144393c3885bf733ab730964dd"
+    },
+    {
+      "name": "v316-click-live-count",
+      "first_line": "2026-11-09T16:18:05Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "v3.12 automation",
+      "results": [
+        "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-click-live-count.txt",
+      "sha256": "9bd33ac2b7a1570b69f1a21d2e8f71af3835ec2a5ffdd14920391e04734be2bb"
+    },
+    {
+      "name": "v316-final-verified",
+      "first_line": "2026-11-09T16:18:19Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 browser ok: 84 complete flows; identity/content/assets/console checked in every flow",
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration",
+        "v3 expansion ok: 33 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 17 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": {
+        "passed": 175662,
+        "failed": 0
+      },
+      "evidence": "v316-final-verified.txt",
+      "sha256": "fa22ba9c0daea23e6bea7826a288d063bffa0e7f32a5b9183c2e460701f89b59"
+    },
+    {
+      "name": "v316-identifiers-after",
+      "first_line": "2026-11-09T16:06:03Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-expansion.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 expansion ok: 33 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-identifiers-after.txt",
+      "sha256": "2e07c279871b6a79eaf9023b8a480a9c573efbe411ce0f4a5e1ff6f5b65e8936"
+    },
+    {
+      "name": "v316-identifiers-before",
+      "first_line": "2026-11-09T16:05:45Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-expansion.test.js",
+      "exit": 1,
+      "filter": null,
+      "results": [],
+      "assertion_calls": null,
+      "evidence": "v316-identifiers-before.txt",
+      "sha256": "d864971032e4401fbeba358b73dbd2b6be1891c5314817ed07fec5b4d540508a"
+    },
+    {
+      "name": "v316-identifiers-browser",
+      "first_line": "2026-11-09T16:06:04Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "damaged identifier",
+      "results": [
+        "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-identifiers-browser.txt",
+      "sha256": "46d282e109861c00269bd9149cbb0e955f1492b01fa5680962ad19e6cf528594"
+    },
+    {
+      "name": "v316-identifiers-full",
+      "first_line": "2026-11-09T16:06:34Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 browser ok: 84 complete flows; identity/content/assets/console checked in every flow",
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration",
+        "v3 expansion ok: 33 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 17 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": {
+        "passed": 175658,
+        "failed": 0
+      },
+      "evidence": "v316-identifiers-full.txt",
+      "sha256": "fdd58eb2060d8236c6e3083ec53c70b78036156c6b3ddc9feb4ab61e7a47b04f"
+    },
+    {
+      "name": "ci-42650575351",
+      "head": "00f97ec0b45b191f310433425016f0e676b63002",
+      "url": "https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42650575351",
+      "exit": 1,
+      "chromium": "9 syntax, 17 scripts, 118 rule groups, 83 browser flows passed",
+      "webkit": "18 completed flows, then native purchase click failed",
+      "evidence": "ci-42650575351-webkit-failure.txt",
+      "sha256": "65253d5f4502bfabcbdb48e077a91fa3b56102eb832d135aea7e89375ffa0d60"
+    }
+  ]
+}

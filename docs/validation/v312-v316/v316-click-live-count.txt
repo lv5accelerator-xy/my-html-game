@@ -1,0 +1,4 @@
+2026-11-09T16:18:05Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js
+ok 1 - v3.12 automation retains live buttons, drafts and focus at desktop and phone widths
+v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow
+EXIT=0

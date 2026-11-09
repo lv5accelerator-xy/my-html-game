@@ -7,7 +7,7 @@
   "use strict";
   const data = {
     VERSION: 32,
-    GAME_VERSION: "3.11.0-preview.1",
+    GAME_VERSION: "3.16.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -49,6 +49,392 @@
         detail: "把整条航线连成一张回收网络。",
       },
     ],
+    ENCOUNTERS: [
+  {
+    "id": "freighter",
+    "name": "无人货船",
+    "description": "封闭货仓仍沿旧航线漂流，回收臂能接近它。",
+    "missions": [
+      "belt",
+      "supply-run"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "cargo",
+        "name": "回收封存货物",
+        "dustSeconds": 12,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "无人货船 · 回收封存货物：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "manifest",
+        "name": "校对货物清单",
+        "dustSeconds": 0,
+        "samples": 2,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "无人货船 · 校对货物清单：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "capsule",
+    "name": "损坏的运输舱",
+    "description": "舱体没有生命信号；货架和缓冲衬里可以分别利用。",
+    "missions": [
+      "belt",
+      "wreck"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "shell",
+        "name": "回收舱壳",
+        "dustSeconds": 8,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "损坏的运输舱 · 回收舱壳：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "lining",
+        "name": "拆检缓冲衬里",
+        "dustSeconds": 0,
+        "samples": 2,
+        "seconds": 35,
+        "costSamples": 0,
+        "record": "损坏的运输舱 · 拆检缓冲衬里：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "beacon",
+    "name": "古老导航信标",
+    "description": "旧信标已经停播，可选择带回硬件或保留校准数据。",
+    "missions": [
+      "belt",
+      "supply-run"
+    ],
+    "minPort": 1,
+    "module": "nav",
+    "choices": [
+      {
+        "id": "hardware",
+        "name": "拆下闲置支架",
+        "dustSeconds": 10,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "古老导航信标 · 拆下闲置支架：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "chart",
+        "name": "测绘旧航标",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 45,
+        "costSamples": 0,
+        "record": "古老导航信标 · 测绘旧航标：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "probe",
+    "name": "失联采矿探针",
+    "description": "探针的电池耗尽，缓存里仍有一小段矿层读数。",
+    "missions": [
+      "belt",
+      "echo"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "ore",
+        "name": "接收矿石",
+        "dustSeconds": 15,
+        "samples": 0,
+        "seconds": 20,
+        "costSamples": 0,
+        "record": "失联采矿探针 · 接收矿石：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "data",
+        "name": "读取矿层缓存",
+        "dustSeconds": 0,
+        "samples": 2,
+        "seconds": 30,
+        "costSamples": 0,
+        "record": "失联采矿探针 · 读取矿层缓存：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "research",
+    "name": "废弃科研设备",
+    "description": "设备已无人使用，原始实验标签尚可辨认。",
+    "missions": [
+      "echo",
+      "garden",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": "scanner",
+    "choices": [
+      {
+        "id": "instrument",
+        "name": "回收测量仪",
+        "dustSeconds": 18,
+        "samples": 0,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "废弃科研设备 · 回收测量仪：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "sample",
+        "name": "提取对照样本",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 40,
+        "costSamples": 1,
+        "record": "废弃科研设备 · 提取对照样本：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "crate",
+    "name": "漂流补给箱",
+    "description": "密封指示灯完好，箱内的材料可立即回收。",
+    "missions": [
+      "belt",
+      "supply-run"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "open",
+        "name": "拆封入库",
+        "dustSeconds": 6,
+        "samples": 1,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "漂流补给箱 · 拆封入库：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "sort",
+        "name": "分类清点",
+        "dustSeconds": 16,
+        "samples": 0,
+        "seconds": 20,
+        "costSamples": 0,
+        "record": "漂流补给箱 · 分类清点：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "signal",
+    "name": "未知求救信号",
+    "description": "近期自动求助来自一艘空置救援浮标。先核验来源，再决定用途。",
+    "missions": [
+      "supply-run",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": "scanner",
+    "choices": [
+      {
+        "id": "verify",
+        "name": "核验信号并留档",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 45,
+        "costSamples": 0,
+        "record": "未知求救信号 · 核验信号并留档：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "power",
+        "name": "回收浮标电源",
+        "dustSeconds": 12,
+        "samples": 1,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "未知求救信号 · 回收浮标电源：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "debris",
+    "name": "不稳定残骸区",
+    "description": "残骸正在缓慢散开。远距回收与固定采样都能安全完成。",
+    "missions": [
+      "belt",
+      "echo"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "remote",
+        "name": "远距回收碎片",
+        "dustSeconds": 10,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "不稳定残骸区 · 远距回收碎片：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "anchor",
+        "name": "消耗样本固定采样器",
+        "dustSeconds": 5,
+        "samples": 3,
+        "seconds": 40,
+        "costSamples": 1,
+        "record": "不稳定残骸区 · 消耗样本固定采样器：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "stardust",
+    "name": "星尘富集带",
+    "description": "尘带的密度比航图更高，可带回货物或留下一份密度记录。",
+    "missions": [
+      "belt",
+      "echo"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "collect",
+        "name": "展开回收网",
+        "dustSeconds": 22,
+        "samples": 0,
+        "seconds": 35,
+        "costSamples": 0,
+        "record": "星尘富集带 · 展开回收网：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "density",
+        "name": "保存密度样本",
+        "dustSeconds": 4,
+        "samples": 2,
+        "seconds": 20,
+        "costSamples": 0,
+        "record": "星尘富集带 · 保存密度样本：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "record",
+    "name": "旧时代通信记录",
+    "description": "无人转发器里有注明来源和年代的历史记录，不是新的求救。",
+    "missions": [
+      "supply-run",
+      "wreck",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": null,
+    "choices": [
+      {
+        "id": "archive",
+        "name": "校对并归档",
+        "dustSeconds": 0,
+        "samples": 2,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "旧时代通信记录 · 校对并归档：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "recycle",
+        "name": "保存副本后回收外壳",
+        "dustSeconds": 10,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "旧时代通信记录 · 保存副本后回收外壳：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "relay",
+        "name": "补足样本修复转发器",
+        "dustSeconds": 6,
+        "samples": 3,
+        "seconds": 40,
+        "costSamples": 1,
+        "record": "旧时代通信记录 · 补足样本修复转发器：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "component",
+    "name": "破损的航站组件",
+    "description": "旧泊位组件的接口与归航星港相容。",
+    "missions": [
+      "supply-run",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": "battery",
+    "choices": [
+      {
+        "id": "metal",
+        "name": "回收金属支架",
+        "dustSeconds": 18,
+        "samples": 0,
+        "seconds": 15,
+        "costSamples": 0,
+        "record": "破损的航站组件 · 回收金属支架：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "interface",
+        "name": "检修接驳接口",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 45,
+        "costSamples": 0,
+        "record": "破损的航站组件 · 检修接驳接口：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "shelter",
+    "name": "未登记的小型避难舱",
+    "description": "避难舱已经空置，离舱登记确认乘员抵达了其他航站。",
+    "missions": [
+      "supply-run",
+      "garden",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": "medbay",
+    "choices": [
+      {
+        "id": "supply",
+        "name": "清点剩余补给",
+        "dustSeconds": 8,
+        "samples": 2,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "未登记的小型避难舱 · 清点剩余补给：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "register",
+        "name": "补录安全等待位置",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 40,
+        "costSamples": 0,
+        "record": "未登记的小型避难舱 · 补录安全等待位置：已确认来源并写入航行记录。"
+      }
+    ]
+  }
+],
     MILESTONES: [10, 25, 50],
     MODULE_MAX_LEVEL: 3,
     MODULE_UPGRADE_SAMPLES: [6, 12],
@@ -112,25 +498,37 @@
         detail: "全舰队产量 ×1.35。",
       },
     ],
+    MISSION_TRAITS: [
+      { module: "scanner", missions: ["echo", "message", "horizon", "white-noise", "old-observatory"], level: 2, samples: 1, label: "透镜校对：测绘任务 +1 样本" },
+      { module: "battery", minSeconds: 180, diversionPerLevel: 0.015, label: "储能缓冲：长期作业每级少分流1.5个百分点" },
+      { module: "medbay", missions: ["wreck", "supply-run", "convoy-relay", "convoy-berth", "convoy-light"], level: 2, samples: 1, label: "医疗整备：补给与接待 +1 样本" },
+      { module: "solar", missions: ["garden", "seedbank", "supply-run"], level: 2, samples: 1, label: "生态保存：种苗与补给 +1 样本" },
+    ],
+    MODULE_SYNERGIES: [
+      { id: "survey", pair: ["nav", "scanner"], missions: ["echo", "message", "horizon", "white-noise", "old-observatory"], seconds: 0.95, diversion: 0.02, label: "测绘协同：航程再短5%，多分流2个百分点" },
+      { id: "endurance", pair: ["battery", "solar"], minSeconds: 180, seconds: 1.05, diversion: -0.025, label: "持续作业：少分流2.5个百分点，航程延长5%" },
+      { id: "relief", pair: ["battery", "medbay"], missions: ["wreck", "supply-run", "convoy-relay", "convoy-berth", "convoy-light"], seconds: 1.05, samples: 1, label: "救护整备：多1样本，航程延长5%" },
+      { id: "recovery", pair: ["scanner", "solar"], missions: ["belt", "wreck"], dust: 1.08, diversion: 0.02, label: "分拣协同：回收星尘多8%，多分流2个百分点" },
+    ],
     MODULES: [
       {
         id: "battery",
         name: "储能矩阵",
         samples: 4,
-        detail: "每级全舰队产量 +12%。",
+        detail: "每级全舰队产量 +12%；180秒以上基础航程每级少分流1.5个百分点。",
       },
       {
         id: "scanner",
         name: "残骸透镜",
         samples: 4,
-        detail: "每级扫描与信标收益 +25%。",
+        detail: "每级扫描与信标收益 +25%；2级起测绘任务多1样本。",
       },
       {
         id: "medbay",
         name: "医疗舱电源",
         samples: 4,
         story: "hospital",
-        detail: "每级全舰队产量 +10%。来自废弃医院船。",
+        detail: "每级全舰队产量 +10%；2级起医疗与补给任务多1样本。来自废弃医院船。",
       },
       {
         id: "nav",
@@ -143,7 +541,7 @@
         name: "温室集光阵",
         samples: 6,
         story: "garden",
-        detail: "每级光帆采集器产量 +30%。来自失落温室。",
+        detail: "每级光帆采集器产量 +30%；2级起生态与补给任务多1样本。来自失落温室。",
       },
     ],
     MISSIONS: [
@@ -311,9 +709,9 @@
         { id: "crew", label: "把下一班接手的人写上去", text: "图边多了一行轮班联络。祁岳把副本交给对岸，让现场有人接、有人答成为航图的一部分。" },
         { id: "landmark", label: "补上船员认得的灯位", text: "你们用船员的叫法标注灯位，再附上正式编号。祁岳说，看懂这张图的人不必先学会我们的术语。" },
       ] },
-      { id: "window", from: "苇", title: "窗边的新地址", collection: "窗台观测册", brief: "苇想给两港的孩子交换一册观察笔记。接下委托后，完成一次两港安全补给，把空白页带回来。", arrival: "对岸的孩子画了一扇窗，窗外是与你们不同的星光。苇没有补成标准图，她请你决定这一页的标题。", replies: [
-        { id: "different", label: "同一条航线，不同的窗", text: "观察册保留了两幅不同的天空。苇把它们并排夹好，给下一位来写的人留下一整页。" },
-        { id: "address", label: "这里有人等你回信", text: "你在页角写下可投递的地址。苇把它贴在窗边，让第一次来的孩子也能找到愿意接信的人。" },
+      { id: "window", from: "育种舱照料者", title: "窗边的新地址", collection: "窗台观测册", brief: "育种舱的新照料者沿着苇留下的培育档案，想给两港的孩子交换一册观察笔记。接下委托后，完成一次两港安全补给，把空白页带回来。", arrival: "对岸的孩子画了一扇窗，窗外是与你们不同的星光。照料者没有补成标准图，请你决定这一页的标题；苇的原始观察记录保留在册首。", replies: [
+        { id: "different", label: "同一条航线，不同的窗", text: "观察册保留了两幅不同的天空。照料者把它们并排夹好，给下一位来写的人留下一整页。" },
+        { id: "address", label: "这里有人等你回信", text: "你在页角写下可投递的地址。照料者把它贴在窗边，让第一次来的孩子也能找到愿意接信的人。" },
       ] },
     ],
     PORT_FOCUSES: [
@@ -2366,6 +2764,230 @@
         text: "远航灯塔亮起，另一端也传来回应。那些曾只属于一个人的归航坐标，成为了两座航站之间的路。第二章「远航星图」完成。",
       },
     ],
+    HARBOR_NEEDS: [
+  {
+    "id": "food",
+    "name": "食物与生态补给",
+    "description": "用保有的试种样本和生产材料接续公共食堂的种植安排。",
+    "mission": "garden",
+    "dust": 6000,
+    "samples": 3,
+    "seconds": 120,
+    "collection": "第一份食堂种植表",
+    "letter": "新照料者把试种记录送进公共食堂。苇的原始档案保留来源，今天的餐桌由居民共同照料。",
+    "from": "育种舱值班组"
+  },
+  {
+    "id": "repair",
+    "name": "维修设备",
+    "description": "回收兼容接头，补齐公共工具柜；也可在港内生产替代件。",
+    "mission": "belt",
+    "dust": 8000,
+    "samples": 2,
+    "seconds": 150,
+    "collection": "公共工具柜铭牌",
+    "letter": "祁岳在工具柜贴上交班表：设备有编号，维护有人接班。",
+    "from": "祁岳与维修员"
+  },
+  {
+    "id": "energy",
+    "name": "能源调配",
+    "description": "把现有储能与生产材料交给轮班组，核对下一轮公共照明。",
+    "mission": "belt",
+    "dust": 10000,
+    "samples": 2,
+    "seconds": 180,
+    "collection": "一盏公共走廊灯",
+    "letter": "走廊的灯按共同排程亮起，夜班也能找到休息区。",
+    "from": "能源轮班组"
+  },
+  {
+    "id": "routes",
+    "name": "航线维护",
+    "description": "两港补给带回的观测，或港内生产的校准材料，都能支持航线检修。",
+    "mission": "supply-run",
+    "dust": 7000,
+    "samples": 3,
+    "seconds": 150,
+    "collection": "手绘维护航图",
+    "letter": "观察员在航图上标出新的交班点。停航条件仍由两端共同核验。",
+    "from": "航路观察组"
+  },
+  {
+    "id": "cargo",
+    "name": "货运与回收",
+    "description": "安排一次安全残骸回收，或生产所需构件后交付公共货架。",
+    "mission": "belt",
+    "dust": 9000,
+    "samples": 2,
+    "seconds": 150,
+    "collection": "第一张公共货签",
+    "letter": "回收物按来源和用途分开登记。公共货架留出了下一班的位置。",
+    "from": "回收工班"
+  },
+  {
+    "id": "reception",
+    "name": "居民接待",
+    "description": "准备安全等待位置、饮水设备与轮班用具；没有必须准时到达的约定。",
+    "mission": "supply-run",
+    "dust": 6000,
+    "samples": 3,
+    "seconds": 120,
+    "collection": "一张窗前座椅卡",
+    "letter": "一位新值班员把水放在窗前，另一位接起来船的频道。空位继续为后来的人保留。",
+    "from": "接待值班组"
+  },
+  {
+    "id": "comms",
+    "name": "通信恢复",
+    "description": "带回两港通信校对，或生产接口材料，更新公开交接频段。",
+    "mission": "supply-run",
+    "dust": 8000,
+    "samples": 3,
+    "seconds": 150,
+    "collection": "共同频段回执",
+    "letter": "阿遥收到学员写的第一份独立值班回执。禾的历史记录仍按家属确认的方式保存。",
+    "from": "阿遥与通信班"
+  }
+],
+    HARBOR_STAGE_DELIVERIES: [4, 14, 35],
+    HARBOR_PROJECTS: [
+  {
+    "id": "public-berths",
+    "name": "公共泊位",
+    "need": "reception",
+    "dust": 15000,
+    "samples": 5,
+    "benefit": "1级起多显示一项可接需求；2/3级扩展实际泊位示意与轮班记录。",
+    "letter": "公共泊位完成三期扩建，居民把共同值班表留在接待台。"
+  },
+  {
+    "id": "repair-dock",
+    "name": "维修设施",
+    "need": "repair",
+    "dust": 18000,
+    "samples": 5,
+    "benefit": "每级让后续维修需求的星尘费用减少4%，最多12%。",
+    "letter": "第三套维修台投入使用。祁岳的接班表已有不同笔迹。"
+  },
+  {
+    "id": "habitat",
+    "name": "居民生活区",
+    "need": "food",
+    "dust": 20000,
+    "samples": 6,
+    "benefit": "每级让后续食物/接待需求少用1份样本，最低仍需1份。",
+    "letter": "生活区的公共食堂和窗前座椅完成交接，照料者为下一季留了地址。"
+  },
+  {
+    "id": "supply-network",
+    "name": "长期补给网络",
+    "need": "cargo",
+    "dust": 22000,
+    "samples": 6,
+    "benefit": "每级让后续食物/能源/货运需求的生产工作量减少10%，最多30%。",
+    "letter": "补给点都保存了独立交接资料，远航与留守的两个地址继续互通。"
+  },
+  {
+    "id": "route-station",
+    "name": "航线维护站",
+    "need": "routes",
+    "dust": 24000,
+    "samples": 6,
+    "benefit": "2级起让后续航线/通信需求少一次指定补给，最低1次。",
+    "letter": "维护站完成三期改进，每个窗口都有能够接班的观察员。"
+  }
+],
+    HARBOR_FOCUSES: [
+  {
+    "id": "production",
+    "name": "生产优先",
+    "dust": 0.8,
+    "samples": 1,
+    "work": 0.8,
+    "trips": 0,
+    "offset": 0,
+    "detail": "交付星尘少20%、生产工作量少20%，但多用1份样本。"
+  },
+  {
+    "id": "reception",
+    "name": "接待优先",
+    "dust": 1,
+    "samples": -1,
+    "work": 1.1,
+    "trips": 0,
+    "offset": 2,
+    "detail": "交付少用1份样本，生产工作量增加10%。"
+  },
+  {
+    "id": "exploration",
+    "name": "探索优先",
+    "dust": 1.1,
+    "samples": 0,
+    "work": 1.3,
+    "trips": -1,
+    "offset": 4,
+    "detail": "指定补给少一次（最低1次），星尘费用多10%、生产工作量多30%。"
+  }
+],
+    PORT_REGIONS: [
+  {
+    "id": "hub",
+    "name": "归航中枢",
+    "x": 300,
+    "y": 160,
+    "target": "port-panel",
+    "shape": "M-40-20h80v40h-80zM-15-40h30v80h-30z"
+  },
+  {
+    "id": "relay",
+    "name": "共鸣中继",
+    "x": 110,
+    "y": 68,
+    "target": "project-relay",
+    "shape": "M0-22v44M-20-14a25 25 0 0 0 0 28M20-14a25 25 0 0 1 0 28M-10 22h20"
+  },
+  {
+    "id": "nursery",
+    "name": "育种舱",
+    "x": 110,
+    "y": 250,
+    "target": "project-nursery",
+    "shape": "M-28 18v-28l28-18 28 18v28zM0 17v-25M0 4q-22-24-15-20M0 0q22-24 15-20"
+  },
+  {
+    "id": "lighthouse",
+    "name": "远航灯塔",
+    "x": 490,
+    "y": 68,
+    "target": "project-lighthouse",
+    "shape": "M-18 22h36L10-18h-20zM-26-24h52M0-34v10"
+  },
+  {
+    "id": "berth",
+    "name": "备用泊位",
+    "x": 490,
+    "y": 250,
+    "target": "rescue-berth",
+    "shape": "M-30-6h60M-30 8h60M-30-14v36M30-14v36M-9-22h18v18H-9z"
+  },
+  {
+    "id": "docking",
+    "name": "停泊区",
+    "x": 300,
+    "y": 45,
+    "target": "port-panel",
+    "shape": "M-16-9h32v18h-32zM-9 0h18"
+  },
+  {
+    "id": "focus",
+    "name": "港务建设",
+    "x": 300,
+    "y": 285,
+    "target": "port-focus",
+    "shape": "M-18 0l18-15L18 0 0 15z"
+  }
+],
     PORT: [
       {
         name: "重新点亮通信塔",

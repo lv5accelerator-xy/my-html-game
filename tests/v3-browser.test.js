@@ -115,6 +115,207 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    {
+      const fixture = require("./helpers/v3-fixtures.cjs").completed("city", TIME);
+      fixture.equipped = ["battery", "solar"]; E.saveLoadout(fixture, "production");
+      fixture.equipped = ["nav", "scanner"]; E.saveLoadout(fixture, "voyage"); fixture.lastAt = TIME;
+      await scenario("v3.14 dispatch comparison and real quick loadout switch preserve the locked voyage", { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        await page.locator('#navigation [data-id="explore"]').click();
+        const row = page.locator('#mission-supply-run');
+        assert.match(await row.locator('.voyage-comparison').innerText(), /当前装备.*惯性导航仪/s);
+        await row.locator('[data-action="loadout-quick"]').click();
+        assert.deepEqual((await read(page)).equipped, ['battery', 'solar']);
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        }
+        await row.locator('[data-action="mission"]').click();
+        const snapshot = (await read(page)).mission;
+        await page.locator('#loadouts [data-action="loadout-apply"][data-id="voyage"]').click();
+        assert.deepEqual((await read(page)).mission, snapshot);
+        await page.reload(); assert.deepEqual((await read(page)).mission, snapshot);
+      });
+    }
+    {
+      const fixture = require("./helpers/v3-fixtures.cjs").completed("voyage", TIME); fixture.lastAt = TIME;
+      await scenario("v3.15 live SVG facilities, keyboard details, resident arrivals and reduced motion", { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          assert.equal(await page.locator('[data-facility="docking"]').getAttribute('data-built'), 'true');
+          assert.equal(await page.locator('.atlas-regular-arrival path').count(), 1);
+          assert.equal(await page.locator('.atlas-arrivals path').count(), 3);
+          await page.locator('[data-port-node="relay"]').focus(); await page.keyboard.press('Enter');
+          assert.match(await page.locator('#dialog-body').innerText(), /全舰队产量 ×1.05/);
+          await page.locator('#dialog-close').click();
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+          if (screenshotDir) await page.locator('#starport-overview').screenshot({path:path.join(screenshotDir, `v3.15-port-${width}.png`)});
+        }
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        assert.equal(await page.locator('[data-port-node="relay"] circle').evaluate(el => getComputedStyle(el).animationName), 'none');
+        await page.reload(); assert.equal(await page.locator('.atlas-arrivals path').count(), 3);
+      });
+    }
+    for (const ending of D.ENDINGS) {
+      const fixture = require("./helpers/v3-fixtures.cjs").completed(ending.id, TIME);
+      fixture.lastAt = TIME; fixture.run.dust = D.PRESTIGE_DUST;
+      await scenario(`v3.16 ${ending.title}: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump`, { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator('#harbor-management [data-action="harbor-accept"][data-id="food"]').click();
+        let state = await read(page); const task = structuredClone(state.management.active);
+        assert.equal(task.id, 'food');
+        await page.locator('#harbor-management [data-action="harbor-focus"][data-id="reception"]').click();
+        assert.deepEqual((await read(page)).management.active, task);
+        await page.locator('#mission-garden [data-action="mission"]').click();
+        state = await read(page); const seconds = state.mission.seconds;
+        assert.equal(state.mission.harborOrder, task.serial);
+        await page.clock.runFor(seconds * 1000);
+        await page.reload();
+        if (await page.locator('#dialog[open]').count()) await page.locator('#dialog-close').click();
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator('#report [data-action="claim"]').click();
+        state = await read(page); assert.equal(state.management.active.trips, 1);
+        const before = state.dust;
+        await page.locator('#harbor-management [data-action="harbor-deliver"]').click();
+        state = await read(page); assert.equal(state.management.stats.deliveries, 1);
+        assert.equal(state.dust, before - task.dustCost);
+        assert.ok(state.management.collections.includes('need-food'));
+        // Return to production terms for a second request and prepare it with passive production.
+        await page.locator('#harbor-management [data-action="harbor-focus"][data-id="production"]').click();
+        await page.locator('#harbor-management [data-action="harbor-accept"][data-id="repair"]').click();
+        state = await read(page); const production = structuredClone(state.management.active);
+        await page.clock.runFor((Math.max(production.workSeconds, Math.ceil(production.productionGoal / E.rawRate(state))) + 2) * 1000);
+        await page.locator('#harbor-management [data-action="harbor-deliver"]').click();
+        state = await read(page); assert.equal(state.management.stats.deliveries, 2);
+        for (let extra = 0; extra < 2; extra++) {
+          await page.locator('#harbor-management [data-action="harbor-accept"]').first().click();
+          const current = await read(page), order = current.management.active;
+          await page.clock.runFor((Math.max(order.workSeconds, Math.ceil(order.productionGoal / E.rawRate(current))) + 2) * 1000);
+          await page.locator('#harbor-management [data-action="harbor-deliver"]').click();
+        }
+        assert.equal((await read(page)).management.stats.deliveries, 4);
+        await openDetails(page,'.harbor-projects');
+        await page.locator('#harbor-project-repair-dock [data-action="harbor-build"]').click();
+        state = await read(page); assert.equal(state.management.projects['repair-dock'], 1);
+        const progress = structuredClone(state.management);
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          await page.locator('#harbor-management').scrollIntoViewIfNeeded();
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+          if (screenshotDir && ending.id === 'city') await page.screenshot({path:path.join(screenshotDir,`v3.16-management-${width}.png`)});
+        }
+        await page.locator('#navigation [data-id="home"]').click();
+        assert.equal(await page.locator('[data-facility="repair-dock"]').getAttribute('data-built'), 'true');
+        if (screenshotDir && ending.id === 'city') {
+          for (const width of [1280,375]) {
+            await page.setViewportSize({width,height:900});
+            await page.locator('#starport-overview').screenshot({path:path.join(screenshotDir,`v3.16-port-${width}.png`)});
+          }
+        }
+        await page.reload(); assert.deepEqual((await read(page)).management, progress);
+        await page.locator('#settings-button').click();
+        const [download] = await Promise.all([page.waitForEvent('download'), page.locator('[data-action="export"]').click()]);
+        const text = fs.readFileSync(await download.path(), 'utf8');
+        await page.locator('#import-file').setInputFiles({ name:'harbor.json', mimeType:'application/json', buffer:Buffer.from(text) });
+        assert.match(await page.locator('.restore-preview').innerText(), /经营交付/);
+        await page.locator('#confirm-import').click();
+        assert.deepEqual((await read(page)).management, progress);
+        await page.locator('#navigation [data-id="jump"]').click();
+        await page.locator('#main [data-action="jump"]').click(); await page.locator('[data-action="confirm-jump"]').click();
+        state = await read(page); assert.deepEqual(state.management, progress);
+        assert.equal(state.epilogue.ending, ending.id);
+      });
+    }
+    await scenario("v3.16 fresh player completes the first scan, fleet, route, story and jump loop using only real controls", null, async page => {
+      for (let i=0;i<30;i++) { await page.locator('[data-action="scan"]').click(); await page.clock.runFor(1000); }
+      await page.locator('#main [data-action="nav"][data-id="fleet"]').click();
+      await page.locator('[data-action="buy"][data-id="drone"]').click();
+      await page.locator('[data-action="route"][data-id="explore"]').click();
+      await page.locator('[data-action="mode"][data-id="10"]').click();
+      let jumped = false;
+      for(let step=0;step<144;step++) {
+        await page.clock.runFor(15000);
+        if(await page.locator('#dialog[open]').count()) await page.locator('#dialog-close').click();
+        let state=await read(page);
+        if(state.beacon.expiresAt > state.clock) {
+          if(!(await page.locator('#navigation [data-id="home"]').isDisabled())) await page.locator('#navigation [data-id="home"]').click();
+          if(await page.locator('[data-action="beacon"]').isVisible()) await page.locator('[data-action="beacon"]').click();
+        }
+        if(!(await page.locator('#navigation [data-id="fleet"]').isDisabled())) await page.locator('#navigation [data-id="fleet"]').click();
+        state=await read(page);
+        const research=D.RESEARCH.find(r=>!state.research.includes(r.id)&&state.run.dust>=r.unlock&&state.dust>=r.cost);
+        if(research) await page.locator(`[data-action="research"][data-id="${research.id}"]`).click();
+        else { const b=E.affordableBest(state); if(b) await page.locator(`[data-buy-id="${b.id}"]`).click(); }
+        state=await read(page);
+        if(state.result || (!state.mission && !state.lore.length && state.run.dust>=600)) {
+          await page.locator('#navigation [data-id="explore"]').click();
+          if(state.result) await page.locator('#report [data-action="claim"][data-id="repair"]').click();
+          else await page.locator('#mission-wreck [data-action="mission"]').click();
+        }
+        state=await read(page);
+        if(E.prestigeGain(state)&&!state.mission&&!state.result) {
+          await page.locator('#navigation [data-id="jump"]').click();
+          await page.locator('#main [data-action="jump"]').click(); await page.locator('[data-action="confirm-jump"]').click();
+          jumped=true; break;
+        }
+      }
+      assert.ok(jumped,'First loop reaches an actual confirmed jump within the player-model budget');
+      const done=await read(page); assert.equal(done.rebirths,1); assert.ok(done.lore.length>0);
+      assert.equal(done.automation.enabled,true);
+      assert.ok(done.timing.events.report); assert.ok(done.timing.events.prestige);
+    });
+    {
+      const fixture = require("./helpers/v3-fixtures.cjs").completed("city", TIME); fixture.lastAt=TIME;
+      const lore=structuredClone(fixture.lore);
+      fixture.equipped=['constructor','__proto__','battery'];
+      fixture.lore.push({story:'constructor',choice:'x'},{story:'__proto__',choice:'x'});
+      await scenario("v3.16 damaged identifier restore retains real equipment/story and renders exploration safely", { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        assert.equal(await page.locator('#dialog[open]').count(),0);
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator('#harbor-management [data-action="harbor-focus"][data-id="reception"]').click();
+        const clean=await read(page); assert.deepEqual(clean.equipped,['battery']); assert.deepEqual(clean.lore,lore);
+        assert.deepEqual(clean.modules,fixture.modules); assert.equal(clean.epilogue.ending,'city');
+        await page.reload(); assert.deepEqual((await read(page)).equipped,['battery']);
+        await page.locator('#navigation [data-id="explore"]').click();
+        assert.ok(await page.locator('#harbor-management').isVisible());
+      });
+    }
+    for (const def of D.ENCOUNTERS) {
+      const fixture = require("./helpers/v3-fixtures.cjs").encounterReady(def.id, TIME);
+      fixture.lastAt = TIME; fixture.samples = 10;
+      await scenario(`v3.13 ${def.name}: real choice, countdown, reload and immutable discovery record`, { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        await page.setViewportSize({ width: 375, height: 900 });
+        await page.locator('#main [data-action="nav"][data-id="explore"]').first().click();
+        const token = fixture.encounters.pending.token, choice = fixture.encounters.pending.choices[0];
+        await page.locator('#encounter-panel [data-action="encounter"]').first().click();
+        assert.equal((await read(page)).encounters.serial, token);
+        await page.clock.runFor(choice.seconds * 1000 + 1000);
+        await page.reload();
+        const saved = await read(page);
+        assert.equal(saved.encounters.pending, null);
+        assert.equal(saved.encounters.history.length, 1);
+        assert.equal(saved.encounters.history[0].choice, choice.id);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      });
+    }
+    await scenario("v3.12 automation retains live buttons, drafts and focus at desktop and phone widths", { [S.KEY]: JSON.stringify({ ...ready(), rebirths: 4, automation: { enabled: true, policy: "balanced", reserve: 0, research: false, dispatch: false } }) }, async page => {
+      await page.locator('#navigation [data-id="fleet"]').click();
+      for (const width of [1280, 375]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.locator('[data-config="reserve"]').fill("123");
+        await page.evaluate(() => { window.retainedInput = document.activeElement; window.retainedBuy = document.querySelector('[data-buy-id="drone"]'); window.retainedLabel = window.retainedBuy.firstChild; });
+        await page.clock.runFor(1500);
+        assert.ok(await page.evaluate(() => retainedInput === document.activeElement && retainedInput.isConnected && retainedBuy.isConnected && retainedBuy === document.querySelector('[data-buy-id="drone"]')));
+        assert.ok(await page.evaluate(() => retainedLabel.isConnected && retainedBuy.firstChild === retainedLabel), "automation keeps the live button label node");
+        assert.equal(await page.locator('[data-config="reserve"]').inputValue(), "123");
+        assert.equal(await page.locator('.current-goal').count(), 1);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      }
+      const beforePurchase = Number.parseInt(await page.locator("#building-drone .building-stats > strong").innerText(), 10); // Live auto-buys may precede the five-second save.
+      await page.locator('[data-buy-id="drone"]').click();
+      assert.equal((await read(page)).buildings.drone, beforePurchase + 1);
+      assert.ok(await page.evaluate(() => retainedLabel.isConnected && retainedBuy.firstChild === retainedLabel));
+      assert.match(await page.locator('#toast').innerText(), /建造/);
+    });
     await scenario("native dialog close keeps the newer keyboard reading focus", { [S.KEY]: JSON.stringify(ready()) }, async (page) => {
       const before = await read(page);
       await page.locator("#settings-button").click();
@@ -173,6 +374,9 @@ async function run() {
             });
         }
         await page.setViewportSize({ width: 1280, height: 900 });
+        await page.locator('#main [data-action="nav"][data-id="home"]').click();
+        assert.equal(await page.evaluate(() => document.activeElement.id), 'scan-control');
+        assert.equal(await page.locator('#main [data-buy-id="drone"]').count(), 0);
         for (let i = 0; i < 6; i++) {
           await page.locator('[data-action="scan"]').click();
           await page.clock.fastForward(1000);
@@ -2648,13 +2852,14 @@ async function run() {
           await page.locator("#route-archive").screenshot({ path: path.join(screenshotDir, "v3.9-archive-desktop.png"), animations: "disabled" });
         }
         await page.reload();
-        assert.deepEqual(await read(page), memory);
+        const reloaded = { ...memory, beacon: { ...memory.beacon, expiresAt: 0 } }; // Storage deliberately dismisses an old visible beacon on load.
+        assert.deepEqual(await read(page), reloaded);
         await page.locator('#navigation [data-id="explore"]').click();
         await page.locator('.ending-actions [data-goal-focus="route-archive"]').click();
         await openArchiveRecord(page, "#story-hospital");
         await page.locator("#story-hospital > summary").click();
         assert.ok(await page.locator("#story-hospital .scene-transcript").first().isVisible());
-        assert.deepEqual(await read(page), memory);
+        assert.deepEqual(await read(page), reloaded);
         assert.equal((await read(page)).epilogue.ending, ending.id);
         assert.equal(await page.locator('#route-archive [data-action="claim"]').count(), 0);
       });

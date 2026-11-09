@@ -1,0 +1,41 @@
+2026-11-09T15:38:02Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-expansion.test.js
+ok 1 - v3.13 无人货船: all choices have actual finite effects, recovery and one settlement
+ok 2 - v3.13 损坏的运输舱: all choices have actual finite effects, recovery and one settlement
+ok 3 - v3.13 古老导航信标: all choices have actual finite effects, recovery and one settlement
+ok 4 - v3.13 失联采矿探针: all choices have actual finite effects, recovery and one settlement
+ok 5 - v3.13 废弃科研设备: all choices have actual finite effects, recovery and one settlement
+ok 6 - v3.13 漂流补给箱: all choices have actual finite effects, recovery and one settlement
+ok 7 - v3.13 未知求救信号: all choices have actual finite effects, recovery and one settlement
+ok 8 - v3.13 不稳定残骸区: all choices have actual finite effects, recovery and one settlement
+ok 9 - v3.13 星尘富集带: all choices have actual finite effects, recovery and one settlement
+ok 10 - v3.13 旧时代通信记录: all choices have actual finite effects, recovery and one settlement
+ok 11 - v3.13 破损的航站组件: all choices have actual finite effects, recovery and one settlement
+ok 12 - v3.13 未登记的小型避难舱: all choices have actual finite effects, recovery and one settlement
+ok 13 - v3.13 active voyage snapshot and RNG survive reload/import and eight-hour recovery without redraw
+ok 14 - v3.13 event gates, cooldown, automation and invalid snapshots preserve safe base income
+ok 15 - v3.13 old schema32 archives add empty events without replaying stories or rewards
+ok 16 - v3.14 all legal two-slot combinations have bounded mission fits and locked preview/settlement
+ok 17 - v3.14 specific fits have genuine tradeoffs and existing production/module levels remain legal
+ok 18 - v3.14 saved loadout comparison uses the actual plan and switching never rewrites the active snapshot
+ok 19 - v3.15 all facilities and resident activity derive only from actual story/build progress
+ok 20 - v3.16 all seven needs and all three directions work after each permanent ending without replaying story rewards
+ok 21 - v3.16 only production after acceptance or a newly tagged matching voyage can prepare a request
+ok 22 - v3.16 eight-hour idle recovery and automation progress tasks but never deliver or choose a new request
+/workspace/starport-v316/tests/v3-expansion.test.js:203
+        assert.equal(E.portFacilities(s).find(n => n.id === p.id).level, level + 1);
+                                                                 ^
+
+TypeError: Cannot read properties of undefined (reading 'level')
+    at /workspace/starport-v316/tests/v3-expansion.test.js:203:66
+    at test (/workspace/starport-v316/tests/v3-expansion.test.js:6:27)
+    at Object.<anonymous> (/workspace/starport-v316/tests/v3-expansion.test.js:192:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49
+
+Node.js v22.23.4
+EXIT=1

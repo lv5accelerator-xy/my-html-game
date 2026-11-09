@@ -1,0 +1,7 @@
+2026-11-09T15:47:22Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-browser.test.js
+ok 1 - v3.16 归航之城: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+ok 2 - v3.16 守望之港: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+ok 3 - v3.16 携种远航: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+ok 4 - v3.16 fresh player completes the first scan, fleet, route, story and jump loop using only real controls
+v3 browser ok: 4 complete flows; identity/content/assets/console checked in every flow
+EXIT=0

@@ -342,6 +342,33 @@ function verify() {
             );
           assert.equal(E.routeArchive(sixth).complete, true);
           assert.ok(E.reachable(sixth, E.nextGoal(sixth).action));
+          if (plan.id === D.EXPEDITION_PLANS[0].id && focus.id === D.PORT_FOCUSES[0].id && energy.id === D.RESCUE_ENERGY[0].id) {
+            const began = sixth.clock, baseRate = E.rawRate(sixth);
+            E.configure(sixth, { enabled: false, dispatch: false });
+            for (let t = 0; t < 7200; t += 15) {
+              if (sixth.result) assert.ok(E.claimMission(sixth));
+              if (!sixth.management.active && sixth.management.stats.deliveries < 42) {
+                const offers = E.harborOffers(sixth);
+                const missing = D.HARBOR_PROJECTS.filter(p => !sixth.management.counts[p.need]);
+                const offer = offers.find(n => missing.some(p => p.need === n.id)) || offers[0];
+                assert.ok(E.acceptHarborNeed(sixth, offer.id, offer.terms.serial));
+              }
+              const task = E.harborStatus(sixth);
+              if (task?.available) assert.ok(E.deliverHarborNeed(sixth, task.serial));
+              if (!sixth.mission && !sixth.result && sixth.samples < 35) E.startMission(sixth, "belt");
+              for (const project of D.HARBOR_PROJECTS) {
+                const offer = E.harborProjectOffer(sixth, project.id);
+                if (offer.available) assert.ok(E.buildHarborProject(sixth, project.id, offer.level));
+              }
+              if (sixth.management.stats.deliveries >= 42 && Object.values(sixth.management.projects).reduce((a,b)=>a+b,0) === 15) break;
+              E.advance(sixth, sixth.lastAt + 15000, { offline: true });
+            }
+            assert.equal(sixth.management.stats.deliveries,42, "earned postgame repeats without injected resources");
+            assert.equal(Object.values(sixth.management.projects).reduce((a,b)=>a+b,0),15);
+            assert.equal(E.rawRate(sixth),baseRate);
+            assert.equal(sixth.epilogue.ending,ending.id);
+            console.log(`v3.16 earned management ${ending.id}: 42 deliveries, 15 construction stages in ${sixth.clock-began}s; zero resource injection`);
+          }
         }
         fifthChapterRows.push({
           preparation: plan.name,

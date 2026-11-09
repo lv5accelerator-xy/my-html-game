@@ -1,0 +1,20 @@
+'use strict';
+const assert=require('node:assert/strict'), http=require('node:http');
+const {chromium}=require(process.env.CODEX_PLAYWRIGHT_PATH);
+const isolate=require('/workspace/starport-v320/tests/helpers/isolate-browser.cjs');
+(async()=>{
+ let trapRequests=0,configRequests=0;
+ const trap=http.createServer((q,r)=>{trapRequests++;r.end('must never be reached');});
+ const local=http.createServer((q,r)=>{if(q.url==='/firebase-config.js'){configRequests++;r.setHeader('Content-Type','text/javascript');r.end('globalThis.STELLAR_FIREBASE_CONFIG={projectId:"production-sentinel"}');}else{r.setHeader('Content-Type','text/html');r.end('<script src="/firebase-config.js"></script><p>isolated app</p>');}});
+ await Promise.all([new Promise(r=>local.listen(0,'127.0.0.1',r)),new Promise(r=>trap.listen(0,'127.0.0.1',r))]);
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CODEX_CHROMIUM_PATH});
+ try {
+  const c=await browser.newContext();const origin=`http://127.0.0.1:${local.address().port}`;await isolate(c,origin);const p=await c.newPage();await p.goto(origin);
+  assert.equal(await p.locator('p').innerText(),'isolated app');
+  assert.deepEqual(await p.evaluate(()=>globalThis.STELLAR_FIREBASE_CONFIG),{});
+  assert.equal(configRequests,0,'real Firebase configuration never reaches the browser');
+  const failed=await p.evaluate(async target=>{try{await fetch(target);return false;}catch{return true;}},`http://127.0.0.1:${trap.address().port}/firestore`);
+  assert.equal(failed,true);assert.equal(trapRequests,0,'different origins are stopped before the network');
+  await c.close();console.log('browser isolation ok: 5 assertions; tested origin works, config is empty, zero real config requests, off-origin fetch blocked, zero trap requests');
+ } finally {await browser.close();await Promise.all([new Promise(r=>local.close(r)),new Promise(r=>trap.close(r))]);}
+})().catch(e=>{console.error(e);process.exitCode=1;});

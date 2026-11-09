@@ -427,4 +427,118 @@ test('v3.19 legacy tasks stay unchanged; escrow and alternatives reject corrupt 
   assert.ok(E.harborSchedule(s).projects.every(p=>p.dustGap>=0 && p.samplesGap>=0));
 });
 
+function earnedLongterm(ending='city') {
+  const s=E.sanitize(structuredClone(require('./fixtures/v316-earned.json')[ending]),1e15);
+  E.configure(s,{enabled:false,research:false,dispatch:false});return s;
+}
+function investigateChain(s,id) {
+  while(E.surveyCount(s,id)<3) {
+    assert.ok(E.startSurvey(s,id,'safe',E.surveyCount(s,id)));
+    E.advance(s,s.lastAt+s.atlas.active.seconds*1000,{offline:true});assert.ok(E.claimSurvey(s,s.atlas.active.token));
+  }
+}
+function switchGear(s,ids) {
+  for(const id of [...s.equipped]) if(!ids.includes(id)) assert.ok(E.equip(s,id));
+  for(const id of ids) if(!s.equipped.includes(id)) assert.ok(E.equip(s,id));
+}
+for(const ending of D.ENDINGS) test(`v3.20 ${ending.title}: all three earned routes, four manual stages, refresh, eight-hour offline and repeat`,()=>{
+  let s=earnedLongterm(ending.id);const lore=structuredClone(s.lore),start=s.clock;
+  for(const chain of D.SECTORS) investigateChain(s,chain.id);
+  for(const def of D.VOYAGES) {
+    assert.ok(E.startVoyage(s,def.id));const token=s.expeditions.active.token;
+    assert.equal(E.startVoyage(s,def.id),false);assert.equal(E.startMission(s,'belt'),false);assert.equal(E.startSurvey(s,'freight','safe',0),false);assert.equal(E.prestige(s),false);
+    for(let stage=0;stage<4;stage++) {
+      switchGear(s,stage===2?[def.module]:['nav','scanner']);
+      const choice=['secure','recover','investigate','secure'][stage],p=E.voyagePreview(s,def.id,choice),dust=s.dust,samples=s.samples;
+      assert.ok(p.available,p.reason);assert.equal(E.dispatchVoyageLeg(s,token,stage+1,choice),false);assert.ok(E.dispatchVoyageLeg(s,token,stage,choice));
+      assert.equal(s.dust,dust-p.dustCost);assert.equal(s.samples,samples-p.costSamples);
+      const lock=structuredClone(s.expeditions.active.leg);switchGear(s,[]);
+      s=S.inspect(JSON.stringify(s),s.lastAt).state;assert.deepEqual(s.expeditions.active.leg,lock);
+      const other=structuredClone(s);E.configure(s,{dispatch:true});E.configure(other,{dispatch:true});
+      E.advance(s,s.lastAt+8*3600000,{offline:true,report:true});for(let i=0;i<8;i++) E.advance(other,other.lastAt+3600000,{offline:true});
+      assert.deepEqual(s,other,'offline splitting preserves production, locked voyage, RNG and ledger');
+      assert.equal(s.expeditions.active.stage,stage);assert.deepEqual(s.expeditions.active.leg,lock);assert.equal(s.mission,null);
+      assert.ok(E.claimVoyageLeg(s,token,stage));assert.equal(E.claimVoyageLeg(s,token,stage),false);
+      assert.equal(s.expeditions.active.supplies,p.suppliesAfter);assert.equal(s.expeditions.active.insight,p.insightAfter);
+    }
+    const a=structuredClone(s.expeditions.active),dust=s.dust,samples=s.samples;
+    assert.ok(E.finishVoyage(s,token));assert.equal(s.dust,dust+a.dust);assert.equal(s.samples,samples+a.samples+6);assert.equal(E.finishVoyage(s,token),false);
+    assert.equal(s.expeditions.records[0].legs.length,4);assert.equal(s.expeditions.completed[def.id],1);
+    s=S.inspect(JSON.stringify(s),s.lastAt).state;assert.deepEqual(s.lore,lore);assert.equal(s.epilogue.ending,ending.id);
+  }
+  assert.ok(s.expeditions.collections.includes('three-addresses'));
+  const def=D.VOYAGES[0];assert.ok(E.startVoyage(s,def.id));const token=s.expeditions.active.token;
+  for(let stage=0;stage<4;stage++) {assert.ok(E.dispatchVoyageLeg(s,token,stage,'recover'));E.advance(s,s.lastAt+s.expeditions.active.leg.seconds*1000,{offline:true});assert.ok(E.claimVoyageLeg(s,token,stage));}
+  const samples=s.samples,earned=s.expeditions.active.samples;assert.ok(E.finishVoyage(s,token));assert.equal(s.samples,samples+earned,'repeat has zero first-route bonus');
+  assert.equal(s.expeditions.records[0].firstBonus,0);assert.equal(s.expeditions.completed.freight,2);assert.equal(new Set(s.expeditions.collections).size,s.expeditions.collections.length);
+  assert.equal(s.epilogue.ending,ending.id);assert.deepEqual(s.lore,lore);
+  console.log(`v3.20 earned ${ending.id}: 9 survey nodes, 3 complete routes + repeat, 16 manual legs, ${s.clock-start}s including twelve 8h absences; zero injected resources`);
+});
+test('v3.20 preflight formations and inherited supply/investigation have explicit bounded tradeoffs',()=>{
+  const s=earnedLongterm();for(const c of D.SECTORS) investigateChain(s,c.id);
+  for(const v of D.VOYAGES) {
+    const before=JSON.stringify(s),options=D.VOYAGE_METHODS.map(m=>E.voyagePreview(s,v.id,m.id));assert.equal(JSON.stringify(s),before);
+    assert.equal(new Set(options.map(p=>JSON.stringify([p.seconds,p.diversion,p.dust,p.samples,p.dustCost,p.costSamples,p.suppliesAfter,p.insightAfter]))).size,3);
+    const nav=E.voyagePreview(s,v.id,'secure',['nav']),solar=E.voyagePreview(s,v.id,'secure',[]);assert.ok(nav.seconds<solar.seconds);
+    const scanner=E.voyagePreview(s,v.id,'recover',['scanner']);assert.ok(scanner.dust>E.voyagePreview(s,v.id,'recover',[]).dust);
+    assert.equal(E.voyagePreview(s,v.id,'investigate',[]).available,false);assert.ok(E.voyagePreview(s,v.id,'secure',[]).available);
+  }
+  assert.ok(E.startVoyage(s,'science'));const t=s.expeditions.active.token;const before=E.voyagePreview(s,'science','recover');
+  assert.ok(E.dispatchVoyageLeg(s,t,0,'secure'));E.advance(s,s.lastAt+s.expeditions.active.leg.seconds*1000);E.claimVoyageLeg(s,t,0);
+  assert.equal(s.expeditions.active.supplies,2);const after=E.voyagePreview(s,'science','recover');assert.ok(after.suppliesBefore>before.suppliesBefore);assert.ok(after.seconds<Math.ceil(1200*1.12),'supplies remove the empty-reserve penalty');
+});
+test('v3.20 old saves get empty expeditions; malformed active legs and replay tokens cannot award rewards',()=>{
+  const locked=earnedLongterm();assert.equal(E.startVoyage(locked,'freight'),false);investigateChain(locked,'freight');assert.ok(E.startVoyage(locked,'freight'));
+  assert.ok(E.dispatchVoyageLeg(locked,locked.expeditions.active.token,0,'secure'));
+  for(const patch of [{seconds:-1},{end:1},{dust:Infinity},{samples:100000},{costSamples:-1},{suppliesBefore:8},{choice:'__proto__'},{equipment:['constructor']},{levels:{nav:99}}]) {
+    const s=structuredClone(locked);Object.assign(s.expeditions.active.leg,patch);const clean=E.sanitize(s,s.lastAt);
+    assert.equal(clean.expeditions.active,null);assert.equal(clean.dust,s.dust);assert.equal(clean.samples,s.samples);assert.deepEqual(clean.epilogue,s.epilogue);assert.deepEqual(clean.lore,s.lore);
+  }
+  const poor=earnedLongterm();investigateChain(poor,'freight');assert.ok(E.startVoyage(poor,'freight'));poor.dust=0;const before=structuredClone(poor);
+  assert.ok(E.voyageGoal(poor).eta>0);assert.match(E.voyageGoal(poor).detail,/星尘/);
+  assert.equal(E.dispatchVoyageLeg(poor,poor.expeditions.active.token,0,'recover'),false);assert.deepEqual(poor,before);
+  for(const {state} of require('./fixtures/v316-saves.json').states) assert.deepEqual(E.sanitize(state,state.lastAt).expeditions,{serial:0,settled:0,active:null,completed:{},collections:[],records:[],archives:{},best:{},dust:0,samples:0});
+});
+test('v3.20 every survey method settles its quoted effects and no infinite permanent multiplier is introduced',()=>{
+  for(const method of D.SURVEY_METHODS) {
+    const s=earnedLongterm(),beforeRate=E.rawRate(s),p=E.surveyPreview(s,'science',method.id),samples=s.samples;
+    assert.ok(E.startSurvey(s,'science',method.id,0));E.advance(s,s.lastAt+p.seconds*1000);assert.ok(E.claimSurvey(s,s.atlas.active.token));
+    assert.equal(s.samples,samples-p.costSamples+p.samples);assert.equal(s.atlas.nodes[0].dust,p.dust);assert.equal(E.rawRate(s),beforeRate);
+  }
+});
+test('v3.20 permanent first archives survive recent-log rotation, first bonuses never repeat and rates do not stack',()=>{
+  let s=earnedLongterm();investigateChain(s,'freight');const rate=E.rawRate(s);let first;
+  for(let run=0;run<14;run++) {
+    assert.ok(E.startVoyage(s,'freight'));const token=s.expeditions.active.token;
+    for(let stage=0;stage<4;stage++) {assert.ok(E.dispatchVoyageLeg(s,token,stage,run===0?'secure':'recover'));E.advance(s,s.lastAt+s.expeditions.active.leg.seconds*1000,{offline:true});assert.ok(E.claimVoyageLeg(s,token,stage));}
+    const before=s.samples,reward=s.expeditions.active.samples;assert.ok(E.finishVoyage(s,token));assert.equal(s.samples,before+reward+(run===0?6:0));
+    if(run===0)first=structuredClone(s.expeditions.archives.freight);
+    s=S.inspect(JSON.stringify(s),s.lastAt).state;assert.deepEqual(s.expeditions.archives.freight,first);assert.equal(E.rawRate(s),rate);
+  }
+  assert.equal(s.expeditions.records.length,12);assert.equal(s.expeditions.completed.freight,14);assert.equal(s.expeditions.archives.freight.token,1);assert.ok(s.expeditions.collections.length<=13);
+  const damaged=structuredClone(s);damaged.expeditions.completed={};const restored=E.sanitize(damaged,damaged.lastAt);assert.equal(restored.expeditions.completed.freight,1,'permanent first archive prevents a lost counter from replaying first reward');
+});
+
+test('v3.20 finite harbor phases benefit only future legs and saved formations stay within two slots',()=>{
+  const s=earnedLongterm();for(const c of D.SECTORS) investigateChain(s,c.id);
+  const base=E.voyagePreview(s,'freight','secure');
+  // Actual deliveries and actual project payments, with no resource injection.
+  for(let i=0;i<8;i++) {
+    const missing=D.HARBOR_PROJECTS.filter(p=>!s.management.counts[p.need]),offers=E.harborOffers(s),o=offers.find(n=>missing.some(p=>p.need===n.id))||offers[0];
+    E.acceptHarborNeed(s,o.id,o.terms.serial);E.advance(s,s.lastAt+500000);assert.ok(E.deliverHarborNeed(s,o.terms.serial));
+    for(const p of D.HARBOR_PROJECTS) {const o=E.harborProjectOffer(s,p.id);if(o.available)assert.ok(E.buildHarborProject(s,p.id,o.level));}
+  }
+  const improved=E.voyagePreview(s,'freight','secure');assert.ok(improved.seconds<base.seconds);assert.ok(improved.diversion<base.diversion);assert.ok(improved.dustCost<base.dustCost);assert.ok(improved.suppliesBefore>base.suppliesBefore);
+  assert.ok(E.startVoyage(s,'freight'));assert.ok(E.dispatchVoyageLeg(s,s.expeditions.active.token,0,'secure'));const locked=structuredClone(s.expeditions.active.leg);
+  switchGear(s,['medbay']);E.saveLoadout(s,'production');switchGear(s,['nav','scanner']);E.saveLoadout(s,'voyage');assert.ok(E.applyLoadout(s,'production'));assert.ok(s.equipped.length<=2);assert.deepEqual(s.expeditions.active.leg,locked);
+  assert.deepEqual(S.inspect(JSON.stringify(s),s.lastAt).state.expeditions.active.leg,locked);
+});
+test('v3.18 earliest atlas unlock is reachable through a fresh actual first run and three successful explorations',()=>{
+  const s=require('./v3-balance.test.js').playRun('explore').state;
+  assert.equal(s.rebirths,0);assert.equal(s.epilogue.ending,null);
+  while(s.discoveries<3) {assert.ok(E.startMission(s,'belt'));E.advance(s,s.lastAt+s.mission.seconds*1000);assert.ok(E.claimMission(s));}
+  const lore=structuredClone(s.lore);investigateChain(s,'freight');assert.equal(E.surveyCount(s,'freight'),3);assert.deepEqual(s.lore,lore);assert.equal(E.startVoyage(s,'freight'),false,'permanent ending remains required for long voyages');
+  assert.ok(E.prestige(s));assert.equal(E.surveyCount(s,'freight'),3);
+});
+
 console.log(`v3 expansion ok: ${checks} behavioral checks`);

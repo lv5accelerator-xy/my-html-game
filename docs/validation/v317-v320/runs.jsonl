@@ -18,3 +18,15 @@
 {"name": "v319-full", "command": ["node", "scripts/check.cjs"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 1, "seconds": 361.84}
 {"name": "v319-diff", "command": ["git", "diff", "--check"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 0, "seconds": 0.02}
 {"name": "v319-full-resumed", "command": ["node", "scripts/check.cjs"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 0, "seconds": 369.25}
+{"name": "v320-rules", "command": ["node", "tests/v3-expansion.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 2.53}
+{"name": "v320-compatibility", "command": ["node", "tests/v3-compatibility.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 0.06}
+{"name": "v320-browser", "command": ["node", "tests/v3-browser.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 1, "seconds": 31.59}
+{"name": "v320-browser-fixed", "command": ["node", "tests/v3-browser.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 15.29}
+{"name": "v320-diff", "command": ["git", "diff", "--check"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 0.01}
+{"name": "v320-browser-syntax", "command": ["node", "--check", "tests/v3-browser.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 0.05}
+{"name": "v320-diff-isolated", "command": ["git", "diff", "--check"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 0.02}
+{"name": "v320-full", "command": ["node", "scripts/check.cjs"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 1, "seconds": 154.15}
+{"name": "v320-network-isolation", "command": ["node", "/workspace/scratch/starport-audit/network-isolation-check.cjs"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 1.86}
+{"name": "v320-rules-final", "command": ["node", "tests/v3-expansion.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 3.05}
+{"name": "v320-full-isolated", "command": ["node", "scripts/check.cjs"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 1, "seconds": 333.22}
+{"name": "v320-final", "command": ["node", "scripts/check.cjs"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 390.12}

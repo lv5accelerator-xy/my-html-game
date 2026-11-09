@@ -1,0 +1,5 @@
+const fs=require('node:fs'), Module=require('node:module');
+const file='/workspace/starport-v320/tests/v3-balance.test.js';
+let source=fs.readFileSync(file,'utf8').replace('const began = sixth.clock,', `require('node:fs').writeFileSync('/workspace/scratch/starport-audit/earned-'+ending.id+'.json',JSON.stringify(sixth)); const began = sixth.clock,`);
+source+='\nverify();';
+const m=new Module(file,module);m.filename=file;m.paths=Module._nodeModulePaths(require('node:path').dirname(file));m._compile(source,file);

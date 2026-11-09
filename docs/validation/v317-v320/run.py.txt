@@ -1,0 +1,10 @@
+import subprocess,os,json,sys,time,pathlib
+root='/workspace/starport-v320'; out=pathlib.Path('/workspace/scratch/starport-audit'); name=sys.argv[1]; cmd=sys.argv[2:]
+env=os.environ.copy(); env['PATH']='/workspace/scratch/starport-tools/node_modules/node/bin:'+env['PATH']; env['CODEX_PLAYWRIGHT_PATH']='/workspace/scratch/starport-tools/node_modules/playwright'; env['CODEX_CHROMIUM_PATH']='/usr/bin/chromium'
+sha=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(); start=time.time()
+with (out/(name+'.log')).open('w') as log:
+ log.write(json.dumps({'command':cmd,'head':sha,'start':start,'env':{k:env.get(k) for k in ['PATH','CODEX_PLAYWRIGHT_PATH','CODEX_CHROMIUM_PATH','V3_BROWSER_ENGINE','V3_TEST_FILTER','V3_SCREENSHOT_DIR']}})+'\n');log.flush()
+ result=subprocess.run(cmd,cwd=root,env=env,stdout=log,stderr=subprocess.STDOUT)
+record={'name':name,'command':cmd,'head':sha,'exit':result.returncode,'seconds':round(time.time()-start,2)}
+with (out/'runs.jsonl').open('a') as f:f.write(json.dumps(record)+'\n')
+print(json.dumps(record));print((out/(name+'.log')).read_text()[-2500:]);sys.exit(result.returncode)

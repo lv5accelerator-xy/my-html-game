@@ -50,6 +50,7 @@ async function main() {
     executablePath: process.env.CODEX_CHROMIUM_PATH || undefined,
   });
   const context = await browser.newContext();
+  await require("./helpers/isolate-browser.cjs")(context, `http://127.0.0.1:${server.address().port}`);
   const page = await context.newPage();
   const pageErrors = [];
   const failedLocalRequests = [];

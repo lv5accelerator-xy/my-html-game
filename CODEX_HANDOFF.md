@@ -1,3 +1,19 @@
+# 当前交接：3.20.0-preview.1 已完成云端验收
+
+规范仓库lv5accelerator-xy/my-html-game。起始main `7034b5c7f75f52eb65acce58c00c373d8e312bfd`，PR #17已合并、该SHA的Pages工作流42673214026成功，GitHub Releases为空。#8/#12未合入，本轮未覆盖历史旧代码。
+
+隔离worktree `/workspace/starport-v320`，开发分支 `codex/v317-v320-gameplay-expansion`；原 `/workspace/my-html-game` 仍干净work/5084568。用户只授权开发分支提交/推送/草稿PR，不合并、不正式发布、不改生产Firebase、玩家档或权限。
+
+v3.17提交a3f2abe：待办/目标/焦点与动画限流；v3.18提交25d844c：三条三节点图谱/事件证据/调查；v3.19提交8fa3c97：三策略/预装/实际建设工作量/资源调度；v3.20三条四阶段远航/编成快照/13纪念/永久首航与有限近期记录已实现，最终版本3.20.0-preview.1。schema32新增可选atlas/expeditions，新经营条款有可选plan，旧合同、六章、三个结局、选择、舰装、方案、12事件、建设、居民、收藏和备份保留。
+
+最终冻结代码在真实托管Codex云Node22.23.4/PW1.55.0/Chromium151上完整`node scripts/check.cjs`退出0：9语法/17脚本/137规则组/52规范旧档/94浏览器，0失败/跳过，390.12秒。新增经济从原main实际赚取的三结局档继续，未注入资源。所有浏览器context屏蔽外网，根v2的测试响应配置为空；生产配置未动。网络隔离独立HTTP陷阱5项断言通过。
+
+完整命令/原始失败/主动中止/环境/阶段与源哈希见[验收文档](docs/v317-v320-validation.md)和docs/validation/v317-v320。仅浏览器单脚本总预算由300增600秒以容纳94流程，原等待/断言均未放宽。此前错误点击已在用方案、一次零命中过滤、超时与会话中断均保留。
+
+云WebKit安装403，公网CONNECT403，云WebKit/公网专项/真实iPhone/真实玩家档未执行。GitHub双引擎CI以最终准确head独立核对，最终SHA、开发分支推送、草稿PR链接和CI以本任务最终交付为准；若后续被中断，先读取git status/log及原始runs，不假装后台继续。保持不合并、不发布。
+
+## 先前施工历史（原文）
+
 # 当前交接：v3.17～v3.20 连续开发
 
 起始 main `7034b5c7f75f52eb65acce58c00c373d8e312bfd`；PR #17 已合并，Pages 工作流42673214026成功，未创建GitHub Release。#8/#12仍开放，未复制旧代码。

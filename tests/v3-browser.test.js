@@ -49,7 +49,7 @@ async function run() {
   const url = process.env.V3_TEST_URL || `http://127.0.0.1:${server.address().port}/v3/`;
   const browser = await (process.env.V3_BROWSER_ENGINE === "webkit" ? webkit : chromium).launch({
     headless: true,
-    executablePath: process.env.CODEX_CHROMIUM_PATH || undefined,
+    executablePath: process.env.V3_BROWSER_ENGINE === "webkit" ? undefined : process.env.CODEX_CHROMIUM_PATH || undefined,
   });
   const screenshotDir = process.env.V3_SCREENSHOT_DIR;
   if (screenshotDir) fs.mkdirSync(screenshotDir, { recursive: true });
@@ -60,6 +60,7 @@ async function run() {
       viewport: { width: 1280, height: 900 },
       acceptDownloads: true,
     });
+    await require("./helpers/isolate-browser.cjs")(context, url);
     const page = await context.newPage();
     const errors = [],
       badResponses = [],
@@ -115,6 +116,75 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    for(let routeIndex=0;routeIndex<D.VOYAGES.length;routeIndex++) {
+      const def=D.VOYAGES[routeIndex],ending=D.ENDINGS[routeIndex];
+      const fixture=E.sanitize(structuredClone(require('./fixtures/v316-earned.json')[ending.id]),TIME);
+      E.configure(fixture,{enabled:false,research:false,dispatch:false});
+      for(const c of D.SECTORS) while(E.surveyCount(fixture,c.id)<3) {E.startSurvey(fixture,c.id,'safe',E.surveyCount(fixture,c.id));E.advance(fixture,fixture.lastAt+fixture.atlas.active.seconds*1000);E.claimSurvey(fixture,fixture.atlas.active.token);}
+      for(const id of [...fixture.equipped]) E.equip(fixture,id);E.equip(fixture,'medbay');E.saveLoadout(fixture,'production');E.equip(fixture,'medbay');E.equip(fixture,'nav');E.equip(fixture,'scanner');E.saveLoadout(fixture,'voyage');fixture.lastAt=TIME;
+      await scenario(`v3.20 ${def.name}/${ending.title}: full earned voyage, formation switch, eight-hour absence, import and repeat`,{[S.KEY]:JSON.stringify(fixture)},async page=>{
+        const closeBrief=async()=>{if(await page.locator('#dialog[open]').count()) await page.locator('#dialog-close').click();};
+        const applyPreset=async id=>{
+          const target=page.locator(`#loadouts [data-action="loadout-apply"][data-id="${id}"]`);
+          if(await target.isDisabled()) {
+            const current=await read(page);assert.deepEqual([...current.equipped].sort(),[...current.loadouts[id]].sort(),'disabled preset is already active');
+            await page.locator(`#loadouts [data-action="loadout-apply"][data-id="${id==='production'?'voyage':'production'}"]`).click();
+          }
+          await target.click();const current=await read(page);assert.deepEqual(current.equipped,current.loadouts[id]);
+        };
+        await page.locator('#navigation [data-id="explore"]').click();
+        assert.match(await page.locator(`#deep-route-${def.id}`).innerText(),/对比/);
+        await page.locator(`[data-action="deep-start"][data-id="${def.id}"]`).click();
+        for(let stage=0;stage<4;stage++) {
+          await applyPreset(stage===2&&def.module==='medbay'?'production':'voyage');
+          const choice=['secure','recover','investigate','secure'][stage],before=await read(page),preview=E.voyagePreview(before,def.id,choice);
+          await page.locator(`[data-action="deep-dispatch"][data-id="${choice}"]`).click();
+          const snapshot=(await read(page)).expeditions.active.leg;assert.equal(snapshot.seconds,preview.seconds);assert.equal(snapshot.dust,preview.dust);
+          assert.equal((await read(page)).dust,before.dust-preview.dustCost);
+          await applyPreset('production');
+          assert.deepEqual((await read(page)).expeditions.active.leg,snapshot);
+          await page.clock.runFor(1000);await page.reload();
+          assert.deepEqual((await read(page)).expeditions.active.leg,snapshot);
+          await page.locator('#navigation [data-id="explore"]').click();
+          assert.ok(await page.locator('#mission-belt [data-action="mission"]').isDisabled());
+          if(stage===1) {
+            const beforeAbsence=await read(page);
+            await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new Event('pagehide'));});
+            await page.clock.fastForward(8*3600000);
+            await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));document.dispatchEvent(new Event('visibilitychange'));});
+            const after=await read(page),expected=E.sanitize(beforeAbsence,beforeAbsence.lastAt);E.advance(expected,expected.lastAt+8*3600000,{offline:true});
+            assert.equal(after.dust,expected.dust);assert.equal(after.clock-beforeAbsence.clock,28800);assert.equal(after.expeditions.active.stage,stage);assert.deepEqual(after.expeditions.active.leg,snapshot);
+            assert.match(await page.locator('#dialog-body .return-ready').innerText(),/远航阶段报告已到达/);
+          } else await page.clock.fastForward(snapshot.seconds*1000+1000);
+          await closeBrief();
+          await page.locator('[data-action="deep-claim"]').click();assert.equal((await read(page)).expeditions.active.stage,stage+1);
+          if(stage===0) {
+            const checkpoint=await read(page);await page.locator('#settings-button').click();
+            const [download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-action="export"]').click()]);const text=fs.readFileSync(await download.path(),'utf8');
+            await page.locator('#import-file').setInputFiles({name:'voyage.json',mimeType:'application/json',buffer:Buffer.from(text)});await page.locator('#confirm-import').click();
+            assert.deepEqual((await read(page)).expeditions,checkpoint.expeditions);assert.equal((await read(page)).epilogue.ending,ending.id);
+            await page.locator('#navigation [data-id="explore"]').click();
+          }
+        }
+        for(const width of [1280,375]) {
+          await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+          if(screenshotDir) await page.locator('#long-voyages').screenshot({path:path.join(screenshotDir,`v320-${def.id}-${width}.png`)});
+        }
+        const before=await read(page),reward=before.expeditions.active;
+        await page.locator('[data-action="deep-finish"]').click();const done=await read(page);
+        assert.equal(done.samples,before.samples+reward.samples+6);assert.equal(done.expeditions.completed[def.id],1);assert.equal(done.expeditions.records[0].legs.length,4);
+        await page.reload();assert.deepEqual((await read(page)).expeditions,done.expeditions);
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator(`[data-action="deep-start"][data-id="${def.id}"]`).click();
+        for(let stage=0;stage<4;stage++) {
+          await page.locator('[data-action="deep-dispatch"][data-id="recover"]').click();const leg=(await read(page)).expeditions.active.leg;
+          await page.clock.fastForward(leg.seconds*1000+1000);await closeBrief();await page.locator('[data-action="deep-claim"]').click();
+        }
+        const repeat=await read(page);await page.locator('[data-action="deep-finish"]').click();const twice=await read(page);
+        assert.equal(twice.samples,repeat.samples+repeat.expeditions.active.samples);assert.equal(twice.expeditions.completed[def.id],2);assert.equal(twice.expeditions.records[0].firstBonus,0);
+        assert.equal(twice.epilogue.ending,ending.id);assert.deepEqual(twice.lore,fixture.lore);assert.equal(new Set(twice.expeditions.collections).size,twice.expeditions.collections.length);
+      });
+    }
     for(const ending of D.ENDINGS) {
       const fixture=E.sanitize(structuredClone(require('./fixtures/v316-earned.json')[ending.id]),TIME);
       E.configure(fixture,{enabled:false,dispatch:false});fixture.lastAt=TIME;

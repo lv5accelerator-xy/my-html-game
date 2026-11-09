@@ -1933,3 +1933,14 @@ html[data-paused="true"] * { animation-play-state:paused !important; }
 .sector-chains,.survey-methods { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr)); gap:20px; }
 .sector-chains article,.survey-methods article { border-bottom:1px solid #293b44; padding:12px 0; }
 .survey-methods button { min-height:44px; } .survey-methods small { display:block; }
+
+.long-voyages {border-top:1px solid #354750;padding:24px 0;margin-top:24px;}
+.deep-routes,.deep-methods {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:24px;}
+.deep-routes article,.deep-methods article {border-bottom:1px solid #354750;padding:12px 0;min-width:0;}
+.deep-routes small,.deep-methods small {display:block;color:#b1c2c6;}
+.deep-methods button,.deep-routes button {min-height:44px;margin-top:8px;white-space:normal;}
+.voyage-active {border-left:3px solid #7ed6c1;padding:16px;}
+.voyage-stages {display:flex;flex-wrap:wrap;gap:12px 28px;padding-left:24px;}
+.voyage-stages [aria-current="step"] {color:#edbb75;}
+.long-voyages details {margin:18px 0;} .long-voyages details article {border-bottom:1px solid #293b44;padding:12px 0;}
+@media(max-width:600px){.voyage-active{padding:12px;} .deep-methods button{width:100%;}}

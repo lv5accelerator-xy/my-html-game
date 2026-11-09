@@ -91,8 +91,111 @@
     "cost": 2
   }
 ],
+    VOYAGES: [
+  {
+    "id": "freight",
+    "chain": "freight",
+    "name": "失落货运航道",
+    "stages": [
+      "验装旧货柜",
+      "残骸分区回收",
+      "中转仓接力",
+      "归航物流交接"
+    ],
+    "seconds": [
+      600,
+      900,
+      1200,
+      900
+    ],
+    "dust": 1.3,
+    "samples": 0,
+    "module": "scanner",
+    "detail": "资源回收与物流。透镜支持精准调查，补给储备影响后续航行。"
+  },
+  {
+    "id": "science",
+    "chain": "science",
+    "name": "静潮观测深域",
+    "stages": [
+      "布设观测探针",
+      "交叉测量静潮",
+      "校验深域座标",
+      "回传原始资料"
+    ],
+    "seconds": [
+      900,
+      1200,
+      1500,
+      1200
+    ],
+    "dust": 0.75,
+    "samples": 2,
+    "module": "nav",
+    "detail": "观测与装备。导航仪支持三角调查，调查积累让后续航段更高效。"
+  },
+  {
+    "id": "beacon",
+    "chain": "quiet",
+    "name": "遥远居民信标",
+    "stages": [
+      "备齐双港补给",
+      "确认远方回执",
+      "交接居民档案",
+      "带回下一班来信"
+    ],
+    "seconds": [
+      720,
+      1080,
+      1320,
+      960
+    ],
+    "dust": 0.9,
+    "samples": 1,
+    "module": "medbay",
+    "detail": "补给与交接。医疗舱电源支持居民调查，来信接续三个既有结局。"
+  }
+],
+    VOYAGE_METHODS: [
+  {
+    "id": "recover",
+    "name": "优先回收资源",
+    "time": 1,
+    "diversion": 0.26,
+    "dust": 1.8,
+    "samples": 1,
+    "cost": 1,
+    "costSamples": 0,
+    "supplies": -1,
+    "insight": 0
+  },
+  {
+    "id": "investigate",
+    "name": "优先调查线索",
+    "time": 1.25,
+    "diversion": 0.2,
+    "dust": 0.55,
+    "samples": 5,
+    "cost": 1.2,
+    "costSamples": 2,
+    "supplies": 0,
+    "insight": 1
+  },
+  {
+    "id": "secure",
+    "name": "保障补给与安全",
+    "time": 1.1,
+    "diversion": 0.09,
+    "dust": 0.8,
+    "samples": 2,
+    "cost": 0.8,
+    "costSamples": 0,
+    "supplies": 2,
+    "insight": 0
+  }
+],
     VERSION: 32,
-    GAME_VERSION: "3.19.0-preview.1",
+    GAME_VERSION: "3.20.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -3125,5 +3228,11 @@
   Object.assign(data.NARRATIVE_SCENES, data.MIDDLE_SCENES);
   Object.assign(data.NARRATIVE_SCENES, data.LATE_SCENES);
   Object.assign(data.STORIES, data.COUNCIL_STORIES, data.RESCUE_STORIES);
+  data.VOYAGE_COLLECTIONS=data.VOYAGES.flatMap(v=>[
+    {id:`voyage-${v.id}`,name:`${v.name} · 首航回执`,text:`${v.name}的原始资料与回收物已交给居民值班组。旧结局不变，两个地址继续通信。`},
+    {id:`cargo-${v.id}`,name:`${v.name} · 物流清单`,text:'同次远航完成至少两次资源回收，货柜编号和接力位置已经归档。'},
+    {id:`survey-${v.id}`,name:`${v.name} · 交叉观测册`,text:'航前资料和本次调查共同留下两份以上证据，下一班可以据此核验。'},
+    {id:`care-${v.id}`,name:`${v.name} · 共同值班来信`,text:'归航仍保有四份以上补给。通信班收到远方的下一班安排，照料者有了明确交接。'}
+  ]).concat({id:'three-addresses',name:'三条远航 · 连通星图',text:'货运、观测和居民信标均已完成远航。记录由两港与沿线共同保存，可继续用不同编成重访。'});
   return Object.freeze(data);
 });

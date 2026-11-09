@@ -84,6 +84,7 @@
       journal: [],
       discoveries: 0,
       atlas: { priority:null, serial:0, claimed:0, active:null, nodes:[] },
+      expeditions:{serial:0,settled:0,active:null,completed:{},collections:[],records:[],archives:{},best:{},dust:0,samples:0},
       encounters: { serial: 0, settled: 0, nextAt: 0, rng: (Number(seed) ^ 0x3e72a1) >>> 0 || 1, pending: null, history: [], catalog: [] },
       starport: 0,
       chapter: [],
@@ -163,7 +164,7 @@
     if (s.chapter?.includes("relay")) rate *= 1.05;
     return bounded(rate);
   }
-  function travel(s) { return s.mission || (s.atlas.active && s.clock < s.atlas.active.end ? s.atlas.active : null); }
+  function travel(s) { return s.mission || (s.expeditions.active?.leg && s.clock<s.expeditions.active.leg.end?s.expeditions.active.leg:null) || (s.atlas.active && s.clock < s.atlas.active.end ? s.atlas.active : null); }
   function productionRate(s) {
     return bounded(
       rawRate(s) *
@@ -926,7 +927,7 @@
   function startMission(s, id) {
     if (
       s.run.dust < 600 ||
-      s.atlas.active ||
+      s.atlas.active || s.expeditions.active ||
       s.mission ||
       s.result ||
       !missionOptions(s).some((m) => m.id === id) ||
@@ -1039,6 +1040,129 @@
     );
     return true;
   }
+  function voyageReason(s,id) {
+    const def=byId(D.VOYAGES,id);
+    return !def ? '未知航线' : !s.epilogue.ending ? '确认任一正式结局后开放' : surveyCount(s,def.chain)<3 ? '先完成对应星区的三处调查' : '';
+  }
+  function voyagePreview(s,id,choice='secure',equipment=s.equipped) {
+    const def=byId(D.VOYAGES,id), method=byId(D.VOYAGE_METHODS,choice);
+    if(!def || !method) return null;
+    const run=s.expeditions.active, stage=run?.id===id ? run.stage : 0;
+    const slots=cleanEquipment(equipment).filter(x=>s.modules[x]>0), local={...s,equipped:slots};
+    const supplies=run?.id===id?run.supplies:Math.min(3,s.management.projects['public-berths']||0);
+    const insight=run?.id===id?run.insight:Math.min(2,D.SECTORS.filter(c=>c.id!==def.chain&&surveyCount(s,c.id)===3).length);
+    const nav=equipped(local,'nav'), scanner=equipped(local,'scanner');
+    const seconds=Math.max(120,Math.ceil((def.seconds[stage]||def.seconds[3])*method.time*(1-nav*.05)*(1-insight*.03)*(supplies===0?1.12:supplies>=4?.94:1)*(1-(s.management.projects['route-station']||0)*.03)));
+    const diversion=Math.max(.04,Math.min(.4,method.diversion-(s.management.projects['repair-dock']||0)*.01-insight*.01+(choice==='investigate'&&scanner? .03:0)));
+    const dustCost=Math.ceil((8000+stage*7000)*method.cost*(1-(s.management.projects['supply-network']||0)*.04));
+    const costSamples=method.costSamples;
+    const dust=Math.floor(Math.min(250000,Math.max(500,rawRate(local)*(70+stage*30)))*method.dust*def.dust*(1+scanner*.08));
+    const samples=method.samples+def.samples+(stage===3?(s.management.projects.habitat||0):0);
+    const reason=voyageReason(s,id) || (s.mission||s.result||s.atlas.active?'先处理当前探索与调查':run && run.id!==id ? '先完成当前远航':run?.leg?'先领取当前阶段报告':stage>=4?'所有阶段已完成，等待归航封存':s.afterword.active&&!run?'先完成当前居民委托':
+      choice==='investigate' && (!slots.includes(def.module)||!s.modules[def.module])?`此调查需要装备${byId(D.MODULES,def.module).name}；安全补给不需要特定舰装`:s.dust<dustCost?`还需 ${Math.ceil(dustCost-s.dust)} 星尘`:s.samples<costSamples?`还需 ${costSamples-s.samples} 样本`:rawRate(s)<=0?'先启动生产舰队':'');
+    return {id,stage,choice,seconds,diversion,dustCost,costSamples,dust,samples,equipment:slots,
+      levels:Object.fromEntries(slots.map(x=>[x,s.modules[x]])),suppliesBefore:supplies,insightBefore:insight,
+      suppliesAfter:Math.min(8,Math.max(0,supplies+method.supplies)),insightAfter:Math.min(4,insight+method.insight),reason,available:!reason};
+  }
+  function startVoyage(s,id) {
+    const p=voyagePreview(s,id);
+    if(s.expeditions.active || !p?.available || s.expeditions.serial>=1e9) return false;
+    s.expeditions.active={id,token:++s.expeditions.serial,stage:0,legs:[],leg:null,dust:0,samples:0,
+      initialSupplies:p.suppliesBefore,initialInsight:p.insightBefore,supplies:p.suppliesBefore,insight:p.insightBefore};
+    s.automation.dispatch=false;
+    log(s, `已编排${byId(D.VOYAGES,id).name}，每段由你决定；离线等待没有失败倒计时。`);return true;
+  }
+  function dispatchVoyageLeg(s,token,stage,choice) {
+    const a=s.expeditions.active;
+    if(!a || a.token!==Number(token) || a.stage!==Number(stage) || a.leg) return false;
+    const p=voyagePreview(s,a.id,choice);
+    if(!p?.available) return false;
+    s.dust-=p.dustCost;s.samples-=p.costSamples;
+    a.leg={stage:a.stage,choice,seconds:p.seconds,diversion:p.diversion,dustCost:p.dustCost,costSamples:p.costSamples,dust:p.dust,samples:p.samples,
+      equipment:p.equipment,levels:p.levels,suppliesBefore:p.suppliesBefore,insightBefore:p.insightBefore,start:s.clock,end:s.clock+p.seconds};
+    log(s,`${byId(D.VOYAGES,a.id).stages[a.stage]}已出发：${byId(D.VOYAGE_METHODS,choice).name}。`);return true;
+  }
+  function claimVoyageLeg(s,token,stage) {
+    const a=s.expeditions.active,l=a?.leg;
+    if(!l || a.token!==Number(token) || a.stage!==Number(stage) || s.clock<l.end) return false;
+    a.dust=bounded(a.dust+l.dust);a.samples=bounded(a.samples+l.samples);
+    const m=byId(D.VOYAGE_METHODS,l.choice);
+    a.supplies=Math.min(8,Math.max(0,a.supplies+m.supplies));a.insight=Math.min(4,a.insight+m.insight);
+    a.legs.push(clone(l));a.stage++;a.leg=null;
+    log(s,'远航阶段已记录，回收物随船封存；下一段选择等待你的安排。');return true;
+  }
+  function finishVoyage(s,token) {
+    const h=s.expeditions,a=h.active;
+    if(!a || a.token!==Number(token) || a.token<=h.settled || a.stage!==4 || a.leg) return false;
+    const first=!h.completed[a.id];
+    addDust(s,a.dust);s.samples=bounded(s.samples+a.samples+(first?6:0));
+    h.completed[a.id]=integer((h.completed[a.id]||0)+1,1e9);h.settled=a.token;
+    const awards=[`voyage-${a.id}`];
+    if(a.legs.filter(l=>l.choice==='recover').length>=2) awards.push(`cargo-${a.id}`);
+    if(a.insight>=2) awards.push(`survey-${a.id}`);
+    if(a.supplies>=4) awards.push(`care-${a.id}`);
+    if(D.VOYAGES.every(v=>h.completed[v.id])) awards.push('three-addresses');
+    const fresh=awards.filter(x=>!h.collections.includes(x));h.collections.push(...fresh);
+    h.records.unshift({id:a.id,token:a.token,clock:s.clock,initialSupplies:a.initialSupplies,initialInsight:a.initialInsight,legs:clone(a.legs),dust:a.dust,samples:a.samples,firstBonus:first?6:0,collections:fresh});h.records=h.records.slice(0,12);
+    if(first) h.archives[a.id]=clone(h.records[0]);
+    const seconds=a.legs.reduce((n,l)=>n+l.seconds,0);h.best[a.id]=Math.min(h.best[a.id]||Infinity,seconds);
+    h.dust=bounded(h.dust+a.dust);h.samples=bounded(h.samples+a.samples+(first?6:0));
+    h.active=null;
+    log(s,`${byId(D.VOYAGES,a.id).name}归航，回收物已交给港务值班组，航行档案与${fresh.length}件新纪念已保存。`);return true;
+  }
+  function voyageGoal(s) {
+    const a=s.expeditions.active;
+    if(!a) return null;
+    const next=!a.leg && a.stage<4 ? voyagePreview(s,a.id,"secure") : null;
+    return {title:a.stage===4?'远航归航，等待封存':a.leg?s.clock>=a.leg.end?'远航阶段报告已到达':'长期远航正在进行':'选择下一段远航安排',detail:next?.reason || '回收、调查、补给会影响下一段耗时与可用方案；已出发编成锁定，下一段可以换装。',action:'explore',label:'查看长期远航',focus:'long-voyages',value:a.stage,target:4,eta:a.leg?Math.max(0,a.leg.end-s.clock):next&&!next.available?incomeEta(s,Math.max(0,next.dustCost-s.dust)):0};
+  }
+  function cleanExpeditions(raw,s) {
+    if(!raw || typeof raw!=='object' || !s.epilogue.ending) return;
+    const h=s.expeditions;h.serial=integer(raw.serial,1e9);h.settled=integer(raw.settled,h.serial);
+    for(const def of D.VOYAGES) if(raw.completed?.[def.id]>0) h.completed[def.id]=integer(raw.completed[def.id],h.settled);
+    const keys=D.VOYAGES.flatMap(v=>['voyage','cargo','survey','care'].map(k=>`${k}-${v.id}`)).concat('three-addresses');
+    h.collections=[...new Set(Array.isArray(raw.collections)?raw.collections:[])].filter(x=>keys.includes(x) && (x==='three-addresses'?D.VOYAGES.every(v=>h.completed[v.id]):D.VOYAGES.some(v=>h.completed[v.id]&&x.endsWith('-'+v.id))));
+    h.dust=bounded(raw.dust);h.samples=bounded(raw.samples);
+    for(const def of D.VOYAGES) if(Number.isInteger(raw.best?.[def.id]) && raw.best[def.id]>=480 && raw.best[def.id]<=16000) h.best[def.id]=raw.best[def.id];
+    function cleanLeg(l,stage,id,supplies,insight) {
+      const m=byId(D.VOYAGE_METHODS,l?.choice),def=byId(D.VOYAGES,id);
+      if(!m || l.stage!==stage || !Array.isArray(l.equipment) || JSON.stringify(cleanEquipment(l.equipment))!==JSON.stringify(l.equipment) || l.equipment.some(x=>!Number.isInteger(l.levels?.[x])||l.levels[x]<1||l.levels[x]>3) ||
+        (l.choice==='investigate'&&!l.equipment.includes(def.module)) || l.suppliesBefore!==supplies || l.insightBefore!==insight ||
+        !Number.isInteger(l.seconds)||l.seconds<120||l.seconds>4000||!Number.isFinite(l.diversion)||l.diversion<.04||l.diversion>.4||
+        !Number.isFinite(l.dustCost)||l.dustCost<1000||l.dustCost>100000||l.costSamples!==m.costSamples||!Number.isFinite(l.dust)||l.dust<0||l.dust>1000000||!Number.isInteger(l.samples)||l.samples<1||l.samples>20||
+        !Number.isInteger(l.start)||l.start<0||l.start>s.clock||l.end!==l.start+l.seconds) return null;
+      return {stage,choice:l.choice,seconds:l.seconds,diversion:l.diversion,dustCost:l.dustCost,costSamples:l.costSamples,dust:l.dust,samples:l.samples,equipment:[...l.equipment],levels:Object.fromEntries(l.equipment.map(x=>[x,l.levels[x]])),suppliesBefore:supplies,insightBefore:insight,start:l.start,end:l.end};
+    }
+    function cleanRun(r,active=false) {
+      const def=byId(D.VOYAGES,r?.id);
+      if(!def || !Number.isInteger(r.token)||r.token<1 || r.token>h.serial || (active ? r.token!==h.serial||r.token<=h.settled||surveyCount(s,def.chain)<3 : r.token>h.settled) ||
+        !Number.isInteger(r.initialSupplies)||r.initialSupplies<0||r.initialSupplies>3||!Number.isInteger(r.initialInsight)||r.initialInsight<0||r.initialInsight>2||!Array.isArray(r.legs)||r.legs.length>4) return null;
+      const a={id:r.id,token:r.token,stage:0,legs:[],leg:null,dust:0,samples:0,initialSupplies:r.initialSupplies,initialInsight:r.initialInsight,supplies:r.initialSupplies,insight:r.initialInsight};
+      for(const saved of r.legs) {
+        const l=cleanLeg(saved,a.stage,a.id,a.supplies,a.insight);if(!l || l.end>s.clock) return null;
+        const m=byId(D.VOYAGE_METHODS,l.choice);a.legs.push(l);a.stage++;a.dust=bounded(a.dust+l.dust);a.samples=bounded(a.samples+l.samples);a.supplies=Math.min(8,Math.max(0,a.supplies+m.supplies));a.insight=Math.min(4,a.insight+m.insight);
+      }
+      if(active && r.stage!==a.stage) return null;
+      if(active && r.leg) { if(a.stage>=4) return null;a.leg=cleanLeg(r.leg,a.stage,a.id,a.supplies,a.insight);if(!a.leg)return null; }
+      return a;
+    }
+    const seen=new Set();
+    for(const r of (Array.isArray(raw.records)?raw.records:[]).slice(0,12)) {
+      const a=cleanRun(r);if(!a || a.stage!==4 || seen.has(a.token)) continue;seen.add(a.token);
+      h.records.push({id:r.id,token:r.token,clock:Math.min(s.clock,bounded(r.clock)),initialSupplies:r.initialSupplies,initialInsight:r.initialInsight,legs:a.legs,dust:a.dust,samples:a.samples,firstBonus:r.firstBonus===6?6:0,collections:[...new Set(Array.isArray(r.collections)?r.collections:[])].filter(x=>h.collections.includes(x))});
+    }
+    for(const def of D.VOYAGES) {
+      const r=raw.archives?.[def.id] || h.records.find(r=>r.id===def.id && r.firstBonus===6);
+      const a=cleanRun(r);
+      if(a && a.id===def.id && a.stage===4) {
+        h.completed[def.id]=Math.max(1,h.completed[def.id]||0);
+        if(!h.collections.includes(`voyage-${def.id}`)) h.collections.push(`voyage-${def.id}`);
+        h.archives[def.id]={id:r.id,token:r.token,clock:Math.min(s.clock,bounded(r.clock)),initialSupplies:r.initialSupplies,initialInsight:r.initialInsight,legs:a.legs,dust:a.dust,samples:a.samples,firstBonus:6,collections:[...new Set(Array.isArray(r.collections)?r.collections:[])].filter(x=>h.collections.includes(x))};
+      }
+    }
+    if(!s.mission && !s.result && !s.atlas.active) h.active=cleanRun(raw.active,true);
+  }
+
   function surveyCount(s, id) { return s.atlas.nodes.filter(n => n.chain === id).length; }
   function surveyPreview(s, id, approach = 'safe') {
     const chain = byId(D.SECTORS, id), method = byId(D.SURVEY_METHODS, approach);
@@ -1047,7 +1171,7 @@
     const seconds = Math.max(30, Math.ceil((90 + node * 60 - Math.min(30, evidence * 5)) * method.time * (1 - equipped(s,'nav') * .06)));
     const costSamples = method.cost;
     const reason = s.discoveries < 3 ? '领取三份成功探索报告后开放图谱' : node >= chain.nodes.length ? '本线三处节点已全部归档'
-      : s.mission || s.result || s.atlas.active ? '先处理当前航程与报告' : s.samples < costSamples ? `还需 ${costSamples-s.samples} 份样本；安全调查无需样本` : rawRate(s) <= 0 ? '先启动生产舰队' : '';
+      : s.mission || s.result || s.atlas.active || s.expeditions.active ? '先处理当前航程与报告' : s.samples < costSamples ? `还需 ${costSamples-s.samples} 份样本；安全调查无需样本` : rawRate(s) <= 0 ? '先启动生产舰队' : '';
     return { chain:id, node, approach, seconds, diversion:method.diversion, costSamples,
       dust: Math.min(250000, Math.floor(Math.max(20,rawRate(s) * (30 + node * 15) * method.dust * (1 + equipped(s,'scanner') * .1)))),
       samples:method.samples + (node === 2 ? 3 : 0), equipment:[...s.equipped], evidence, reason, available:!reason };
@@ -1223,7 +1347,7 @@
     const task = harborStatus(s);
     const base = { action: "explore", focus: "harbor-management", value: 0, target: 1, eta: 0 };
     if (!task) return { ...base, title: "规划归航星港的下一班", detail: "接下一份居民需求，安排生产或航线；交付后推进有限工程与居民回信。", label: "查看港务经营" };
-    if (s.samples < task.samplesLeft) return { ...base, title: `${task.name} · 收集交付样本`, detail: `尚需 ${task.samplesLeft} 份样本，现有 ${s.samples}；普通安全探索可以补足。`, label: "安排安全回收", focus: s.mission ? "active-mission" : "mission-belt", value: s.samples, target: Math.max(1,task.samplesLeft), eta: null };
+    if (s.samples < task.samplesLeft) return { ...base, title: `${task.name} · 收集交付样本`, detail: `尚需 ${task.samplesLeft} 份样本，现有 ${s.samples}；普通安全探索可以补足。`, label: "安排安全回收", focus: s.mission ? "active-mission" : "mission-belt", value: s.samples, target: Math.max(1,task.samplesLeft), eta: null, etaHint:"完成安全探索并领取样本；扫描不会增加样本" };
     return { ...base, title: `${task.name} · ${task.available ? "可以交付" : "正在准备"}`, detail: task.reason || "交付将扣除已列明资源，回信、经营统计与下一轮目标会保存。", label: task.available ? "完成交付" : "查看需求进度", value: task.workReady ? 1 : task.produced / task.productionGoal, eta: task.workReady ? incomeEta(s, Math.max(0, task.dustLeft - s.dust)) : Math.max(task.preparationLeft, incomeEta(s, Math.max(0, task.productionGoal - task.produced)) || 0) };
   }
   function residentRequests(s) {
@@ -1233,7 +1357,7 @@
       return { ...clone(request), record: record ? clone(record) : null,
         active: s.afterword.active === request.id,
         ready: s.afterword.active === request.id && s.afterword.ready,
-        available: !record && !s.afterword.active && !s.mission && !s.result };
+        available: !record && !s.afterword.active && !s.mission && !s.result && !s.atlas.active && !s.expeditions.active };
     });
   }
   function acceptResidentRequest(s, id) {
@@ -1437,7 +1561,7 @@
   }
   function prestige(s) {
     const gain = prestigeGain(s);
-    if (!gain || s.mission || s.result || s.atlas.active) return false;
+    if (!gain || s.mission || s.result || s.atlas.active || s.expeditions.active) return false;
     recordTiming(s, "prestige");
     s.records.unshift({
       seconds: s.clock - s.run.startedClock,
@@ -1482,6 +1606,7 @@
     if (need) tasks.push(need.available ? `${need.name}可以立即交付` : `${need.name}：${need.reason}`);
     const projects = D.HARBOR_PROJECTS.filter(p => harborProjectOffer(s, p.id).available);
     if (projects.length) tasks.push(`${projects.length} 项长期工程可手动确认建设`);
+    if(s.expeditions.active) tasks.push(voyageGoal(s).title);
     if(s.atlas.active) tasks.push(s.clock>=s.atlas.active.end ? "星区调查可以归档" : "星区调查仍在航行");
     return tasks;
   }
@@ -1579,7 +1704,7 @@
         if (activity) activity.spentDust += Math.max(0, beforeDust - s.dust);
       }
     }
-    if (capability(s, "autoDispatch") && s.automation.dispatch) {
+    if (capability(s, "autoDispatch") && s.automation.dispatch && !s.atlas.active && !s.expeditions.active) {
       if (s.result && !s.result.story) {
         const claimed = claimMission(
           s,
@@ -1641,7 +1766,7 @@
     return (
       ["home", "fleet"].includes(action) ||
       (action === "explore" &&
-        (s.run.dust >= 600 || Boolean(s.mission || s.result || s.atlas.active))) ||
+        (s.run.dust >= 600 || Boolean(s.mission || s.result || s.atlas.active || s.expeditions.active))) ||
       (action === "jump" &&
         (s.run.dust >= D.PRESTIGE_DUST * 0.3 || s.rebirths > 0))
     );
@@ -2114,6 +2239,8 @@
         eta: event.choice ? Math.max(0, event.readyAt - s.clock) : 0 };
     }
 
+    const voyage = voyageGoal(s);
+    if(voyage) return voyage;
     const survey = surveyGoal(s);
     if (survey) return survey;
     const readyProject = D.HARBOR_PROJECTS.find(p => harborProjectOffer(s, p.id).available);
@@ -2686,6 +2813,7 @@
     if (raw.legacyArchive && typeof raw.legacyArchive === "object")
       s.legacyArchive = clone(raw.legacyArchive);
     cleanAtlas(raw.atlas,s);
+    cleanExpeditions(raw.expeditions,s);
     return s;
   }
   function migrateLegacy(raw, now = Date.now()) {
@@ -2806,6 +2934,7 @@
     onboarding,
     portFacilities,
     portActivity,
+    voyagePreview, voyageReason, startVoyage, dispatchVoyageLeg, claimVoyageLeg, finishVoyage, voyageGoal,
     surveyCount, surveyPreview, setSurveyPriority, startSurvey, claimSurvey, surveyGoal,
     harborSchedule, packHarborNeed, reserveHarborNeed,
     harborTerms,

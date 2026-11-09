@@ -54,6 +54,7 @@ async function main() {
     hasTouch: true,
     isMobile: true,
   });
+  await require("./helpers/isolate-browser.cjs")(context, `http://127.0.0.1:${server.address().port}`);
   const page = await context.newPage();
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));

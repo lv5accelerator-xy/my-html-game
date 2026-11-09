@@ -35,6 +35,7 @@
       harborDeliveries: state.management.stats.deliveries,
       harborProjects: Object.values(state.management.projects).reduce((a, b) => a + b, 0),
       encounters: state.encounters.catalog.length,
+      sectors:state.atlas.nodes.length,
       mission: state.mission?.id || null, pending: state.result?.id || null,
     };
   }

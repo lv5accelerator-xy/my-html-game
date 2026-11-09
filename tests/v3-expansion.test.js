@@ -326,4 +326,52 @@ test('v3.17 pending decisions precede repeat management; live arrival list remov
   assert.notEqual(E.nextGoal(s).focus, 'encounter-panel');
 });
 
+for(const chain of D.SECTORS) test(`v3.18 ${chain.name}: earned state, all nodes, snapshot, offline, restore and one claim`,()=>{
+  let s=E.sanitize(structuredClone(require('./fixtures/v316-earned.json').city),1e15);
+  E.configure(s,{enabled:false,dispatch:false});
+  while(s.discoveries<3) {assert.ok(E.startMission(s,'belt'));E.advance(s,s.lastAt+s.mission.seconds*1000);assert.ok(E.claimMission(s));}
+  const memories=structuredClone(s.lore), ending=s.epilogue.ending;
+  for(let node=0;node<3;node++) {
+    assert.ok(E.setSurveyPriority(s,chain.id));
+    const p=E.surveyPreview(s,chain.id,'safe'), balance=s.dust, samples=s.samples;
+    assert.ok(p.available);assert.ok(E.startSurvey(s,chain.id,'safe',node));
+    const locked=structuredClone(s.atlas.active);
+    assert.equal(E.startMission(s,'belt'),false); assert.equal(E.prestige(s),false);
+    assert.equal(E.startSurvey(s,chain.id,'analysis',node),false);
+    assert.equal(E.claimSurvey(s,locked.token),false);
+    s=E.sanitize(JSON.parse(JSON.stringify(s)),s.lastAt);assert.deepEqual(s.atlas.active,locked);
+    E.advance(s,s.lastAt+8*3600000,{offline:true});
+    assert.deepEqual(s.atlas.active,locked,'offline never claims a discovery');
+    assert.ok(E.claimSurvey(s,locked.token));assert.ok(s.dust>=balance+locked.dust);
+    assert.equal(s.samples,samples+locked.samples);assert.equal(E.claimSurvey(s,locked.token),false);
+    assert.equal(E.surveyCount(s,chain.id),node+1);
+  }
+  assert.equal(E.surveyPreview(s,chain.id,'safe').available,false);
+  assert.deepEqual(s.lore,memories);assert.equal(s.epilogue.ending,ending);
+  assert.deepEqual(S.inspect(JSON.stringify(s),s.lastAt).state.atlas,s.atlas);
+});
+test('v3.18 methods, equipment and all twelve event evidence change actual investigation terms',()=>{
+  const s=completed();s.discoveries=3;
+  const signatures=new Set(D.SURVEY_METHODS.map(m=>{const p=E.surveyPreview(s,'freight',m.id);return JSON.stringify([p.seconds,p.diversion,p.dust,p.samples,p.costSamples]);}));
+  assert.equal(signatures.size,3);
+  for(const event of D.ENCOUNTERS) {
+    const chain=D.SECTORS.find(c=>c.events.includes(event.id));assert.ok(chain,event.id+' maps to a chain');
+    const before=E.surveyPreview(s,chain.id).seconds;
+    s.encounters.catalog.push(`${event.id}:${event.choices[0].id}`);
+    assert.ok(E.surveyPreview(s,chain.id).seconds<before);
+  }
+  const before=E.surveyPreview(s,'science').seconds;s.equipped=[];assert.ok(E.surveyPreview(s,'science').seconds>before);
+  s.samples=0;assert.equal(E.surveyPreview(s,'science','analysis').available,false);assert.ok(E.surveyPreview(s,'science','safe').available);
+});
+test('v3.18 invalid investigation recovery cannot duplicate nodes, conflict with a mission or change old records',()=>{
+  const s=completed();s.discoveries=3;assert.ok(E.startSurvey(s,'freight','safe',0));
+  for(const patch of [{node:2},{token:0},{dust:Infinity},{seconds:-1},{end:1},{diversion:0},{samples:1e9},{chain:'__proto__'}]) {
+    const bad=structuredClone(s);Object.assign(bad.atlas.active,patch);
+    const clean=E.sanitize(bad,bad.lastAt);assert.equal(clean.atlas.active,null);assert.deepEqual(clean.lore,s.lore);assert.equal(clean.epilogue.ending,s.epilogue.ending);
+  }
+  E.advance(s,s.lastAt+400000);assert.ok(E.claimSurvey(s,s.atlas.active.token));
+  s.atlas.nodes.push(structuredClone(s.atlas.nodes[0]));
+  assert.equal(E.sanitize(s,s.lastAt).atlas.nodes.length,1);
+});
+
 console.log(`v3 expansion ok: ${checks} behavioral checks`);

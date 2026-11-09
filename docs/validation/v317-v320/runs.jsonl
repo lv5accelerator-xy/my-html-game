@@ -4,3 +4,10 @@
 {"name": "v317-rules", "command": ["node", "tests/v3-expansion.test.js"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "exit": 0, "seconds": 0.92}
 {"name": "v317-browser", "command": ["node", "tests/v3-browser.test.js"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "exit": 0, "seconds": 3.24}
 {"name": "v317-full", "command": ["node", "scripts/check.cjs"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "exit": 0, "seconds": 290.39}
+{"name": "v318-rules", "command": ["node", "tests/v3-expansion.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.99}
+{"name": "v318-compatibility", "command": ["node", "tests/v3-compatibility.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.04}
+{"name": "v318-browser", "command": ["node", "tests/v3-browser.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.68}
+{"name": "v318-capture-compat", "command": ["node", "/workspace/scratch/starport-audit/capture-v316-compat.cjs"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.05}
+{"name": "v318-compatibility-expanded", "command": ["node", "tests/v3-compatibility.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.05}
+{"name": "v318-browser-fixed", "command": ["node", "tests/v3-browser.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 33.33}
+{"name": "v318-full", "command": ["node", "scripts/check.cjs"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 343.66}

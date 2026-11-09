@@ -83,6 +83,7 @@
       lore: [],
       journal: [],
       discoveries: 0,
+      atlas: { priority:null, serial:0, claimed:0, active:null, nodes:[] },
       encounters: { serial: 0, settled: 0, nextAt: 0, rng: (Number(seed) ^ 0x3e72a1) >>> 0 || 1, pending: null, history: [], catalog: [] },
       starport: 0,
       chapter: [],
@@ -162,10 +163,11 @@
     if (s.chapter?.includes("relay")) rate *= 1.05;
     return bounded(rate);
   }
+  function travel(s) { return s.mission || (s.atlas.active && s.clock < s.atlas.active.end ? s.atlas.active : null); }
   function productionRate(s) {
     return bounded(
       rawRate(s) *
-        (s.mission ? 1 - s.mission.diversion : 1) *
+        (travel(s) ? 1 - travel(s).diversion : 1) *
         (s.clock < s.burstUntil ? 2 : 1),
     );
   }
@@ -189,7 +191,7 @@
     const delta = Math.max(0, productionRate(after) - productionRate(s));
     const steadyDelta =
       Math.max(0, rawRate(after) - rawRate(s)) *
-      (s.mission ? 1 - s.mission.diversion : 1);
+      (travel(s) ? 1 - travel(s).diversion : 1);
     return {
       count,
       cost,
@@ -217,8 +219,8 @@
     if (missing <= 0) return 0;
     const base = rawRate(s);
     if (!Number.isFinite(missing) || base <= 0) return null;
-    const missionEnd = s.mission
-      ? Math.max(s.clock + 1, s.mission.end)
+    const missionEnd = travel(s)
+      ? Math.max(s.clock + 1, travel(s).end)
       : s.clock;
     const ends = [
       ...new Set([missionEnd, s.burstUntil].filter((t) => t > s.clock)),
@@ -227,7 +229,7 @@
       left = missing;
     const rateAt = (t) =>
       base *
-      (s.mission && t < missionEnd ? 1 - s.mission.diversion : 1) *
+      (travel(s) && t < missionEnd ? 1 - travel(s).diversion : 1) *
       (t < s.burstUntil ? 2 : 1);
     for (const end of ends) {
       const rate = rateAt(at),
@@ -921,6 +923,7 @@
   function startMission(s, id) {
     if (
       s.run.dust < 600 ||
+      s.atlas.active ||
       s.mission ||
       s.result ||
       !missionOptions(s).some((m) => m.id === id) ||
@@ -1033,6 +1036,71 @@
     );
     return true;
   }
+  function surveyCount(s, id) { return s.atlas.nodes.filter(n => n.chain === id).length; }
+  function surveyPreview(s, id, approach = 'safe') {
+    const chain = byId(D.SECTORS, id), method = byId(D.SURVEY_METHODS, approach);
+    if (!chain || !method) return null;
+    const node = surveyCount(s, id), evidence = s.encounters.catalog.filter(key => chain.events.includes(key.split(':')[0])).length;
+    const seconds = Math.max(30, Math.ceil((90 + node * 60 - Math.min(30, evidence * 5)) * method.time * (1 - equipped(s,'nav') * .06)));
+    const costSamples = method.cost;
+    const reason = s.discoveries < 3 ? '领取三份成功探索报告后开放图谱' : node >= chain.nodes.length ? '本线三处节点已全部归档'
+      : s.mission || s.result || s.atlas.active ? '先处理当前航程与报告' : s.samples < costSamples ? `还需 ${costSamples-s.samples} 份样本；安全调查无需样本` : rawRate(s) <= 0 ? '先启动生产舰队' : '';
+    return { chain:id, node, approach, seconds, diversion:method.diversion, costSamples,
+      dust: Math.min(250000, Math.floor(Math.max(20,rawRate(s) * (30 + node * 15) * method.dust * (1 + equipped(s,'scanner') * .1)))),
+      samples:method.samples + (node === 2 ? 3 : 0), equipment:[...s.equipped], evidence, reason, available:!reason };
+  }
+  function setSurveyPriority(s, id) {
+    if (s.discoveries < 3 || !byId(D.SECTORS,id)) return false;
+    s.atlas.priority = id; return true;
+  }
+  function startSurvey(s, id, approach, expectedNode) {
+    const p = surveyPreview(s,id,approach);
+    if (!p?.available || p.node !== Number(expectedNode) || s.atlas.serial >= 1e9) return false;
+    s.samples -= p.costSamples;
+    s.atlas.priority = id;
+    s.atlas.active = { chain:id, node:p.node, approach, token:++s.atlas.serial, seconds:p.seconds, diversion:p.diversion,
+      dust:p.dust, samples:p.samples, equipment:p.equipment, start:s.clock, end:s.clock+p.seconds };
+    s.automation.dispatch = false;
+    log(s, `调查${byId(D.SECTORS,id).name}：${byId(D.SECTORS,id).nodes[p.node]}，结果和编成已锁定。`);
+    return true;
+  }
+  function claimSurvey(s, token) {
+    const a = s.atlas.active;
+    if (!a || a.token !== Number(token) || a.token <= s.atlas.claimed || s.clock < a.end || a.node !== surveyCount(s,a.chain)) return false;
+    addDust(s,a.dust); s.samples = bounded(s.samples+a.samples);
+    s.atlas.nodes.push({chain:a.chain,node:a.node,approach:a.approach,token:a.token,equipment:[...a.equipment],dust:a.dust,samples:a.samples,clock:s.clock});
+    s.atlas.claimed = a.token; s.atlas.active = null;
+    if (surveyCount(s,a.chain) === 3) s.atlas.priority = null;
+    log(s, `${byId(D.SECTORS,a.chain).nodes[a.node]}已归档${a.node===2 ? '，新航线与纪念品开放' : '，下一处坐标已确认'}。`);
+    return true;
+  }
+  function surveyGoal(s) {
+    const a = s.atlas.active, id = a?.chain || s.atlas.priority;
+    if (!id || s.discoveries < 3 || !reachable(s,'explore')) return null;
+    const chain = byId(D.SECTORS,id), count = surveyCount(s,id);
+    if (!a && count === 3) return null;
+    return { title:a ? s.clock>=a.end ? '调查记录等待归档' : `正在调查${chain.name}` : `继续调查${chain.name}`,
+      detail:a ? '结果已锁定，离线可完成航行；归档与下一段调查由你确认。' : chain.nodes[count], action:'explore', label:'查看星区图谱',focus:'sector-atlas',value:count,target:3,eta:a ? Math.max(0,a.end-s.clock) : 0 };
+  }
+  function cleanAtlas(raw,s) {
+    if (!raw || typeof raw !== 'object') return;
+    const a = s.atlas;
+    a.serial=integer(raw.serial,1e9); a.claimed=integer(raw.claimed,a.serial);
+    if(byId(D.SECTORS,raw.priority)) a.priority=raw.priority;
+    const seen=new Set();
+    for(const r of (Array.isArray(raw.nodes)?raw.nodes:[]).slice(0,9)) {
+      if(!byId(D.SECTORS,r?.chain) || r.node!==surveyCount(s,r.chain) || r.node>=3 || !byId(D.SURVEY_METHODS,r.approach) || !Number.isInteger(r.token) || r.token<1 || r.token>a.claimed || seen.has(r.token)) continue;
+      seen.add(r.token);
+      a.nodes.push({chain:r.chain,node:r.node,approach:r.approach,token:r.token,equipment:cleanEquipment(r.equipment),dust:bounded(r.dust,250000),samples:integer(r.samples,12),clock:Math.min(s.clock,bounded(r.clock))});
+    }
+    const r=raw.active, method=byId(D.SURVEY_METHODS,r?.approach);
+    if(!s.mission && !s.result && byId(D.SECTORS,r?.chain) && method && r.node===surveyCount(s,r.chain) && r.node<3 && r.token===a.serial && r.token>a.claimed &&
+      Number.isFinite(r.seconds) && r.seconds>=30 && r.seconds<=450 && r.diversion===method.diversion && Number.isFinite(r.dust) && r.dust>=0 && r.dust<=250000 && r.samples===method.samples+(r.node===2?3:0) &&
+      Number.isInteger(r.start) && r.start>=0 && r.start<=s.clock && r.end===r.start+r.seconds)
+      a.active={chain:r.chain,node:r.node,approach:r.approach,token:r.token,seconds:r.seconds,diversion:r.diversion,dust:r.dust,samples:r.samples,equipment:cleanEquipment(r.equipment),start:r.start,end:r.end};
+  }
+  function cleanEquipment(items) { return [...new Set(Array.isArray(items)?items:[])].filter(id=>byId(D.MODULES,id)).slice(0,2); }
+
   function harborTerms(s, id) {
     const need = byId(D.HARBOR_NEEDS, id), focus = byId(D.HARBOR_FOCUSES, s.management.focus);
     if (!s.epilogue.ending || !need) return null;
@@ -1328,7 +1396,7 @@
   }
   function prestige(s) {
     const gain = prestigeGain(s);
-    if (!gain || s.mission || s.result) return false;
+    if (!gain || s.mission || s.result || s.atlas.active) return false;
     recordTiming(s, "prestige");
     s.records.unshift({
       seconds: s.clock - s.run.startedClock,
@@ -1373,6 +1441,7 @@
     if (need) tasks.push(need.available ? `${need.name}可以立即交付` : `${need.name}：${need.reason}`);
     const projects = D.HARBOR_PROJECTS.filter(p => harborProjectOffer(s, p.id).available);
     if (projects.length) tasks.push(`${projects.length} 项长期工程可手动确认建设`);
+    if(s.atlas.active) tasks.push(s.clock>=s.atlas.active.end ? "星区调查可以归档" : "星区调查仍在航行");
     return tasks;
   }
   function progressSnapshot(s) {
@@ -1531,7 +1600,7 @@
     return (
       ["home", "fleet"].includes(action) ||
       (action === "explore" &&
-        (s.run.dust >= 600 || Boolean(s.mission || s.result))) ||
+        (s.run.dust >= 600 || Boolean(s.mission || s.result || s.atlas.active))) ||
       (action === "jump" &&
         (s.run.dust >= D.PRESTIGE_DUST * 0.3 || s.rebirths > 0))
     );
@@ -2004,6 +2073,8 @@
         eta: event.choice ? Math.max(0, event.readyAt - s.clock) : 0 };
     }
 
+    const survey = surveyGoal(s);
+    if (survey) return survey;
     const readyProject = D.HARBOR_PROJECTS.find(p => harborProjectOffer(s, p.id).available);
     const harbor = harborGoal(s);
     if (harborStatus(s)?.available) return harbor;
@@ -2563,6 +2634,7 @@
     }
     if (raw.legacyArchive && typeof raw.legacyArchive === "object")
       s.legacyArchive = clone(raw.legacyArchive);
+    cleanAtlas(raw.atlas,s);
     return s;
   }
   function migrateLegacy(raw, now = Date.now()) {
@@ -2683,6 +2755,7 @@
     onboarding,
     portFacilities,
     portActivity,
+    surveyCount, surveyPreview, setSurveyPriority, startSurvey, claimSurvey, surveyGoal,
     harborTerms,
     harborOffers,
     setHarborFocus,

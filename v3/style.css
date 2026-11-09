@@ -1922,3 +1922,14 @@ html[data-paused="true"] * { animation-play-state:paused !important; }
 .return-ready { border-top:1px solid #354750; margin-top:16px; padding-top:8px; }
 [tabindex="-1"]:focus-visible { outline:2px solid #7ed6c1; outline-offset:4px; }
 @media(max-width:600px) { #navigation button { min-height:48px; } .harbor-actions { gap:8px; } }
+
+.sector-atlas { border-top:1px solid #354750; padding:24px 0; margin-top:24px; }
+.sector-atlas svg { width:100%; max-width:700px; display:block; }
+.sector-node { cursor:pointer; outline:none; }
+.sector-node circle { fill:#142029; stroke:#edbb75; stroke-width:2; }
+.sector-node text { fill:#edbb75; font-size:16px; }
+.sector-node.is-complete circle { stroke:#7ed6c1; fill:#243d3b; }
+.sector-node:focus circle { stroke:white; stroke-width:4; }
+.sector-chains,.survey-methods { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr)); gap:20px; }
+.sector-chains article,.survey-methods article { border-bottom:1px solid #293b44; padding:12px 0; }
+.survey-methods button { min-height:44px; } .survey-methods small { display:block; }

@@ -115,6 +115,39 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    for(const chain of D.SECTORS) {
+      const fixture=structuredClone(require('./fixtures/v316-earned.json').city);
+      E.configure(fixture,{enabled:false,dispatch:false}); fixture.lastAt=TIME;
+      await scenario(`v3.18 ${chain.name}: three real investigations, phone map keyboard, in-transit refresh and export`,{[S.KEY]:JSON.stringify(fixture)},async page=>{
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.setViewportSize({width:375,height:900});
+        const node=page.locator(`g[data-action="sector-select"][data-id="${chain.id}"]`).first();
+        await node.focus();await page.keyboard.press('Enter');
+        assert.equal((await read(page)).atlas.priority,chain.id);
+        for(let i=0;i<3;i++) {
+          await page.locator('[data-action="survey-start"][data-id="safe"]').click();
+          const lock=(await read(page)).atlas.active;
+          assert.equal(lock.node,i);
+          await page.clock.runFor(1000);await page.reload();
+          assert.deepEqual((await read(page)).atlas.active,lock);
+          await page.locator('#navigation [data-id="explore"]').click();
+          await page.clock.runFor(lock.seconds*1000);
+          await page.locator('[data-action="survey-claim"]').click();
+          assert.equal((await read(page)).atlas.nodes.filter(n=>n.chain===chain.id).length,i+1);
+          assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+        }
+        assert.match(await page.locator('#sector-atlas').innerText(),new RegExp(chain.collection));
+        const before=await read(page);await page.reload();assert.deepEqual((await read(page)).atlas,before.atlas);
+        assert.equal((await read(page)).epilogue.ending,'city');
+        await page.locator('#settings-button').click();
+        const [download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-action="export"]').click()]);
+        const exported=JSON.parse(fs.readFileSync(await download.path(),'utf8'));
+        assert.deepEqual(exported.atlas,before.atlas);
+        await page.locator('#dialog-close').click();
+        await page.locator('#navigation [data-id="explore"]').click();
+        if(screenshotDir && chain.id==='quiet') await page.locator('#sector-atlas').screenshot({path:path.join(screenshotDir,'v318-atlas-phone.png')});
+      });
+    }
     {
       const fixture = require('./helpers/v3-fixtures.cjs').completed('city', TIME);
       const event = require('./helpers/v3-fixtures.cjs').encounterReady('crate', TIME);
@@ -3169,6 +3202,7 @@ async function run() {
       const entries=await page.evaluate(()=>SalvageStorage.backups(localStorage).entries);
       assert.ok(entries.some(entry=>entry.valid&&entry.text===target),"the recovery source is still recoverable");
     });
+    assert.ok(checks > 0, "At least one browser flow must execute; unmatched filters are errors");
     console.log(
       `v3 browser ok: ${checks} complete flows; identity/content/assets/console checked in every flow`,
     );

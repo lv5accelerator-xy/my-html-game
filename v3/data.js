@@ -6,8 +6,93 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
   const data = {
+    SECTORS: [
+  {
+    "id": "freight",
+    "name": "失联货运网络",
+    "nodes": [
+      "核对漂流货签",
+      "寻找中转仓座标",
+      "接通无人货运环"
+    ],
+    "events": [
+      "freighter",
+      "crate",
+      "capsule",
+      "stardust"
+    ],
+    "discovery": "旧货运网仍有可用的安全中转仓",
+    "collection": "三港联运货签",
+    "route": "失落货运航道已登记"
+  },
+  {
+    "id": "science",
+    "name": "旧时代科研遗迹",
+    "nodes": [
+      "回收探针原始数据",
+      "复核旧实验站",
+      "保存观测阵列档案"
+    ],
+    "events": [
+      "probe",
+      "research",
+      "record",
+      "component"
+    ],
+    "discovery": "完整观测资料交给两港共同复核",
+    "collection": "原始观测底片",
+    "route": "静潮观测深域已登记"
+  },
+  {
+    "id": "quiet",
+    "name": "静潮后的未登记航路",
+    "nodes": [
+      "对照偏移信标",
+      "验证阴影交接点",
+      "标记居民回程窗口"
+    ],
+    "events": [
+      "beacon",
+      "signal",
+      "debris",
+      "shelter"
+    ],
+    "discovery": "三处短线窗口有独立观察与接班位置",
+    "collection": "手绘回程星图",
+    "route": "遥远居民信标已登记"
+  }
+],
+    SURVEY_METHODS: [
+  {
+    "id": "safe",
+    "name": "安全接力",
+    "time": 1.2,
+    "diversion": 0.08,
+    "dust": 0.65,
+    "samples": 2,
+    "cost": 0
+  },
+  {
+    "id": "salvage",
+    "name": "回收优先",
+    "time": 1,
+    "diversion": 0.22,
+    "dust": 1.8,
+    "samples": 1,
+    "cost": 0
+  },
+  {
+    "id": "analysis",
+    "name": "深入调查",
+    "time": 1.3,
+    "diversion": 0.18,
+    "dust": 0.4,
+    "samples": 6,
+    "cost": 2
+  }
+],
     VERSION: 32,
-    GAME_VERSION: "3.17.0-preview.1",
+    GAME_VERSION: "3.18.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,

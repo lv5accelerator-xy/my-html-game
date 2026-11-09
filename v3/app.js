@@ -730,9 +730,13 @@
     ).name;
     document.querySelectorAll("[data-buy-id]").forEach((button) => {
       const p = quote(button.dataset.buyId);
-      button.textContent = p.count
+      const label = p.count
         ? `建造${p.count > 1 ? ` ×${p.count}` : ""} · ${number(p.cost)} 星尘`
         : "建造已达上限";
+      if (button.textContent !== label) {
+        if (button.childNodes.length === 1 && button.firstChild.nodeType === Node.TEXT_NODE) button.firstChild.nodeValue = label;
+        else button.textContent = label;
+      }
       button.disabled = !p.count || p.cost > state.dust;
       const field = (name, text) => {
         const el = $(`[data-buy-${name}="${button.dataset.buyId}"]`);
@@ -850,7 +854,9 @@
           for (const attr of [...node.attributes]) if (!keep(attr.name) && !next.hasAttribute(attr.name)) node.removeAttribute(attr.name);
           for (const attr of [...next.attributes]) if (!keep(attr.name) && node.getAttribute(attr.name) !== attr.value) node.setAttribute(attr.name, attr.value);
           if (!editing && node.matches('input[type="checkbox"]')) node.checked = next.checked;
-          sync(node, next);
+          // Purchase labels belong to updateNumbers. The authored template is
+          // empty; clearing that live text during input blur can cancel WebKit's click.
+          if (!node.hasAttribute("data-buy-id")) sync(node, next);
         }
         cursor = node.nextSibling;
       }

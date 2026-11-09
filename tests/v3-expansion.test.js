@@ -303,4 +303,13 @@ test('v3.13 each event rejects corrupt in-flight terms and enforces its gates an
     assert.equal(s.encounters.serial,offer.token);
   }
 });
+test('v3.16 restore rejects inherited object keys as equipment or story identifiers while retaining valid progress', () => {
+  const s=completed(), lore=structuredClone(s.lore);
+  s.equipped=['constructor','__proto__','battery'];
+  s.lore.push({story:'constructor',choice:'x'},{story:'__proto__',choice:'x'},{story:['hospital'],choice:'repair'});
+  const clean=E.sanitize(s,s.lastAt);
+  assert.deepEqual(clean.equipped,['battery']); assert.deepEqual(clean.lore,lore);
+  assert.deepEqual(clean.modules,s.modules); assert.deepEqual(clean.epilogue,s.epilogue);
+  assert.deepEqual(E.sanitize(clean,clean.lastAt),clean);
+});
 console.log(`v3 expansion ok: ${checks} behavioral checks`);

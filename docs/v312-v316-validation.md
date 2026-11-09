@@ -1,5 +1,7 @@
 # v3.12～v3.16 连续开发验收
 
+最新：草稿 [PR #17](https://github.com/lv5accelerator-xy/my-html-game/pull/17)，补修后最终完整验收为9语法、17脚本、119项v3规则组、22旧档、84浏览器流程；详情见末节。
+
 ## 来源与边界
 
 起始 main：`508456827a798eaf48397511a5c408371c4665c3`；原 work 工作区干净。2026-11-09 核对全部开放 PR：#8 删除旧交接、草稿 #12 历史流程规范化；均未合并。读取 #12 的 AGENTS/CODEX_HANDOFF，并按最新main核对，未合并其旧v3.8代码。main已包含原生dialog关闭焦点守卫，本轮仅修改v3运行文件、测试与文档。
@@ -45,7 +47,7 @@ node scripts/check.cjs
 
 `node tests/v3-expansion.test.js`退出0：19组。完整`node scripts/check.cjs`退出0：9语法、16/16脚本、105项v3行为（86+19）、79条v3浏览器流程，失败/跳过0；日志v315-rules.log、v315-full.log。新增真实SVG区域键盘Enter、状态与实际增益、首支来船及三队、375/1280无溢出、减少动态效果和刷新显示检查；所有原港口/居民委托断言保留。
 
-## v3.16 最终结果
+## v3.16 里程碑结果（00f97ec）
 
 `node tests/v3-expansion.test.js` 最终32组通过；原`node tests/v3-gameplay.test.js`86组保留；`node tests/v3-compatibility.test.js`22份实际v3.11规范快照逐字段相同、迁移幂等。`node tests/v3-balance.test.js`保留原三路线/前四跃迁/六章及81份实际通关分支；三个结局各继续42次实际资源交付与15期工程，用时5385游戏秒（约89.75分钟），没有向经营模型注入新资源、设施或样本。
 
@@ -78,3 +80,15 @@ node scripts/check.cjs
 真实云WebKit安装命令`playwright install webkit`退出1：官方CDN及Microsoft镜像均返回`403 Domain forbidden`，见[原始日志](validation/v312-v316/webkit-install.txt)。没有改网络策略、关闭WebKit工作流或冒称云WebKit通过。既有PR CI仍使用Node22/PW1.55并独立运行WebKit；它的实际状态以最终PR检查为准。真实iPhone/Safari、真实玩家旧档和公开站点未测试。本次没有发布，公开站点仍是原版本。
 
 最终测试在提交前工作树运行，日志中的SHA是当时父提交，不冒充最终版本的已检出SHA；runtime/tests/scripts共28份文件以SHA256清单映射到最终提交，提交后再次校验。原work工作区、根v2运行文件、生产Firebase和部署配置未改。最后按授权推送开发分支并创建草稿PR；最终准确SHA、PR链接及检查状态见交付消息和GitHub分支记录。
+
+## 最终补修：恢复记录中的继承键
+
+在已创建PR #17后，补查真实复现原有校验问题：`constructor`、`__proto__`可能被当成已拥有装备；故事键则会访问继承对象并报`Cannot read properties of undefined (reading 'find')`。修复前新增第33组在Node22实际退出1，原始记录[v316-identifiers-before.txt](validation/v312-v316/v316-identifiers-before.txt)保留。现在装备只接受已知模块ID，剧情只接受字符串和自身已知故事ID；合法装备、完整主线和结局不变。
+
+补修后扩展规则33/33、真实损坏标识浏览器专项1/1通过；再执行**无过滤完整`node scripts/check.cjs`退出0**：9语法、17/17脚本、119项v3规则组（86+33）、22份原v3.11快照、84条v3浏览器流程、175,662次实际assert调用、失败/跳过0。原始全量[v316-final-verified.txt](validation/v312-v316/v316-final-verified.txt)。运行时与测试仍使用上述Node22/PW1.55/Chromium151真实云环境；统计器不改变断言。
+
+五阶段里程碑保持05d5d86→4d8c720→068d150→cbb124d→00f97ec；另有一份范围明确的恢复校验补修提交。原00f97ec的28份源哈希另保存在source-sha256-00f97ec.json，最新补修使用source-sha256.json，提交后再次核对。草稿PR链接固定为#17；准确最终HEAD以GitHub和本次交付为准，CI最新结果以该HEAD检查为准。所有改动已在开发分支；不合并、部署或写生产数据。
+
+### WebKit原生购买点击补修
+
+00f97ec的首次PR检查42650575351：完整Chromium入口通过9/17/118/83；WebKit完成前18条后，在预算输入提交后购买未触发（toast为空），实际失败退出1。原始WebKit步骤日志见ci-42650575351-webkit-failure.txt。定位到动态购买按钮的空模板被协调器清空，随后textContent重建标签；原按钮对象保留仍会使WebKit原生点击丢失。新增文字节点连续性断言在云Chromium修复前同样退出1，修复后通过。协调器现在保留由数值更新器管理的标签，更新器仅在内容变化时原位改写文字节点；保留真实点击、购买增量、焦点和反馈断言，无额外等待/重试/强制点击。新增手动增量断言首轮误用尚未自动保存的旧计数（实际13，对比缓存10+1），保留失败v316-boundary-full.txt；改用点击前真实DOM计数，仍严格断言手动仅增加1艘，没有等待保存或放宽断言。最后再次无过滤完整检查119规则组/84浏览器流程通过，日志v316-final-verified.txt。

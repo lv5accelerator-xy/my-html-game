@@ -263,6 +263,22 @@ async function run() {
       assert.equal(done.automation.enabled,true);
       assert.ok(done.timing.events.report); assert.ok(done.timing.events.prestige);
     });
+    {
+      const fixture = require("./helpers/v3-fixtures.cjs").completed("city", TIME); fixture.lastAt=TIME;
+      const lore=structuredClone(fixture.lore);
+      fixture.equipped=['constructor','__proto__','battery'];
+      fixture.lore.push({story:'constructor',choice:'x'},{story:'__proto__',choice:'x'});
+      await scenario("v3.16 damaged identifier restore retains real equipment/story and renders exploration safely", { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        assert.equal(await page.locator('#dialog[open]').count(),0);
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator('#harbor-management [data-action="harbor-focus"][data-id="reception"]').click();
+        const clean=await read(page); assert.deepEqual(clean.equipped,['battery']); assert.deepEqual(clean.lore,lore);
+        assert.deepEqual(clean.modules,fixture.modules); assert.equal(clean.epilogue.ending,'city');
+        await page.reload(); assert.deepEqual((await read(page)).equipped,['battery']);
+        await page.locator('#navigation [data-id="explore"]').click();
+        assert.ok(await page.locator('#harbor-management').isVisible());
+      });
+    }
     for (const def of D.ENCOUNTERS) {
       const fixture = require("./helpers/v3-fixtures.cjs").encounterReady(def.id, TIME);
       fixture.lastAt = TIME; fixture.samples = 10;
@@ -286,14 +302,18 @@ async function run() {
       for (const width of [1280, 375]) {
         await page.setViewportSize({ width, height: 900 });
         await page.locator('[data-config="reserve"]').fill("123");
-        await page.evaluate(() => { window.retainedInput = document.activeElement; window.retainedBuy = document.querySelector('[data-buy-id="drone"]'); });
+        await page.evaluate(() => { window.retainedInput = document.activeElement; window.retainedBuy = document.querySelector('[data-buy-id="drone"]'); window.retainedLabel = window.retainedBuy.firstChild; });
         await page.clock.runFor(1500);
         assert.ok(await page.evaluate(() => retainedInput === document.activeElement && retainedInput.isConnected && retainedBuy.isConnected && retainedBuy === document.querySelector('[data-buy-id="drone"]')));
+        assert.ok(await page.evaluate(() => retainedLabel.isConnected && retainedBuy.firstChild === retainedLabel), "automation keeps the live button label node");
         assert.equal(await page.locator('[data-config="reserve"]').inputValue(), "123");
         assert.equal(await page.locator('.current-goal').count(), 1);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       }
+      const beforePurchase = Number.parseInt(await page.locator("#building-drone .building-stats > strong").innerText(), 10); // Live auto-buys may precede the five-second save.
       await page.locator('[data-buy-id="drone"]').click();
+      assert.equal((await read(page)).buildings.drone, beforePurchase + 1);
+      assert.ok(await page.evaluate(() => retainedLabel.isConnected && retainedBuy.firstChild === retainedLabel));
       assert.match(await page.locator('#toast').innerText(), /建造/);
     });
     await scenario("native dialog close keeps the newer keyboard reading focus", { [S.KEY]: JSON.stringify(ready()) }, async (page) => {

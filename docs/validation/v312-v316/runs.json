@@ -418,6 +418,140 @@
       "assertion_calls": null,
       "evidence": "webkit-install.txt",
       "sha256": "404d4d54d15c9a1a120edbcff8e9a90fb5620b91b7ba2926011c04ef6410410d"
+    },
+    {
+      "name": "v316-boundary-full",
+      "first_line": "2026-11-09T16:14:36Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node scripts/check.cjs",
+      "exit": 1,
+      "filter": null,
+      "results": [
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration",
+        "v3 expansion ok: 33 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 17 test scripts, 1 failed checks."
+      ],
+      "assertion_calls": {
+        "passed": 171368,
+        "failed": 1
+      },
+      "evidence": "v316-boundary-full.txt",
+      "sha256": "0f3c397a9d4b316168e86e0138fa54c99c9993549b785c6e7c670ff5c632e85d"
+    },
+    {
+      "name": "v316-click-after",
+      "first_line": "2026-11-09T16:13:33Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "v3.12 automation",
+      "results": [
+        "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-click-after.txt",
+      "sha256": "8b0d0b1ebe44459be7ba15c0175097ec6b15f8afadbb9f8ff31c4a82e5566577"
+    },
+    {
+      "name": "v316-click-before",
+      "first_line": "2026-11-09T16:13:19Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js",
+      "exit": 1,
+      "filter": "v3.12 automation",
+      "results": [],
+      "assertion_calls": null,
+      "evidence": "v316-click-before.txt",
+      "sha256": "f858a2fb8cba5c104eb430687d35790c7013fb144393c3885bf733ab730964dd"
+    },
+    {
+      "name": "v316-click-live-count",
+      "first_line": "2026-11-09T16:18:05Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "v3.12 automation",
+      "results": [
+        "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-click-live-count.txt",
+      "sha256": "9bd33ac2b7a1570b69f1a21d2e8f71af3835ec2a5ffdd14920391e04734be2bb"
+    },
+    {
+      "name": "v316-final-verified",
+      "first_line": "2026-11-09T16:18:19Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 browser ok: 84 complete flows; identity/content/assets/console checked in every flow",
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration",
+        "v3 expansion ok: 33 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 17 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": {
+        "passed": 175662,
+        "failed": 0
+      },
+      "evidence": "v316-final-verified.txt",
+      "sha256": "fa22ba9c0daea23e6bea7826a288d063bffa0e7f32a5b9183c2e460701f89b59"
+    },
+    {
+      "name": "v316-identifiers-after",
+      "first_line": "2026-11-09T16:06:03Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-expansion.test.js",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 expansion ok: 33 behavioral checks"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-identifiers-after.txt",
+      "sha256": "2e07c279871b6a79eaf9023b8a480a9c573efbe411ce0f4a5e1ff6f5b65e8936"
+    },
+    {
+      "name": "v316-identifiers-before",
+      "first_line": "2026-11-09T16:05:45Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-expansion.test.js",
+      "exit": 1,
+      "filter": null,
+      "results": [],
+      "assertion_calls": null,
+      "evidence": "v316-identifiers-before.txt",
+      "sha256": "d864971032e4401fbeba358b73dbd2b6be1891c5314817ed07fec5b4d540508a"
+    },
+    {
+      "name": "v316-identifiers-browser",
+      "first_line": "2026-11-09T16:06:04Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node tests/v3-browser.test.js",
+      "exit": 0,
+      "filter": "damaged identifier",
+      "results": [
+        "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+      ],
+      "assertion_calls": null,
+      "evidence": "v316-identifiers-browser.txt",
+      "sha256": "46d282e109861c00269bd9149cbb0e955f1492b01fa5680962ad19e6cf528594"
+    },
+    {
+      "name": "v316-identifiers-full",
+      "first_line": "2026-11-09T16:06:34Z sha=00f97ec0b45b191f310433425016f0e676b63002 command=node scripts/check.cjs",
+      "exit": 0,
+      "filter": null,
+      "results": [
+        "v3 browser ok: 84 complete flows; identity/content/assets/console checked in every flow",
+        "v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration",
+        "v3 expansion ok: 33 behavioral checks",
+        "v3 gameplay ok: 86 behavioral checks",
+        "RESULT: 9 syntax checks, 17 test scripts, 0 failed checks."
+      ],
+      "assertion_calls": {
+        "passed": 175658,
+        "failed": 0
+      },
+      "evidence": "v316-identifiers-full.txt",
+      "sha256": "fdd58eb2060d8236c6e3083ec53c70b78036156c6b3ddc9feb4ab61e7a47b04f"
+    },
+    {
+      "name": "ci-42650575351",
+      "head": "00f97ec0b45b191f310433425016f0e676b63002",
+      "url": "https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42650575351",
+      "exit": 1,
+      "chromium": "9 syntax, 17 scripts, 118 rule groups, 83 browser flows passed",
+      "webkit": "18 completed flows, then native purchase click failed",
+      "evidence": "ci-42650575351-webkit-failure.txt",
+      "sha256": "65253d5f4502bfabcbdb48e077a91fa3b56102eb832d135aea7e89375ffa0d60"
     }
   ]
 }

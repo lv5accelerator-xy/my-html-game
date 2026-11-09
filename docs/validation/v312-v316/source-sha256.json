@@ -1,8 +1,8 @@
 {
-  "v3/app.js": "7422ac826ef4149870e62441bbd46ccacea67b4573fe76e6d8966d112aeb6ac6",
+  "v3/app.js": "8bc82db8d23d4d35bc63938b2c9d296c77a8e0c26acf9500d210518323d30623",
   "v3/assets/salvage-orbit.webp": "c117ca8fad5edc14e73e6a1cddaaa0e8117337463d7971c0b270163220210ef0",
   "v3/data.js": "dd87f99eb690a16ea2ab4b3c38067b7f65d1f42a5c688d7eb67e91cfa63afb07",
-  "v3/engine.js": "61f801d3af1eadf234afe9ba68b2c27054ba94981146ada1f1783d253f364a00",
+  "v3/engine.js": "21f335a199956e5334ddf3fb585a3692e3343b80dff6a078062c9893f07bac9e",
   "v3/index.html": "b694fcd31ed5fd189c1e4b2e173b225a1e85b4022c7bd0f68d14268c116b1ed2",
   "v3/storage.js": "88f56565dc9da55a978a1d8c7d0d3a96e58ffc4a2db8403eb395abd3e951b839",
   "v3/style.css": "0f3c72bb770f91f4580a0db794bc44b4f1f459877bbf39e56f70ead032252feb",
@@ -21,9 +21,9 @@
   "tests/season.test.js": "737d411bdf511a7fdfc4ded451aa4ff6f5d4a4d6f76d179d68487d015aee8c83",
   "tests/usability-flow.test.js": "7dd791552eff842dfcdc9ef7965a3f402a1bf67ba413ad040f5f94575ce9b954",
   "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45",
-  "tests/v3-browser.test.js": "20e869f3fb2489cc2347d80fca92985f09ae16302273ecf30df7f0187531b462",
+  "tests/v3-browser.test.js": "1ed31c63ce58612282c2798c332b863b8a7660a8c0623b96ba84ae80667d5c7d",
   "tests/v3-compatibility.test.js": "01f9afb59dbe91cd2cbca33b0d16cc4ca45a3b0c1f03de46630b4d7c6b513d92",
-  "tests/v3-expansion.test.js": "c15d2b296f123c83fd4e6f5efed20174c273aac43f9e430b74827f2823da1fd6",
+  "tests/v3-expansion.test.js": "3387a611a6a76a67d987fead26658fcd913bb8bbc8d30b03ad53e214913bd6c5",
   "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393",
   "scripts/archive-stage.ps1": "41111dc3bbe9d9a72780e55e13edd8bd4b3262369dadd0bd0828358ac26a3b90",
   "scripts/check.cjs": "7791474806be710491277e3df5c0f71a20eb79890e65a0cef44c14505913c559"

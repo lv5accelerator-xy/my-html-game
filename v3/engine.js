@@ -2173,7 +2173,7 @@
       if (raw.modules?.[m.id])
         s.modules[m.id] = integer(raw.modules[m.id], D.MODULE_MAX_LEVEL);
     s.equipped = [...new Set(Array.isArray(raw.equipped) ? raw.equipped : [])]
-      .filter((id) => s.modules[id])
+      .filter((id) => byId(D.MODULES, id) && s.modules[id] > 0)
       .slice(0, 2);
     for (const loadout of D.LOADOUTS)
       if (validLoadout(s, raw.loadouts?.[loadout.id]))
@@ -2181,7 +2181,8 @@
     s.lore = (Array.isArray(raw.lore) ? raw.lore : [])
       .filter(
         (r) =>
-          D.STORIES[r?.story] && byId(D.STORIES[r.story].choices, r.choice),
+          typeof r?.story === "string" && Object.hasOwn(D.STORIES, r.story) &&
+          byId(D.STORIES[r.story].choices, r.choice),
       )
       .filter((r, i, all) => all.findIndex((x) => x.story === r.story) === i)
       .map((r) => ({ story: r.story, choice: r.choice }));

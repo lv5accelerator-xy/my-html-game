@@ -1,0 +1,44 @@
+Head 00f97ec0b45b191f310433425016f0e676b63002; GitHub synthetic merge 90ee2d41cce1ee406f5f1a9060beca99a2465425.
+Run https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42650575351
+Main 9 syntax/17 scripts/118 behaviors/83 Chromium flows passed; WebKit failed after 18 completed flows.
+##[group]Run node tests/v3-browser.test.js
+2026-11-09T16:06:49.9790858Z [36;1mnode tests/v3-browser.test.js[0m
+2026-11-09T16:06:49.9811425Z shell: /usr/bin/bash -e {0}
+2026-11-09T16:06:49.9811672Z env:
+2026-11-09T16:06:49.9812048Z   CODEX_PLAYWRIGHT_PATH: /home/runner/work/my-html-game/my-html-game/node_modules/playwright
+2026-11-09T16:06:49.9812661Z   V3_BROWSER_ENGINE: webkit
+2026-11-09T16:06:49.9812891Z ##[endgroup]
+2026-11-09T16:06:55.2509920Z ok 1 - v3.14 dispatch comparison and real quick loadout switch preserve the locked voyage
+2026-11-09T16:06:57.2981588Z ok 2 - v3.15 live SVG facilities, keyboard details, resident arrivals and reduced motion
+2026-11-09T16:07:13.5147976Z ok 3 - v3.16 归航之城: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+2026-11-09T16:07:29.6667517Z ok 4 - v3.16 守望之港: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+2026-11-09T16:07:45.8031388Z ok 5 - v3.16 携种远航: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+2026-11-09T16:08:32.6969694Z ok 6 - v3.16 fresh player completes the first scan, fleet, route, story and jump loop using only real controls
+2026-11-09T16:08:33.6790607Z ok 7 - v3.13 无人货船: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:34.5502932Z ok 8 - v3.13 损坏的运输舱: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:35.4562478Z ok 9 - v3.13 古老导航信标: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:36.7488709Z ok 10 - v3.13 失联采矿探针: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:38.1525842Z ok 11 - v3.13 废弃科研设备: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:39.0754841Z ok 12 - v3.13 漂流补给箱: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:40.9420356Z ok 13 - v3.13 未知求救信号: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:41.8844026Z ok 14 - v3.13 不稳定残骸区: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:43.5033633Z ok 15 - v3.13 星尘富集带: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:44.9076371Z ok 16 - v3.13 旧时代通信记录: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:46.1610929Z ok 17 - v3.13 破损的航站组件: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:47.5877708Z ok 18 - v3.13 未登记的小型避难舱: real choice, countdown, reload and immutable discovery record
+2026-11-09T16:08:48.5889170Z AssertionError [ERR_ASSERTION]: The input did not match the regular expression /建造/. Input:
+2026-11-09T16:08:48.5890379Z 
+2026-11-09T16:08:48.5890540Z ''
+2026-11-09T16:08:48.5890753Z 
+2026-11-09T16:08:48.5891284Z     at /home/runner/work/my-html-game/my-html-game/tests/v3-browser.test.js:297:14
+2026-11-09T16:08:48.5892453Z     at async scenario (/home/runner/work/my-html-game/my-html-game/tests/v3-browser.test.js:90:7)
+2026-11-09T16:08:48.5893611Z     at async run (/home/runner/work/my-html-game/my-html-game/tests/v3-browser.test.js:284:5) {
+2026-11-09T16:08:48.5894198Z   generatedMessage: true,
+2026-11-09T16:08:48.5894487Z   code: 'ERR_ASSERTION',
+2026-11-09T16:08:48.5894747Z   actual: '',
+2026-11-09T16:08:48.5895715Z   expected: /建造/,
+2026-11-09T16:08:48.5896115Z   operator: 'match',
+2026-11-09T16:08:48.5896536Z   diff: 'simple'
+2026-11-09T16:08:48.5896894Z }
+2026-11-09T16:08:48.6004527Z ##[error]Process completed with exit code 1.
+2026-11-09T16:08:48.6150989Z

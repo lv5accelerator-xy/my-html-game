@@ -83,6 +83,7 @@
       lore: [],
       journal: [],
       discoveries: 0,
+      encounters: { serial: 0, settled: 0, nextAt: 0, rng: (Number(seed) ^ 0x3e72a1) >>> 0 || 1, pending: null, history: [] },
       starport: 0,
       chapter: [],
       campaign: { completed: [], preparation: null },
@@ -840,6 +841,68 @@
       dust: Math.max(20, rawRate(s) * m.yieldSeconds * (plan ? plan.dust : 1)),
     };
   }
+  function encounterCandidates(s, missionId) {
+    return D.ENCOUNTERS.filter(e => e.missions.includes(missionId) && s.starport >= e.minPort && (!e.module || equipped(s, e.module) > 0));
+  }
+  function rollEncounter(s, m) {
+    if (s.discoveries < 3 || s.encounters.pending || s.clock < s.encounters.nextAt ||
+      (m.story && !s.lore.some(r => r.story === m.story))) return null;
+    const list = encounterCandidates(s, m.id);
+    if (!list.length || s.encounters.serial >= 1e9) return null;
+    const rng = { rng: s.encounters.rng };
+    const roll = random(rng);
+    s.encounters.rng = rng.rng;
+    // At most one discovery in ten minutes; a queued choice never interrupts production.
+    s.encounters.nextAt = s.clock + 600;
+    if (roll >= 0.45) return null;
+    const def = list[Math.floor((roll / 0.45) * list.length)];
+    return { token: ++s.encounters.serial, id: def.id, mission: m.id, choice: null, readyAt: 0,
+      choices: def.choices.map(c => ({ id: c.id,
+        dust: Math.min(250000, Math.floor(rawRate(s) * c.dustSeconds * (s.run.route === "reclaim" ? 1.2 : 1))),
+        samples: c.samples, seconds: c.seconds, costSamples: c.costSamples })) };
+  }
+  function encounterOffer(s) {
+    const event = s.encounters.pending;
+    if (!event) return null;
+    const def = byId(D.ENCOUNTERS, event.id);
+    return { ...clone(event), name: def.name, description: def.description,
+      choices: event.choices.map(c => ({ ...c, name: byId(def.choices, c.id).name, available: !event.choice && s.samples >= c.costSamples })) };
+  }
+  function settleEncounter(s) {
+    const event = s.encounters.pending;
+    if (!event?.choice || s.clock < event.readyAt || event.token <= s.encounters.settled) return false;
+    const choice = byId(event.choices, event.choice);
+    addDust(s, choice.dust);
+    s.samples = bounded(s.samples + choice.samples);
+    s.encounters.settled = event.token;
+    s.encounters.history.unshift({ token: event.token, id: event.id, choice: event.choice, clock: s.clock });
+    s.encounters.history = s.encounters.history.slice(0, 32);
+    s.encounters.pending = null;
+    log(s, `航行发现：${byId(D.ENCOUNTERS, event.id).name} · ${byId(byId(D.ENCOUNTERS, event.id).choices, event.choice).name}，回收已入库。`);
+    return true;
+  }
+  function chooseEncounter(s, token, id) {
+    const offer = encounterOffer(s), choice = offer?.choices.find(c => c.id === id);
+    if (!offer || offer.token !== Number(token) || offer.token <= s.encounters.settled || !choice?.available) return false;
+    s.samples -= choice.costSamples;
+    s.encounters.pending.choice = id;
+    s.encounters.pending.readyAt = s.clock + choice.seconds;
+    settleEncounter(s);
+    return true;
+  }
+  function cleanEncounter(raw, s) {
+    const def = byId(D.ENCOUNTERS, raw?.id);
+    if (!def || !def.missions.includes(raw.mission) || !Number.isInteger(raw.token) || raw.token <= s.encounters.settled || raw.token > s.encounters.serial ||
+      !Array.isArray(raw.choices) || raw.choices.length !== def.choices.length || (raw.choice !== null && !byId(def.choices, raw.choice))) return null;
+    const choices = [];
+    for (const c of def.choices) {
+      const saved = raw.choices.find(r => r?.id === c.id);
+      if (!saved || !Number.isFinite(saved.dust) || saved.dust < 0 || saved.dust > 250000 || saved.samples !== c.samples || saved.seconds !== c.seconds || saved.costSamples !== c.costSamples) return null;
+      choices.push({ id: c.id, dust: saved.dust, samples: c.samples, seconds: c.seconds, costSamples: c.costSamples });
+    }
+    if (raw.choice && (!Number.isFinite(raw.readyAt) || raw.readyAt < 0)) return null;
+    return { token: raw.token, id: def.id, mission: raw.mission, choice: raw.choice, readyAt: raw.choice ? Math.min(s.clock + 45, raw.readyAt) : 0, choices };
+  }
   function startMission(s, id) {
     if (
       s.run.dust < 600 ||
@@ -873,6 +936,8 @@
           }
         : {}),
     };
+    const encounter = succeeded && rollEncounter(s, m);
+    if (encounter) s.mission.encounter = encounter;
     if (storyMission(m)) track.preparation = null;
     log(s, `派遣探索：${m.name}，预计 ${preview.seconds} 秒归航。`);
     return true;
@@ -900,6 +965,7 @@
         ? { energy: m.energy, confirmations: [...m.confirmations] }
         : {}),
     };
+    if (m.encounter && !s.encounters.pending) s.encounters.pending = clone(m.encounter);
     s.mission = null;
     log(
       s,
@@ -1223,6 +1289,7 @@
     else if (active) s.timing.foregroundSeconds++;
     const returning = Boolean(s.mission && s.clock >= s.mission.end);
     completeMission(s);
+    settleEncounter(s);
     if (activity && returning) activity.missionsCompleted++;
     if (s.beacon.expiresAt && s.clock >= s.beacon.expiresAt)
       s.beacon.expiresAt = 0;
@@ -1762,6 +1829,13 @@
     if (epilogue) return epilogue;
     const resident = residentGoal(s);
     if (resident) return resident;
+    if (s.encounters.pending && !s.mission) {
+      const event = encounterOffer(s);
+      return { title: event.name, detail: event.choice ? "回收已安排，生产继续。完成后写入航行记录。" : "有一份额外发现等待安排；普通探索收益已保留，没有选择期限。",
+        action: "explore", label: "查看航行发现", focus: "encounter-panel", value: event.choice ? 1 : 0, target: 1,
+        eta: event.choice ? Math.max(0, event.readyAt - s.clock) : 0 };
+    }
+
     if (
       s.rebirths === 0 &&
       s.research.length === 0 &&
@@ -2158,6 +2232,21 @@
     };
     s.burstUntil = Math.min(s.clock + 20, bounded(raw.burstUntil));
     s.lastScanClock = Math.min(s.clock, Number(raw.lastScanClock) || 0);
+    const encounters = raw.encounters;
+    if (encounters && typeof encounters === "object") {
+      s.encounters.serial = integer(encounters.serial, 1e9);
+      s.encounters.settled = integer(encounters.settled, s.encounters.serial);
+      s.encounters.nextAt = Math.min(s.clock + 600, bounded(encounters.nextAt));
+      s.encounters.rng = Number(encounters.rng) >>> 0 || 1;
+      const records = Array.isArray(encounters.history) ? encounters.history : [];
+      const seen = new Set();
+      s.encounters.history = records.filter(r => {
+        const def = byId(D.ENCOUNTERS, r?.id);
+        if (!def || !byId(def.choices, r.choice) || !Number.isInteger(r.token) || r.token < 1 || r.token > s.encounters.settled || seen.has(r.token)) return false;
+        seen.add(r.token); return true;
+      }).slice(0, 32).map(r => ({ token: r.token, id: r.id, choice: r.choice, clock: Math.min(s.clock, bounded(r.clock)) }));
+      s.encounters.pending = cleanEncounter(encounters.pending, s);
+    }
     const validCampaign = (r) => {
       const m = byId(D.MISSIONS, r?.id);
       return (
@@ -2247,6 +2336,10 @@
           ? { energy: r.energy, confirmations: [...r.confirmations] }
           : {}),
       };
+    }
+    if (s.mission && !s.encounters.pending) {
+      const event = cleanEncounter(raw.mission?.encounter, s);
+      if (event && event.mission === s.mission.id && !event.choice) s.mission.encounter = event;
     }
     if (s.mission || s.result) {
       s.campaign.preparation = null;
@@ -2350,6 +2443,9 @@
     campaignGoal,
     missionPrerequisite,
     routeArchive,
+    encounterCandidates,
+    encounterOffer,
+    chooseEncounter,
     startMission,
     claimMission,
     moduleOffer,

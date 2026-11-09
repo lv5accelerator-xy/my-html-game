@@ -7,7 +7,7 @@
   "use strict";
   const data = {
     VERSION: 32,
-    GAME_VERSION: "3.12.0-preview.1",
+    GAME_VERSION: "3.13.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -49,6 +49,392 @@
         detail: "把整条航线连成一张回收网络。",
       },
     ],
+    ENCOUNTERS: [
+  {
+    "id": "freighter",
+    "name": "无人货船",
+    "description": "封闭货仓仍沿旧航线漂流，回收臂能接近它。",
+    "missions": [
+      "belt",
+      "supply-run"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "cargo",
+        "name": "回收封存货物",
+        "dustSeconds": 12,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "无人货船 · 回收封存货物：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "manifest",
+        "name": "校对货物清单",
+        "dustSeconds": 0,
+        "samples": 2,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "无人货船 · 校对货物清单：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "capsule",
+    "name": "损坏的运输舱",
+    "description": "舱体没有生命信号；货架和缓冲衬里可以分别利用。",
+    "missions": [
+      "belt",
+      "wreck"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "shell",
+        "name": "回收舱壳",
+        "dustSeconds": 8,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "损坏的运输舱 · 回收舱壳：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "lining",
+        "name": "拆检缓冲衬里",
+        "dustSeconds": 0,
+        "samples": 2,
+        "seconds": 35,
+        "costSamples": 0,
+        "record": "损坏的运输舱 · 拆检缓冲衬里：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "beacon",
+    "name": "古老导航信标",
+    "description": "旧信标已经停播，可选择带回硬件或保留校准数据。",
+    "missions": [
+      "belt",
+      "supply-run"
+    ],
+    "minPort": 1,
+    "module": "nav",
+    "choices": [
+      {
+        "id": "hardware",
+        "name": "拆下闲置支架",
+        "dustSeconds": 10,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "古老导航信标 · 拆下闲置支架：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "chart",
+        "name": "测绘旧航标",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 45,
+        "costSamples": 0,
+        "record": "古老导航信标 · 测绘旧航标：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "probe",
+    "name": "失联采矿探针",
+    "description": "探针的电池耗尽，缓存里仍有一小段矿层读数。",
+    "missions": [
+      "belt",
+      "echo"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "ore",
+        "name": "接收矿石",
+        "dustSeconds": 15,
+        "samples": 0,
+        "seconds": 20,
+        "costSamples": 0,
+        "record": "失联采矿探针 · 接收矿石：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "data",
+        "name": "读取矿层缓存",
+        "dustSeconds": 0,
+        "samples": 2,
+        "seconds": 30,
+        "costSamples": 0,
+        "record": "失联采矿探针 · 读取矿层缓存：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "research",
+    "name": "废弃科研设备",
+    "description": "设备已无人使用，原始实验标签尚可辨认。",
+    "missions": [
+      "echo",
+      "garden",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": "scanner",
+    "choices": [
+      {
+        "id": "instrument",
+        "name": "回收测量仪",
+        "dustSeconds": 18,
+        "samples": 0,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "废弃科研设备 · 回收测量仪：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "sample",
+        "name": "提取对照样本",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 40,
+        "costSamples": 1,
+        "record": "废弃科研设备 · 提取对照样本：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "crate",
+    "name": "漂流补给箱",
+    "description": "密封指示灯完好，箱内的材料可立即回收。",
+    "missions": [
+      "belt",
+      "supply-run"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "open",
+        "name": "拆封入库",
+        "dustSeconds": 6,
+        "samples": 1,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "漂流补给箱 · 拆封入库：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "sort",
+        "name": "分类清点",
+        "dustSeconds": 16,
+        "samples": 0,
+        "seconds": 20,
+        "costSamples": 0,
+        "record": "漂流补给箱 · 分类清点：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "signal",
+    "name": "未知求救信号",
+    "description": "近期自动求助来自一艘空置救援浮标。先核验来源，再决定用途。",
+    "missions": [
+      "supply-run",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": "scanner",
+    "choices": [
+      {
+        "id": "verify",
+        "name": "核验信号并留档",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 45,
+        "costSamples": 0,
+        "record": "未知求救信号 · 核验信号并留档：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "power",
+        "name": "回收浮标电源",
+        "dustSeconds": 12,
+        "samples": 1,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "未知求救信号 · 回收浮标电源：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "debris",
+    "name": "不稳定残骸区",
+    "description": "残骸正在缓慢散开。远距回收与固定采样都能安全完成。",
+    "missions": [
+      "belt",
+      "echo"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "remote",
+        "name": "远距回收碎片",
+        "dustSeconds": 10,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "不稳定残骸区 · 远距回收碎片：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "anchor",
+        "name": "消耗样本固定采样器",
+        "dustSeconds": 5,
+        "samples": 3,
+        "seconds": 40,
+        "costSamples": 1,
+        "record": "不稳定残骸区 · 消耗样本固定采样器：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "stardust",
+    "name": "星尘富集带",
+    "description": "尘带的密度比航图更高，可带回货物或留下一份密度记录。",
+    "missions": [
+      "belt",
+      "echo"
+    ],
+    "minPort": 0,
+    "module": null,
+    "choices": [
+      {
+        "id": "collect",
+        "name": "展开回收网",
+        "dustSeconds": 22,
+        "samples": 0,
+        "seconds": 35,
+        "costSamples": 0,
+        "record": "星尘富集带 · 展开回收网：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "density",
+        "name": "保存密度样本",
+        "dustSeconds": 4,
+        "samples": 2,
+        "seconds": 20,
+        "costSamples": 0,
+        "record": "星尘富集带 · 保存密度样本：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "record",
+    "name": "旧时代通信记录",
+    "description": "无人转发器里有注明来源和年代的历史记录，不是新的求救。",
+    "missions": [
+      "supply-run",
+      "wreck",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": null,
+    "choices": [
+      {
+        "id": "archive",
+        "name": "校对并归档",
+        "dustSeconds": 0,
+        "samples": 2,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "旧时代通信记录 · 校对并归档：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "recycle",
+        "name": "保存副本后回收外壳",
+        "dustSeconds": 10,
+        "samples": 0,
+        "seconds": 0,
+        "costSamples": 0,
+        "record": "旧时代通信记录 · 保存副本后回收外壳：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "relay",
+        "name": "补足样本修复转发器",
+        "dustSeconds": 6,
+        "samples": 3,
+        "seconds": 40,
+        "costSamples": 1,
+        "record": "旧时代通信记录 · 补足样本修复转发器：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "component",
+    "name": "破损的航站组件",
+    "description": "旧泊位组件的接口与归航星港相容。",
+    "missions": [
+      "supply-run",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": "battery",
+    "choices": [
+      {
+        "id": "metal",
+        "name": "回收金属支架",
+        "dustSeconds": 18,
+        "samples": 0,
+        "seconds": 15,
+        "costSamples": 0,
+        "record": "破损的航站组件 · 回收金属支架：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "interface",
+        "name": "检修接驳接口",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 45,
+        "costSamples": 0,
+        "record": "破损的航站组件 · 检修接驳接口：已确认来源并写入航行记录。"
+      }
+    ]
+  },
+  {
+    "id": "shelter",
+    "name": "未登记的小型避难舱",
+    "description": "避难舱已经空置，离舱登记确认乘员抵达了其他航站。",
+    "missions": [
+      "supply-run",
+      "garden",
+      "belt"
+    ],
+    "minPort": 1,
+    "module": "medbay",
+    "choices": [
+      {
+        "id": "supply",
+        "name": "清点剩余补给",
+        "dustSeconds": 8,
+        "samples": 2,
+        "seconds": 25,
+        "costSamples": 0,
+        "record": "未登记的小型避难舱 · 清点剩余补给：已确认来源并写入航行记录。"
+      },
+      {
+        "id": "register",
+        "name": "补录安全等待位置",
+        "dustSeconds": 0,
+        "samples": 3,
+        "seconds": 40,
+        "costSamples": 0,
+        "record": "未登记的小型避难舱 · 补录安全等待位置：已确认来源并写入航行记录。"
+      }
+    ]
+  }
+],
     MILESTONES: [10, 25, 50],
     MODULE_MAX_LEVEL: 3,
     MODULE_UPGRADE_SAMPLES: [6, 12],

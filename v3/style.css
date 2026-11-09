@@ -1867,3 +1867,8 @@ p {
   .row-action button, .control-row input, .control-row select { min-height:44px; }
   .goal-rail { min-height:0; }
 }
+
+.encounter-panel { border-top:2px solid #edbb75; padding:20px 0; margin:16px 0; }
+.event-choices { display:flex; flex-wrap:wrap; gap:12px; }
+.event-choices button { flex:1 1 210px; text-align:left; white-space:normal; }
+.event-choices small { display:block; margin-top:6px; }

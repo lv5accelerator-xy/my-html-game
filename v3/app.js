@@ -636,10 +636,16 @@
       return `<article class="resident-request" id="resident-${r.id}"><div><small>${r.from}</small><h3>${r.title}</h3><p>${r.record ? escape(reply.text) : r.ready ? r.arrival : r.brief}</p></div><div class="resident-request-actions">${r.record ? `<p class="resident-collection">已收藏 · ${r.collection}</p><details data-details-key="resident-letter-${r.id}"><summary>重读回信</summary><p>${escape(reply.label)}</p><p>${escape(reply.text)}</p><small>你的星港 · ${ending.title}；${D.PORT_FOCUSES.find((p) => p.id === state.council.priority)?.name || "共同建设"}</small></details>` : r.ready ? r.replies.map((x) => `<button class="outline" ${action("resident-reply", r.id)} data-reply="${x.id}">${x.label}</button>`).join("") : r.active ? `<p>已接下 · ${state.mission ? "等待本次补给归航" : "请派遣两港补给并领取报告"}</p><button class="outline" ${action("nav", "explore")} data-goal-focus="${state.result ? "report" : state.mission ? "active-mission" : "mission-supply-run"}">前往补给交接</button>` : `<button class="outline" ${action("resident-accept", r.id)} ${r.available ? "" : "disabled"}>接下委托</button><small>同一时间接一份；先处理当前航程。接下后暂停自动派遣。</small>`}</div></article>`;
     }).join("")}</section>`;
   }
+  function encounterPanel() {
+    const event = E.encounterOffer(state);
+    const history = state.encounters.history;
+    if (!event && !history.length) return "";
+    return `<section class="encounter-panel" id="encounter-panel" tabindex="-1" aria-label="动态拾荒发现"><h2>${event ? event.name : "航行发现记录"}</h2>${event ? `<p>${event.description}</p><p>本次额外发现 · 普通探索收益独立领取 · 无选择期限</p>${event.choice ? `<p>正在处理 · 剩余 <strong data-encounter-time></strong> · 原结果已锁定</p>` : `<div class="event-choices">${event.choices.map(c => `<button class="outline" ${action("encounter", c.id)} data-token="${event.token}" ${c.available ? "" : "disabled"}><strong>${c.name}</strong><small>+${number(c.dust)} 星尘 · +${c.samples} 样本 · ${duration(c.seconds)}${c.costSamples ? ` · 支出 ${c.costSamples} 样本` : ""}</small></button>`).join("")}</div>`}` : ""}${history.length ? `<details data-details-key="encounter-history"><summary>已记录 ${history.length} 次发现（保留最近32次）</summary>${history.map(r => `<p>${escape(D.ENCOUNTERS.find(e => e.id === r.id).choices.find(c => c.id === r.choice).record)}</p>`).join("")}</details>` : ""}</section>`;
+  }
   function explore() {
     const port = D.PORT[state.starport];
     return `<div class="page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
+      ${missionReport()}${encounterPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
         .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
@@ -745,6 +751,7 @@
     document.querySelectorAll("[data-beacon-seconds]").forEach((el) => {
       el.textContent = remaining;
     });
+    if ($("[data-encounter-time]")) $("[data-encounter-time]").textContent = duration(Math.max(0, state.encounters.pending.readyAt - state.clock));
     if (state.mission) {
       const m = state.mission;
       if ($("[data-mission-time]"))
@@ -830,6 +837,9 @@
       state.chapter,
       state.campaign,
       state.council,
+      state.encounters,
+      state.mission?.id,
+      state.result,
       state.rescue,
       state.epilogue,
       state.afterword,
@@ -1082,6 +1092,8 @@
           : null;
         toast(story ? "重要发现已永久归档，故事奖励已入库。" : "探索回收物已入库，当前目标已更新。");
       }
+    } else if (kind === "encounter") {
+      if (E.chooseEncounter(state, button.dataset.token, id)) toast("发现处理方案已确认，结果与航行记录会自动保存。");
     } else if (kind === "resident-accept") E.acceptResidentRequest(state, id);
     else if (kind === "resident-reply") {
       if (E.completeResidentRequest(state, id, button.dataset.reply)) toast("回信与收藏已归档。星港的日常还会继续。");

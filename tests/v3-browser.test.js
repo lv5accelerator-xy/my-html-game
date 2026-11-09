@@ -115,6 +115,24 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    for (const def of D.ENCOUNTERS) {
+      const fixture = require("./helpers/v3-fixtures.cjs").encounterReady(def.id, TIME);
+      fixture.lastAt = TIME; fixture.samples = 10;
+      await scenario(`v3.13 ${def.name}: real choice, countdown, reload and immutable discovery record`, { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        await page.setViewportSize({ width: 375, height: 900 });
+        await page.locator('#main [data-action="nav"][data-id="explore"]').first().click();
+        const token = fixture.encounters.pending.token, choice = fixture.encounters.pending.choices[0];
+        await page.locator('#encounter-panel [data-action="encounter"]').first().click();
+        assert.equal((await read(page)).encounters.serial, token);
+        await page.clock.runFor(choice.seconds * 1000 + 1000);
+        await page.reload();
+        const saved = await read(page);
+        assert.equal(saved.encounters.pending, null);
+        assert.equal(saved.encounters.history.length, 1);
+        assert.equal(saved.encounters.history[0].choice, choice.id);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      });
+    }
     await scenario("v3.12 automation retains live buttons, drafts and focus at desktop and phone widths", { [S.KEY]: JSON.stringify({ ...ready(), rebirths: 4, automation: { enabled: true, policy: "balanced", reserve: 0, research: false, dispatch: false } }) }, async page => {
       await page.locator('#navigation [data-id="fleet"]').click();
       for (const width of [1280, 375]) {

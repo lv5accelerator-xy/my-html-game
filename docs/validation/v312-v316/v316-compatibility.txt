@@ -1,0 +1,3 @@
+2026-11-09T15:38:02Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-compatibility.test.js
+v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration
+EXIT=0

@@ -1891,3 +1891,24 @@ p {
 .facility-controls button { min-height:44px; }
 .port-activity { color:#7ed6c1; font-size:.85rem; }
 @media(prefers-reduced-motion:reduce) { .port-atlas * { animation:none !important; transition:none !important; } }
+
+.harbor-home, .harbor-management { padding:24px 0; border-top:1px solid #354750; margin-top:24px; }
+.harbor-focuses, .harbor-offers, .harbor-project-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:16px; }
+.harbor-focuses button { white-space:normal; text-align:left; }
+.harbor-focuses small { display:block; margin-top:6px; }
+.harbor-focuses [aria-pressed="true"] { border-color:#edbb75; background:#2c2a23; }
+.harbor-offers article, .harbor-project { padding:16px 0; border-bottom:1px solid #293b44; }
+.harbor-active { margin:20px 0; padding:20px; border-left:3px solid #7ed6c1; background:#142029; }
+.harbor-active progress { display:block; width:100%; height:10px; accent-color:#7ed6c1; }
+.harbor-actions { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0; }
+.harbor-projects, .harbor-management > details { margin:16px 0; }
+.atlas-level { fill:#b1c2c6; font-size:16px; }
+@media(max-width:600px) { .harbor-active { padding:12px; } .harbor-focuses { grid-template-columns:1fr; gap:8px; } .harbor-actions button { width:100%; min-height:44px; } }
+
+.harbor-focus-description { display:none; color:#7ed6c1; }
+@media(max-width:600px) {
+  .harbor-focuses { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .harbor-focuses button { min-width:0; padding:10px 4px; min-height:44px; text-align:center; }
+  .harbor-focuses small { display:none; }
+  .harbor-focus-description { display:block; font-size:.85rem; margin:8px 0; }
+}

@@ -83,7 +83,7 @@
       lore: [],
       journal: [],
       discoveries: 0,
-      encounters: { serial: 0, settled: 0, nextAt: 0, rng: (Number(seed) ^ 0x3e72a1) >>> 0 || 1, pending: null, history: [] },
+      encounters: { serial: 0, settled: 0, nextAt: 0, rng: (Number(seed) ^ 0x3e72a1) >>> 0 || 1, pending: null, history: [], catalog: [] },
       starport: 0,
       chapter: [],
       campaign: { completed: [], preparation: null },
@@ -98,6 +98,8 @@
       },
       epilogue: { confirmed: [], ending: null },
       afterword: { active: null, ready: false, completed: [] },
+      management: { focus: "production", cycle: 0, active: null, projects: {}, counts: {},
+        stats: { deliveries: 0, voyages: 0, dustSpent: 0, samplesSpent: 0 }, history: [], collections: [] },
       records: [],
       beacon: { nextAt: 45, expiresAt: 0 },
       burstUntil: 0,
@@ -849,7 +851,7 @@
         (plan ? plan.samples : 0) +
         (explorer ? 1 : 0) +
         (s.chapter?.includes("nursery") ? 1 : 0),
-      dust: Math.max(20, rawRate(s) * m.yieldSeconds * fit.dust * (plan ? plan.dust : 1)),
+      dust: bounded(Math.max(20, rawRate(s) * m.yieldSeconds * fit.dust * (plan ? plan.dust : 1))),
     };
   }
   function encounterCandidates(s, missionId) {
@@ -886,6 +888,8 @@
     addDust(s, choice.dust);
     s.samples = bounded(s.samples + choice.samples);
     s.encounters.settled = event.token;
+    const entry = `${event.id}:${event.choice}`;
+    if (!s.encounters.catalog.includes(entry)) s.encounters.catalog.push(entry);
     s.encounters.history.unshift({ token: event.token, id: event.id, choice: event.choice, clock: s.clock });
     s.encounters.history = s.encounters.history.slice(0, 32);
     s.encounters.pending = null;
@@ -947,6 +951,8 @@
           }
         : {}),
     };
+    const order = s.management.active;
+    if (s.epilogue.ending && order && order.mission === id) s.mission.harborOrder = order.serial;
     const encounter = succeeded && rollEncounter(s, m);
     if (encounter) s.mission.encounter = encounter;
     if (storyMission(m)) track.preparation = null;
@@ -976,6 +982,7 @@
         ? { energy: m.energy, confirmations: [...m.confirmations] }
         : {}),
     };
+    if (m.harborOrder) s.result.harborOrder = m.harborOrder;
     if (m.encounter && !s.encounters.pending) s.encounters.pending = clone(m.encounter);
     s.mission = null;
     log(
@@ -1025,6 +1032,90 @@
       `${offer.level ? "升级" : "装配"}${byId(D.MODULES, id).name}：${s.modules[id]} 级，使用 ${offer.samples} 份样本。`,
     );
     return true;
+  }
+  function harborTerms(s, id) {
+    const need = byId(D.HARBOR_NEEDS, id), focus = byId(D.HARBOR_FOCUSES, s.management.focus);
+    if (!s.epilogue.ending || !need) return null;
+    const tier = Math.min(3, Math.floor(s.management.cycle / 7));
+    const level = id => s.management.projects[id] || 0;
+    const dustCost = Math.ceil(need.dust * (1 + tier * .25) * focus.dust * (id === "repair" ? 1 - level("repair-dock") * .04 : 1));
+    const samplesCost = Math.max(1, need.samples + focus.samples + Math.min(1, tier) - (["food", "reception"].includes(id) ? level("habitat") : 0));
+    const work = need.seconds * focus.work * (["food", "energy", "cargo"].includes(id) ? 1 - level("supply-network") * .1 : 1);
+    return { id, serial: s.management.cycle + 1, focus: focus.id, acceptedClock: s.clock,
+      dustCost, samplesCost, workSeconds: Math.max(30, Math.ceil(work)), productionGoal: Math.min(250000, Math.max(600, Math.ceil(rawRate(s) * work))), produced: 0,
+      mission: need.mission, tripsRequired: Math.max(1, (tier > 0 ? 2 : 1) + focus.trips - (["routes", "comms"].includes(id) && level("route-station") >= 2 ? 1 : 0)), trips: 0 };
+  }
+  function harborOffers(s) {
+    if (!s.epilogue.ending || s.management.active || s.management.cycle >= 1e9) return [];
+    const focus = byId(D.HARBOR_FOCUSES, s.management.focus), count = s.management.projects["public-berths"] ? 4 : 3;
+    return Array.from({ length: count }, (_, i) => D.HARBOR_NEEDS[(s.management.cycle + focus.offset + i * 2) % D.HARBOR_NEEDS.length])
+      .map(need => ({ ...clone(need), terms: harborTerms(s, need.id) }));
+  }
+  function setHarborFocus(s, id) {
+    if (!s.epilogue.ending || !byId(D.HARBOR_FOCUSES, id)) return false;
+    s.management.focus = id;
+    return true;
+  }
+  function acceptHarborNeed(s, id, serial) {
+    if (Number(serial) !== s.management.cycle + 1 || !harborOffers(s).some(n => n.id === id)) return false;
+    s.management.active = harborTerms(s, id);
+    log(s, `居民需求：${byId(D.HARBOR_NEEDS, id).name}。方案已记录，无期限；探索或港内生产均可推进。`);
+    return true;
+  }
+  function harborStatus(s) {
+    const task = s.management.active;
+    if (!s.epilogue.ending || !task) return null;
+    const preparationLeft = Math.max(0, task.acceptedClock + task.workSeconds - s.clock);
+    const workReady = (task.produced >= task.productionGoal && preparationLeft === 0) || task.trips >= task.tripsRequired;
+    const reason = !workReady ? `完成指定补给，或港内生产与筹备（还需 ${preparationLeft} 秒筹备）`
+      : s.samples < task.samplesCost ? `还需 ${task.samplesCost - s.samples} 份样本，可安全探索取得`
+      : s.dust < task.dustCost ? `还需 ${Math.ceil(task.dustCost - s.dust)} 星尘；自动购买预算可保留交付费用` : "";
+    return { ...clone(task), ...clone(byId(D.HARBOR_NEEDS, task.id)), preparationLeft, workReady, available: !reason, reason };
+  }
+  function deliverHarborNeed(s, serial) {
+    const task = harborStatus(s);
+    if (!task?.available || task.serial !== Number(serial)) return false;
+    s.dust -= task.dustCost; s.samples -= task.samplesCost;
+    const h = s.management;
+    h.cycle++; h.stats.deliveries++;
+    h.stats.dustSpent = bounded(h.stats.dustSpent + task.dustCost);
+    h.stats.samplesSpent = bounded(h.stats.samplesSpent + task.samplesCost);
+    h.counts[task.id] = integer((h.counts[task.id] || 0) + 1, 1e9);
+    h.history.unshift({ serial: task.serial, id: task.id, focus: task.focus, clock: s.clock });
+    h.history = h.history.slice(0, 24);
+    if (!h.collections.includes(`need-${task.id}`)) h.collections.push(`need-${task.id}`);
+    h.active = null;
+    log(s, `${task.name}已交付，居民回信「${task.collection}」已记录。下一轮需求开放。`);
+    return true;
+  }
+  function harborProjectOffer(s, id) {
+    const project = byId(D.HARBOR_PROJECTS, id);
+    if (!project) return null;
+    const level = s.management.projects[id] || 0, next = level + 1;
+    const dustCost = project.dust * next, samplesCost = project.samples + (next - 1) * 3;
+    const reason = !s.epilogue.ending ? "确认任一正式结局后开放"
+      : level >= 3 ? "三期已完成，永久保留"
+      : !s.management.counts[project.need] ? `先完成一次${byId(D.HARBOR_NEEDS, project.need).name}`
+      : s.management.stats.deliveries < D.HARBOR_STAGE_DELIVERIES[level] ? `累计交付 ${D.HARBOR_STAGE_DELIVERIES[level]} 份居民需求后开放`
+      : s.dust < dustCost || s.samples < samplesCost ? `需要 ${dustCost} 星尘与 ${samplesCost} 样本` : "";
+    return { ...clone(project), level, next, dustCost, samplesCost, available: !reason, reason };
+  }
+  function buildHarborProject(s, id, expectedLevel) {
+    const offer = harborProjectOffer(s, id);
+    if (!offer?.available || offer.level !== Number(expectedLevel)) return false;
+    s.dust -= offer.dustCost; s.samples -= offer.samplesCost;
+    s.management.projects[id] = offer.next;
+    if (offer.next === 3 && !s.management.collections.includes(`project-${id}`)) s.management.collections.push(`project-${id}`);
+    log(s, `${offer.name}第${offer.next}期建成。${offer.benefit}`);
+    return true;
+  }
+  function harborGoal(s) {
+    if (!s.epilogue.ending || !reachable(s, "explore")) return null;
+    const task = harborStatus(s);
+    const base = { action: "explore", focus: "harbor-management", value: 0, target: 1, eta: 0 };
+    if (!task) return { ...base, title: "规划归航星港的下一班", detail: "接下一份居民需求，安排生产或航线；交付后推进有限工程与居民回信。", label: "查看港务经营" };
+    if (s.samples < task.samplesCost) return { ...base, title: `${task.name} · 收集交付样本`, detail: `需要 ${task.samplesCost} 份样本，现有 ${s.samples}；普通安全探索可以补足。`, label: "安排安全回收", focus: s.mission ? "active-mission" : "mission-belt", value: s.samples, target: task.samplesCost, eta: null };
+    return { ...base, title: `${task.name} · ${task.available ? "可以交付" : "正在准备"}`, detail: task.reason || "交付将扣除已列明资源，回信、经营统计与下一轮目标会保存。", label: task.available ? "完成交付" : "查看需求进度", value: task.workReady ? 1 : task.produced / task.productionGoal, eta: task.workReady ? incomeEta(s, Math.max(0, task.dustCost - s.dust)) : Math.max(task.preparationLeft, incomeEta(s, Math.max(0, task.productionGoal - task.produced)) || 0) };
   }
   function residentRequests(s) {
     if (!s.epilogue.ending) return [];
@@ -1134,6 +1225,11 @@
     }
     if (r.id === "supply-run" && r.succeeded && s.afterword.active)
       s.afterword.ready = true;
+    const order = s.management.active;
+    if (s.epilogue.ending && order && r.harborOrder === order.serial && r.id === order.mission && r.succeeded) {
+      order.trips = Math.min(order.tripsRequired, order.trips + 1);
+      s.management.stats.voyages = integer(s.management.stats.voyages + 1, 1e9);
+    }
     s.result = null;
     return true;
   }
@@ -1273,6 +1369,9 @@
       buildings: { ...s.buildings },
       research: [...s.research],
       modules: { ...s.modules },
+      harborWork: s.management.active ? { serial: s.management.active.serial, produced: s.management.active.produced, trips: s.management.active.trips } : null,
+      harborDeliveries: s.management.stats.deliveries,
+      harborProjects: { ...s.management.projects },
     };
   }
   function returnReport(s, before, totals) {
@@ -1288,13 +1387,23 @@
       modules: D.MODULES.filter(
         (m) => (s.modules[m.id] || 0) > (before.modules[m.id] || 0),
       ).map((m) => ({ id: m.id, level: s.modules[m.id] })),
+      harborChanges: [
+        ...(s.management.active && before.harborWork?.serial === s.management.active.serial && (s.management.active.produced > before.harborWork.produced || s.management.active.trips > before.harborWork.trips)
+          ? [`居民需求筹备：生产工作量 ${Math.floor(s.management.active.produced)}/${s.management.active.productionGoal}，匹配补给 ${s.management.active.trips}/${s.management.active.tripsRequired}，交付仍待确认`] : []),
+        ...(s.management.stats.deliveries > (before.harborDeliveries || 0) ? [`居民需求交付 +${s.management.stats.deliveries - (before.harborDeliveries || 0)}`] : []),
+        ...D.HARBOR_PROJECTS.filter(p => (s.management.projects[p.id] || 0) > (before.harborProjects?.[p.id] || 0)).map(p => `${p.name}已完成第${s.management.projects[p.id]}期`),
+      ],
       pending: s.result?.id || null,
       story: s.result?.story || null,
     };
   }
   function tick(s, offline, active, activity) {
     // Income uses the previous second's state. Completion and purchases affect the next second.
-    addDust(s, productionRate(s));
+    const produced = addDust(s, productionRate(s));
+    if (s.epilogue.ending && s.management.active) {
+      const task = s.management.active;
+      task.produced = Math.min(task.productionGoal, bounded(task.produced + produced));
+    }
     s.clock++;
     if (offline) s.timing.offlineSeconds++;
     else if (active) s.timing.foregroundSeconds++;
@@ -1806,7 +1915,13 @@
         benefit: live ? benefits[region.id] : "此区域尚未生效，完成实际工程后才会点亮。",
         record: record ? { id: sceneId, title: record.title } : null,
         target: (region.id === "berth" && s.rescue.completed.length === 3) || (region.id === "focus" && focus) ? "route-archive" : region.target };
-    });
+    }).concat(!s.epilogue.ending ? [] : D.HARBOR_PROJECTS.map((project, i) => {
+      const level = s.management.projects[project.id] || 0;
+      return { id: project.id, name: project.name, x: 80 + i * 110, y: 370, shape: "M-14-12h28v24h-28zM-6-4h12v8H-6z" + (level >= 2 ? "M-24-4h10v16h-10zM14-4h10v16H14z" : "") + (level === 3 ? "M-18-16h36M0-26v10M-24 16h48" : ""),
+        target: `harbor-project-${project.id}`, live: level > 0, kind: "longterm", level,
+        status: `建设 ${level}/3 期`, benefit: level ? project.benefit : "完成居民需求后可分三期建设，无无限等级或永久生产倍率。",
+        record: null };
+    }));
   }
   function portActivity(s) {
     const firstConvoy = s.campaign.completed.length === D.MISSIONS.filter(m => m.campaign).length;
@@ -1839,9 +1954,9 @@
       return {
         title: "启动第一艘拾荒无人机",
         detail: `收集 ${buildingCost(s, "drone")} 星尘，建造无人机，让航站开始自动运转。`,
-        action: "fleet",
-        label: "前往舰队",
-        focus: "building-drone",
+        action: s.dust >= buildingCost(s, "drone") ? "fleet" : "home",
+        label: s.dust >= buildingCost(s, "drone") ? "前往舰队" : "扫描信标积累材料",
+        focus: s.dust >= buildingCost(s, "drone") ? "building-drone" : "scan-control",
         value: s.dust,
         target: buildingCost(s, "drone"),
         eta: incomeEta(s, Math.max(0, buildingCost(s, "drone") - s.dust)),
@@ -1869,6 +1984,8 @@
     if (epilogue) return epilogue;
     const resident = residentGoal(s);
     if (resident) return resident;
+    const harbor = harborGoal(s);
+    if (harbor) return harbor;
     if (s.encounters.pending && !s.mission) {
       const event = encounterOffer(s);
       return { title: event.name, detail: event.choice ? "回收已安排，生产继续。完成后写入航行记录。" : "有一份额外发现等待安排；普通探索收益已保留，没有选择期限。",
@@ -2272,6 +2389,38 @@
     };
     s.burstUntil = Math.min(s.clock + 20, bounded(raw.burstUntil));
     s.lastScanClock = Math.min(s.clock, Number(raw.lastScanClock) || 0);
+    const harbor = raw.management;
+    if (s.epilogue.ending && harbor && typeof harbor === "object") {
+      const h = s.management;
+      if (byId(D.HARBOR_FOCUSES, harbor.focus)) h.focus = harbor.focus;
+      h.cycle = integer(harbor.cycle, 1e9);
+      h.stats.deliveries = h.cycle;
+      h.stats.voyages = integer(harbor.stats?.voyages, 1e9);
+      h.stats.dustSpent = bounded(harbor.stats?.dustSpent);
+      h.stats.samplesSpent = bounded(harbor.stats?.samplesSpent);
+      for (const need of D.HARBOR_NEEDS) if (harbor.counts?.[need.id] > 0) h.counts[need.id] = integer(harbor.counts[need.id], h.cycle);
+      for (const project of D.HARBOR_PROJECTS) {
+        const level = integer(harbor.projects?.[project.id], D.HARBOR_STAGE_DELIVERIES.filter(n => h.cycle >= n).length);
+        if (level && h.counts[project.need]) h.projects[project.id] = level;
+      }
+      const records = Array.isArray(harbor.history) ? harbor.history : [], seen = new Set();
+      h.history = records.filter(r => {
+        if (!byId(D.HARBOR_NEEDS, r?.id) || !byId(D.HARBOR_FOCUSES, r.focus) || !Number.isInteger(r.serial) || r.serial < 1 || r.serial > h.cycle || seen.has(r.serial)) return false;
+        seen.add(r.serial); return true;
+      }).slice(0, 24).map(r => ({ serial: r.serial, id: r.id, focus: r.focus, clock: Math.min(s.clock, bounded(r.clock)) }));
+      h.collections = [...new Set(Array.isArray(harbor.collections) ? harbor.collections : [])].filter(id =>
+        D.HARBOR_NEEDS.some(n => `need-${n.id}` === id && h.counts[n.id]) || D.HARBOR_PROJECTS.some(p => `project-${p.id}` === id && h.projects[p.id] === 3));
+      const a = harbor.active, def = byId(D.HARBOR_NEEDS, a?.id);
+      if (def && a.serial === h.cycle + 1 && a.serial <= 1e9 && byId(D.HARBOR_FOCUSES, a.focus) && a.mission === def.mission &&
+        Number.isFinite(a.dustCost) && a.dustCost >= def.dust * .4 && a.dustCost <= def.dust * 2 &&
+        Number.isInteger(a.samplesCost) && a.samplesCost >= 1 && a.samplesCost <= def.samples + 5 &&
+        Number.isFinite(a.productionGoal) && a.productionGoal >= 600 && a.productionGoal <= 250000 &&
+        (a.workSeconds === undefined || (Number.isFinite(a.workSeconds) && a.workSeconds >= 0 && a.workSeconds <= 500)) &&
+        Number.isInteger(a.tripsRequired) && a.tripsRequired >= 1 && a.tripsRequired <= 2 &&
+        Number.isFinite(a.acceptedClock) && a.acceptedClock >= 0 && a.acceptedClock <= s.clock)
+        h.active = { id: a.id, serial: a.serial, focus: a.focus, acceptedClock: a.acceptedClock, dustCost: a.dustCost, samplesCost: a.samplesCost,
+          workSeconds: a.workSeconds ?? 0, productionGoal: a.productionGoal, produced: bounded(a.produced, a.productionGoal), mission: a.mission, tripsRequired: a.tripsRequired, trips: integer(a.trips, a.tripsRequired) };
+    }
     const encounters = raw.encounters;
     if (encounters && typeof encounters === "object") {
       s.encounters.serial = integer(encounters.serial, 1e9);
@@ -2285,6 +2434,9 @@
         if (!def || !byId(def.choices, r.choice) || !Number.isInteger(r.token) || r.token < 1 || r.token > s.encounters.settled || seen.has(r.token)) return false;
         seen.add(r.token); return true;
       }).slice(0, 32).map(r => ({ token: r.token, id: r.id, choice: r.choice, clock: Math.min(s.clock, bounded(r.clock)) }));
+      const catalog = Array.isArray(encounters.catalog) ? encounters.catalog : [];
+      s.encounters.catalog = [...new Set([...catalog, ...s.encounters.history.map(r => `${r.id}:${r.choice}`)])].filter(key =>
+        D.ENCOUNTERS.some(e => e.choices.some(c => `${e.id}:${c.id}` === key)));
       s.encounters.pending = cleanEncounter(encounters.pending, s);
     }
     const validCampaign = (r) => {
@@ -2376,6 +2528,10 @@
           ? { energy: r.energy, confirmations: [...r.confirmations] }
           : {}),
       };
+    }
+    const order = s.management.active;
+    for (const [clean, saved] of [[s.mission, raw.mission], [s.result, raw.result]]) {
+      if (clean && order && saved?.harborOrder === order.serial && clean.id === order.mission && (!s.mission || s.mission.start >= order.acceptedClock)) clean.harborOrder = order.serial;
     }
     if (s.mission && !s.encounters.pending) {
       const event = cleanEncounter(raw.mission?.encounter, s);
@@ -2507,6 +2663,15 @@
     onboarding,
     portFacilities,
     portActivity,
+    harborTerms,
+    harborOffers,
+    setHarborFocus,
+    acceptHarborNeed,
+    harborStatus,
+    deliverHarborNeed,
+    harborProjectOffer,
+    buildHarborProject,
+    harborGoal,
     milestone,
   });
 });

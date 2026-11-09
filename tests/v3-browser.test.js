@@ -155,6 +155,114 @@ async function run() {
         await page.reload(); assert.equal(await page.locator('.atlas-arrivals path').count(), 3);
       });
     }
+    for (const ending of D.ENDINGS) {
+      const fixture = require("./helpers/v3-fixtures.cjs").completed(ending.id, TIME);
+      fixture.lastAt = TIME; fixture.run.dust = D.PRESTIGE_DUST;
+      await scenario(`v3.16 ${ending.title}: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump`, { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator('#harbor-management [data-action="harbor-accept"][data-id="food"]').click();
+        let state = await read(page); const task = structuredClone(state.management.active);
+        assert.equal(task.id, 'food');
+        await page.locator('#harbor-management [data-action="harbor-focus"][data-id="reception"]').click();
+        assert.deepEqual((await read(page)).management.active, task);
+        await page.locator('#mission-garden [data-action="mission"]').click();
+        state = await read(page); const seconds = state.mission.seconds;
+        assert.equal(state.mission.harborOrder, task.serial);
+        await page.clock.runFor(seconds * 1000);
+        await page.reload();
+        if (await page.locator('#dialog[open]').count()) await page.locator('#dialog-close').click();
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator('#report [data-action="claim"]').click();
+        state = await read(page); assert.equal(state.management.active.trips, 1);
+        const before = state.dust;
+        await page.locator('#harbor-management [data-action="harbor-deliver"]').click();
+        state = await read(page); assert.equal(state.management.stats.deliveries, 1);
+        assert.equal(state.dust, before - task.dustCost);
+        assert.ok(state.management.collections.includes('need-food'));
+        // Return to production terms for a second request and prepare it with passive production.
+        await page.locator('#harbor-management [data-action="harbor-focus"][data-id="production"]').click();
+        await page.locator('#harbor-management [data-action="harbor-accept"][data-id="repair"]').click();
+        state = await read(page); const production = structuredClone(state.management.active);
+        await page.clock.runFor((Math.max(production.workSeconds, Math.ceil(production.productionGoal / E.rawRate(state))) + 2) * 1000);
+        await page.locator('#harbor-management [data-action="harbor-deliver"]').click();
+        state = await read(page); assert.equal(state.management.stats.deliveries, 2);
+        for (let extra = 0; extra < 2; extra++) {
+          await page.locator('#harbor-management [data-action="harbor-accept"]').first().click();
+          const current = await read(page), order = current.management.active;
+          await page.clock.runFor((Math.max(order.workSeconds, Math.ceil(order.productionGoal / E.rawRate(current))) + 2) * 1000);
+          await page.locator('#harbor-management [data-action="harbor-deliver"]').click();
+        }
+        assert.equal((await read(page)).management.stats.deliveries, 4);
+        await openDetails(page,'.harbor-projects');
+        await page.locator('#harbor-project-repair-dock [data-action="harbor-build"]').click();
+        state = await read(page); assert.equal(state.management.projects['repair-dock'], 1);
+        const progress = structuredClone(state.management);
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          await page.locator('#harbor-management').scrollIntoViewIfNeeded();
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+          if (screenshotDir && ending.id === 'city') await page.screenshot({path:path.join(screenshotDir,`v3.16-management-${width}.png`)});
+        }
+        await page.locator('#navigation [data-id="home"]').click();
+        assert.equal(await page.locator('[data-facility="repair-dock"]').getAttribute('data-built'), 'true');
+        if (screenshotDir && ending.id === 'city') {
+          for (const width of [1280,375]) {
+            await page.setViewportSize({width,height:900});
+            await page.locator('#starport-overview').screenshot({path:path.join(screenshotDir,`v3.16-port-${width}.png`)});
+          }
+        }
+        await page.reload(); assert.deepEqual((await read(page)).management, progress);
+        await page.locator('#settings-button').click();
+        const [download] = await Promise.all([page.waitForEvent('download'), page.locator('[data-action="export"]').click()]);
+        const text = fs.readFileSync(await download.path(), 'utf8');
+        await page.locator('#import-file').setInputFiles({ name:'harbor.json', mimeType:'application/json', buffer:Buffer.from(text) });
+        assert.match(await page.locator('.restore-preview').innerText(), /经营交付/);
+        await page.locator('#confirm-import').click();
+        assert.deepEqual((await read(page)).management, progress);
+        await page.locator('#navigation [data-id="jump"]').click();
+        await page.locator('#main [data-action="jump"]').click(); await page.locator('[data-action="confirm-jump"]').click();
+        state = await read(page); assert.deepEqual(state.management, progress);
+        assert.equal(state.epilogue.ending, ending.id);
+      });
+    }
+    await scenario("v3.16 fresh player completes the first scan, fleet, route, story and jump loop using only real controls", null, async page => {
+      for (let i=0;i<30;i++) { await page.locator('[data-action="scan"]').click(); await page.clock.runFor(1000); }
+      await page.locator('#main [data-action="nav"][data-id="fleet"]').click();
+      await page.locator('[data-action="buy"][data-id="drone"]').click();
+      await page.locator('[data-action="route"][data-id="explore"]').click();
+      await page.locator('[data-action="mode"][data-id="10"]').click();
+      let jumped = false;
+      for(let step=0;step<144;step++) {
+        await page.clock.runFor(15000);
+        if(await page.locator('#dialog[open]').count()) await page.locator('#dialog-close').click();
+        let state=await read(page);
+        if(state.beacon.expiresAt > state.clock) {
+          if(!(await page.locator('#navigation [data-id="home"]').isDisabled())) await page.locator('#navigation [data-id="home"]').click();
+          if(await page.locator('[data-action="beacon"]').isVisible()) await page.locator('[data-action="beacon"]').click();
+        }
+        if(!(await page.locator('#navigation [data-id="fleet"]').isDisabled())) await page.locator('#navigation [data-id="fleet"]').click();
+        state=await read(page);
+        const research=D.RESEARCH.find(r=>!state.research.includes(r.id)&&state.run.dust>=r.unlock&&state.dust>=r.cost);
+        if(research) await page.locator(`[data-action="research"][data-id="${research.id}"]`).click();
+        else { const b=E.affordableBest(state); if(b) await page.locator(`[data-buy-id="${b.id}"]`).click(); }
+        state=await read(page);
+        if(state.result || (!state.mission && !state.lore.length && state.run.dust>=600)) {
+          await page.locator('#navigation [data-id="explore"]').click();
+          if(state.result) await page.locator('#report [data-action="claim"][data-id="repair"]').click();
+          else await page.locator('#mission-wreck [data-action="mission"]').click();
+        }
+        state=await read(page);
+        if(E.prestigeGain(state)&&!state.mission&&!state.result) {
+          await page.locator('#navigation [data-id="jump"]').click();
+          await page.locator('#main [data-action="jump"]').click(); await page.locator('[data-action="confirm-jump"]').click();
+          jumped=true; break;
+        }
+      }
+      assert.ok(jumped,'First loop reaches an actual confirmed jump within the player-model budget');
+      const done=await read(page); assert.equal(done.rebirths,1); assert.ok(done.lore.length>0);
+      assert.equal(done.automation.enabled,true);
+      assert.ok(done.timing.events.report); assert.ok(done.timing.events.prestige);
+    });
     for (const def of D.ENCOUNTERS) {
       const fixture = require("./helpers/v3-fixtures.cjs").encounterReady(def.id, TIME);
       fixture.lastAt = TIME; fixture.samples = 10;
@@ -246,6 +354,9 @@ async function run() {
             });
         }
         await page.setViewportSize({ width: 1280, height: 900 });
+        await page.locator('#main [data-action="nav"][data-id="home"]').click();
+        assert.equal(await page.evaluate(() => document.activeElement.id), 'scan-control');
+        assert.equal(await page.locator('#main [data-buy-id="drone"]').count(), 0);
         for (let i = 0; i < 6; i++) {
           await page.locator('[data-action="scan"]').click();
           await page.clock.fastForward(1000);

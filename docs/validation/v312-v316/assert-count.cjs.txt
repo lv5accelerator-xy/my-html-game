@@ -1,0 +1,29 @@
+'use strict';
+const Module = require('node:module');
+const original = Module._load, proxies = new WeakMap();
+let passed = 0, failed = 0;
+function call(fn, receiver, args) {
+  try {
+    const value = Reflect.apply(fn, receiver, args);
+    if (value && typeof value.then === 'function') return value.then(v => { passed++; return v; }, e => { failed++; throw e; });
+    passed++; return value;
+  } catch (error) { failed++; throw error; }
+}
+function wrap(target) {
+  if (proxies.has(target)) return proxies.get(target);
+  const proxy = new Proxy(target, {
+    apply(fn, receiver, args) { return call(fn, receiver, args); },
+    get(fn, key, receiver) {
+      const value = Reflect.get(fn, key, receiver);
+      if (key === 'strict') return wrap(value);
+      if (typeof value !== 'function' || ['AssertionError','CallTracker','constructor'].includes(key)) return value;
+      return (...args) => call(value, fn, args);
+    }
+  });
+  proxies.set(target, proxy); return proxy;
+}
+Module._load = function(request, ...args) {
+  const value = original.call(this, request, ...args);
+  return ['node:assert','assert','node:assert/strict','assert/strict'].includes(request) ? wrap(value) : value;
+};
+process.on('exit', () => console.log(`ASSERT_RESULT: ${JSON.stringify({file:process.argv[1],passed,failed})}`));

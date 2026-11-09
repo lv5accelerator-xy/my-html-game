@@ -1,0 +1,89 @@
+2026-11-09T15:16:28Z sha=508456827a798eaf48397511a5c408371c4665c3 command=node tests/v3-gameplay.test.js
+ok 1 - fresh save has a reachable goal; scans throttle and first drone creates passive income
+ok 2 - bulk purchase respects funds and capacity; 10/25/50 change production
+ok 3 - route is a single committed choice each run; unreachable goals are never emitted
+ok 4 - automation gates prevent early unlocks, obey reserve and buy at most once per second
+ok 5 - fractional time, offline automation and mission completion are chunk invariant
+ok 6 - offline cap and reversed system clock never grant extra income
+ok 7 - mission result survives a save round trip; reward and story choice can only be claimed once
+ok 8 - risk outcomes are deterministic across reload and failures have no dust penalty
+ok 9 - golden beacon expires, cannot be claimed twice, and recovery route adds a finite burst
+ok 10 - jump preserves permanent progress and blocks pending exploration
+ok 11 - starport spends available cores without removing historical production bonus
+ok 12 - equipment has two slots and no duplicate stacking
+ok 13 - legacy migration preserves every field, original text and live v2 save
+ok 14 - corrupt and future records stay intact; failed backup aborts restore
+ok 15 - untrusted save text cannot become executable journal markup or unlock unknown systems
+ok 16 - every story choice permits later crafting and upgrading without changing the choice or repeating rewards
+ok 17 - workshop costs come from real safe exploration, all five modules reach level three, and full slots are preserved
+ok 18 - purchase previews match actual milestone, research, core, route and equipped effects without mutating state
+ok 19 - income ETA accounts for burst expiry and mission diversion ending and stays finite or unknown
+ok 20 - unclaimed reports outrank construction, routes and jumps, and every next goal remains reachable
+ok 21 - local milestone timings distinguish visible and offline seconds, record once and survive a jump and reload
+ok 22 - v3.0 saves retain inventory, pending missions and archives; missing timing data starts now without fabricated events
+ok 23 - return briefing is observational: actual purchases, research, income and net balance match the unchanged simulation
+ok 24 - return briefing leaves a story pending, counts failed voyages, and never claims a story reward
+ok 25 - background briefing aggregates several ticks and still respects the eight-hour cap
+ok 26 - chapter two gates each sector and construction in sequence, including actually equipped level-two gear
+ok 27 - all nine old-choice combinations continue through three new stories without overwriting choices or automatic decisions
+ok 28 - chapter goals always lead to a reachable prerequisite, gear, sample, report or construction target
+ok 29 - old saves gain only the optional empty chapter; invalid construction and repeat dispatch cannot unlock or replay chapter rewards
+ok 30 - auto dispatch pauses for a reachable new chapter story but still runs ordinary safe voyages when prerequisites are missing
+ok 31 - chapter three requires a deliberate preparation and previews real time, diversion and rewards without spending resources
+ok 32 - nine old-choice combinations and every preparation and new decision finish chapter three with one-time rewards and original records
+ok 33 - long supply voyages and high-diversion calibration survive reload; offline claims never duplicate campaign rewards
+ok 34 - v32 records gain only optional campaign data; invalid preparations, out-of-order records and fabricated reports cannot skip the story
+ok 35 - campaign goals expose reachable research, sample and gear prerequisites; archives reflect old decisions and rereading is observational
+ok 36 - automation waits for manual campaign and council preparations; the unlocked safe supply route remains playable
+ok 37 - v3.3 archives, prepared and active voyages gain only optional council/loadouts fields with no changes to resources or rewards
+ok 38 - fourth chapter requires the first convoy, a manual meeting and exactly one affordable permanent construction
+ok 39 - all nine original choices, every port direction, preparation and new choice reach the same fourth-chapter finish with one-time rewards
+ok 40 - port directions have distinct bounded effects on later voyages, never change old economy, and previews are observational
+ok 41 - saved loadouts switch both slots atomically, preview real effects, follow upgrades and survive prestige/export/import
+ok 42 - invalid or unavailable loadouts cannot partly change equipment; explicit empty loadouts remain valid
+ok 43 - long council supply voyages, high diversion and ecology samples survive gear changes/reloads/offline returns without altered snapshots
+ok 44 - council goals expose construction, samples, research, saved gear and pending reports while rejecting out-of-order records
+ok 45 - eight hours offline never choose port construction or council stories; completed chapter and presets survive further production and jumps
+ok 46 - rescue requires the completed drill and manual energy; the resource-free plan works without ships, samples or lost records
+ok 47 - every original choice, port direction, energy and preparation rescues three distinct teams with single rewards and unchanged prior chapters
+ok 48 - three independent confirmations survive refresh, cannot be reused, and backup waiting has no offline deadline
+ok 49 - long rescue snapshots and rewards survive all gear changes, reloads and eight-hour returns while remaining manual
+ok 50 - energy effects change rescue previews only; paid arrangements charge once and do not remove any buildings, modules or observations
+ok 51 - invalid rescue records, consent snapshots and premature signatures cannot skip teams, duplicate rewards or erase valid earlier choices
+ok 52 - completed rescue, consent protocol and energy survive prestige and export/import; auto safe supply resumes only after signing
+ok 53 - v3.4 ready, partially prepared, active and pending council saves acquire only optional rescue defaults
+ok 54 - chapter six requires the signed rescue protocol; no time, offline production or automation chooses handoffs or endings
+ok 55 - all original choices, port directions, energies and preparations reach every explicit ending at zero cost without hidden karma
+ok 56 - partial handoffs, permanent ending, old records and legacy archive survive restore and prestige; ordinary active voyages are unchanged
+ok 57 - malformed or premature final records cannot skip chapters, commit an ending early or inject archive text
+ok 58 - v3.5 prepared, active, pending, partial-consent and protocol saves acquire only optional epilogue defaults
+ok 59 - early dialogue unlocks only after the actual event, with no future scenes or premature choice responses
+ok 60 - all original choices and every second-chapter reply have distinct read-only responses, retained continuity and event-gated construction scenes
+ok 61 - historical dialogue is reconstructed from existing records across restores, endings and jumps, without a new saved field or mutable shared text
+ok 62 - middle dialogue waits for actual reports and port construction; preparation and rehearsal do not finish the later rescue
+ok 63 - all middle replies retain actual voyage plans, old decisions and the built port through reading, restoring and jumps
+ok 64 - older choice-only archives do not invent a voyage plan, and a duplicate pending result cannot replace recorded history
+ok 65 - late communications require actual power, waiting, rescue reports, protocol and resident records
+ok 66 - every rescue reply retains its actual supply, voyage plan, port and original memories without reading or claiming twice
+ok 67 - finale previews cannot commit a future, and the archive contains only confirmed residents and the chosen ending
+ok 68 - chapter archives partition known records and letters exactly once and keep future chapters out
+ok 69 - historical rescue dialogue does not guess a missing voyage plan or replace a completed choice with a duplicate report
+ok 70 - preview mode never bypasses early story or milestone gates, and pending rescue dialogue requires the matching successful report
+ok 71 - resident requests require a confirmed ending, an idle ship and a fresh delivery after accepting
+ok 72 - all endings and resident replies keep old rewards unchanged and award each collection only once
+ok 73 - resident progress sanitizes unknown and duplicate replies, and legacy v3.9 saves gain only the optional field
+ok 74 - reading preferences survive reload independently, reject malformed values, and never damage game records
+ok 75 - v3.11 restore inspection is read-only, bounded, and does not simulate offline rewards
+ok 76 - v3.11 manual and automatic slots rotate independently without touching primary, v2 or reading records
+ok 77 - v3.11 periodic backups keep the preceding primary snapshot and only rotate every five minutes
+ok 78 - v3.11 backup quota failures do not stop ordinary saving, but restore and reset require verified backups
+ok 79 - v3.11 damaged and future backups remain exportable and a successful recovery preserves the damaged source
+ok 80 - v3.11 expected-source guards reject a changed primary, including changes during backup writes
+ok 81 - v3.11 restoring keeps the latest in-memory snapshot as well as the exact primary original
+ok 82 - v3.11 restart preserves v2, original migration backup, preferences and the recoverable prior voyage
+ok 83 - v3.11 backup listing handles unavailable storage and keeps the historical single-backup entry without duplication
+ok 84 - v3.11 a failed recovery never rotates away its chosen oldest or historical single-backup source
+ok 85 - v3.12 progressive guide derives completion from existing progress and never restarts veterans
+ok 86 - v3.12 core-loop objectives point to route, voyage and report controls
+v3 gameplay ok: 86 behavioral checks
+EXIT=0

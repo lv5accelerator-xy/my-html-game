@@ -43,7 +43,7 @@
 
 ## 当前版本
 
-v3「拾荒航线」入口为 `/v3/`，本开发分支当前为 **v3.15.0-preview.1**。新增可交互动态SVG星港，停泊、居民、来船与建设均来自实际进度；保留任务舰装、出航比较和12类动态发现。保留六章主线、三个永久结局、本机备份、schema 32 与独立存档；v3 不连接旧版 Firebase。尚未合并或发布，详见 [试玩说明](docs/v3-playable.md) 与 [连续开发验收](docs/v312-v316-validation.md)。
+v3「拾荒航线」入口为 `/v3/`，本开发分支当前为 **v3.16.0-preview.1**。完成v3.12～v3.16可玩性扩展：渐进目标、12类确定性事件、舰装协同与出航比较、可交互SVG星港，以及三种结局均可接续的七类持续需求、三个经营方向、五项各三期工程和12件经营收藏。保留六章主线、三个永久结局、本机备份、schema 32 与独立存档；v3 不连接旧版 Firebase。尚未合并或发布，详见 [试玩说明](docs/v3-playable.md) 与 [连续开发验收](docs/v312-v316-validation.md)。
 
 旧版主入口保留 **v2.3.0「归航之约」**。
 
@@ -123,7 +123,7 @@ my-html-game/
 
 ## 测试
 
-统一完整入口为 `node scripts/check.cjs`，需设置 `CODEX_PLAYWRIGHT_PATH`，可通过 `CODEX_CHROMIUM_PATH` 指定浏览器。执行 9 项运行脚本语法检查与 tests/ 中全部 15 个测试脚本。
+统一完整入口为 `node scripts/check.cjs`，需设置 `CODEX_PLAYWRIGHT_PATH`，可通过 `CODEX_CHROMIUM_PATH` 指定浏览器。执行 9 项运行脚本语法检查与 tests/ 中全部 17 个测试脚本。
 
 基础语法与数值测试只需要 Node.js：
 

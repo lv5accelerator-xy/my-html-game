@@ -129,4 +129,178 @@ test('v3.15 all facilities and resident activity derive only from actual story/b
     assert.deepEqual(E.portActivity(done), E.portActivity(before));
   }
 });
+function finishWork(s) {
+  E.advance(s, s.lastAt + Math.max(0, s.management.active.acceptedClock + s.management.active.workSeconds - s.clock) * 1000, { offline: true });
+  for (let i = 0; !E.harborStatus(s).workReady && i < 10; i++) E.advance(s, s.lastAt + Math.max(1000, Math.ceil((s.management.active.productionGoal - s.management.active.produced) / E.rawRate(s)) * 1000), { offline: true });
+  assert.ok(E.harborStatus(s).workReady);
+}
+function takeNeed(s, id) {
+  for (let i = 0; i < 7; i++) {
+    const offers = E.harborOffers(s), offer = offers.find(n => n.id === id) || offers[0];
+    assert.ok(E.acceptHarborNeed(s, offer.id, offer.terms.serial));
+    if (offer.id === id) return;
+    finishWork(s); assert.ok(E.deliverHarborNeed(s, s.management.active.serial));
+  }
+  assert.fail('Every need must recur within seven cycles');
+}
+test('v3.16 all seven needs and all three directions work after each permanent ending without replaying story rewards', () => {
+  for (const ending of D.ENDINGS) for (const focus of D.HARBOR_FOCUSES) for (const need of D.HARBOR_NEEDS) {
+    let s = completed(ending.id); const lore = structuredClone(s.lore), afterword = structuredClone(s.afterword);
+    assert.ok(E.setHarborFocus(s, focus.id)); takeNeed(s, need.id);
+    const locked = structuredClone(s.management.active), serial = locked.serial;
+    assert.equal(E.deliverHarborNeed(s, serial), false);
+    E.setHarborFocus(s, D.HARBOR_FOCUSES.find(f => f.id !== focus.id).id);
+    assert.deepEqual(s.management.active, locked);
+    finishWork(s); s = E.sanitize(s, s.lastAt);
+    const dust = s.dust, samples = s.samples;
+    assert.ok(E.deliverHarborNeed(s, serial));
+    assert.equal(s.dust, dust - locked.dustCost); assert.equal(s.samples, samples - locked.samplesCost);
+    assert.equal(E.deliverHarborNeed(s, serial), false);
+    assert.ok(s.management.collections.includes(`need-${need.id}`));
+    assert.deepEqual(s.lore, lore); assert.deepEqual(s.afterword, afterword);
+    assert.equal(s.epilogue.ending, ending.id); assert.equal(E.chooseEnding(s, ending.id), false);
+    assert.deepEqual(E.sanitize(s, s.lastAt).management, s.management);
+  }
+});
+test('v3.16 only production after acceptance or a newly tagged matching voyage can prepare a request', () => {
+  const s = completed(); E.startMission(s, 'supply-run');
+  E.setHarborFocus(s, 'reception');
+  const offer = E.harborOffers(s).find(n => n.mission === 'supply-run');
+  assert.ok(E.acceptHarborNeed(s, offer.id, offer.terms.serial));
+  const task = s.management.active;
+  assert.equal(s.mission.harborOrder, undefined);
+  E.scan(s); E.addDust(s, 1e8); assert.equal(task.produced, 0);
+  E.advance(s, s.lastAt + s.mission.seconds * 1000); E.claimMission(s); assert.equal(task.trips, 0);
+  assert.ok(E.startMission(s, 'supply-run')); assert.equal(s.mission.harborOrder, task.serial);
+  let restored = E.sanitize(s, s.lastAt); assert.equal(restored.mission.harborOrder, task.serial);
+  E.advance(restored, restored.lastAt + restored.mission.seconds * 1000);
+  restored = E.sanitize(restored, restored.lastAt);
+  assert.ok(E.claimMission(restored)); assert.equal(restored.management.active.trips, 1);
+  assert.equal(E.claimMission(restored), false); assert.equal(restored.management.active.trips, 1);
+});
+test('v3.16 eight-hour idle recovery and automation progress tasks but never deliver or choose a new request', () => {
+  const s = completed(); takeNeed(s, 'cargo');
+  E.configure(s, { dispatch: true });
+  const serial = s.management.active.serial, cycle = s.management.cycle;
+  const a = structuredClone(s), b = structuredClone(s);
+  E.advance(a, a.lastAt + 48 * 3600000, { offline: true });
+  for (let i = 0; i < 8; i++) E.advance(b, b.lastAt + 3600000, { offline: true });
+  assert.equal(a.management.active.serial, serial); assert.equal(a.management.cycle, cycle);
+  assert.ok(E.harborStatus(a).workReady);
+  assert.deepEqual(a.management, b.management);
+  assert.equal(a.dust, b.dust); assert.equal(a.samples, b.samples);
+});
+test('v3.16 all five projects have three finite stages, real task conveniences and exact atlas persistence', () => {
+  for (const ending of D.ENDINGS) {
+    let s = completed(ending.id), startingRate = E.rawRate(s); s.samples = 1000;
+    for (const need of D.HARBOR_NEEDS) { takeNeed(s, need.id); finishWork(s); E.deliverHarborNeed(s, s.management.active.serial); }
+    while (s.management.cycle < 35) { const n = E.harborOffers(s)[0]; E.acceptHarborNeed(s,n.id,n.terms.serial); finishWork(s); E.deliverHarborNeed(s,s.management.active.serial); }
+    for (const p of D.HARBOR_PROJECTS) {
+      for (let level = 0; level < 3; level++) {
+        const offer = E.harborProjectOffer(s, p.id), before = s.dust;
+        assert.ok(offer.available); assert.ok(E.buildHarborProject(s, p.id, level));
+        assert.equal(s.dust, before - offer.dustCost);
+        assert.equal(E.buildHarborProject(s, p.id, level), false);
+        assert.equal(E.portFacilities(s).find(n => n.id === p.id).level, level + 1);
+      }
+      assert.equal(E.buildHarborProject(s, p.id, 3), false);
+      assert.ok(s.management.collections.includes(`project-${p.id}`));
+    }
+    assert.equal(E.rawRate(s), startingRate, 'projects never stack production multipliers');
+    assert.equal(E.harborOffers(s).length, 4);
+    const completedState = structuredClone(s);
+    s = E.sanitize(s, s.lastAt); assert.deepEqual(s.management, completedState.management);
+    assert.deepEqual(E.portFacilities(s), E.portFacilities(completedState));
+    s.run.dust = D.PRESTIGE_DUST; assert.ok(E.prestige(s)); assert.deepEqual(s.management, completedState.management);
+  }
+});
+test('v3.16 project capabilities change only future terms; focus directions have measurable costs', () => {
+  const s = completed(); E.setHarborFocus(s,'production'); const prod = E.harborTerms(s,'repair');
+  E.setHarborFocus(s,'reception'); const reception = E.harborTerms(s,'repair');
+  assert.ok(prod.dustCost < reception.dustCost); assert.ok(prod.samplesCost > reception.samplesCost);
+  takeNeed(s,'repair'); const original = structuredClone(s.management.active);
+  s.management.projects['repair-dock'] = 3;
+  assert.deepEqual(s.management.active, original);
+  assert.ok(E.harborTerms(s,'repair').dustCost < original.dustCost);
+});
+test('v3.16 malformed management, stale serials, insufficient resources and non-ending archives are safe', () => {
+  const early = ready(); assert.deepEqual(E.harborOffers(early), []);
+  assert.equal(E.setHarborFocus(early,'production'), false); assert.equal(E.acceptHarborNeed(early,'food',1),false);
+  const s = completed(); const n = E.harborOffers(s)[0];
+  assert.equal(E.acceptHarborNeed(s,n.id,99),false); assert.ok(E.acceptHarborNeed(s,n.id,1));
+  finishWork(s); s.dust = 0; s.samples = 0; const before = structuredClone(s);
+  assert.equal(E.deliverHarborNeed(s,1),false); assert.deepEqual(s,before);
+  for (const patch of [{id:'invalid'},{dustCost:Infinity},{productionGoal:0},{samplesCost:-1},{serial:99},{mission:'echo'}]) {
+    const bad = structuredClone(s); Object.assign(bad.management.active,patch);
+    assert.equal(E.sanitize(bad,bad.lastAt).management.active,null);
+  }
+  early.management = structuredClone(s.management); assert.equal(E.sanitize(early,early.lastAt).management.active,null);
+  const bad = structuredClone(s); bad.management.collections = ['invalid','project-public-berths']; bad.management.projects = {'unknown':Infinity,'public-berths':Infinity};
+  const clean = E.sanitize(bad,bad.lastAt); assert.deepEqual(clean.management.collections,[]); assert.deepEqual(clean.management.projects,{});
+});
+test('v3.16 restore/backups preserve active terms, collections and permanent endings without crediting old income', () => {
+  const s = completed(); takeNeed(s,'food'); E.advance(s,s.lastAt+1000);
+  const map = new Map(); const storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,String(v))};
+  S.save(storage,s,s.lastAt); S.checkpoint(storage,JSON.stringify(s),'manual','postgame',s.lastAt);
+  const restored = S.restore(storage,JSON.stringify(s),s.lastAt+1e8);
+  assert.deepEqual(restored.management,s.management); assert.equal(restored.dust,s.dust);
+  assert.equal(restored.epilogue.ending,s.epilogue.ending); assert.equal(S.summarize(restored).harborDeliveries,s.management.stats.deliveries);
+});
+test('v3.16 discovery catalog remains permanent while recent event history rotates', () => {
+  const s = encounterReady('crate'); const c = s.encounters.pending.choices[0];
+  E.chooseEncounter(s,s.encounters.pending.token,c.id); E.advance(s,s.lastAt+c.seconds*1000);
+  const catalog = structuredClone(s.encounters.catalog); s.encounters.history=[];
+  assert.deepEqual(E.sanitize(s,s.lastAt).encounters.catalog,catalog);
+});
+test('v3.16 extreme resource previews remain bounded and damaged task quantities cannot create rewards', () => {
+  const s = completed(); s.totalCores = D.MAX_NUMBER;
+  for (const b of D.BUILDINGS) s.buildings[b.id] = 10000;
+  const preview = E.missionPreview(s,'belt'); assert.equal(preview.dust, E.rawRate(s) * 75);
+  const saturated=structuredClone(s); saturated.totalCores=Number.MAX_VALUE;
+  assert.equal(E.missionPreview(saturated,'belt').dust,D.MAX_NUMBER);
+  assert.ok(E.startMission(s,'belt')); const snapshot=structuredClone(s.mission);
+  assert.deepEqual(E.sanitize(s,s.lastAt).mission,snapshot);
+  E.advance(s,s.lastAt+s.mission.seconds*1000); assert.ok(E.claimMission(s));
+  assert.ok(Number.isFinite(s.dust) && s.dust<=D.MAX_NUMBER);
+});
+test('v3.16 preparation is meaningful for saturated fleets and finite project stages need actual deliveries', () => {
+  const s = completed(); takeNeed(s,'food');
+  s.management.active.produced=s.management.active.productionGoal;
+  assert.equal(E.harborStatus(s).workReady,false);
+  const report = E.advance(s,s.lastAt+s.management.active.workSeconds*1000,{offline:true,report:true});
+  assert.ok(E.harborStatus(s).available); assert.ok(E.deliverHarborNeed(s,s.management.active.serial));
+  assert.equal(E.harborProjectOffer(s,'habitat').available,false);
+  assert.match(E.harborProjectOffer(s,'habitat').reason,/4 份/);
+  assert.deepEqual(D.HARBOR_STAGE_DELIVERIES,[4,14,35]);
+  const a=completed(); takeNeed(a,'food');
+  assert.ok(E.advance(a,a.lastAt+1000,{offline:true,report:true}).harborChanges.length>0);
+});
+test('v3.16 window reply belongs to a living caretaker and retains all original ids and collections', () => {
+  const r=D.RESIDENT_REQUESTS.find(r=>r.id==='window');
+  assert.equal(r.from,'育种舱照料者'); assert.equal(r.collection,'窗台观测册');
+  assert.deepEqual(r.replies.map(r=>r.id),['different','address']);
+  assert.match(r.brief,/苇留下/); assert.ok(r.replies.every(r=>!r.text.includes('苇把')));
+});
+test('v3.16 first goal returns an underfunded player to the real scan control and only directs affordable construction', () => {
+  const s=E.createState(0);
+  assert.equal(E.nextGoal(s).action,'home'); assert.equal(E.nextGoal(s).focus,'scan-control');
+  for(let i=0;i<6;i++) { E.advance(s,i*1000); E.scan(s); }
+  assert.equal(E.nextGoal(s).action,'fleet'); assert.equal(E.nextGoal(s).focus,'building-drone');
+});
+test('v3.13 each event rejects corrupt in-flight terms and enforces its gates and cooldown without losing base rewards', () => {
+  for(const def of D.ENCOUNTERS) {
+    const original=encounterReady(def.id,1000,'active'), raw=structuredClone(original);
+    raw.mission.encounter.choices[0].samples+=99;
+    const clean=E.sanitize(raw,raw.lastAt);
+    assert.ok(clean.mission); assert.equal(clean.mission.encounter,undefined);
+    E.advance(clean,clean.lastAt+clean.mission.seconds*1000);
+    assert.equal(clean.result.dust,original.mission.dust); assert.ok(E.claimMission(clean));
+    if(def.minPort) { const gate=structuredClone(original); gate.starport=0; assert.ok(!E.encounterCandidates(gate,'belt').some(e=>e.id===def.id)); }
+    if(def.module) { const gate=structuredClone(original); gate.equipped=[]; assert.ok(!E.encounterCandidates(gate,'belt').some(e=>e.id===def.id)); }
+    const s=encounterReady(def.id), offer=E.encounterOffer(s), c=offer.choices[0];
+    s.samples=10; assert.ok(E.chooseEncounter(s,offer.token,c.id)); E.advance(s,s.lastAt+c.seconds*1000);
+    assert.ok(E.startMission(s,'belt')); assert.equal(s.mission.encounter,undefined);
+    assert.equal(s.encounters.serial,offer.token);
+  }
+});
 console.log(`v3 expansion ok: ${checks} behavioral checks`);

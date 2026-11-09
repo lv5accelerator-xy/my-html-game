@@ -1,0 +1,4 @@
+2026-11-09T15:53:41Z sha=cbb124d582ffcf7485c9cc1ef688b3efe2124ece command=node tests/v3-browser.test.js
+ok 1 - new save: readable goal, three initial controls, 1280/375 layout, scans and passive production
+v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow
+EXIT=0

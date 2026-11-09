@@ -1,0 +1,89 @@
+2026-11-09T15:26:53Z sha=4d8c720b96abb2ebbdd943a3d399b65080a67f78 command=node tests/v3-browser.test.js
+ok 1 - v3.14 dispatch comparison and real quick loadout switch preserve the locked voyage
+ok 2 - v3.13 无人货船: real choice, countdown, reload and immutable discovery record
+ok 3 - v3.13 损坏的运输舱: real choice, countdown, reload and immutable discovery record
+ok 4 - v3.13 古老导航信标: real choice, countdown, reload and immutable discovery record
+ok 5 - v3.13 失联采矿探针: real choice, countdown, reload and immutable discovery record
+ok 6 - v3.13 废弃科研设备: real choice, countdown, reload and immutable discovery record
+ok 7 - v3.13 漂流补给箱: real choice, countdown, reload and immutable discovery record
+ok 8 - v3.13 未知求救信号: real choice, countdown, reload and immutable discovery record
+ok 9 - v3.13 不稳定残骸区: real choice, countdown, reload and immutable discovery record
+ok 10 - v3.13 星尘富集带: real choice, countdown, reload and immutable discovery record
+ok 11 - v3.13 旧时代通信记录: real choice, countdown, reload and immutable discovery record
+ok 12 - v3.13 破损的航站组件: real choice, countdown, reload and immutable discovery record
+ok 13 - v3.13 未登记的小型避难舱: real choice, countdown, reload and immutable discovery record
+ok 14 - v3.12 automation retains live buttons, drafts and focus at desktop and phone widths
+ok 15 - native dialog close keeps the newer keyboard reading focus
+ok 16 - new save: readable goal, three initial controls, 1280/375 layout, scans and passive production
+ok 17 - safe exploration: report, story choice, permanent equipment, equipment slots and starport repair
+ok 18 - jump: preserved collection, first automation unlock and actual automatic purchases
+ok 19 - budget, auto research controls, starport repair and new exploration unlock
+ok 20 - old record: migration retains source, unrecognized research, active expedition and unclaimed rewards
+ok 21 - corrupt source: original survives autosave interval
+ok 22 - imported narrative is text; full keyboard access to settings
+ok 23 - large legacy-scale numbers remain readable without horizontal scroll
+ok 24 - v3.0 workshop: craft missing story gear, upgrade both to level three, preserve choices and replace full equipment slots
+ok 25 - fleet forecasts: selected batch updates gains and payback; actual purchase crosses a milestone with the predicted production
+ok 26 - report goal: outranks early construction and route choice; keyboard activation focuses the reachable report
+ok 27 - live ETA and local timing: income enables a purchase, research is recorded, and exported timing distinguishes offline from foreground
+ok 28 - automatic construction preserves an unfinished reserve input and its keyboard focus
+ok 29 - return briefing: actual automation summary, mobile layout, direct report link and immediate reload without duplicate rewards
+ok 30 - chapter two: three real voyages, old-choice follow-ups, prerequisite gear, long-voyage reload, permanent construction and jump preservation on desktop and phone
+ok 31 - automatic voyages can pause after the current return without cancelling it or losing its reward
+ok 32 - chapter three: actual preparation previews, saved plans, voyage reload, offline manual decisions, mobile convoy handoff, letters, archive rereading and persistent supply route
+ok 33 - mobile current star map leads directly to research, samples and actual equipped gear; completed sectors remain folded
+ok 34 - chapter four 接待扩容: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump
+ok 35 - chapter four 生态补给: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump
+ok 36 - chapter four 档案校准: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump
+ok 37 - saved equipment presets: real production/voyage comparison, one-click two-slot replacement, active snapshot preservation, reload, upgrades and export/import
+ok 38 - chapter five 接待扩容/轮换照明与储能: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump
+ok 39 - chapter five 生态补给/转接空闲采集阵列: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump
+ok 40 - chapter five 档案校准/回收观测站备用设备: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump
+ok 41 - rescue with no spare resources: paid options disabled, free rotation remains reachable, manual supply and safe waiting
+ok 42 - chapter six 接待扩容/归航之城: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 43 - chapter six 接待扩容/守望之港: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 44 - chapter six 接待扩容/携种远航: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 45 - chapter six 生态补给/归航之城: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 46 - chapter six 生态补给/守望之港: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 47 - chapter six 生态补给/携种远航: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 48 - chapter six 档案校准/归航之城: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 49 - chapter six 档案校准/守望之港: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 50 - chapter six 档案校准/携种远航: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 51 - chapter six during automatic supply: active voyage survives handoff, eight-hour absence never selects ending, manual continuation still reachable
+ok 52 - first two chapters dialogue path 1: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards
+ok 53 - first two chapters dialogue path 2: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards
+ok 54 - first two chapters dialogue path 3: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards
+ok 55 - middle chapters reception: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation
+ok 56 - middle chapters ecology: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation
+ok 57 - middle chapters archive: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation
+ok 58 - rescue dialogue 接待扩容/轮换照明与储能: live replies, actual plans, safe waiting, chapter navigation and read-only reload
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  {
+    afterword: {
+      active: null,
+      completed: [],
+      ready: false
+...
+    beacon: {
++     expiresAt: 0,
+-     expiresAt: 1866,
+      nextAt: 2046
+    },
+    buildings: {
+      drone: 10,
+      forge: 0,
+
+    at /workspace/starport-v316/tests/v3-browser.test.js:2705:16
+    at async scenario (/workspace/starport-v316/tests/v3-browser.test.js:90:7)
+    at async run (/workspace/starport-v316/tests/v3-browser.test.js:2643:7) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [Object],
+  expected: [Object],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+EXIT=1

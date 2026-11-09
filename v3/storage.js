@@ -32,6 +32,9 @@
       chapter: E.routeArchive(state).chapter, ending: state.epilogue.ending,
       lore: state.lore.map(({ story, choice }) => ({ story, choice })),
       residents: state.afterword.completed.length,
+      harborDeliveries: state.management.stats.deliveries,
+      harborProjects: Object.values(state.management.projects).reduce((a, b) => a + b, 0),
+      encounters: state.encounters.catalog.length,
       mission: state.mission?.id || null, pending: state.result?.id || null,
     };
   }

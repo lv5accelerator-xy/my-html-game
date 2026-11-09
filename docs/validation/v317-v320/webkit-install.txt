@@ -1,0 +1,37 @@
+{"command": ["/workspace/scratch/starport-tools/node_modules/.bin/playwright", "install", "webkit"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "start": 1794255427.832168, "env": {"PATH": "/workspace/scratch/starport-tools/node_modules/node/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback", "CODEX_PLAYWRIGHT_PATH": "/workspace/scratch/starport-tools/node_modules/playwright", "CODEX_CHROMIUM_PATH": "/usr/bin/chromium", "V3_BROWSER_ENGINE": null}}
+Downloading Webkit 26.0 (playwright build v2203)[2m from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2203/webkit-debian-13.zip[22m
+Error: Download failed: server returned code 403 body 'Domain forbidden'. URL: https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2203/webkit-debian-13.zip
+    at IncomingMessage.handleError (/workspace/scratch/starport-tools/node_modules/playwright-core/lib/server/registry/oopDownloadBrowserMain.js:56:23)
+    at IncomingMessage.emit (node:events:531:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+Downloading Webkit 26.0 (playwright build v2203)[2m from https://playwright.download.prss.microsoft.com/dbazure/download/playwright/builds/webkit/2203/webkit-debian-13.zip[22m
+Error: Download failed: server returned code 403 body 'Domain forbidden'. URL: https://playwright.download.prss.microsoft.com/dbazure/download/playwright/builds/webkit/2203/webkit-debian-13.zip
+    at IncomingMessage.handleError (/workspace/scratch/starport-tools/node_modules/playwright-core/lib/server/registry/oopDownloadBrowserMain.js:56:23)
+    at IncomingMessage.emit (node:events:531:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+Downloading Webkit 26.0 (playwright build v2203)[2m from https://cdn.playwright.dev/builds/webkit/2203/webkit-debian-13.zip[22m
+Error: Download failed: server returned code 403 body 'Domain forbidden'. URL: https://cdn.playwright.dev/builds/webkit/2203/webkit-debian-13.zip
+    at IncomingMessage.handleError (/workspace/scratch/starport-tools/node_modules/playwright-core/lib/server/registry/oopDownloadBrowserMain.js:56:23)
+    at IncomingMessage.emit (node:events:531:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+Downloading Webkit 26.0 (playwright build v2203)[2m from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2203/webkit-debian-13.zip[22m
+Error: Download failed: server returned code 403 body 'Domain forbidden'. URL: https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2203/webkit-debian-13.zip
+    at IncomingMessage.handleError (/workspace/scratch/starport-tools/node_modules/playwright-core/lib/server/registry/oopDownloadBrowserMain.js:56:23)
+    at IncomingMessage.emit (node:events:531:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+Downloading Webkit 26.0 (playwright build v2203)[2m from https://playwright.download.prss.microsoft.com/dbazure/download/playwright/builds/webkit/2203/webkit-debian-13.zip[22m
+Error: Download failed: server returned code 403 body 'Domain forbidden'. URL: https://playwright.download.prss.microsoft.com/dbazure/download/playwright/builds/webkit/2203/webkit-debian-13.zip
+    at IncomingMessage.handleError (/workspace/scratch/starport-tools/node_modules/playwright-core/lib/server/registry/oopDownloadBrowserMain.js:56:23)
+    at IncomingMessage.emit (node:events:531:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+Failed to install browsers
+Error: Failed to download Webkit 26.0 (playwright build v2203), caused by
+Error: Download failure, code=1
+    at ChildProcess.<anonymous> (/workspace/scratch/starport-tools/node_modules/playwright-core/lib/server/registry/browserFetcher.js:94:32)
+    at ChildProcess.emit (node:events:519:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)

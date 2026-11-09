@@ -116,6 +116,28 @@ async function run() {
   };
   try {
     {
+      const fixture = require('./helpers/v3-fixtures.cjs').completed('city', TIME);
+      const event = require('./helpers/v3-fixtures.cjs').encounterReady('crate', TIME);
+      fixture.encounters = event.encounters; fixture.lastAt = TIME - 3600000;
+      await scenario('v3.17 arrival decisions, accurate next target, keyboard focus and quiet phone atlas', {[S.KEY]: JSON.stringify(fixture)}, async page => {
+        assert.match(await page.locator('#dialog-body .return-ready').innerText(), /等待手动决定/);
+        await page.locator('[data-action="return-next"]').click();
+        assert.ok(await page.locator('#encounter-panel').isVisible());
+        assert.equal(await page.evaluate(() => document.activeElement.id), 'encounter-panel');
+        await page.locator('#encounter-panel [data-action="encounter"]').first().click();
+        await page.clock.runFor(60000);
+        assert.equal((await read(page)).encounters.pending, null);
+        await page.locator('#navigation [data-id="home"]').click();
+        await page.setViewportSize({width:375,height:900});
+        assert.equal(await page.locator('.atlas-node.is-built circle').first().evaluate(n=>getComputedStyle(n).animationName), 'none');
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+        if(screenshotDir) await page.screenshot({path:path.join(screenshotDir,'v317-arrival-phone.png')});
+        await page.reload();
+        assert.equal((await read(page)).encounters.pending,null);
+      });
+    }
+
+    {
       const fixture = require("./helpers/v3-fixtures.cjs").completed("city", TIME);
       fixture.equipped = ["battery", "solar"]; E.saveLoadout(fixture, "production");
       fixture.equipped = ["nav", "scanner"]; E.saveLoadout(fixture, "voyage"); fixture.lastAt = TIME;

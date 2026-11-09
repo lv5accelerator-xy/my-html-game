@@ -312,4 +312,18 @@ test('v3.16 restore rejects inherited object keys as equipment or story identifi
   assert.deepEqual(clean.modules,s.modules); assert.deepEqual(clean.epilogue,s.epilogue);
   assert.deepEqual(E.sanitize(clean,clean.lastAt),clean);
 });
+test('v3.17 pending decisions precede repeat management; live arrival list removes settled items', () => {
+  const s = completed();
+  const event = encounterReady('crate');
+  s.encounters = structuredClone(event.encounters);
+  const before = JSON.stringify(s);
+  assert.equal(E.nextGoal(s).focus, 'encounter-panel');
+  assert.match(E.arrivalTasks(s).join(' '), /等待手动决定/);
+  assert.equal(JSON.stringify(s), before);
+  assert.ok(E.chooseEncounter(s, s.encounters.pending.token, s.encounters.pending.choices[0].id));
+  E.advance(s, s.lastAt + 60000, {offline:true});
+  assert.ok(!E.arrivalTasks(s).join(' ').includes('等待手动决定'));
+  assert.notEqual(E.nextGoal(s).focus, 'encounter-panel');
+});
+
 console.log(`v3 expansion ok: ${checks} behavioral checks`);

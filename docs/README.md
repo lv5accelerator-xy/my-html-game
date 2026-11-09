@@ -13,3 +13,4 @@
 累计更新记录位于 [patch-notes](../patch-notes/README.md)，历史可运行快照位于 [历史版本](../历史版本/README.md)。
 
 - [v3.12～v3.16 连续开发与验收](v312-v316-validation.md)
+- [v3.17～v3.20 连续开发与验收](v317-v320-validation.md)

@@ -1,0 +1,28 @@
+# v3.17～v3.20 连续开发验收
+
+## 来源与环境
+
+2026-11-09 起始 main `7034b5c7f75f52eb65acce58c00c373d8e312bfd`。已读取 README、AGENTS、CODEX_HANDOFF、docs/README、v3-playable、v3-main-story 与 v312-v316-validation。原工作区 `/workspace/my-html-game` 为干净的旧 work 分支，未改写；`git fetch origin` 后从实际最新 main 建立 `/workspace/starport-v320` / `codex/v317-v320-gameplay-expansion`。PR #17 已合并；#8/#12 仍开放，未合并旧代码。GitHub 工具读得 main 的 Pages 工作流 [42673214026](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42673214026) 成功，GitHub Releases 列表为空。历史验收不代替本次验证。
+
+本任务附带的 Codex 托管云环境 `ccarenv_b64_Y2NhcmVudl85NmVlOGE5ZTNjMzg4MTkxOGI4MmEzZWY5ZDE2YTBkYQ` 实际等待至 ready，状态 running/connected、network enforced，复用预置仓库。本轮没有创建、保存或发布新的环境配置。默认 Node24.19.0，仓库外安装 Node22.23.4 / Playwright1.55.0，Chromium151.0.7922.173。Browser 技能已读且工具检索没有可调用的浏览器控制 js；按用户明确授权使用 Playwright。所有游戏浏览器流程隔离 context；v3 不连接 Firebase，根 v2 与生产配置不改。
+
+安装命令 `npm install --prefix /workspace/scratch/starport-tools --no-audit --no-fund node@22 playwright@1.55.0` 退出0。`gh auth status` 显示当前 GH_TOKEN 无效；`gh api .../releases`、`.../actions/runs` 被代理 Forbidden，改用已连接 GitHub 工具读取。`curl -I --max-time 20 https://lv5accelerator-xy.github.io/my-html-game/v3/` 退出56，CONNECT 403，因此未完成公开站点专项验证。`playwright install webkit` 退出1，官方 CDN/Microsoft 域名均 403 Domain forbidden，原始证据保留，云 WebKit 未运行。最终 Actions WebKit 与真实 iPhone 分开记录。
+
+## 命令、数量与证据
+
+测试统一由仓库外 run.py 记录命令、父 HEAD、环境、退出码和时长，原文在本目录 validation/v317-v320。所有 node 测试用：
+
+```sh
+PATH=/workspace/scratch/starport-tools/node_modules/node/bin:$PATH
+CODEX_PLAYWRIGHT_PATH=/workspace/scratch/starport-tools/node_modules/playwright
+CODEX_CHROMIUM_PATH=/usr/bin/chromium
+node scripts/check.cjs
+```
+
+脚本数、命名规则组、浏览器完整流程和旧档份数分别统计，不将内部 assert 次数冒充玩法数。完整入口不设置 V3_TEST_FILTER；专项过滤只用于诊断/新增流程，并明确记录。日志内 HEAD 是执行时父提交；阶段 source 哈希核对实际被测源文件，不能把父提交称作已完成版本 SHA。
+
+基线 `node scripts/check.cjs` 退出0：9语法、17/17测试脚本、119 v3规则组（86+33）、22 v3.11规范旧档、84 v3浏览器流程，失败/跳过0，用时282.90秒。另以原 main 的 `tests/v3-balance.test.js` 在内存增加捕获（不改变规则/资源），从创建新档、四次跃迁、六章、实际选择一路生成三种结局的 earned 存档，capture-main-earned 退出0。新增经营与远航经济验收将从这些档继续，不注入资源或装备。它们是确定性模型档，不是真实玩家档。
+
+## v3.17
+
+实现待决定发现优先、归航可办事项、实时资源缺口、目标区域键盘焦点及手机/后台动画限流；不增加存档字段。`node tests/v3-expansion.test.js`退出0，34组；`V3_TEST_FILTER=v3.17 node tests/v3-browser.test.js`退出0，1条新增专项。最终无过滤`node scripts/check.cjs`退出0：9语法、17/17脚本、120规则组（86+34）、22旧档、85完整浏览器流程，失败/跳过0。包含原新手真实扫描→建造→路线→研究→探索→报告→确认跃迁，以及三个终章的经营流程，1280×900/375×900、节点连续性、输入焦点与刷新断言均保留。手机截图已人工查看，布局无溢出。云WebKit仍因下载403未执行；Actions此阶段尚未推送。原始命令/日志和被测源文件哈希同目录。

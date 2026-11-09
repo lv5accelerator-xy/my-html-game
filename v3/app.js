@@ -256,6 +256,7 @@
         parent = parent.parentElement
       )
         if (parent.matches("details")) parent.open = true;
+      if (destination && !destination.matches("button, input, select, summary, a, [tabindex]")) destination.tabIndex = -1;
       destination?.focus({ preventScroll: true });
       destination?.scrollIntoView({ block: "center", behavior: "instant" });
     }
@@ -310,6 +311,7 @@
       <p>样本 ${signed(report.samples)} 份 · 探索归航 ${report.missionsCompleted} 次 · 自动领取 ${report.reportsClaimed} 次</p>
       ${changes.length ? `<ul class="return-changes">${changes.map((text) => `<li>${text}</li>`).join("")}</ul>` : "<p>舰队按原配置持续运行。</p>"}
       ${pending?.story ? `<p class="return-pending">「${D.STORIES[pending.story].title}」等待你的选择。</p>` : pending ? '<p class="return-pending">一份归航报告等待领取。</p>' : ""}
+      <div class="return-ready"><h3>现在可以安排</h3>${E.arrivalTasks(state).map(text => `<p>${escape(text)}</p>`).join("") || "<p>所有已完成内容均已入库。</p>"}<p>推荐：${escape(E.nextGoal(state).title)}</p></div>
       <div class="dialog-actions"><button ${action("cancel")}>留在航站</button><button class="primary" ${action("return-next")}>${state.result ? "处理归航报告" : "查看下一个目标"} →</button></div>`,
     );
     signature = "";
@@ -333,7 +335,7 @@
   }
   function currentGoal() {
     const g = E.nextGoal(state);
-    return `<aside class="current-goal" aria-label="当前主要目标"><div><small>当前目标</small><strong>${g.title}</strong><p>${g.detail}</p><small data-goal-eta></small></div><button class="outline" ${action("current-goal")}>${g.label} →</button></aside>`;
+    return `<aside class="current-goal" aria-label="当前主要目标"><div><small>当前目标</small><strong>${g.title}</strong><p data-goal-detail>${g.detail}</p><small data-goal-eta></small></div><button class="outline" ${action("current-goal")}>${g.label} →</button></aside>`;
   }
   function harborHome() {
     if (!state.epilogue.ending) return "";
@@ -346,7 +348,7 @@
     return `${lastReturnReport ? `<section class="return-banner"><div><strong>上次归航简报</strong><p>${duration(lastReturnReport.seconds)} · 探索归航 ${lastReturnReport.missionsCompleted} 次</p></div><button class="outline" ${action("return-report")}>查看简报</button></section>` : ""}<div class="home-layout"><section class="scene" aria-label="归航航站"><div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
       <button class="beacon-button" ${action("beacon")} ${state.beacon.expiresAt ? "" : "hidden"}>捕获金色信标<small>剩余 <span data-beacon-seconds>15</span> 秒</small></button>
       <div class="scan-area"><button id="scan-control" class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
-      <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
+      <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p data-goal-detail>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
       <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
       ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${starportOverview()}${harborHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
   }
@@ -768,6 +770,7 @@
       el.textContent = number(state.run.dust);
     });
     const goal = E.nextGoal(state);
+    document.querySelectorAll("[data-goal-detail]").forEach(el => el.textContent !== goal.detail && (el.textContent = goal.detail));
     if ($("[data-goal-eta]"))
       $("[data-goal-eta]").textContent =
         goal.etaHint ||
@@ -1381,6 +1384,7 @@
       }
     }
     wasVisible = visible;
+    document.documentElement.dataset.paused = String(!visible);
     if (!wasVisible)
       absence = {
         before: E.progressSnapshot(state),

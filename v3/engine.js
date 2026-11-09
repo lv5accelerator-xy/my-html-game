@@ -1362,6 +1362,19 @@
     if (newly) log(s, `解锁${newly.name}：${newly.detail}`);
     return gain;
   }
+  // Read from current state, so a reopened brief never advertises an already claimed item.
+  function arrivalTasks(s) {
+    const tasks = [];
+    if (s.result) tasks.push(s.result.story ? "归航故事等待手动选择" : "归航报告可以立即领取");
+    const event = encounterOffer(s);
+    if (event) tasks.push(event.choice ? `发现处理剩余 ${Math.max(0, event.readyAt - s.clock)} 秒` : `${event.name}等待手动决定`);
+    if (s.afterword.ready) tasks.push("居民补给已交接，可以留下回信");
+    const need = harborStatus(s);
+    if (need) tasks.push(need.available ? `${need.name}可以立即交付` : `${need.name}：${need.reason}`);
+    const projects = D.HARBOR_PROJECTS.filter(p => harborProjectOffer(s, p.id).available);
+    if (projects.length) tasks.push(`${projects.length} 项长期工程可手动确认建设`);
+    return tasks;
+  }
   function progressSnapshot(s) {
     return {
       dust: s.dust,
@@ -1984,14 +1997,19 @@
     if (epilogue) return epilogue;
     const resident = residentGoal(s);
     if (resident) return resident;
-    const harbor = harborGoal(s);
-    if (harbor) return harbor;
     if (s.encounters.pending && !s.mission) {
       const event = encounterOffer(s);
       return { title: event.name, detail: event.choice ? "回收已安排，生产继续。完成后写入航行记录。" : "有一份额外发现等待安排；普通探索收益已保留，没有选择期限。",
         action: "explore", label: "查看航行发现", focus: "encounter-panel", value: event.choice ? 1 : 0, target: 1,
         eta: event.choice ? Math.max(0, event.readyAt - s.clock) : 0 };
     }
+
+    const readyProject = D.HARBOR_PROJECTS.find(p => harborProjectOffer(s, p.id).available);
+    const harbor = harborGoal(s);
+    if (harborStatus(s)?.available) return harbor;
+    if (readyProject) return { title: `推进${readyProject.name}`, detail: harborProjectOffer(s, readyProject.id).benefit,
+      action: "explore", label: "查看工程条款", focus: `harbor-project-${readyProject.id}`, value: 1, target: 1, eta: 0 };
+    if (harbor) return harbor;
 
     if (
       s.rebirths === 0 &&
@@ -2596,6 +2614,7 @@
     addDust,
     rawRate,
     productionRate,
+    arrivalTasks,
     progressSnapshot,
     returnReport,
     purchaseImpact,

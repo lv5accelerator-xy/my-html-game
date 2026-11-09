@@ -1912,3 +1912,13 @@ p {
   .harbor-focuses small { display:none; }
   .harbor-focus-description { display:block; font-size:.85rem; margin:8px 0; }
 }
+
+/* Continuous decorative animation is opt-in; progress itself remains state driven. */
+.atlas-node.is-built circle { animation:none; }
+@media (prefers-reduced-motion:no-preference) and (min-width:800px) and (hover:hover) {
+  .port-atlas:hover .atlas-node.is-built circle { animation:port-light 4s ease-in-out 2 alternate; }
+}
+html[data-paused="true"] * { animation-play-state:paused !important; }
+.return-ready { border-top:1px solid #354750; margin-top:16px; padding-top:8px; }
+[tabindex="-1"]:focus-visible { outline:2px solid #7ed6c1; outline-offset:4px; }
+@media(max-width:600px) { #navigation button { min-height:48px; } .harbor-actions { gap:8px; } }

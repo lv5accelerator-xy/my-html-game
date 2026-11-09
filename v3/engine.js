@@ -791,10 +791,21 @@
   function missionOptions(s) {
     return D.MISSIONS.filter((m) => !missionLock(s, m.id));
   }
+  function missionFit(s, id) {
+    const m = byId(D.MISSIONS, id);
+    const fits = item => m && (!item.missions || item.missions.includes(id)) && (!item.minSeconds || m.seconds >= item.minSeconds);
+    const traits = D.MISSION_TRAITS.filter(t => fits(t) && equipped(s, t.module) >= (t.level || 1));
+    const synergy = D.MODULE_SYNERGIES.find(t => fits(t) && t.pair.every(id => equipped(s, id) > 0));
+    return { seconds: synergy?.seconds || 1, dust: synergy?.dust || 1,
+      samples: traits.reduce((n, t) => n + (t.samples || 0), 0) + (synergy?.samples || 0),
+      diversion: traits.reduce((n, t) => n - (t.diversionPerLevel || 0) * equipped(s, t.module), 0) + (synergy?.diversion || 0),
+      labels: [...traits.map(t => t.label), ...(synergy ? [synergy.label] : [])] };
+  }
   function missionPreview(s, id, planId) {
     const m = byId(D.MISSIONS, id);
     if (!m) return null;
     const explorer = s.run.route === "explore";
+    const fit = missionFit(s, id);
     const plan =
       storyMission(m) &&
       byId(
@@ -811,7 +822,7 @@
       seconds: Math.max(
         30,
         Math.ceil(
-          m.seconds *
+          m.seconds * fit.seconds *
             (energy ? energy.seconds : 1) *
             (focus ? focus.seconds : 1) *
             (plan ? plan.seconds : 1) *
@@ -820,11 +831,11 @@
             (s.chapter?.includes("lighthouse") ? 0.9 : 1),
         ),
       ),
-      diversion:
+      diversion: Math.max(0.03, Math.min(0.5,
         m.diversion *
         (explorer ? 0.5 : 1) *
         (plan ? plan.diversion : 1) *
-        (focus ? focus.diversion : 1),
+        (focus ? focus.diversion : 1) + fit.diversion)),
       chance: Math.min(
         1,
         m.chance +
@@ -832,13 +843,13 @@
           (has(s, "navigation") && m.chance < 1 ? 0.05 : 0),
       ),
       samples:
-        m.samples +
+        m.samples + fit.samples +
         (energy ? energy.bonusSamples : 0) +
         (focus ? focus.bonusSamples : 0) +
         (plan ? plan.samples : 0) +
         (explorer ? 1 : 0) +
         (s.chapter?.includes("nursery") ? 1 : 0),
-      dust: Math.max(20, rawRate(s) * m.yieldSeconds * (plan ? plan.dust : 1)),
+      dust: Math.max(20, rawRate(s) * m.yieldSeconds * fit.dust * (plan ? plan.dust : 1)),
     };
   }
   function encounterCandidates(s, missionId) {
@@ -2267,7 +2278,7 @@
     };
     const limits = (def) => ({
       seconds: Math.ceil(
-        def.seconds *
+        def.seconds * 1.1 *
           (def.rescue
             ? Math.max(...D.RESCUE_ENERGY.map((e) => e.seconds))
             : 1) *
@@ -2278,7 +2289,7 @@
       samples: Math.max(
         4,
         def.samples +
-          2 +
+          5 +
           (def.rescue
             ? Math.max(...D.RESCUE_ENERGY.map((e) => e.bonusSamples))
             : 0) +
@@ -2413,6 +2424,7 @@
     affordableBest,
     missionOptions,
     missionLock,
+    missionFit,
     missionPreview,
     storyText,
     storyScene,

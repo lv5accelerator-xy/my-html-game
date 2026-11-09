@@ -423,7 +423,7 @@
       const preview = E.missionPreview(state, m.id),
         offer = E.projectOffer(state, p.id);
       const known = state.lore.some((r) => r.story === p.story);
-      return `<article class="sector ${offer.built ? "connected" : "current-sector"}" id="mission-${m.id}" tabindex="-1"><span class="sector-status">0${i + 1} · ${offer.built ? "已连通" : lock ? "等待航路条件" : known ? "故事已记录" : "信号已定位"}</span><h3>${m.name}</h3><p>${m.detail}</p><p class="sector-metrics">${duration(preview.seconds)} · 分流 ${Math.round(preview.diversion * 100)}%<br>安全回收 ${number(preview.dust)} 星尘 · ${preview.samples} 份样本</p>${lock ? `<p class="blueprint-lock">${lock}</p>${prerequisiteButton(m.id)}` : ""}<button class="outline" ${action("mission", m.id)} ${lock || state.mission || state.result || state.run.dust < 600 ? "disabled" : ""}>${known ? "再次安全探索" : "安全派遣"}</button><div class="sector-project" id="project-${p.id}" tabindex="-1"><h4>${p.name}${offer.built ? " · 已建成" : ""}</h4><p>${p.detail}</p>${offer.built ? "<small>永久效果已生效 · 跃迁保留</small>" : `<p>${p.cores} 星核 + ${p.samples} 样本<br>当前 ${number(state.cores)} 星核 · ${number(state.samples)} 样本</p>${known ? "" : "<small>先处理这个星域的首次故事。</small>"}<button ${action("project", p.id)} ${offer.available ? "" : "disabled"}>建设${p.name}</button>`}</div></article>`;
+      return `<article class="sector ${offer.built ? "connected" : "current-sector"}" id="mission-${m.id}" tabindex="-1"><span class="sector-status">0${i + 1} · ${offer.built ? "已连通" : lock ? "等待航路条件" : known ? "故事已记录" : "信号已定位"}</span><h3>${m.name}</h3><p>${m.detail}</p><p class="sector-metrics">${duration(preview.seconds)} · 分流 ${Math.round(preview.diversion * 100)}%<br>安全回收 ${number(preview.dust)} 星尘 · ${preview.samples} 份样本</p>${lock ? `<p class="blueprint-lock">${lock}</p>${prerequisiteButton(m.id)}` : ""}${voyageComparison(m.id)}<button class="outline" ${action("mission", m.id)} ${lock || state.mission || state.result || state.run.dust < 600 ? "disabled" : ""}>${known ? "再次安全探索" : "安全派遣"}</button><div class="sector-project" id="project-${p.id}" tabindex="-1"><h4>${p.name}${offer.built ? " · 已建成" : ""}</h4><p>${p.detail}</p>${offer.built ? "<small>永久效果已生效 · 跃迁保留</small>" : `<p>${p.cores} 星核 + ${p.samples} 样本<br>当前 ${number(state.cores)} 星核 · ${number(state.samples)} 样本</p>${known ? "" : "<small>先处理这个星域的首次故事。</small>"}<button ${action("project", p.id)} ${offer.available ? "" : "disabled"}>建设${p.name}</button>`}</div></article>`;
     };
     const remaining = D.PROJECTS.filter((p) => !state.chapter.includes(p.id));
     const completed = D.PROJECTS.filter((p) => state.chapter.includes(p.id));
@@ -462,7 +462,7 @@
       busy = Boolean(state.mission || state.result);
     const selected = track.preparation?.id === m.id && track.preparation.plan;
     return `<article id="mission-${m.id}" tabindex="-1"><h3>${m.name}</h3><p>${m.detail}</p><p>所有方案都是安全航程。派遣前比较准备方案；没有倒计时惩罚，归航后等你决定。</p>${lock ? `<p class="blueprint-lock">${lock}</p>${prerequisiteButton(m.id)}` : ""}
-      <div class="preparation-grid" aria-label="航前准备方案">${D.EXPEDITION_PLANS.map(
+      ${voyageComparison(m.id)}<div class="preparation-grid" aria-label="航前准备方案">${D.EXPEDITION_PLANS.map(
         (plan) => {
           const p = E.missionPreview(state, m.id, plan.id);
           return `<button class="preparation-option" ${action("prepare", plan.id)} data-mission="${m.id}" aria-pressed="${selected === plan.id}" ${lock || busy ? "disabled" : ""}><strong>${plan.name}</strong><span>${plan.detail}</span><span>${duration(p.seconds)} · 分流 ${Math.round(p.diversion * 1000) / 10}%</span><span>${number(p.dust)} 星尘 · ${p.samples} 样本</span></button>`;
@@ -636,6 +636,14 @@
       return `<article class="resident-request" id="resident-${r.id}"><div><small>${r.from}</small><h3>${r.title}</h3><p>${r.record ? escape(reply.text) : r.ready ? r.arrival : r.brief}</p></div><div class="resident-request-actions">${r.record ? `<p class="resident-collection">已收藏 · ${r.collection}</p><details data-details-key="resident-letter-${r.id}"><summary>重读回信</summary><p>${escape(reply.label)}</p><p>${escape(reply.text)}</p><small>你的星港 · ${ending.title}；${D.PORT_FOCUSES.find((p) => p.id === state.council.priority)?.name || "共同建设"}</small></details>` : r.ready ? r.replies.map((x) => `<button class="outline" ${action("resident-reply", r.id)} data-reply="${x.id}">${x.label}</button>`).join("") : r.active ? `<p>已接下 · ${state.mission ? "等待本次补给归航" : "请派遣两港补给并领取报告"}</p><button class="outline" ${action("nav", "explore")} data-goal-focus="${state.result ? "report" : state.mission ? "active-mission" : "mission-supply-run"}">前往补给交接</button>` : `<button class="outline" ${action("resident-accept", r.id)} ${r.available ? "" : "disabled"}>接下委托</button><small>同一时间接一份；先处理当前航程。接下后暂停自动派遣。</small>`}</div></article>`;
     }).join("")}</section>`;
   }
+  function voyageComparison(id) {
+    const fit = E.missionFit(state, id), current = E.missionPreview(state, id);
+    const names = items => items.length ? items.map(id => `${D.MODULES.find(m => m.id === id).name} ${state.modules[id]}级`).join("、") : "空槽";
+    const alternate = D.LOADOUTS.find(l => state.loadouts[l.id] && state.loadouts[l.id].join(",") !== state.equipped.join(","));
+    const other = alternate && E.loadoutPreview(state, alternate.id, id);
+    const signed = n => `${n > 0 ? "+" : ""}${Math.round(n * 10) / 10}`;
+    return `<div class="voyage-comparison"><small>当前装备：${names(state.equipped)}</small><p>${fit.labels.length ? fit.labels.join("；") : "此组合无额外任务适配，使用基础回收与既有舰装效果。"}</p>${other ? `<small>对比「${alternate.name}」：航程 ${signed(other.mission.seconds - current.seconds)}秒 · 分流 ${signed((other.mission.diversion - current.diversion) * 100)}个百分点 · 星尘 ${signed(other.mission.dust - current.dust)} · 样本 ${signed(other.mission.samples - current.samples)}${other.lock ? ` · 条件：${other.lock}` : ""}</small><button class="text-button" ${action("loadout-quick", alternate.id)}>切换${alternate.name}</button>` : `<small>在装备方案中保存另一套配置后，可在此对比实际差异。</small>`}</div>`;
+  }
   function encounterPanel() {
     const event = E.encounterOffer(state);
     const history = state.encounters.history;
@@ -650,7 +658,7 @@
         .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
           const p = E.missionPreview(state, m.id);
-          return `<div class="mission-row" id="mission-${m.id}" tabindex="-1"><div><h3>${m.name}</h3><p>${m.detail}</p></div><div class="mission-metrics"><small>${duration(p.seconds)} · 分流 ${Math.round(p.diversion * 100)}%</small><p>成功率 ${Math.round(p.chance * 100)}%<br>成功回收 ${number(p.dust)} 星尘<br>${p.samples} 份样本</p></div><div class="row-action"><button class="${m.chance < 1 ? "" : "outline"}" ${action("mission", m.id)} ${state.mission || state.result ? "disabled" : ""}>${m.chance < 1 ? "风险派遣" : "安全派遣"}</button></div></div>`;
+          return `<div class="mission-row" id="mission-${m.id}" tabindex="-1"><div><h3>${m.name}</h3><p>${m.detail}</p></div><div class="mission-metrics"><small>${duration(p.seconds)} · 分流 ${Math.round(p.diversion * 100)}%</small><p>成功率 ${Math.round(p.chance * 100)}%<br>成功回收 ${number(p.dust)} 星尘<br>${p.samples} 份样本</p></div><div class="row-action">${voyageComparison(m.id)}<button class="${m.chance < 1 ? "" : "outline"}" ${action("mission", m.id)} ${state.mission || state.result ? "disabled" : ""}>${m.chance < 1 ? "风险派遣" : "安全派遣"}</button></div></div>`;
         })
         .join("")}</section>
       <section class="port-panel" id="port-panel" tabindex="-1"><span class="port-progress">星港修复 ${state.starport} / ${D.PORT.length}</span><h2>${port ? port.name : "这里终于可以成为家。"}</h2><p>${port ? `需要 ${port.cores} 星核与 ${port.samples} 份样本。你拥有 ${number(state.cores)} 星核与 ${number(state.samples)} 份样本。` : D.PORT.at(-1).text}</p>${port ? `<button class="outline" ${action("port")} ${state.cores >= port.cores && state.samples >= port.samples ? "" : "disabled"}>修复航站</button>` : "<p>归航星港已建成。远航星图已经开放，新的回信正在等待。</p>"}</section>
@@ -1101,7 +1109,7 @@
     else if (kind === "loadout-save") {
       if (E.saveLoadout(state, id))
         toast(`${D.LOADOUTS.find((p) => p.id === id).name}方案已保存。`);
-    } else if (kind === "loadout-apply") {
+    } else if (["loadout-apply", "loadout-quick"].includes(kind)) {
       if (E.applyLoadout(state, id))
         toast("装备方案已切换，当前生产按新装备运行；已出发航程保留原准备。");
     } else if (kind === "port-focus") {

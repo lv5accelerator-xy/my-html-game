@@ -115,6 +115,27 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    {
+      const fixture = require("./helpers/v3-fixtures.cjs").completed("city", TIME);
+      fixture.equipped = ["battery", "solar"]; E.saveLoadout(fixture, "production");
+      fixture.equipped = ["nav", "scanner"]; E.saveLoadout(fixture, "voyage"); fixture.lastAt = TIME;
+      await scenario("v3.14 dispatch comparison and real quick loadout switch preserve the locked voyage", { [S.KEY]: JSON.stringify(fixture) }, async page => {
+        await page.locator('#navigation [data-id="explore"]').click();
+        const row = page.locator('#mission-supply-run');
+        assert.match(await row.locator('.voyage-comparison').innerText(), /当前装备.*惯性导航仪/s);
+        await row.locator('[data-action="loadout-quick"]').click();
+        assert.deepEqual((await read(page)).equipped, ['battery', 'solar']);
+        for (const width of [1280, 375]) {
+          await page.setViewportSize({ width, height: 900 });
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        }
+        await row.locator('[data-action="mission"]').click();
+        const snapshot = (await read(page)).mission;
+        await page.locator('#loadouts [data-action="loadout-apply"][data-id="voyage"]').click();
+        assert.deepEqual((await read(page)).mission, snapshot);
+        await page.reload(); assert.deepEqual((await read(page)).mission, snapshot);
+      });
+    }
     for (const def of D.ENCOUNTERS) {
       const fixture = require("./helpers/v3-fixtures.cjs").encounterReady(def.id, TIME);
       fixture.lastAt = TIME; fixture.samples = 10;
@@ -2681,13 +2702,14 @@ async function run() {
           await page.locator("#route-archive").screenshot({ path: path.join(screenshotDir, "v3.9-archive-desktop.png"), animations: "disabled" });
         }
         await page.reload();
-        assert.deepEqual(await read(page), memory);
+        const reloaded = { ...memory, beacon: { ...memory.beacon, expiresAt: 0 } }; // Storage deliberately dismisses an old visible beacon on load.
+        assert.deepEqual(await read(page), reloaded);
         await page.locator('#navigation [data-id="explore"]').click();
         await page.locator('.ending-actions [data-goal-focus="route-archive"]').click();
         await openArchiveRecord(page, "#story-hospital");
         await page.locator("#story-hospital > summary").click();
         assert.ok(await page.locator("#story-hospital .scene-transcript").first().isVisible());
-        assert.deepEqual(await read(page), memory);
+        assert.deepEqual(await read(page), reloaded);
         assert.equal((await read(page)).epilogue.ending, ending.id);
         assert.equal(await page.locator('#route-archive [data-action="claim"]').count(), 0);
       });

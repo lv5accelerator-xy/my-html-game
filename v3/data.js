@@ -7,7 +7,7 @@
   "use strict";
   const data = {
     VERSION: 32,
-    GAME_VERSION: "3.13.0-preview.1",
+    GAME_VERSION: "3.14.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -498,25 +498,37 @@
         detail: "全舰队产量 ×1.35。",
       },
     ],
+    MISSION_TRAITS: [
+      { module: "scanner", missions: ["echo", "message", "horizon", "white-noise", "old-observatory"], level: 2, samples: 1, label: "透镜校对：测绘任务 +1 样本" },
+      { module: "battery", minSeconds: 180, diversionPerLevel: 0.015, label: "储能缓冲：长期作业每级少分流1.5个百分点" },
+      { module: "medbay", missions: ["wreck", "supply-run", "convoy-relay", "convoy-berth", "convoy-light"], level: 2, samples: 1, label: "医疗整备：补给与接待 +1 样本" },
+      { module: "solar", missions: ["garden", "seedbank", "supply-run"], level: 2, samples: 1, label: "生态保存：种苗与补给 +1 样本" },
+    ],
+    MODULE_SYNERGIES: [
+      { id: "survey", pair: ["nav", "scanner"], missions: ["echo", "message", "horizon", "white-noise", "old-observatory"], seconds: 0.95, diversion: 0.02, label: "测绘协同：航程再短5%，多分流2个百分点" },
+      { id: "endurance", pair: ["battery", "solar"], minSeconds: 180, seconds: 1.05, diversion: -0.025, label: "持续作业：少分流2.5个百分点，航程延长5%" },
+      { id: "relief", pair: ["battery", "medbay"], missions: ["wreck", "supply-run", "convoy-relay", "convoy-berth", "convoy-light"], seconds: 1.05, samples: 1, label: "救护整备：多1样本，航程延长5%" },
+      { id: "recovery", pair: ["scanner", "solar"], missions: ["belt", "wreck"], dust: 1.08, diversion: 0.02, label: "分拣协同：回收星尘多8%，多分流2个百分点" },
+    ],
     MODULES: [
       {
         id: "battery",
         name: "储能矩阵",
         samples: 4,
-        detail: "每级全舰队产量 +12%。",
+        detail: "每级全舰队产量 +12%；180秒以上基础航程每级少分流1.5个百分点。",
       },
       {
         id: "scanner",
         name: "残骸透镜",
         samples: 4,
-        detail: "每级扫描与信标收益 +25%。",
+        detail: "每级扫描与信标收益 +25%；2级起测绘任务多1样本。",
       },
       {
         id: "medbay",
         name: "医疗舱电源",
         samples: 4,
         story: "hospital",
-        detail: "每级全舰队产量 +10%。来自废弃医院船。",
+        detail: "每级全舰队产量 +10%；2级起医疗与补给任务多1样本。来自废弃医院船。",
       },
       {
         id: "nav",
@@ -529,7 +541,7 @@
         name: "温室集光阵",
         samples: 6,
         story: "garden",
-        detail: "每级光帆采集器产量 +30%。来自失落温室。",
+        detail: "每级光帆采集器产量 +30%；2级起生态与补给任务多1样本。来自失落温室。",
       },
     ],
     MISSIONS: [

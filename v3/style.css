@@ -1872,3 +1872,8 @@ p {
 .event-choices { display:flex; flex-wrap:wrap; gap:12px; }
 .event-choices button { flex:1 1 210px; text-align:left; white-space:normal; }
 .event-choices small { display:block; margin-top:6px; }
+
+.voyage-comparison { max-width:340px; font-size:.8rem; text-align:left; color:#b1c2c6; }
+.voyage-comparison p { color:#7ed6c1; margin:6px 0; font-size:.8rem; }
+.voyage-comparison small { display:block; overflow-wrap:anywhere; }
+@media(max-width:600px) { .voyage-comparison { max-width:100%; } }

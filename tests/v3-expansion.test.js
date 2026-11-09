@@ -70,4 +70,43 @@ test('v3.13 old schema32 archives add empty events without replaying stories or 
     assert.equal(encounters.pending, null); assert.deepEqual(encounters.history, []);
   }
 });
+test('v3.14 all legal two-slot combinations have bounded mission fits and locked preview/settlement', () => {
+  const pairs = D.MODULES.flatMap((m, i) => D.MODULES.slice(i + 1).map(n => [m.id, n.id]));
+  for (const equipped of pairs) for (const id of ['belt', 'garden', 'supply-run']) {
+    let state = completed(); state.equipped = equipped; state.encounters.nextAt = state.clock + 600;
+    const preview = E.missionPreview(state, id);
+    assert.ok(Number.isFinite(preview.dust) && preview.dust <= D.MAX_NUMBER);
+    assert.ok(preview.seconds >= 30 && preview.seconds <= D.MISSIONS.find(m => m.id === id).seconds * 1.1);
+    assert.ok(preview.diversion >= .03 && preview.diversion <= .5);
+    assert.ok(E.startMission(state, id));
+    const snapshot = structuredClone(state.mission);
+    assert.equal(snapshot.samples, preview.samples); assert.equal(snapshot.dust, preview.dust);
+    assert.equal(snapshot.seconds, preview.seconds); assert.equal(snapshot.diversion, preview.diversion);
+    state.equipped = []; state.modules = { ...state.modules, scanner: 1 };
+    state = E.sanitize(state, state.lastAt); assert.deepEqual(state.mission, snapshot);
+    E.advance(state, state.lastAt + snapshot.seconds * 1000, { offline: true });
+    assert.equal(state.result.dust, preview.dust); assert.equal(state.result.samples, preview.samples);
+  }
+});
+test('v3.14 specific fits have genuine tradeoffs and existing production/module levels remain legal', () => {
+  const state = completed(); const old = structuredClone(state.modules);
+  state.equipped = ['nav', 'scanner']; const survey = E.missionPreview(state, 'old-observatory', 'relay');
+  state.equipped = ['battery', 'solar']; const long = E.missionPreview(state, 'old-observatory', 'relay');
+  assert.ok(survey.seconds < long.seconds); assert.ok(survey.diversion > long.diversion);
+  state.equipped = ['battery', 'medbay']; const relief = E.missionPreview(state, 'supply-run');
+  state.equipped = ['nav', 'scanner']; const fast = E.missionPreview(state, 'supply-run');
+  assert.ok(relief.samples > fast.samples); assert.ok(relief.seconds > fast.seconds);
+  assert.deepEqual(state.modules, old);
+  for (const def of D.MODULES) { state.equipped = [def.id]; assert.ok(E.sanitize(state, state.lastAt).equipped.includes(def.id)); }
+});
+test('v3.14 saved loadout comparison uses the actual plan and switching never rewrites the active snapshot', () => {
+  const state = completed(); state.equipped = ['battery', 'solar']; E.saveLoadout(state, 'production');
+  state.equipped = ['nav', 'scanner']; E.saveLoadout(state, 'voyage');
+  const forecast = E.loadoutPreview(state, 'production', 'supply-run');
+  assert.ok(E.applyLoadout(state, 'production'));
+  assert.deepEqual(forecast.mission, E.missionPreview(state, 'supply-run'));
+  E.startMission(state, 'supply-run'); const locked = structuredClone(state.mission);
+  E.applyLoadout(state, 'voyage'); assert.deepEqual(state.mission, locked);
+  assert.deepEqual(E.sanitize(state, state.lastAt).loadouts, state.loadouts);
+});
 console.log(`v3 expansion ok: ${checks} behavioral checks`);

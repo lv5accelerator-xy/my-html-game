@@ -57,7 +57,7 @@
   "public_acceptance": {
     "first_run": 42741301733,
     "webkit": "failed: test clicked tutorial underneath timed announcement",
-    "chromium": "full flows in progress",
+    "chromium": "first run completed successfully; see first_chromium counts",
     "fix": "only test startup ordering; release runtime unchanged",
     "final_result": {
       "run": 42744103954,

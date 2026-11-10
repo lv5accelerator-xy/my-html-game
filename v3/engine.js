@@ -1211,6 +1211,54 @@
     return h;
   }
 
+  const linkState = s => s.continuation.links || {earned:[],records:[],active:null};
+  const voyageTotal = s => D.VOYAGES.reduce((n,v)=>n+(s.expeditions.completed[v.id]||0),0);
+  function linkProof(s,d) {
+    return Boolean(s.epilogue.ending&&s.continuation.community.completed.includes(d.letter)&&surveyCount(s,d.chain)===3&&s.expeditions.archives[D.VOYAGES.find(v=>v.chain===d.chain)?.id]&&
+      s.continuation.reviews.earned.some(id=>byId(D.REVIEWS,id)?.chain===d.chain)&&(!d.project||(s.management.projects[d.project]||0)>=2)&&
+      (!d.allVoyages||D.VOYAGES.every(v=>s.expeditions.archives[v.id]))&&(!d.after||linkState(s).earned.includes(d.after)));
+  }
+  function linkOffer(s,id) {
+    const d=byId(D.RESIDENT_LINKS,id);if(!d)return null;
+    const h=linkState(s),done=h.earned.includes(id),record=h.records.find(r=>r.id===id);
+    const reason=done?'回信已永久归档':h.active?'先交接当前跨系统协作':!s.epilogue.ending?'确认任一正式结局后开放':!linkProof(s,d)?'需要对应居民回信、三节点图谱、证据复查和永久首航；工程场景还需对应二期建设':'';
+    const prior=d.after&&h.records.find(r=>r.id===d.after);
+    return {...clone(d),done,record:record?clone(record):null,reason,available:!reason,
+      echo:prior?(prior.choice==='share'?'通信班沿用你先前选择的共同练习板，准备公开副本。':'通信班沿用你先前的带班核验安排，先向相关值班员说明。'):''};
+  }
+  function acceptLink(s,id) {
+    const q=linkOffer(s,id);if(!q?.available)return false;
+    if(!s.continuation.links)s.continuation.links={earned:[],records:[],active:null};
+    s.continuation.links.active={id,clock:s.clock,deliveries:s.management.stats.deliveries,voyages:voyageTotal(s),ending:s.epilogue.ending};
+    log(s,`跨系统协作「${q.name}」已接下。接下后完成一份居民需求或一条完整远航，再亲手回信。`);return true;
+  }
+  function linkStatus(s) {
+    const a=linkState(s).active;if(!a)return null;
+    const ready=s.management.stats.deliveries>a.deliveries||voyageTotal(s)>a.voyages;
+    return {...clone(a),ready,reason:ready?'实际交接已核实；请选择回信与资料用途。':'接下后完成一份居民需求交付，或一条完整长期远航；单段报告不计数。'};
+  }
+  function linkChoiceOffer(s,id,choice) {
+    const d=byId(D.RESIDENT_LINKS,id),a=linkStatus(s);if(!d||!['share','care'].includes(choice))return null;
+    const dustCost=choice==='share'?4000:0,costSamples=choice==='care'?2:0;
+    const reason=!a||a.id!==id?'尚未接下此协作':!a.ready?a.reason:s.dust<dustCost?'还需星尘准备公开副本':s.samples<costSamples?'还需2份样本核验原始记录':'';
+    return {choice,dustCost,costSamples,dust:choice==='care'?5000:0,samples:choice==='share'?1:0,reason,available:!reason};
+  }
+  function completeLink(s,id,choice) {
+    const q=linkChoiceOffer(s,id,choice),h=linkState(s),a=h.active;if(!q?.available||h.earned.includes(id))return false;
+    s.dust-=q.dustCost;s.samples-=q.costSamples;addDust(s,q.dust);s.samples=bounded(s.samples+q.samples);
+    h.earned.push(id);h.records.push({id,choice,clock:s.clock,ending:a.ending});h.active=null;
+    log(s,`居民协作「${byId(D.RESIDENT_LINKS,id).name}」的用途与回信已永久保存。重读不再结算。`);return true;
+  }
+  function cleanLinks(raw,s) {
+    const h={earned:[],records:[],active:null};if(!raw||typeof raw!=='object'||!s.epilogue.ending)return h;
+    // Independent first-settlement markers survive damaged prose receipts.
+    h.earned=[...new Set(Array.isArray(raw.earned)?raw.earned:[])].filter(id=>byId(D.RESIDENT_LINKS,id)).slice(0,6);
+    for(const id of h.earned){const r=Array.isArray(raw.records)&&raw.records.find(r=>r?.id===id);if(r&&['share','care'].includes(r.choice)&&r.ending===s.epilogue.ending&&Number.isInteger(r.clock)&&r.clock>=0&&r.clock<=s.clock)h.records.push({id,choice:r.choice,clock:r.clock,ending:r.ending});}
+    const a=raw.active,d=byId(D.RESIDENT_LINKS,a?.id);
+    if(d&&!h.earned.includes(a.id)&&a.ending===s.epilogue.ending&&Number.isInteger(a.clock)&&a.clock>=0&&a.clock<=s.clock&&Number.isInteger(a.deliveries)&&a.deliveries>=0&&a.deliveries<=s.management.stats.deliveries&&Number.isInteger(a.voyages)&&a.voyages>=0&&a.voyages<=voyageTotal(s)&&linkProof({...s,continuation:{...s.continuation,links:h}},d))h.active={id:a.id,clock:a.clock,deliveries:a.deliveries,voyages:a.voyages,ending:a.ending};
+    return h;
+  }
+
   function freshHonors() { return {claimed:[]}; }
   function honorProgress(s,id) {
     const d=byId(D.HONORS,id);if(!d||!s.epilogue.ending) return 0;
@@ -1375,6 +1423,7 @@
     h.reviews = cleanReviews(raw.reviews,s);
     h.community = cleanCommunity(raw.community,s);
     h.honors = cleanHonors(raw.honors,{...s,continuation:h});
+    if(Object.hasOwn(raw,"links"))h.links=cleanLinks(raw.links,{...s,continuation:h});
     const q = raw.sequence, a = s.expeditions.active, steps = cleanPlanSteps(s, q?.steps);
     if (a && q?.token === a.token && q.id === a.id && s.expeditions.completed[a.id] && steps &&
       [...a.legs, ...(a.leg ? [a.leg] : [])].every(l => l.choice === steps[l.stage].choice && sameEquipment(l.equipment, steps[l.stage].equipment)))
@@ -1962,6 +2011,8 @@
     if(community)add(community.available?'ready':community.workReady?'prepare':'ongoing','community','居民协作',community.reason||'已备齐，可交接并阅读回信。','community-life',community.available?'community-deliver':'nav',community.available?String(community.serial):'explore');
     if(need)add(need.available?'ready':need.workReady?'prepare':'ongoing','need',need.name,need.reason||'已备齐，可完成交付。','harbor-management',need.available?'harbor-deliver':'nav',need.available?String(need.serial):'explore');
     const event=encounterOffer(s);if(event)add(event.choice?'ongoing':'ready','encounter',event.name,event.choice?'正在按已选方法处理。':'等待你的决定，没有期限。','encounter-panel');
+    const links=linkStatus(s);if(links)add(links.ready?'ready':'ongoing','resident-links','居民回响',links.reason,'resident-links');
+    else if(D.RESIDENT_LINKS.some(d=>linkOffer(s,d.id).available))add('prepare','resident-links','发现与居民的回响','已有真实证据与首航，可接下一份协作。','resident-links');
     const goal=nextGoal(s),represented=[...seen].some(key=>({report:['report','active-mission'],review:['sector-reviews'],survey:['sector-atlas'],voyage:['long-voyages'],community:['community-life'],need:['harbor-management'],encounter:['encounter-panel']}[key]||[]).includes(goal.focus));
     // The primary rail already presents this goal, so secondary suggestions exclude it.
     if(s.epilogue.ending){
@@ -3260,7 +3311,7 @@
     addDust,
     rawRate,
     productionRate,
-    arrivalTasks, actionCenter,
+    arrivalTasks, actionCenter, linkOffer,acceptLink,linkStatus,linkChoiceOffer,completeLink,
     progressSnapshot,
     returnReport,
     purchaseImpact,

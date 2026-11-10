@@ -1,0 +1,20 @@
+ok 1 - v3.25 action center city-v324-mature: unique, reachable, observational and compatible
+ok 2 - v3.25 action center city-v324-contract: unique, reachable, observational and compatible
+ok 3 - v3.25 action center city-v324-paid: unique, reachable, observational and compatible
+ok 4 - v3.25 action center watch-v324-mature: unique, reachable, observational and compatible
+ok 5 - v3.25 action center watch-v324-contract: unique, reachable, observational and compatible
+ok 6 - v3.25 action center watch-v324-paid: unique, reachable, observational and compatible
+ok 7 - v3.25 action center voyage-v324-mature: unique, reachable, observational and compatible
+ok 8 - v3.25 action center voyage-v324-contract: unique, reachable, observational and compatible
+ok 9 - v3.25 action center voyage-v324-paid: unique, reachable, observational and compatible
+ok 10 - v3.25 new and post-jump saves never suggest locked secondary navigation
+ok 11 - v3.25 ready commands reuse atomic once-only delivery and voyage report rules
+ok 12 - v3.26 city/share: six earned cross-system stories, new gameplay, frozen history and finite awards
+ok 13 - v3.26 city/care: six earned cross-system stories, new gameplay, frozen history and finite awards
+ok 14 - v3.26 watch/share: six earned cross-system stories, new gameplay, frozen history and finite awards
+ok 15 - v3.26 watch/care: six earned cross-system stories, new gameplay, frozen history and finite awards
+ok 16 - v3.26 voyage/share: six earned cross-system stories, new gameplay, frozen history and finite awards
+ok 17 - v3.26 voyage/care: six earned cross-system stories, new gameplay, frozen history and finite awards
+ok 18 - v3.26 partial flight is insufficient, complete voyage counts once; no expiry or offline auto-choice
+ok 19 - v3.26 damaged replies retain independent once-only markers; malformed/unknown inputs cannot change history
+v3 quality ok: 19 behavioral checks

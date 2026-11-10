@@ -195,7 +195,7 @@
   }
 ],
     VERSION: 32,
-    GAME_VERSION: "3.25.0-preview.1",
+    GAME_VERSION: "3.26.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -3584,5 +3584,14 @@
   }
 ];
   data.LONG_VOYAGE_FITS = { batteryDiversion:.012, solarCost:.03, medbayDiversion:.006, medbaySamplesLevel:2, scannerFreight:.08, scannerOther:.04, scannerScienceLevel:2 };
+  data.RESIDENT_LINKS = [
+    {id:'cargo-table',group:'meals',name:'食堂里的旧货签',letter:'meals-1',chain:'freight',text:'公共食堂值班组把失联货运证据与实际首航清单放在一起：旧航线没有被遗忘，但货柜里的姓名也不该任意公开。',share:'公开去名货签，让下一班值守核对路线',care:'保留具名清单，只交给获授权的接班人',shared:'食堂墙上的去名货签帮助新来船找到了补给台。',cared:'值班员把具名清单收进授权柜，接班时逐份核对。'},
+    {id:'lab-consent',group:'workshop',name:'遗迹不替人作答',letter:'workshop-1',chain:'science',text:'祁岳与维修班对照科研遗迹的原始观测。归航能验证数据，却不能替原作者同意新的用途。下一班还需要一次实际交接来检验流程。',share:'公开观测方法，隐去私人实验附注',care:'先保留原始资料，由维修班现场说明',shared:'维修台旁多了一张可复算的观测方法卡。',cared:'维修班在交接表中加入了现场解释与授权栏。'},
+    {id:'signal-class',group:'signals',name:'给下一班通信员的练习',letter:'signals-1',chain:'quiet',text:'阿遥与通信班把居民信标首航回执带进培训室。真实接待进度已经能证明联络有效，课程仍要决定怎样让新学员参与。',share:'让学员用去名回执共同演练',care:'由值班员带学员逐份核验',shared:'通信室的共同练习板开始记录学员自己的核验步骤。',cared:'每张值班桌多了一份由带班员签名的交接练习。'},
+    {id:'dock-handoff',group:'workshop',name:'不用祁岳一直守着',letter:'workshop-2',chain:'freight',project:'repair-dock',text:'维修设施已经能承担第二班工作。祁岳想把旧货运事故的复查与新的维修交接连起来，确认他不值班时流程仍能运转。',share:'把去名故障复盘贴到公共检修板',care:'将完整复盘留给维护员逐班交接',shared:'公共检修板标出了每一处允许暂停的工序。',cared:'维护员的交班箱里保存了带来源的完整复盘。'},
+    {id:'garden-heirs',group:'meals',name:'窗前有了下一位照料者',letter:'meals-2',chain:'science',project:'habitat',text:'育种舱的新照料者按苇留下的历史培育档案核对遗迹光照记录。生活区建成后，休息的椅子旁终于有了稳定的值班表。苇只在旧记录里说话。',share:'公开后代植物的去名观测表',care:'由照料者保存原始记录，向来访者说明',shared:'窗前出现了人人能填写的新叶观测表，原作者仍署苇的名字。',cared:'照料者的柜中保存着原始记录，椅边留下了可预约的讲解时间。'},
+    {id:'two-addresses',group:'signals',name:'档案之外的下一封回信',letter:'signals-2',chain:'quiet',after:'signal-class',allVoyages:true,text:'三条永久首航档案都已入库。阿遥请下一班通信员把今天的实际交接写进回信，港口未来的用途沿用你已经确认的正式结局。',share:'寄送可公开的去名交接副本',care:'只把完整交接寄给对应的下一班',shared:'两处地址开始交换去名的共同值班摘要。',cared:'下一班收到具名交接回执，两处地址各自保留原件。'}
+  ];
+
   return Object.freeze(data);
 });

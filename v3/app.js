@@ -690,6 +690,15 @@
       ${q.ready&&!q.paused?`<button class="primary" ${action('plan-next',String(a.token))} data-stage="${a.stage}">${a.stage===3?'领取末段并归航入库':'领取本段并按安排接续'}</button>`:''}
       <button class="outline" ${action(q.paused?'plan-resume':'plan-pause',String(a.token))}>${q.paused?'恢复本次安排':'本次归航后暂停接续'}</button>${q.stage<4?`<button class="text-button" ${action('plan-restore',String(a.token))}>恢复已确认的下一段编成</button>`:''}<button class="text-button" ${action('plan-stop',String(a.token))}>改为逐段手动安排</button></div>`;
   }
+  function residentLinks() {
+    if(!state.epilogue.ending)return '';
+    const h=state.continuation.links||{earned:[],records:[],active:null},a=E.linkStatus(state);
+    const reply=r=>{const d=D.RESIDENT_LINKS.find(d=>d.id===r.id),ending=D.ENDINGS.find(d=>d.id===r.ending).title;return `<p>${escape(r.choice==='share'?d.shared:d.cared)}</p><p>这封回信属于「${ending}」之后的共同值班；正式结局没有改变。</p>`;};
+    return `<section class="panel resident-links" id="resident-links" tabindex="-1"><div class="section-title"><h2>发现与居民的回响</h2><span>永久回信 ${h.earned.length}/6</span></div><p>证据、首航和居民接班一起改变今天的星港。接下后实际完成一份居民需求或一条完整远航，再选择资料用途；没有期限。</p>
+      ${a?`<article class="harbor-active"><h3>${D.RESIDENT_LINKS.find(d=>d.id===a.id).name}</h3><p>${escape(a.reason)}</p><button class="outline" ${action('nav','explore')} data-goal-focus="harbor-management">接续居民需求</button><button class="outline" ${action('nav','explore')} data-goal-focus="long-voyages">安排完整远航</button><div class="review-methods">${['share','care'].map(choice=>{const q=E.linkChoiceOffer(state,a.id,choice),d=D.RESIDENT_LINKS.find(d=>d.id===a.id);return `<article><h4>${escape(choice==='share'?d.share:d.care)}</h4><p>交接支出 ${q.dustCost} 星尘 / ${q.costSamples} 样本；一次回收 ${q.dust} 星尘 / ${q.samples} 样本。</p><p>${escape(q.reason)}</p><button class="outline" ${action('link-complete',a.id)} data-link-choice="${choice}" ${q.available?'':'disabled'}>确认此用途并寄出回信</button></article>`;}).join('')}</div></article>`:''}
+      <details data-details-key="resident-link-stories" ${a?'open':''}><summary>六份互动与已保存回信</summary>${D.RESIDENT_LINKS.map(d=>{const q=E.linkOffer(state,d.id);return `<article id="link-${d.id}" tabindex="-1"><h3>${q.done?'✓ ':''}${d.name}</h3><p>${escape(d.text)}</p>${q.echo?`<p>${escape(q.echo)}</p>`:''}${q.record?reply(q.record):`<p>${escape(q.reason)}</p>${!q.done?`<button class="outline" ${action('link-accept',d.id)} ${q.available?'':'disabled'}>接下这次协作</button>`:'<p>原始回信损坏，已领取标记保留，不再结算收益。</p>'}`}</article>`;}).join('')}</details></section>`;
+  }
+
   function readyActions() {
     if(!E.reachable(state,'explore'))return '';
     const groups=E.actionCenter(state);
@@ -743,7 +752,7 @@
   function communityScene() {
     if(!state.epilogue.ending) return '';
     const h=state.continuation.community;
-    return `<section class="community-scene" aria-label="居民值班区"><h3>星港里的下一班</h3><svg viewBox="0 0 360 116" role="img" aria-label="居民工作牌与已归档值班记录">${D.COMMUNITY_GROUPS.map((g,i)=>{const level=state.management.projects[g.project]||0,count=D.COMMUNITY_STORIES.filter(d=>d.group===g.id&&h.completed.includes(d.id)).length,x=i*120;return `<g transform="translate(${x},0)"><rect class="${level?'is-built':''}" x="8" y="12" width="104" height="70" rx="8"/><text x="60" y="34" text-anchor="middle">${g.id==='meals'?'食堂':g.id==='workshop'?'维修':'通信'} · 工程${level}期</text>${[0,1,2].map(n=>`<rect class="${n<count?'is-built':''}" x="${26+n*23}" y="49" width="15" height="18" rx="3"/>`).join('')}<text x="60" y="105" text-anchor="middle">值班记录 ${count}/3</text></g>`;}).join('')}</svg><p>设施轮廓来自已建工程，点亮的工作牌来自已确认居民回信。通信联络保留原有地址。${E.reachable(state,'explore')?'':'本航次累计获得600星尘后可打开探索页，已有回信继续保留。'}</p><div class="harbor-actions">${D.COMMUNITY_GROUPS.map(g=>`<button class="outline" ${action('nav','explore')} data-goal-focus="community-group-${g.id}" ${E.reachable(state,'explore')?'':'disabled'}>${g.name}</button>`).join('')}</div></section>`;
+    return `<section class="community-scene" aria-label="居民值班区"><h3>星港里的下一班</h3><svg viewBox="0 0 360 116" role="img" aria-label="居民工作牌与已归档值班记录">${D.COMMUNITY_GROUPS.map((g,i)=>{const level=state.management.projects[g.project]||0,count=D.COMMUNITY_STORIES.filter(d=>d.group===g.id&&h.completed.includes(d.id)).length,x=i*120;return `<g transform="translate(${x},0)"><rect class="${level?'is-built':''}" x="8" y="12" width="104" height="70" rx="8"/><text x="60" y="34" text-anchor="middle">${g.id==='meals'?'食堂':g.id==='workshop'?'维修':'通信'} · 工程${level}期</text>${[0,1,2].map(n=>`<rect class="${n<count?'is-built':''}" x="${26+n*23}" y="49" width="15" height="18" rx="3"/>`).join('')}<text x="60" y="105" text-anchor="middle">值班记录 ${count}/3</text></g>`;}).join('')}</svg><p>设施轮廓来自已建工程，点亮的工作牌来自已确认居民回信。通信联络保留原有地址。${E.reachable(state,'explore')?'':'本航次累计获得600星尘后可打开探索页，已有回信继续保留。'}</p><div class="link-markers" aria-label="居民选择留下的星港变化">${(state.continuation.links?.records||[]).map(r=>{const d=D.RESIDENT_LINKS.find(d=>d.id===r.id);return `<span data-link-marker="${r.id}">${escape(r.choice==='share'?d.shared:d.cared)}</span>`;}).join('')}</div><div class="harbor-actions">${D.COMMUNITY_GROUPS.map(g=>`<button class="outline" ${action('nav','explore')} data-goal-focus="community-group-${g.id}" ${E.reachable(state,'explore')?'':'disabled'}>${g.name}</button>`).join('')}</div></section>`;
   }
   function communityPanel() {
     if(!state.epilogue.ending) return '';
@@ -810,7 +819,7 @@
   function explore() {
     const port = D.PORT[state.starport];
     return `<div class="page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${encounterPanel()}${communityPanel()}${honorsPanel()}${longVoyages()}${sectorAtlas()}${reviewsPanel()}${harborPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
+      ${missionReport()}${encounterPanel()}${residentLinks()}${communityPanel()}${honorsPanel()}${longVoyages()}${sectorAtlas()}${reviewsPanel()}${harborPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
         .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
@@ -1169,9 +1178,9 @@
     if (blocked) warnings.push("本机记录未正常载入，下表当前一栏不能代表原记录。原文将先备份，建议另外导出原文。");
     else {
       if (next.savedAt < current.savedAt) warnings.push("所选记录的保存时间更早，之后的进度不会合并。");
-      if (next.chapter < current.chapter || next.lore.length < current.lore.length || next.starport < current.starport || next.rebirths < current.rebirths || next.residents < current.residents || next.harborDeliveries < current.harborDeliveries || next.harborProjects < current.harborProjects || next.sectors < current.sectors || next.voyages < current.voyages || next.voyageCollections < current.voyageCollections || next.reviewArchives<current.reviewArchives || next.communityLetters<current.communityLetters || next.honors<current.honors)
+      if (next.chapter < current.chapter || next.lore.length < current.lore.length || next.starport < current.starport || next.rebirths < current.rebirths || next.residents < current.residents || next.harborDeliveries < current.harborDeliveries || next.harborProjects < current.harborProjects || next.sectors < current.sectors || next.voyages < current.voyages || next.voyageCollections < current.voyageCollections || next.reviewArchives<current.reviewArchives || next.communityLetters<current.communityLetters || next.honors<current.honors || next.residentLinks<current.residentLinks)
         warnings.push("部分永久进度将回到所选记录，请核对章节、修复、跃迁和回信。");
-      if (next.ending !== current.ending || current.lore.some(item => next.lore.some(other => item.story === other.story && item.choice !== other.choice)))
+      if ((current.residentLinks>0&&next.linkChoices!==current.linkChoices) || next.ending !== current.ending || current.lore.some(item => next.lore.some(other => item.story === other.story && item.choice !== other.choice)))
         warnings.push("故事选择或结局与当前记录不同，接续后以所选记录为准。");
     }
     if (incoming.legacy) warnings.push("这是旧版航站记录，将按迁移规则接入；不覆盖旧版原存档，也不连接旧版云端。");
@@ -1185,6 +1194,7 @@
       ["经营交付 / 工程期数 / 发现收藏", `${current.harborDeliveries} / ${current.harborProjects} / ${current.encounters}`, `${next.harborDeliveries} / ${next.harborProjects} / ${next.encounters}`],
       ["复查档案 / 居民回信 / 长期荣誉", `${current.reviewArchives} / ${current.communityLetters} / ${current.honors}`, `${next.reviewArchives} / ${next.communityLetters} / ${next.honors}`],
       ["重访安排 / 接续授权", `${current.itineraryPlans} / ${current.itineraryActive ? "本航次" : "无"}`, `${next.itineraryPlans} / ${next.itineraryActive ? "本航次" : "无"}`],
+      ["居民回响 / 用途记录", `${current.residentLinks} / ${current.linkChoices}`, `${next.residentLinks} / ${next.linkChoices}`],
       ["星尘", number(current.dust), number(next.dust)],
       ["样本 / 星核", `${number(current.samples)} / ${number(current.cores)}`, `${number(next.samples)} / ${number(next.cores)}`],
     ];
@@ -1268,6 +1278,10 @@
     if(kind==='community-accept'){if(E.acceptCommunity(state,id,button.dataset.serial)){save();render();toast('居民协作已接下，条件已锁定，无交付期限。');}return;}
     if(kind==='community-path'){if(E.setCommunityPath(state,button.dataset.serial,id)){save();render();}return;}
     if(kind==='community-pack'){if(E.packCommunity(state,id)){save();render();toast('可用资源已预装，不会被自动购买花掉。');}return;}
+    if(kind==='link-accept'){if(E.acceptLink(state,id))toast('已接下协作。请完成一份新的居民需求或一条完整远航。');save();render();return;}
+    if(kind==='link-complete'){
+      if(E.completeLink(state,id,button.dataset.linkChoice)){save();render();const d=D.RESIDENT_LINKS.find(d=>d.id===id);openDialog('新的居民回信',`<h3>${escape(d.name)}</h3><p>${escape(button.dataset.linkChoice==='share'?d.shared:d.cared)}</p><p>用途、回信与一次结算已永久归档。</p><button class="primary" ${action('cancel')}>收好回信</button>`);}return;
+    }
     if(kind==='plan-copy-first') {
       const draft=planDraft(id);itineraryDrafts[id]=draft.map(()=>({...draft[0],equipment:[...draft[0].equipment]}));
       signature='';render();toast('四段草稿已填好。请检查每段预览，再保存；尚未派遣或花费资源。');return;

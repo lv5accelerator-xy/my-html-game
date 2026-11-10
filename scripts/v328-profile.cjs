@@ -1,5 +1,51 @@
 'use strict';
+// Repeatable workload, not a real phone benchmark. Timers are installed before app load.
 const fs=require('node:fs'),http=require('node:http'),path=require('node:path'),assert=require('node:assert/strict');
-const root=process.env.PROFILE_SITE_ROOT||path.resolve(__dirname,'..'),E=require('../v3/engine.js'),S=require('../v3/storage.js'),F=require('../tests/fixtures/v320-saves.json'),{chromium}=require(process.env.CODEX_PLAYWRIGHT_PATH);
-const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);if(!file.startsWith(root+'/')||!fs.existsSync(file)){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');res.end(fs.readFileSync(file));});
-(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({executablePath:process.env.CODEX_CHROMIUM_PATH});const context=await browser.newContext({viewport:{width:375,height:900}}),url=`http://127.0.0.1:${server.address().port}/v3/index.html`;await require('../tests/helpers/isolate-browser.cjs')(context,url);const s=E.sanitize(structuredClone(require('../tests/fixtures/v324-saves.json').states[0].state),Date.now());s.lastAt=Date.now();await context.addInitScript(({key,text})=>{localStorage.setItem(key,text);window.__cost={calls:{},mutations:0,writes:0};const set=Storage.prototype.setItem;Storage.prototype.setItem=function(...a){window.__cost.writes++;return set.apply(this,a);};Object.defineProperty(globalThis,'SalvageEngine',{configurable:true,set(api){const wrap=Object.fromEntries(Object.entries(api).map(([k,fn])=>[k,typeof fn==='function'?function(...a){window.__cost.calls[k]=(window.__cost.calls[k]||0)+1;return fn(...a);}:fn]));Object.defineProperty(globalThis,'SalvageEngine',{value:wrap});}});},{key:S.KEY,text:JSON.stringify(s)});const page=await context.newPage();await page.clock.install({time:Date.now()});await page.goto(url);await page.locator('#next-goal-title').waitFor();await page.evaluate(()=>{new MutationObserver(ms=>window.__cost.mutations+=ms.length).observe(document.querySelector('#main'),{subtree:true,childList:true,characterData:true,attributes:true});});const rows=[];for(const surface of ['home','explore']){if(surface==='explore')await page.locator('#navigation [data-id="explore"]').click();for(const hidden of [false,true]){await page.evaluate(hidden=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>hidden});document.dispatchEvent(new Event('visibilitychange'));window.__cost={calls:{},mutations:0,writes:0};},hidden);const start=performance.now();await page.clock.runFor(60000);rows.push({surface,hidden,simulatedSeconds:60,wallMs:performance.now()-start,...await page.evaluate(()=>({...window.__cost,nodes:document.querySelectorAll('*').length,heap:performance.memory?.usedJSHeapSize||null,overflow:document.documentElement.scrollWidth>innerWidth}))});}await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'));document.querySelector('#dialog[open]')?.close();});}assert.ok(rows[0].calls.nextGoal>0,"profile must exercise actual timers");assert.equal(rows[0].overflow,false);console.log(JSON.stringify({version:await page.evaluate(()=>SalvageData.GAME_VERSION),model:'earned full-history save; same375px browser,60s virtual foreground and hidden, instrumentation overhead included',rows},null,2));await browser.close();server.close();})().catch(e=>{console.error(e);server.close();process.exit(1);});
+const site=process.env.PROFILE_SITE_ROOT||path.resolve(__dirname,'..'),E=require('../v3/engine.js'),S=require('../v3/storage.js');
+const {chromium}=require(process.env.CODEX_PLAYWRIGHT_PATH);
+const server=http.createServer((req,res)=>{
+ const file=path.resolve(site,'.'+new URL(req.url,'http://localhost').pathname);
+ if(!file.startsWith(site+'/')||!fs.existsSync(file)){res.writeHead(404).end();return;}
+ res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');res.end(fs.readFileSync(file));
+});
+(async()=>{
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ const browser=await chromium.launch({executablePath:process.env.CODEX_CHROMIUM_PATH});
+ const context=await browser.newContext({viewport:{width:375,height:900}}),url=`http://127.0.0.1:${server.address().port}/v3/index.html`;
+ await require('../tests/helpers/isolate-browser.cjs')(context,url);
+ const s=E.sanitize(structuredClone(require('../tests/fixtures/v324-saves.json').states[0].state),Date.now());s.lastAt=Date.now();
+ await context.addInitScript(({key,text})=>{
+  localStorage.setItem(key,text);window.__cost={calls:{},mutations:0,writes:0};
+  const set=Storage.prototype.setItem;Storage.prototype.setItem=function(...a){window.__cost.writes++;return set.apply(this,a);};
+  Object.defineProperty(globalThis,'SalvageEngine',{configurable:true,set(api){
+   const wrap=Object.fromEntries(Object.entries(api).map(([k,fn])=>[k,typeof fn==='function'?function(...a){window.__cost.calls[k]=(window.__cost.calls[k]||0)+1;return fn(...a);}:fn]));
+   Object.defineProperty(globalThis,'SalvageEngine',{value:wrap});
+  }});
+ },{key:S.KEY,text:JSON.stringify(s)});
+ const page=await context.newPage();await page.clock.install({time:Date.now()});await page.goto(url);await page.locator('#next-goal-title').waitFor();
+ await page.evaluate(()=>new MutationObserver(ms=>window.__cost.mutations+=ms.length).observe(document.querySelector('#main'),{subtree:true,childList:true,characterData:true,attributes:true}));
+ const rows=[];
+ const visible=async hidden=>page.evaluate(hidden=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>hidden});document.dispatchEvent(new Event('visibilitychange'));window.__cost={calls:{},mutations:0,writes:0};},hidden);
+ for(const surface of ['home','explore']){
+  if(surface==='explore')await page.locator('#navigation [data-id="explore"]').click();
+  for(const hidden of [false,true]){
+   await visible(hidden);const start=performance.now();await page.clock.runFor(60000);
+   rows.push({surface,hidden,simulatedSeconds:60,wallMs:performance.now()-start,...await page.evaluate(()=>({...window.__cost,nodes:document.querySelectorAll('*').length,overflow:document.documentElement.scrollWidth>innerWidth}))});
+  }
+  await visible(false);await page.evaluate(()=>document.querySelector('#dialog[open]')?.close());
+ }
+ assert.ok(rows[0].calls.nextGoal>0,'profile must exercise actual timers');assert.ok(rows.every(r=>!r.overflow));
+ const soak=[];const seconds=Number(process.env.PROFILE_SOAK_SECONDS||0);
+ if(seconds){
+  const cdp=await context.newCDPSession(page),sample=async elapsed=>{
+   await cdp.send('HeapProfiler.collectGarbage');const heap=await cdp.send('Runtime.getHeapUsage');
+   soak.push({virtualSeconds:elapsed,heapBytes:heap.usedSize,nodes:await page.locator('*').count()});
+  };
+  await sample(0);const start=performance.now();
+  for(let elapsed=0;elapsed<seconds;elapsed+=300){await page.clock.runFor(Math.min(300,seconds-elapsed)*1000);await sample(Math.min(seconds,elapsed+300));}
+  assert.ok(Math.max(...soak.map(x=>x.nodes))-Math.min(...soak.map(x=>x.nodes))<80,'bounded live DOM under stable workload');
+  console.log('SOAK '+JSON.stringify({simulatedSeconds:seconds,wallMs:performance.now()-start,samples:soak}));
+ }
+ console.log(JSON.stringify({version:await page.evaluate(()=>SalvageData.GAME_VERSION),browser:browser.version(),model:'fixed v3.24 earned full-history save;375px;60 virtual seconds per surface/state;instrumentation overhead included',rows},null,2));
+ await browser.close();server.close();
+})().catch(e=>{console.error(e);server.close();process.exit(1);});

@@ -1,0 +1,35 @@
+ok 1 - v3.25 action center city-v324-mature: unique, reachable, observational and compatible
+ok 2 - v3.25 action center city-v324-contract: unique, reachable, observational and compatible
+ok 3 - v3.25 action center city-v324-paid: unique, reachable, observational and compatible
+ok 4 - v3.25 action center watch-v324-mature: unique, reachable, observational and compatible
+ok 5 - v3.25 action center watch-v324-contract: unique, reachable, observational and compatible
+ok 6 - v3.25 action center watch-v324-paid: unique, reachable, observational and compatible
+ok 7 - v3.25 action center voyage-v324-mature: unique, reachable, observational and compatible
+ok 8 - v3.25 action center voyage-v324-contract: unique, reachable, observational and compatible
+ok 9 - v3.25 action center voyage-v324-paid: unique, reachable, observational and compatible
+ok 10 - v3.25 new and post-jump saves never suggest locked secondary navigation
+ok 11 - v3.25 ready commands reuse atomic once-only delivery and voyage report rules
+node:internal/assert/utils:77
+    throw err;
+    ^
+
+AssertionError [ERR_ASSERTION]: signal-class
+    at /workspace/starport-v328/tests/v3-quality.test.js:12:42
+    at test (/workspace/starport-v328/tests/v3-quality.test.js:3:24)
+    at Object.<anonymous> (/workspace/starport-v328/tests/v3-quality.test.js:10:68)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v22.23.4

@@ -1,0 +1,2568 @@
+v3.16 earned management city: 42 deliveries, 15 construction stages in 5385s; zero resource injection
+v3.16 earned management watch: 42 deliveries, 15 construction stages in 5385s; zero resource injection
+v3.16 earned management voyage: 42 deliveries, 15 construction stages in 5385s; zero resource injection
+┌─────────┬────────────┬───────┬───────────┬───────┬───────────┬────────────┬─────────┐
+│ (index) │ route      │ drone │ milestone │ story │ firstJump │ secondJump │ samples │
+├─────────┼────────────┼───────┼───────────┼───────┼───────────┼────────────┼─────────┤
+│ 0       │ '工业航线' │ 15    │ 135       │ 210   │ 1133      │ 706        │ 1       │
+│ 1       │ '回收航线' │ 15    │ 90        │ 150   │ 1185      │ 810        │ 1       │
+│ 2       │ '探索航线' │ 15    │ 135       │ 180   │ 1125      │ 765        │ 50      │
+└─────────┴────────────┴───────┴───────────┴───────┴───────────┴────────────┴─────────┘
+v3 balance ok: three routes, first-run beats, 15–25 minute jumps and faster second runs; starport 3180s, chapter two +1815s, complete campaign 4995s
+┌─────────┬─────────────┬─────────────────────┬───────────────┐
+│ (index) │ preparation │ chapterThreeSeconds │ earnedSamples │
+├─────────┼─────────────┼─────────────────────┼───────────────┤
+│ 0       │ '校准优先'  │ 345                 │ 53            │
+│ 1       │ '补给优先'  │ 480                 │ 65            │
+│ 2       │ '分段接续'  │ 435                 │ 59            │
+└─────────┴─────────────┴─────────────────────┴───────────────┘
+┌─────────┬─────────────┬────────────┬────────────────────┬────────────┐
+│ (index) │ preparation │ port       │ chapterFourSeconds │ netSamples │
+├─────────┼─────────────┼────────────┼────────────────────┼────────────┤
+│ 0       │ '校准优先'  │ '接待扩容' │ 345                │ 43         │
+│ 1       │ '校准优先'  │ '生态补给' │ 345                │ 47         │
+│ 2       │ '校准优先'  │ '档案校准' │ 315                │ 43         │
+│ 3       │ '补给优先'  │ '接待扩容' │ 465                │ 55         │
+│ 4       │ '补给优先'  │ '生态补给' │ 465                │ 59         │
+│ 5       │ '补给优先'  │ '档案校准' │ 420                │ 55         │
+│ 6       │ '分段接续'  │ '接待扩容' │ 405                │ 49         │
+│ 7       │ '分段接续'  │ '生态补给' │ 405                │ 53         │
+│ 8       │ '分段接续'  │ '档案校准' │ 360                │ 49         │
+└─────────┴─────────────┴────────────┴────────────────────┴────────────┘
+┌─────────┬─────────────┬────────────┬──────────────────────┬────────────────────┬────────────┐
+│ (index) │ preparation │ port       │ energy               │ chapterFiveSeconds │ netSamples │
+├─────────┼─────────────┼────────────┼──────────────────────┼────────────────────┼────────────┤
+│ 0       │ '校准优先'  │ '接待扩容' │ '轮换照明与储能'     │ 495                │ 72         │
+│ 1       │ '校准优先'  │ '接待扩容' │ '转接空闲采集阵列'   │ 420                │ 66         │
+│ 2       │ '校准优先'  │ '接待扩容' │ '回收观测站备用设备' │ 450                │ 70         │
+│ 3       │ '校准优先'  │ '生态补给' │ '轮换照明与储能'     │ 495                │ 78         │
+│ 4       │ '校准优先'  │ '生态补给' │ '转接空闲采集阵列'   │ 420                │ 72         │
+│ 5       │ '校准优先'  │ '生态补给' │ '回收观测站备用设备' │ 450                │ 76         │
+│ 6       │ '校准优先'  │ '档案校准' │ '轮换照明与储能'     │ 450                │ 72         │
+│ 7       │ '校准优先'  │ '档案校准' │ '转接空闲采集阵列'   │ 360                │ 66         │
+│ 8       │ '校准优先'  │ '档案校准' │ '回收观测站备用设备' │ 420                │ 70         │
+│ 9       │ '补给优先'  │ '接待扩容' │ '轮换照明与储能'     │ 660                │ 84         │
+│ 10      │ '补给优先'  │ '接待扩容' │ '转接空闲采集阵列'   │ 540                │ 78         │
+│ 11      │ '补给优先'  │ '接待扩容' │ '回收观测站备用设备' │ 585                │ 82         │
+│ 12      │ '补给优先'  │ '生态补给' │ '轮换照明与储能'     │ 660                │ 90         │
+│ 13      │ '补给优先'  │ '生态补给' │ '转接空闲采集阵列'   │ 540                │ 84         │
+│ 14      │ '补给优先'  │ '生态补给' │ '回收观测站备用设备' │ 585                │ 88         │
+│ 15      │ '补给优先'  │ '档案校准' │ '轮换照明与储能'     │ 585                │ 84         │
+│ 16      │ '补给优先'  │ '档案校准' │ '转接空闲采集阵列'   │ 465                │ 78         │
+│ 17      │ '补给优先'  │ '档案校准' │ '回收观测站备用设备' │ 540                │ 82         │
+│ 18      │ '分段接续'  │ '接待扩容' │ '轮换照明与储能'     │ 585                │ 78         │
+│ 19      │ '分段接续'  │ '接待扩容' │ '转接空闲采集阵列'   │ 465                │ 72         │
+│ 20      │ '分段接续'  │ '接待扩容' │ '回收观测站备用设备' │ 540                │ 76         │
+│ 21      │ '分段接续'  │ '生态补给' │ '轮换照明与储能'     │ 585                │ 84         │
+│ 22      │ '分段接续'  │ '生态补给' │ '转接空闲采集阵列'   │ 465                │ 78         │
+│ 23      │ '分段接续'  │ '生态补给' │ '回收观测站备用设备' │ 540                │ 82         │
+│ 24      │ '分段接续'  │ '档案校准' │ '轮换照明与储能'     │ 540                │ 78         │
+│ 25      │ '分段接续'  │ '档案校准' │ '转接空闲采集阵列'   │ 420                │ 72         │
+│ 26      │ '分段接续'  │ '档案校准' │ '回收观测站备用设备' │ 465                │ 76         │
+└─────────┴─────────────┴────────────┴──────────────────────┴────────────────────┴────────────┘
+v3 ending balance ok: 81 earned-save branches, zero added resource costs or wait timers, free play retained
+{
+  "version": "3.24.0-preview.1",
+  "model": "one scan/s first30s; visits15s; normal fees/rewards; no injected resources; action counts are engine calls, not browser clicks",
+  "runs": [
+    {
+      "route": "industry",
+      "run": 1,
+      "seconds": 1133,
+      "events": {
+        "drone": 15,
+        "route": 30,
+        "milestone": 135,
+        "research": 30,
+        "exploration": 106,
+        "story": 210,
+        "jump": 1133
+      },
+      "atTenMinutes": [
+        {
+          "clock": 600,
+          "dust": 305214.16016000055,
+          "earnedDust": 2961571.1601599986,
+          "samples": 1,
+          "cores": 0,
+          "rate": 19881.132480000004,
+          "buildings": {
+            "drone": 43,
+            "sail": 42,
+            "forge": 22,
+            "relay": 17
+          },
+          "missionRemaining": 0
+        }
+      ],
+      "availableDust": 782756.3289600003,
+      "earnedDust": 30059747.32896,
+      "samples": 1,
+      "cores": 0,
+      "attempts": {
+        "scan": 30,
+        "buy": 70,
+        "startMission": 8,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 6,
+        "claimMission": 1
+      },
+      "successful": {
+        "scan": 30,
+        "buy": 70,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 6,
+        "startMission": 1,
+        "claimMission": 1
+      }
+    },
+    {
+      "route": "industry",
+      "run": 2,
+      "seconds": 706,
+      "events": {
+        "drone": 1,
+        "route": 15,
+        "milestone": 25,
+        "research": 60,
+        "exploration": 34,
+        "story": 1,
+        "jump": 706
+      },
+      "atTenMinutes": [
+        {
+          "clock": 1733,
+          "dust": 220337.17715200095,
+          "earnedDust": 21282655.177151997,
+          "samples": 1,
+          "cores": 4,
+          "rate": 62105.551199999994,
+          "buildings": {
+            "drone": 77,
+            "sail": 59,
+            "forge": 38,
+            "relay": 22
+          },
+          "missionRemaining": 0
+        }
+      ],
+      "availableDust": 760121.3983520006,
+      "earnedDust": 30063525.39835196,
+      "samples": 1,
+      "cores": 4,
+      "attempts": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "claimBeacon": 4,
+        "research": 5
+      },
+      "successful": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "claimBeacon": 4,
+        "research": 5
+      }
+    },
+    {
+      "route": "industry",
+      "run": 3,
+      "seconds": 605,
+      "events": {
+        "drone": 1,
+        "route": 15,
+        "milestone": 21,
+        "research": 45,
+        "exploration": 29,
+        "story": 1,
+        "jump": 605
+      },
+      "atTenMinutes": [
+        {
+          "clock": 2439,
+          "dust": 1006895.6204573552,
+          "earnedDust": 29397539.62045735,
+          "samples": 1,
+          "cores": 8,
+          "rate": 134427.60388753534,
+          "buildings": {
+            "drone": 78,
+            "sail": 61,
+            "forge": 40,
+            "relay": 25
+          },
+          "missionRemaining": 0
+        }
+      ],
+      "availableDust": 618232.9243749584,
+      "earnedDust": 30069813.92437496,
+      "samples": 1,
+      "cores": 8,
+      "attempts": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 4
+      },
+      "successful": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 4
+      }
+    },
+    {
+      "route": "industry",
+      "run": 4,
+      "seconds": 555,
+      "events": {
+        "drone": 1,
+        "route": 15,
+        "milestone": 19,
+        "research": 60,
+        "exploration": 27,
+        "story": 1,
+        "jump": 555
+      },
+      "atTenMinutes": [],
+      "availableDust": 3609911.371690482,
+      "earnedDust": 30617369.37169044,
+      "samples": 1,
+      "cores": 12,
+      "attempts": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "claimBeacon": 4,
+        "research": 5
+      },
+      "successful": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "claimBeacon": 4,
+        "research": 5
+      }
+    },
+    {
+      "route": "reclaim",
+      "run": 1,
+      "seconds": 1185,
+      "events": {
+        "drone": 15,
+        "route": 30,
+        "milestone": 90,
+        "research": 30,
+        "exploration": 60,
+        "story": 150,
+        "jump": 1185
+      },
+      "atTenMinutes": [
+        {
+          "clock": 600,
+          "dust": 453943.0566400005,
+          "earnedDust": 4126620.0566400075,
+          "samples": 1,
+          "cores": 0,
+          "rate": 19274.112000000005,
+          "buildings": {
+            "drone": 50,
+            "sail": 41,
+            "forge": 28,
+            "relay": 18
+          },
+          "missionRemaining": 0
+        }
+      ],
+      "availableDust": 2852431.4533120003,
+      "earnedDust": 32074074.453312006,
+      "samples": 1,
+      "cores": 0,
+      "attempts": {
+        "scan": 261,
+        "buy": 74,
+        "startMission": 4,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 7,
+        "claimMission": 1
+      },
+      "successful": {
+        "scan": 261,
+        "buy": 74,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 7,
+        "startMission": 1,
+        "claimMission": 1
+      }
+    },
+    {
+      "route": "reclaim",
+      "run": 2,
+      "seconds": 810,
+      "events": {
+        "drone": 1,
+        "route": 15,
+        "milestone": 22,
+        "research": 30,
+        "exploration": 29,
+        "story": 1,
+        "jump": 810
+      },
+      "atTenMinutes": [
+        {
+          "clock": 1785,
+          "dust": 71735.31862400209,
+          "earnedDust": 15264804.31862398,
+          "samples": 1,
+          "cores": 4,
+          "rate": 37896.72480000001,
+          "buildings": {
+            "drone": 74,
+            "sail": 57,
+            "forge": 36,
+            "relay": 21
+          },
+          "missionRemaining": 0
+        }
+      ],
+      "availableDust": 3070656.7458240036,
+      "earnedDust": 30121443.745824005,
+      "samples": 1,
+      "cores": 4,
+      "attempts": {
+        "scan": 186,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 5,
+        "buy": 5
+      },
+      "successful": {
+        "scan": 186,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 5,
+        "buy": 5
+      }
+    },
+    {
+      "route": "reclaim",
+      "run": 3,
+      "seconds": 730,
+      "events": {
+        "drone": 1,
+        "route": 15,
+        "milestone": 20,
+        "research": 30,
+        "exploration": 26,
+        "story": 1,
+        "jump": 730
+      },
+      "atTenMinutes": [
+        {
+          "clock": 2595,
+          "dust": 247406.07384171215,
+          "earnedDust": 19677359.07384166,
+          "samples": 1,
+          "cores": 8,
+          "rate": 45188.03970135518,
+          "buildings": {
+            "drone": 76,
+            "sail": 59,
+            "forge": 38,
+            "relay": 22
+          },
+          "missionRemaining": 0
+        }
+      ],
+      "availableDust": 719794.1787600578,
+      "earnedDust": 30046717.178760175,
+      "samples": 1,
+      "cores": 8,
+      "attempts": {
+        "scan": 170,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 4,
+        "buy": 4
+      },
+      "successful": {
+        "scan": 170,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 4,
+        "buy": 4
+      }
+    },
+    {
+      "route": "reclaim",
+      "run": 4,
+      "seconds": 616,
+      "events": {
+        "drone": 1,
+        "route": 15,
+        "milestone": 19,
+        "research": 30,
+        "exploration": 25,
+        "story": 1,
+        "jump": 616
+      },
+      "atTenMinutes": [
+        {
+          "clock": 3325,
+          "dust": 286150.1877668168,
+          "earnedDust": 28559431.187766723,
+          "samples": 1,
+          "cores": 12,
+          "rate": 83988.01801123125,
+          "buildings": {
+            "drone": 79,
+            "sail": 61,
+            "forge": 40,
+            "relay": 25
+          },
+          "missionRemaining": 0
+        }
+      ],
+      "availableDust": 602468.2852059322,
+      "earnedDust": 30024945.285205834,
+      "samples": 1,
+      "cores": 12,
+      "attempts": {
+        "scan": 147,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 4,
+        "buy": 1
+      },
+      "successful": {
+        "scan": 147,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 4,
+        "buy": 1
+      }
+    },
+    {
+      "route": "explore",
+      "run": 1,
+      "seconds": 1125,
+      "events": {
+        "drone": 15,
+        "route": 30,
+        "milestone": 135,
+        "research": 30,
+        "exploration": 106,
+        "story": 180,
+        "jump": 1125
+      },
+      "atTenMinutes": [
+        {
+          "clock": 600,
+          "dust": 360963.7620000009,
+          "earnedDust": 2616597.762000002,
+          "samples": 11,
+          "cores": 0,
+          "rate": 16551.216000000004,
+          "buildings": {
+            "drone": 40,
+            "sail": 40,
+            "forge": 26,
+            "relay": 15
+          },
+          "missionRemaining": 0
+        }
+      ],
+      "availableDust": 3736672.3236000026,
+      "earnedDust": 33433345.323599987,
+      "samples": 29,
+      "cores": 0,
+      "attempts": {
+        "scan": 30,
+        "buy": 70,
+        "startMission": 17,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 6,
+        "claimMission": 10
+      },
+      "successful": {
+        "scan": 30,
+        "buy": 70,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 6,
+        "startMission": 10,
+        "claimMission": 10
+      }
+    },
+    {
+      "route": "explore",
+      "run": 2,
+      "seconds": 765,
+      "events": {
+        "drone": 1,
+        "route": 15,
+        "milestone": 25,
+        "research": 45,
+        "exploration": 35,
+        "story": 1,
+        "jump": 765
+      },
+      "atTenMinutes": [
+        {
+          "clock": 1725,
+          "dust": 327994.8755600018,
+          "earnedDust": 15782318.875560049,
+          "samples": 40,
+          "cores": 2,
+          "rate": 39953.865600000005,
+          "buildings": {
+            "drone": 73,
+            "sail": 55,
+            "forge": 34,
+            "relay": 24
+          },
+          "missionRemaining": 48
+        }
+      ],
+      "availableDust": 5582740.775240003,
+      "earnedDust": 34704122.77524005,
+      "samples": 46,
+      "cores": 4,
+      "attempts": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "startMission": 9,
+        "research": 5,
+        "claimBeacon": 5,
+        "claimMission": 7
+      },
+      "successful": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "research": 5,
+        "claimBeacon": 5,
+        "startMission": 7,
+        "claimMission": 7
+      }
+    },
+    {
+      "route": "explore",
+      "run": 3,
+      "seconds": 645,
+      "events": {
+        "drone": 1,
+        "route": 15,
+        "milestone": 21,
+        "research": 30,
+        "exploration": 30,
+        "story": 1,
+        "jump": 645
+      },
+      "atTenMinutes": [
+        {
+          "clock": 2490,
+          "dust": 302685.0531280456,
+          "earnedDust": 20223875.05312802,
+          "samples": 53,
+          "cores": 1,
+          "rate": 75272.83864513766,
+          "buildings": {
+            "drone": 75,
+            "sail": 57,
+            "forge": 37,
+            "relay": 25
+          },
+          "missionRemaining": 33
+        }
+      ],
+      "availableDust": 6145732.322044547,
+      "earnedDust": 31280271.322044514,
+      "samples": 56,
+      "cores": 8,
+      "attempts": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "startMission": 7,
+        "research": 5,
+        "claimBeacon": 4,
+        "claimMission": 6
+      },
+      "successful": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "research": 5,
+        "startMission": 6,
+        "claimBeacon": 4,
+        "claimMission": 6
+      }
+    },
+    {
+      "route": "explore",
+      "run": 4,
+      "seconds": 645,
+      "events": {
+        "drone": 1,
+        "route": 15,
+        "milestone": 19,
+        "research": 30,
+        "exploration": 27,
+        "story": 1,
+        "jump": 645
+      },
+      "atTenMinutes": [
+        {
+          "clock": 3135,
+          "dust": 690288.8224467454,
+          "earnedDust": 29246251.82244675,
+          "samples": 71,
+          "cores": 5,
+          "rate": 88249.66772787867,
+          "buildings": {
+            "drone": 78,
+            "sail": 60,
+            "forge": 39,
+            "relay": 27
+          },
+          "missionRemaining": 33
+        },
+        {
+          "clock": 600,
+          "dust": 305214.16016000055,
+          "earnedDust": 2961571.1601599986,
+          "samples": 1,
+          "cores": 0,
+          "rate": 19881.132480000004,
+          "buildings": {
+            "drone": 43,
+            "sail": 42,
+            "forge": 22,
+            "relay": 17
+          },
+          "missionRemaining": 0
+        },
+        {
+          "clock": 1733,
+          "dust": 220337.17715200095,
+          "earnedDust": 21282655.177151997,
+          "samples": 1,
+          "cores": 4,
+          "rate": 62105.551199999994,
+          "buildings": {
+            "drone": 77,
+            "sail": 59,
+            "forge": 38,
+            "relay": 22
+          },
+          "missionRemaining": 0
+        },
+        {
+          "clock": 600,
+          "dust": 453943.0566400005,
+          "earnedDust": 4126620.0566400075,
+          "samples": 1,
+          "cores": 0,
+          "rate": 19274.112000000005,
+          "buildings": {
+            "drone": 50,
+            "sail": 41,
+            "forge": 28,
+            "relay": 18
+          },
+          "missionRemaining": 0
+        },
+        {
+          "clock": 1785,
+          "dust": 71735.31862400209,
+          "earnedDust": 15264804.31862398,
+          "samples": 1,
+          "cores": 4,
+          "rate": 37896.72480000001,
+          "buildings": {
+            "drone": 74,
+            "sail": 57,
+            "forge": 36,
+            "relay": 21
+          },
+          "missionRemaining": 0
+        },
+        {
+          "clock": 600,
+          "dust": 360963.7620000009,
+          "earnedDust": 2616597.762000002,
+          "samples": 11,
+          "cores": 0,
+          "rate": 16551.216000000004,
+          "buildings": {
+            "drone": 40,
+            "sail": 40,
+            "forge": 26,
+            "relay": 15
+          },
+          "missionRemaining": 0
+        },
+        {
+          "clock": 1725,
+          "dust": 327994.8755600018,
+          "earnedDust": 15782318.875560049,
+          "samples": 44,
+          "cores": 4,
+          "rate": 39953.865600000005,
+          "buildings": {
+            "drone": 73,
+            "sail": 55,
+            "forge": 34,
+            "relay": 24
+          },
+          "missionRemaining": 48
+        },
+        {
+          "clock": 600,
+          "dust": 360963.7620000009,
+          "earnedDust": 2616597.762000002,
+          "samples": 11,
+          "cores": 0,
+          "rate": 16551.216000000004,
+          "buildings": {
+            "drone": 40,
+            "sail": 40,
+            "forge": 26,
+            "relay": 15
+          },
+          "missionRemaining": 0
+        },
+        {
+          "clock": 1725,
+          "dust": 327994.8755600018,
+          "earnedDust": 15782318.875560049,
+          "samples": 40,
+          "cores": 2,
+          "rate": 39953.865600000005,
+          "buildings": {
+            "drone": 73,
+            "sail": 55,
+            "forge": 34,
+            "relay": 24
+          },
+          "missionRemaining": 48
+        },
+        {
+          "clock": 2490,
+          "dust": 302685.0531280456,
+          "earnedDust": 20223875.05312802,
+          "samples": 53,
+          "cores": 1,
+          "rate": 75272.83864513766,
+          "buildings": {
+            "drone": 75,
+            "sail": 57,
+            "forge": 37,
+            "relay": 25
+          },
+          "missionRemaining": 33
+        },
+        {
+          "clock": 3135,
+          "dust": 94359.3775736009,
+          "earnedDust": 30687570.377573587,
+          "samples": 71,
+          "cores": 5,
+          "rate": 88755.10683284934,
+          "buildings": {
+            "drone": 78,
+            "sail": 61,
+            "forge": 40,
+            "relay": 27
+          },
+          "missionRemaining": 33
+        },
+        {
+          "clock": 3780,
+          "dust": 486450.20736000326,
+          "earnedDust": 18392057.20735993,
+          "samples": 73,
+          "cores": 0,
+          "rate": 52941.081600000005,
+          "buildings": {
+            "drone": 76,
+            "sail": 59,
+            "forge": 38,
+            "relay": 22
+          },
+          "missionRemaining": 0
+        },
+        {
+          "clock": 5565,
+          "dust": 590209.0170110465,
+          "earnedDust": 66055109.01701102,
+          "samples": 119,
+          "cores": 3,
+          "rate": 129625.02462751867,
+          "buildings": {
+            "drone": 81,
+            "sail": 64,
+            "forge": 42,
+            "relay": 35
+          },
+          "missionRemaining": 109
+        },
+        {
+          "clock": 5565,
+          "dust": 156355.88662293067,
+          "earnedDust": 65621255.8866228,
+          "samples": 121,
+          "cores": 3,
+          "rate": 129625.02462751867,
+          "buildings": {
+            "drone": 81,
+            "sail": 64,
+            "forge": 42,
+            "relay": 35
+          },
+          "missionRemaining": 109
+        },
+        {
+          "clock": 5565,
+          "dust": 294915.4064766209,
+          "earnedDust": 65759815.40647653,
+          "samples": 119,
+          "cores": 3,
+          "rate": 129625.02462751867,
+          "buildings": {
+            "drone": 81,
+            "sail": 64,
+            "forge": 42,
+            "relay": 35
+          },
+          "missionRemaining": 76
+        },
+        {
+          "clock": 5565,
+          "dust": 979706.4891663864,
+          "earnedDust": 38781643.48916635,
+          "samples": 112,
+          "cores": 3,
+          "rate": 114774.79136327551,
+          "buildings": {
+            "drone": 80,
+            "sail": 63,
+            "forge": 41,
+            "relay": 30
+          },
+          "missionRemaining": 6
+        },
+        {
+          "clock": 5565,
+          "dust": 979706.4891663864,
+          "earnedDust": 38781643.48916635,
+          "samples": 112,
+          "cores": 3,
+          "rate": 114774.79136327551,
+          "buildings": {
+            "drone": 80,
+            "sail": 63,
+            "forge": 41,
+            "relay": 30
+          },
+          "missionRemaining": 6
+        },
+        {
+          "clock": 5565,
+          "dust": 979706.4891663864,
+          "earnedDust": 38781643.48916635,
+          "samples": 112,
+          "cores": 3,
+          "rate": 114774.79136327551,
+          "buildings": {
+            "drone": 80,
+            "sail": 63,
+            "forge": 41,
+            "relay": 30
+          },
+          "missionRemaining": 6
+        },
+        {
+          "clock": 5565,
+          "dust": 824085.1112072016,
+          "earnedDust": 55433207.111207135,
+          "samples": 106,
+          "cores": 3,
+          "rate": 123960.56783536801,
+          "buildings": {
+            "drone": 82,
+            "sail": 64,
+            "forge": 42,
+            "relay": 33
+          },
+          "missionRemaining": 104
+        },
+        {
+          "clock": 5565,
+          "dust": 769726.2590742802,
+          "earnedDust": 55378848.25907431,
+          "samples": 106,
+          "cores": 3,
+          "rate": 123960.56783536801,
+          "buildings": {
+            "drone": 82,
+            "sail": 64,
+            "forge": 42,
+            "relay": 33
+          },
+          "missionRemaining": 104
+        },
+        {
+          "clock": 5565,
+          "dust": 769726.2590742802,
+          "earnedDust": 55378848.25907431,
+          "samples": 106,
+          "cores": 3,
+          "rate": 123960.56783536801,
+          "buildings": {
+            "drone": 82,
+            "sail": 64,
+            "forge": 42,
+            "relay": 33
+          },
+          "missionRemaining": 84
+        }
+      ],
+      "availableDust": 6570028.581798463,
+      "earnedDust": 39331457.58179847,
+      "samples": 74,
+      "cores": 12,
+      "attempts": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "startMission": 7,
+        "research": 5,
+        "claimBeacon": 4,
+        "claimMission": 6
+      },
+      "successful": {
+        "scan": 30,
+        "chooseRoute": 1,
+        "research": 5,
+        "startMission": 6,
+        "claimBeacon": 4,
+        "claimMission": 6
+      }
+    }
+  ],
+  "campaignCalls": {
+    "attempts": {
+      "scan": 687,
+      "buy": 290,
+      "startMission": 265,
+      "chooseRoute": 14,
+      "research": 49,
+      "claimBeacon": 63,
+      "claimMission": 232,
+      "prestige": 10,
+      "repairPort": 4,
+      "configure": 8,
+      "buildProject": 3,
+      "buildModule": 4,
+      "equip": 2,
+      "prepareMission": 117,
+      "saveLoadout": 9,
+      "buildPortFocus": 9,
+      "arrangeRescueEnergy": 27,
+      "rescueMission": 243,
+      "confirmRescue": 243,
+      "confirmBackupBerth": 27,
+      "adoptKeeperProtocol": 27,
+      "confirmEpilogue": 243,
+      "chooseEnding": 81,
+      "acceptHarborNeed": 231,
+      "deliverHarborNeed": 231,
+      "buildHarborProject": 75,
+      "chooseEncounter": 3,
+      "setHarborFocus": 3,
+      "startVoyage": 9,
+      "dispatchVoyageLeg": 36,
+      "claimVoyageLeg": 36,
+      "finishVoyage": 9,
+      "startReview": 27,
+      "claimReview": 27,
+      "acceptCommunity": 27,
+      "deliverCommunity": 27
+    },
+    "successful": {
+      "scan": 687,
+      "buy": 290,
+      "chooseRoute": 14,
+      "research": 46,
+      "claimBeacon": 63,
+      "startMission": 235,
+      "claimMission": 232,
+      "prestige": 10,
+      "repairPort": 3,
+      "buildProject": 3,
+      "buildModule": 4,
+      "equip": 2,
+      "prepareMission": 117,
+      "saveLoadout": 9,
+      "buildPortFocus": 9,
+      "arrangeRescueEnergy": 27,
+      "rescueMission": 243,
+      "confirmRescue": 243,
+      "confirmBackupBerth": 27,
+      "adoptKeeperProtocol": 27,
+      "confirmEpilogue": 243,
+      "chooseEnding": 81,
+      "acceptHarborNeed": 231,
+      "deliverHarborNeed": 231,
+      "buildHarborProject": 75,
+      "chooseEncounter": 3,
+      "setHarborFocus": 3,
+      "startVoyage": 9,
+      "dispatchVoyageLeg": 36,
+      "claimVoyageLeg": 36,
+      "finishVoyage": 9,
+      "startReview": 27,
+      "claimReview": 27,
+      "acceptCommunity": 27,
+      "deliverCommunity": 27
+    }
+  },
+  "late": [
+    {
+      "ending": "city",
+      "clock": 38912,
+      "availableDust": 5432843262.097579,
+      "samples": 115,
+      "rate": 178582.11547396347,
+      "deliveries": 35,
+      "projects": {
+        "habitat": 3,
+        "repair-dock": 2,
+        "route-station": 2,
+        "public-berths": 3
+      },
+      "honors": 12,
+      "quotes": [
+        {
+          "route": "freight",
+          "id": "freight",
+          "steps": [
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            }
+          ],
+          "quotes": [
+            {
+              "id": "freight",
+              "stage": 0,
+              "choice": "secure",
+              "seconds": 525,
+              "diversion": 0.04999999999999999,
+              "dustCost": 6400,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 2,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 3,
+              "insightBefore": 2,
+              "suppliesAfter": 5,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "freight",
+              "stage": 1,
+              "choice": "secure",
+              "seconds": 741,
+              "diversion": 0.04999999999999999,
+              "dustCost": 12000,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 2,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 5,
+              "insightBefore": 2,
+              "suppliesAfter": 7,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "freight",
+              "stage": 2,
+              "choice": "secure",
+              "seconds": 987,
+              "diversion": 0.04999999999999999,
+              "dustCost": 17600,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 2,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 7,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "freight",
+              "stage": 3,
+              "choice": "secure",
+              "seconds": 741,
+              "diversion": 0.04999999999999999,
+              "dustCost": 23200,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 5,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 8,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            }
+          ],
+          "seconds": 2994,
+          "dustCost": 59200,
+          "costSamples": 0,
+          "dust": 1289600,
+          "samples": 11,
+          "dustGap": 0,
+          "sampleGap": 0,
+          "reason": "",
+          "available": true
+        },
+        {
+          "route": "science",
+          "id": "science",
+          "steps": [
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            }
+          ],
+          "quotes": [
+            {
+              "id": "science",
+              "stage": 0,
+              "choice": "secure",
+              "seconds": 788,
+              "diversion": 0.04999999999999999,
+              "dustCost": 6400,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 4,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 3,
+              "insightBefore": 2,
+              "suppliesAfter": 5,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "science",
+              "stage": 1,
+              "choice": "secure",
+              "seconds": 987,
+              "diversion": 0.04999999999999999,
+              "dustCost": 12000,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 4,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 5,
+              "insightBefore": 2,
+              "suppliesAfter": 7,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "science",
+              "stage": 2,
+              "choice": "secure",
+              "seconds": 1234,
+              "diversion": 0.04999999999999999,
+              "dustCost": 17600,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 4,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 7,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "science",
+              "stage": 3,
+              "choice": "secure",
+              "seconds": 987,
+              "diversion": 0.04999999999999999,
+              "dustCost": 23200,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 7,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 8,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            }
+          ],
+          "seconds": 3996,
+          "dustCost": 59200,
+          "costSamples": 0,
+          "dust": 672000,
+          "samples": 19,
+          "dustGap": 0,
+          "sampleGap": 0,
+          "reason": "",
+          "available": true
+        },
+        {
+          "route": "beacon",
+          "id": "beacon",
+          "steps": [
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            }
+          ],
+          "quotes": [
+            {
+              "id": "beacon",
+              "stage": 0,
+              "choice": "secure",
+              "seconds": 630,
+              "diversion": 0.04999999999999999,
+              "dustCost": 6400,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 3,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 3,
+              "insightBefore": 2,
+              "suppliesAfter": 5,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "beacon",
+              "stage": 1,
+              "choice": "secure",
+              "seconds": 889,
+              "diversion": 0.04999999999999999,
+              "dustCost": 12000,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 3,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 5,
+              "insightBefore": 2,
+              "suppliesAfter": 7,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "beacon",
+              "stage": 2,
+              "choice": "secure",
+              "seconds": 1086,
+              "diversion": 0.04999999999999999,
+              "dustCost": 17600,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 3,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 7,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "beacon",
+              "stage": 3,
+              "choice": "secure",
+              "seconds": 790,
+              "diversion": 0.04999999999999999,
+              "dustCost": 23200,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 6,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 8,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            }
+          ],
+          "seconds": 3395,
+          "dustCost": 59200,
+          "costSamples": 0,
+          "dust": 806400,
+          "samples": 15,
+          "dustGap": 0,
+          "sampleGap": 0,
+          "reason": "",
+          "available": true
+        }
+      ]
+    },
+    {
+      "ending": "watch",
+      "clock": 38912,
+      "availableDust": 5432843262.097579,
+      "samples": 115,
+      "rate": 178582.11547396347,
+      "deliveries": 35,
+      "projects": {
+        "habitat": 3,
+        "repair-dock": 2,
+        "route-station": 2,
+        "public-berths": 3
+      },
+      "honors": 12,
+      "quotes": [
+        {
+          "route": "freight",
+          "id": "freight",
+          "steps": [
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            }
+          ],
+          "quotes": [
+            {
+              "id": "freight",
+              "stage": 0,
+              "choice": "secure",
+              "seconds": 525,
+              "diversion": 0.04999999999999999,
+              "dustCost": 6400,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 2,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 3,
+              "insightBefore": 2,
+              "suppliesAfter": 5,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "freight",
+              "stage": 1,
+              "choice": "secure",
+              "seconds": 741,
+              "diversion": 0.04999999999999999,
+              "dustCost": 12000,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 2,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 5,
+              "insightBefore": 2,
+              "suppliesAfter": 7,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "freight",
+              "stage": 2,
+              "choice": "secure",
+              "seconds": 987,
+              "diversion": 0.04999999999999999,
+              "dustCost": 17600,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 2,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 7,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "freight",
+              "stage": 3,
+              "choice": "secure",
+              "seconds": 741,
+              "diversion": 0.04999999999999999,
+              "dustCost": 23200,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 5,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 8,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            }
+          ],
+          "seconds": 2994,
+          "dustCost": 59200,
+          "costSamples": 0,
+          "dust": 1289600,
+          "samples": 11,
+          "dustGap": 0,
+          "sampleGap": 0,
+          "reason": "",
+          "available": true
+        },
+        {
+          "route": "science",
+          "id": "science",
+          "steps": [
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            }
+          ],
+          "quotes": [
+            {
+              "id": "science",
+              "stage": 0,
+              "choice": "secure",
+              "seconds": 788,
+              "diversion": 0.04999999999999999,
+              "dustCost": 6400,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 4,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 3,
+              "insightBefore": 2,
+              "suppliesAfter": 5,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "science",
+              "stage": 1,
+              "choice": "secure",
+              "seconds": 987,
+              "diversion": 0.04999999999999999,
+              "dustCost": 12000,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 4,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 5,
+              "insightBefore": 2,
+              "suppliesAfter": 7,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "science",
+              "stage": 2,
+              "choice": "secure",
+              "seconds": 1234,
+              "diversion": 0.04999999999999999,
+              "dustCost": 17600,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 4,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 7,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "science",
+              "stage": 3,
+              "choice": "secure",
+              "seconds": 987,
+              "diversion": 0.04999999999999999,
+              "dustCost": 23200,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 7,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 8,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            }
+          ],
+          "seconds": 3996,
+          "dustCost": 59200,
+          "costSamples": 0,
+          "dust": 672000,
+          "samples": 19,
+          "dustGap": 0,
+          "sampleGap": 0,
+          "reason": "",
+          "available": true
+        },
+        {
+          "route": "beacon",
+          "id": "beacon",
+          "steps": [
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            }
+          ],
+          "quotes": [
+            {
+              "id": "beacon",
+              "stage": 0,
+              "choice": "secure",
+              "seconds": 630,
+              "diversion": 0.04999999999999999,
+              "dustCost": 6400,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 3,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 3,
+              "insightBefore": 2,
+              "suppliesAfter": 5,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "beacon",
+              "stage": 1,
+              "choice": "secure",
+              "seconds": 889,
+              "diversion": 0.04999999999999999,
+              "dustCost": 12000,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 3,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 5,
+              "insightBefore": 2,
+              "suppliesAfter": 7,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "beacon",
+              "stage": 2,
+              "choice": "secure",
+              "seconds": 1086,
+              "diversion": 0.04999999999999999,
+              "dustCost": 17600,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 3,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 7,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "beacon",
+              "stage": 3,
+              "choice": "secure",
+              "seconds": 790,
+              "diversion": 0.04999999999999999,
+              "dustCost": 23200,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 6,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 8,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            }
+          ],
+          "seconds": 3395,
+          "dustCost": 59200,
+          "costSamples": 0,
+          "dust": 806400,
+          "samples": 15,
+          "dustGap": 0,
+          "sampleGap": 0,
+          "reason": "",
+          "available": true
+        }
+      ]
+    },
+    {
+      "ending": "voyage",
+      "clock": 38912,
+      "availableDust": 5432843262.097579,
+      "samples": 115,
+      "rate": 178582.11547396347,
+      "deliveries": 35,
+      "projects": {
+        "habitat": 3,
+        "repair-dock": 2,
+        "route-station": 2,
+        "public-berths": 3
+      },
+      "honors": 12,
+      "quotes": [
+        {
+          "route": "freight",
+          "id": "freight",
+          "steps": [
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            }
+          ],
+          "quotes": [
+            {
+              "id": "freight",
+              "stage": 0,
+              "choice": "secure",
+              "seconds": 525,
+              "diversion": 0.04999999999999999,
+              "dustCost": 6400,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 2,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 3,
+              "insightBefore": 2,
+              "suppliesAfter": 5,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "freight",
+              "stage": 1,
+              "choice": "secure",
+              "seconds": 741,
+              "diversion": 0.04999999999999999,
+              "dustCost": 12000,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 2,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 5,
+              "insightBefore": 2,
+              "suppliesAfter": 7,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "freight",
+              "stage": 2,
+              "choice": "secure",
+              "seconds": 987,
+              "diversion": 0.04999999999999999,
+              "dustCost": 17600,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 2,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 7,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "freight",
+              "stage": 3,
+              "choice": "secure",
+              "seconds": 741,
+              "diversion": 0.04999999999999999,
+              "dustCost": 23200,
+              "costSamples": 0,
+              "dust": 322400,
+              "samples": 5,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 8,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            }
+          ],
+          "seconds": 2994,
+          "dustCost": 59200,
+          "costSamples": 0,
+          "dust": 1289600,
+          "samples": 11,
+          "dustGap": 0,
+          "sampleGap": 0,
+          "reason": "",
+          "available": true
+        },
+        {
+          "route": "science",
+          "id": "science",
+          "steps": [
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            }
+          ],
+          "quotes": [
+            {
+              "id": "science",
+              "stage": 0,
+              "choice": "secure",
+              "seconds": 788,
+              "diversion": 0.04999999999999999,
+              "dustCost": 6400,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 4,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 3,
+              "insightBefore": 2,
+              "suppliesAfter": 5,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "science",
+              "stage": 1,
+              "choice": "secure",
+              "seconds": 987,
+              "diversion": 0.04999999999999999,
+              "dustCost": 12000,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 4,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 5,
+              "insightBefore": 2,
+              "suppliesAfter": 7,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "science",
+              "stage": 2,
+              "choice": "secure",
+              "seconds": 1234,
+              "diversion": 0.04999999999999999,
+              "dustCost": 17600,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 4,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 7,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "science",
+              "stage": 3,
+              "choice": "secure",
+              "seconds": 987,
+              "diversion": 0.04999999999999999,
+              "dustCost": 23200,
+              "costSamples": 0,
+              "dust": 168000,
+              "samples": 7,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 8,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            }
+          ],
+          "seconds": 3996,
+          "dustCost": 59200,
+          "costSamples": 0,
+          "dust": 672000,
+          "samples": 19,
+          "dustGap": 0,
+          "sampleGap": 0,
+          "reason": "",
+          "available": true
+        },
+        {
+          "route": "beacon",
+          "id": "beacon",
+          "steps": [
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            },
+            {
+              "choice": "secure",
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              }
+            }
+          ],
+          "quotes": [
+            {
+              "id": "beacon",
+              "stage": 0,
+              "choice": "secure",
+              "seconds": 630,
+              "diversion": 0.04999999999999999,
+              "dustCost": 6400,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 3,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 3,
+              "insightBefore": 2,
+              "suppliesAfter": 5,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "beacon",
+              "stage": 1,
+              "choice": "secure",
+              "seconds": 889,
+              "diversion": 0.04999999999999999,
+              "dustCost": 12000,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 3,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 5,
+              "insightBefore": 2,
+              "suppliesAfter": 7,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "beacon",
+              "stage": 2,
+              "choice": "secure",
+              "seconds": 1086,
+              "diversion": 0.04999999999999999,
+              "dustCost": 17600,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 3,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 7,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            },
+            {
+              "id": "beacon",
+              "stage": 3,
+              "choice": "secure",
+              "seconds": 790,
+              "diversion": 0.04999999999999999,
+              "dustCost": 23200,
+              "costSamples": 0,
+              "dust": 201600,
+              "samples": 6,
+              "support": null,
+              "equipment": [
+                "nav",
+                "scanner"
+              ],
+              "levels": {
+                "nav": 2,
+                "scanner": 3
+              },
+              "suppliesBefore": 8,
+              "insightBefore": 2,
+              "suppliesAfter": 8,
+              "insightAfter": 2,
+              "reason": "",
+              "available": true
+            }
+          ],
+          "seconds": 3395,
+          "dustCost": 59200,
+          "costSamples": 0,
+          "dust": 806400,
+          "samples": 15,
+          "dustGap": 0,
+          "sampleGap": 0,
+          "reason": "",
+          "available": true
+        }
+      ]
+    }
+  ]
+}

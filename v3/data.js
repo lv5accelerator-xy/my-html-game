@@ -195,7 +195,7 @@
   }
 ],
     VERSION: 32,
-    GAME_VERSION: "3.21.0-preview.1",
+    GAME_VERSION: "3.22.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -3234,5 +3234,147 @@
     {id:`survey-${v.id}`,name:`${v.name} · 交叉观测册`,text:'航前资料和本次调查共同留下两份以上证据，下一班可以据此核验。'},
     {id:`care-${v.id}`,name:`${v.name} · 共同值班来信`,text:'归航仍保有四份以上补给。通信班收到远方的下一班安排，照料者有了明确交接。'}
   ]).concat({id:'three-addresses',name:'三条远航 · 连通星图',text:'货运、观测和居民信标均已完成远航。记录由两港与沿线共同保存，可继续用不同编成重访。'});
+  data.REVIEWS = [
+  {
+    "id": "freight-tags",
+    "chain": "freight",
+    "index": 0,
+    "name": "货签上的第二次核对",
+    "events": [
+      "freighter",
+      "crate"
+    ],
+    "kind": "time",
+    "detail": "对照无人货船和漂流箱的编号，分清货签与真正的交接位置。",
+    "letter": "三处货签对上了同一条接力线，值班组把可复核的停靠位置标在旁边。"
+  },
+  {
+    "id": "freight-cabins",
+    "chain": "freight",
+    "index": 1,
+    "name": "运输舱的装卸顺序",
+    "events": [
+      "capsule"
+    ],
+    "kind": "cost",
+    "detail": "复核损坏运输舱的固定点，记录一次拆检后能够复用的接头。",
+    "letter": "回收员保留了损坏处和替换处的两个编号，下一班不必把整座舱重新拆开。"
+  },
+  {
+    "id": "freight-dust",
+    "chain": "freight",
+    "index": 2,
+    "name": "星尘损耗的来路",
+    "events": [
+      "stardust"
+    ],
+    "kind": "samples",
+    "detail": "沿已登记的富集带交叉取样，确认货柜外侧的沉积来源。",
+    "letter": "回收量与沉积样本分开记账，旧时代的运输习惯终于有了可以检查的注脚。"
+  },
+  {
+    "id": "science-probe",
+    "chain": "science",
+    "index": 0,
+    "name": "探针读数的盲区",
+    "events": [
+      "probe"
+    ],
+    "kind": "time",
+    "detail": "用失联采矿探针的旧读数与本次直接观测互证，不等待随机事件再次出现。",
+    "letter": "空白不再被当成零。没有旧读数的位置，观测员留下了本次实测的来源。"
+  },
+  {
+    "id": "science-tools",
+    "chain": "science",
+    "index": 1,
+    "name": "科研设备的备用接口",
+    "events": [
+      "research",
+      "component"
+    ],
+    "kind": "cost",
+    "detail": "对照科研设备与航站组件的接头，留下可重复使用的校准顺序。",
+    "letter": "设备并没有恢复成旧时代的样子，但下一位维护者知道哪些接口仍能安全使用。"
+  },
+  {
+    "id": "science-record",
+    "chain": "science",
+    "index": 2,
+    "name": "通信记录里的时间差",
+    "events": [
+      "record"
+    ],
+    "kind": "samples",
+    "detail": "把旧通信记录与两港当前时标对照，补上一份能说明来源的观测档案。",
+    "letter": "记录注明了旧讯息与新回执的不同日期。历史没有被改写，今天也没有被误记为昨天。"
+  },
+  {
+    "id": "quiet-beacon",
+    "chain": "quiet",
+    "index": 0,
+    "name": "偏移信标与残骸阴影",
+    "events": [
+      "beacon",
+      "debris"
+    ],
+    "kind": "time",
+    "detail": "复核旧信标在残骸边缘的遮蔽范围，标出安全航路的实际边界。",
+    "letter": "航图没有把阴影擦掉，而是在旁边留下了可等待、可返回的位置。"
+  },
+  {
+    "id": "quiet-signal",
+    "chain": "quiet",
+    "index": 1,
+    "name": "未知信号的登记口",
+    "events": [
+      "signal"
+    ],
+    "kind": "cost",
+    "detail": "检查旧求助信号的登记路径，确保核验的是记录，不凭空推定新的幸存者。",
+    "letter": "通信班记下了哪些结论已经确认，哪些仍只是历史中的讯号。未确认的部分保持留白。"
+  },
+  {
+    "id": "quiet-shelter",
+    "chain": "quiet",
+    "index": 2,
+    "name": "小型避难舱的交接地址",
+    "events": [
+      "shelter"
+    ],
+    "kind": "samples",
+    "detail": "沿已登记短线验证避难舱记录的交接位置，由当前居民值班组接收档案。",
+    "letter": "地址写在现在的值班表上。来信送往仍生活在两港的人，历史记录继续按原意保存。"
+  }
+];
+  data.REVIEW_METHODS = [
+  {
+    "id": "safe",
+    "name": "安全复核",
+    "time": 1.2,
+    "diversion": 0.08,
+    "refund": 0.5,
+    "samples": 2,
+    "costSamples": 0
+  },
+  {
+    "id": "salvage",
+    "name": "拆检回收",
+    "time": 1,
+    "diversion": 0.22,
+    "refund": 0.9,
+    "samples": 1,
+    "costSamples": 0
+  },
+  {
+    "id": "analysis",
+    "name": "交叉取样",
+    "time": 1.3,
+    "diversion": 0.18,
+    "refund": 0.3,
+    "samples": 6,
+    "costSamples": 2
+  }
+];
   return Object.freeze(data);
 });

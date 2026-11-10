@@ -28,3 +28,12 @@ for(const {name,state} of v320.states) {
  assert.deepEqual(E.sanitize(current,current.lastAt),current);
 }
 console.log(`v3.20 compatibility ok: ${v320.states.length} canonical snapshots; all old fields/archives/locked terms preserved`);
+
+const v321=require('./fixtures/v321-saves.json');
+for(const {name,state} of v321.states) {
+ const current=E.sanitize(state,state.lastAt),{reviews,...prior}=current.continuation;
+ assert.deepEqual({...current,continuation:prior},state,name+': v3.21 plans/authorization and paid voyage preserved');
+ assert.deepEqual(reviews,E.createState(state.lastAt).continuation.reviews);
+ assert.deepEqual(E.sanitize(current,current.lastAt),current);
+}
+console.log(`v3.21 compatibility ok: ${v321.states.length} canonical snapshots; saved plans, active/paused authorizations and every prior field equal`);

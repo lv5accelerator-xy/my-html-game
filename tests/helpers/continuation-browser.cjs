@@ -37,4 +37,30 @@ module.exports=async function({scenario,read,E,D,S,TIME,openDetails,fs,path,scre
    await page.reload();assert.deepEqual((await read(page)).continuation,done.continuation);
   });
  }
+ for(const [index,chain] of D.SECTORS.entries()){
+  const ending=D.ENDINGS[index],raw=fixtures.states.find(x=>x.name===ending.id+'-three-archives').state,s=E.sanitize(structuredClone(raw),raw.lastAt);
+  const offer=E.harborOffers(s)[0];assert.ok(E.acceptHarborNeed(s,offer.id,offer.terms.serial));E.advance(s,s.lastAt+3600000);assert.ok(E.harborStatus(s).available);
+  for(const id of [...s.equipped])E.equip(s,id);E.equip(s,'medbay');E.saveLoadout(s,'production');E.equip(s,'medbay');E.equip(s,'nav');E.equip(s,'scanner');E.saveLoadout(s,'voyage');s.lastAt=TIME;
+  await scenario(`v3.22 ${chain.id}/${ending.id}: three evidence reviews, actual choices, locked reload/offline, one-use first-leg support and free practice`,{[S.KEY]:JSON.stringify(s)},async page=>{
+   const close=async()=>{if(await page.locator('#dialog[open]').count())await page.locator('#dialog-close').click();};
+   await nav(page,'home');const cycle=(await read(page)).management.cycle;await page.locator('#arrival-actions [data-action="harbor-deliver"]').click();assert.equal((await read(page)).management.cycle,cycle+1);assert.equal(await page.locator('#arrival-actions [data-action="harbor-deliver"]').count(),0);
+   await nav(page,'explore');const original=await read(page),defs=D.REVIEWS.filter(d=>d.chain===chain.id),methods=['safe','salvage','analysis'];
+   await openDetails(page,`[data-details-key="reviews-${chain.id}"]`);
+   for(let i=0;i<3;i++){
+    const before=await read(page),p=E.reviewPreview(before,defs[i].id,methods[i]);assert.ok(p.available);
+    await page.locator(`[data-action="review-start"][data-id="${methods[i]}"][data-review-id="${defs[i].id}"]`).click();
+    const paid=await read(page),locked=paid.continuation.reviews.active;assert.equal(paid.dust,before.dust-p.dustCost);assert.equal(paid.samples,before.samples-p.costSamples);assert.equal(locked.seconds,p.seconds);
+    assert.ok(await page.locator('#mission-belt [data-action="mission"]').isDisabled());
+    if(i===0){await page.locator('[data-action="loadout-apply"][data-id="production"]').click();assert.deepEqual((await read(page)).continuation.reviews.active,locked);await page.reload();await close();assert.deepEqual((await read(page)).continuation.reviews.active,locked);await nav(page,'explore');}
+    if(i===1){const prior=await read(page);await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new Event('pagehide'));});await page.clock.fastForward(8*3600000);await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));document.dispatchEvent(new Event('visibilitychange'));});assert.equal((await read(page)).clock-prior.clock,28800);}else await page.clock.fastForward(locked.seconds*1000+1000);
+    await close();const ready=await read(page);assert.ok(ready.continuation.reviews.active);await page.locator('[data-action="review-claim"]').click();const done=await read(page);assert.equal(done.continuation.reviews.records.length,i+1);assert.equal(done.samples,ready.samples+p.samples);assert.equal(done.continuation.reviews.active,null);assert.equal(await page.locator('[data-action="review-claim"]').count(),0);
+   }
+   let state=await read(page);assert.deepEqual(state.atlas,original.atlas);assert.deepEqual(state.epilogue,original.epilogue);assert.deepEqual(state.encounters.pending,original.encounters.pending,'review never picks a story discovery');
+   const p=E.reviewPreview(state,defs[0].id);assert.equal(p.practice,true);await openDetails(page,`[data-details-key="reviews-${chain.id}"]`);await page.locator(`[data-action="review-start"][data-review-id="${defs[0].id}"]`).click();await page.clock.fastForward(p.seconds*1000+1000);await close();await page.locator('[data-action="review-claim"]').click();assert.equal((await read(page)).samples,state.samples);assert.deepEqual((await read(page)).continuation.reviews.records,state.continuation.reviews.records);
+   await page.locator('[data-review-support]').selectOption(defs[0].id);const route=D.VOYAGES.find(v=>v.chain===chain.id),before=await read(page),preview=E.voyagePreview(before,route.id);assert.equal(preview.support,defs[0].id);
+   await page.locator(`[data-action="deep-start"][data-id="${route.id}"]`).click();await page.locator('[data-action="deep-dispatch"][data-id="secure"]').click();state=await read(page);assert.equal(state.expeditions.active.leg.seconds,preview.seconds);assert.equal(state.expeditions.active.leg.dustCost,preview.dustCost);assert.deepEqual(state.continuation.reviews.used,[defs[0].id]);
+   await page.reload();await close();assert.deepEqual((await read(page)).continuation.reviews,state.continuation.reviews);await nav(page,'explore');
+   for(const width of [1280,375]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);if(screenshotDir)await page.locator('#sector-reviews').screenshot({path:path.join(screenshotDir,`v322-${chain.id}-${width}.png`)});}
+  });
+ }
 };

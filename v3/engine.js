@@ -165,7 +165,8 @@
     if (s.chapter?.includes("relay")) rate *= 1.05;
     return bounded(rate);
   }
-  function travel(s) { return s.mission || (s.expeditions.active?.leg && s.clock<s.expeditions.active.leg.end?s.expeditions.active.leg:null) || (s.atlas.active && s.clock < s.atlas.active.end ? s.atlas.active : null); }
+  function reviewBusy(s) { return s.continuation?.reviews?.active; }
+  function travel(s) { return s.mission || (reviewBusy(s) && s.clock<reviewBusy(s).end ? reviewBusy(s) : null) || (s.expeditions.active?.leg && s.clock<s.expeditions.active.leg.end?s.expeditions.active.leg:null) || (s.atlas.active && s.clock < s.atlas.active.end ? s.atlas.active : null); }
   function productionRate(s) {
     return bounded(
       rawRate(s) *
@@ -928,7 +929,7 @@
   function startMission(s, id) {
     if (
       s.run.dust < 600 ||
-      s.atlas.active || s.expeditions.active ||
+      s.atlas.active || s.expeditions.active || reviewBusy(s) ||
       s.mission ||
       s.result ||
       !missionOptions(s).some((m) => m.id === id) ||
@@ -1041,7 +1042,96 @@
     );
     return true;
   }
-  function freshContinuation() { return { plans: {}, sequence: null }; }
+  function freshReviews() { return { serial:0, settled:0, active:null, records:[], earned:[], used:[], uses:[], selected:null, aid:null }; }
+  function reviewDone(s,id) { return s.continuation.reviews.earned.includes(id); }
+  function reviewPreview(s,id,method='safe') {
+    const def=byId(D.REVIEWS,id),m=byId(D.REVIEW_METHODS,method);
+    if(!def||!m) return null;
+    const h=s.continuation.reviews,practice=reviewDone(s,id),previous=D.REVIEWS.find(r=>r.chain===def.chain&&r.index===def.index-1);
+    const evidence=def.events.filter(event=>s.encounters.catalog.some(key=>key.startsWith(event+':')));
+    const seconds=Math.max(60,Math.ceil((180+def.index*90)*m.time*(evidence.length ? .85 : 1)*(1-equipped(s,'nav')*.05)));
+    const dustCost=practice?0:3000+def.index*2000,costSamples=practice?0:m.costSamples;
+    const reason=surveyCount(s,def.chain)<3?'先完成本线三处原始调查':previous&&!reviewDone(s,previous.id)?'先归档本线前一项证据复查':s.mission||s.result||s.atlas.active||s.expeditions.active||h.active?'先处理当前航程与报告':s.dust<dustCost?`还需 ${Math.ceil(dustCost-s.dust)} 星尘`:s.samples<costSamples?`还需 ${costSamples-s.samples} 样本`:rawRate(s)<=0?'先启动生产舰队':'';
+    return {id,method,practice,evidence,seconds,diversion:m.diversion,dustCost,costSamples,dust:practice?0:Math.floor(dustCost*m.refund),samples:practice?0:m.samples+def.index,equipment:[...s.equipped],levels:Object.fromEntries(s.equipped.map(key=>[key,s.modules[key]])),reason,available:!reason};
+  }
+  function startReview(s,id,method,expectedSerial) {
+    const h=s.continuation.reviews,p=reviewPreview(s,id,method);
+    if(!p?.available||h.serial>=1e9||Number(expectedSerial)!==h.serial+1) return false;
+    s.dust-=p.dustCost;s.samples-=p.costSamples;
+    const {reason,available,...locked}=p;
+    h.active={...locked,token:++h.serial,start:s.clock,end:s.clock+p.seconds};s.automation.dispatch=false;
+    log(s,`证据复查已出发：${byId(D.REVIEWS,id).name}；${p.evidence.length?'旧记录作对照':'本次直接补录实测来源'}。`);return true;
+  }
+  function claimReview(s,token) {
+    const h=s.continuation.reviews,a=h.active;
+    if(!a||a.token!==Number(token)||a.token<=h.settled||s.clock<a.end) return false;
+    if(!a.practice&&!reviewDone(s,a.id)) {addDust(s,a.dust);s.samples=bounded(s.samples+a.samples);h.records.push({...clone(a),claimedAt:s.clock});h.earned.push(a.id);}
+    h.settled=a.token;h.active=null;log(s,a.practice?'复查演练已归档，没有重复资源或许可奖励。':'复查档案与一次首段支援许可已保存。');return true;
+  }
+  function reviewGoal(s) {
+    const a=s.continuation.reviews.active;if(!a)return null;
+    return {title:s.clock>=a.end?'证据复查等待归档':'证据复查正在进行',detail:'旧发现作为对照；缺失来源在本次安全复查补录。没有随机卡关与领取期限。',action:'explore',label:'查看证据复查',focus:'sector-reviews',value:Math.min(a.seconds,s.clock-a.start),target:a.seconds,eta:Math.max(0,a.end-s.clock)};
+  }
+  function selectVoyageSupport(s,id) {
+    const h=s.continuation.reviews;
+    if(s.expeditions.active)return false;
+    if(id!==null&&(!reviewDone(s,id)||h.used.includes(id)))return false;
+    h.selected=id;return true;
+  }
+  function voyageSupport(s,id,stage) {
+    if(stage!==0)return null;
+    const h=s.continuation?.reviews;if(!h)return null;
+    const run=s.expeditions.active;
+    const key=run?.token?(h.aid?.token===run.token?h.aid.id:null):h.selected;
+    const def=byId(D.REVIEWS,key),route=byId(D.VOYAGES,id);
+    return def&&route?.chain===def.chain&&reviewDone(s,key)&&(!h.used.includes(key)||h.aid?.token===run?.token)?def:null;
+  }
+  function reserveVoyageSupport(s,id,token) {
+    const h=s.continuation.reviews,def=byId(D.REVIEWS,h.selected),route=byId(D.VOYAGES,id);
+    h.aid=def&&route.chain===def.chain&&reviewDone(s,def.id)&&!h.used.includes(def.id)?{id:def.id,token}:null;
+  }
+  function consumeVoyageSupport(s,a) {
+    const h=s.continuation.reviews;
+    if(a.stage!==0||h.aid?.token!==a.token||h.used.includes(h.aid.id))return;
+    h.used.push(h.aid.id);h.uses.push({id:h.aid.id,token:a.token,route:a.id});h.selected=null;
+  }
+  function cleanReviews(raw,s) {
+    const h=freshReviews();if(!raw||typeof raw!=='object')return h;
+    h.serial=integer(raw.serial,1e9);h.settled=integer(raw.settled,h.serial);
+    for(const id of (Array.isArray(raw.earned)?raw.earned:[]).slice(0,9)) {
+      const def=byId(D.REVIEWS,id),previous=def&&D.REVIEWS.find(d=>d.chain===def.chain&&d.index===def.index-1);
+      if(def&&!h.earned.includes(id)&&surveyCount(s,def.chain)===3&&h.earned.length<h.settled&&(!previous||h.earned.includes(previous.id)))h.earned.push(id);
+    }
+    function record(r,active=false) {
+      const def=byId(D.REVIEWS,r?.id),m=byId(D.REVIEW_METHODS,r?.method);
+      if(!def||!m||surveyCount(s,def.chain)<3||!Number.isInteger(r.token)||r.token<1||r.token>h.serial||(active?(r.token!==h.serial||r.token<=h.settled):r.token>h.settled)||!Array.isArray(r.equipment)||JSON.stringify(cleanEquipment(r.equipment))!==JSON.stringify(r.equipment)||r.equipment.some(id=>!Number.isInteger(r.levels?.[id])||r.levels[id]<1||r.levels[id]>3))return null;
+      const previous=D.REVIEWS.find(x=>x.chain===def.chain&&x.index===def.index-1);
+      if(previous&&!h.earned.includes(previous.id))return null;
+      if(!Array.isArray(r.evidence)||r.evidence.length>def.events.length||new Set(r.evidence).size!==r.evidence.length||r.evidence.some(id=>!def.events.includes(id)))return null;
+      const seconds=Math.max(60,Math.ceil((180+def.index*90)*m.time*(r.evidence.length ? .85 : 1)*(1-(r.equipment.includes('nav')?r.levels.nav:0)*.05)));
+      const practice=r.practice===true,dustCost=practice?0:3000+def.index*2000;
+      if(r.seconds!==seconds||r.diversion!==m.diversion||r.dustCost!==dustCost||r.costSamples!==(practice?0:m.costSamples)||r.dust!==(practice?0:Math.floor(dustCost*m.refund))||r.samples!==(practice?0:m.samples+def.index)||!Number.isInteger(r.start)||r.start<0||r.start>s.clock||r.end!==r.start+seconds||(!active&&r.end>s.clock))return null;
+      return {id:def.id,method:m.id,practice,evidence:[...r.evidence],seconds,diversion:m.diversion,dustCost,costSamples:r.costSamples,dust:r.dust,samples:r.samples,equipment:[...r.equipment],levels:Object.fromEntries(r.equipment.map(id=>[id,r.levels[id]])),token:r.token,start:r.start,end:r.end};
+    }
+    const seen=new Set(),tokens=new Set();
+    for(const r of (Array.isArray(raw.records)?raw.records:[]).slice(0,9)){
+      const a=record(r);if(!a||a.practice||seen.has(a.id)||tokens.has(a.token))continue;
+      seen.add(a.id);if(!h.earned.includes(a.id))h.earned.push(a.id);tokens.add(a.token);h.records.push({...a,claimedAt:Math.max(a.end,Math.min(s.clock,bounded(r.claimedAt)))});
+    }
+    h.used=[...new Set(Array.isArray(raw.used)?raw.used:[])].filter(id=>h.earned.includes(id));
+    const routes=D.VOYAGES,used=new Set();
+    for(const r of (Array.isArray(raw.uses)?raw.uses:[]).slice(0,9)) {
+      if(!h.earned.includes(r?.id)||used.has(r.id)||byId(D.REVIEWS,r.id).chain!==byId(routes,r.route)?.chain||!Number.isInteger(r.token)||r.token<1||r.token>s.expeditions.serial)continue;
+      used.add(r.id);h.uses.push({id:r.id,token:r.token,route:r.route});if(!h.used.includes(r.id))h.used.push(r.id);
+    }
+    if(h.earned.includes(raw.selected)&&!h.used.includes(raw.selected))h.selected=raw.selected;
+    const a=s.expeditions.active,aid=raw.aid;
+    if(a&&aid?.token===a.token&&h.earned.includes(aid.id)&&byId(D.REVIEWS,aid.id).chain===byId(routes,a.id).chain&&((a.stage===0&&!a.leg&&!h.used.includes(aid.id))||((a.stage>0||a.leg)&&h.used.includes(aid.id))))h.aid={id:aid.id,token:a.token};
+    if(!s.mission&&!s.result&&!s.atlas.active&&!s.expeditions.active){const a=record(raw.active,true);if(a&&a.practice===h.earned.includes(a.id))h.active=a;}
+    return h;
+  }
+
+  function freshContinuation() { return { plans: {}, sequence: null, reviews: freshReviews() }; }
   function cleanPlanSteps(s, steps, capture = false) {
     if (!Array.isArray(steps) || steps.length !== 4) return null;
     const result = [];
@@ -1154,6 +1244,7 @@
     for (const def of D.VOYAGES) if (Object.hasOwn(raw.plans || {}, def.id) && s.expeditions.completed[def.id]) {
       const steps = cleanPlanSteps(s, raw.plans[def.id]?.steps); if (steps) h.plans[def.id] = { steps };
     }
+    h.reviews = cleanReviews(raw.reviews,s);
     const q = raw.sequence, a = s.expeditions.active, steps = cleanPlanSteps(s, q?.steps);
     if (a && q?.token === a.token && q.id === a.id && s.expeditions.completed[a.id] && steps &&
       [...a.legs, ...(a.leg ? [a.leg] : [])].every(l => l.choice === steps[l.stage].choice && sameEquipment(l.equipment, steps[l.stage].equipment)))
@@ -1172,16 +1263,16 @@
     const slots=cleanEquipment(equipment).filter(x=>s.modules[x]>0), local={...s,equipped:slots};
     const supplies=run?.id===id?run.supplies:Math.min(3,s.management.projects['public-berths']||0);
     const insight=run?.id===id?run.insight:Math.min(2,D.SECTORS.filter(c=>c.id!==def.chain&&surveyCount(s,c.id)===3).length);
-    const nav=equipped(local,'nav'), scanner=equipped(local,'scanner');
-    const seconds=Math.max(120,Math.ceil((def.seconds[stage]||def.seconds[3])*method.time*(1-nav*.05)*(1-insight*.03)*(supplies===0?1.12:supplies>=4?.94:1)*(1-(s.management.projects['route-station']||0)*.03)));
+    const nav=equipped(local,'nav'), scanner=equipped(local,'scanner'), support=voyageSupport(s,id,stage);
+    const seconds=Math.max(120,Math.ceil((def.seconds[stage]||def.seconds[3])*method.time*(1-nav*.05)*(1-insight*.03)*(supplies===0?1.12:supplies>=4?.94:1)*(1-(s.management.projects['route-station']||0)*.03)*(support?.kind==='time'?.95:1)));
     const diversion=Math.max(.04,Math.min(.4,method.diversion-(s.management.projects['repair-dock']||0)*.01-insight*.01+(choice==='investigate'&&scanner? .03:0)));
-    const dustCost=Math.ceil((8000+stage*7000)*method.cost*(1-(s.management.projects['supply-network']||0)*.04));
+    const dustCost=Math.ceil((8000+stage*7000)*method.cost*(1-(s.management.projects['supply-network']||0)*.04)*(support?.kind==='cost'?.95:1));
     const costSamples=method.costSamples;
     const dust=Math.floor(Math.min(250000,Math.max(500,rawRate(local)*(70+stage*30)))*method.dust*def.dust*(1+scanner*.08));
-    const samples=method.samples+def.samples+(stage===3?(s.management.projects.habitat||0):0);
-    const reason=voyageReason(s,id) || (s.mission||s.result||s.atlas.active?'先处理当前探索与调查':run && run.id!==id ? '先完成当前远航':run?.leg?'先领取当前阶段报告':stage>=4?'所有阶段已完成，等待归航封存':s.afterword.active&&!run?'先完成当前居民委托':
+    const samples=method.samples+def.samples+(stage===3?(s.management.projects.habitat||0):0)+(support?.kind==='samples'?1:0);
+    const reason=voyageReason(s,id) || (s.mission||s.result||s.atlas.active||reviewBusy(s)?'先处理当前探索与调查':run && run.id!==id ? '先完成当前远航':run?.leg?'先领取当前阶段报告':stage>=4?'所有阶段已完成，等待归航封存':s.afterword.active&&!run?'先完成当前居民委托':
       choice==='investigate' && (!slots.includes(def.module)||!s.modules[def.module])?`此调查需要装备${byId(D.MODULES,def.module).name}；安全补给不需要特定舰装`:s.dust<dustCost?`还需 ${Math.ceil(dustCost-s.dust)} 星尘`:s.samples<costSamples?`还需 ${costSamples-s.samples} 样本`:rawRate(s)<=0?'先启动生产舰队':'');
-    return {id,stage,choice,seconds,diversion,dustCost,costSamples,dust,samples,equipment:slots,
+    return {id,stage,choice,seconds,diversion,dustCost,costSamples,dust,samples,support:support?.id||null,equipment:slots,
       levels:Object.fromEntries(slots.map(x=>[x,s.modules[x]])),suppliesBefore:supplies,insightBefore:insight,
       suppliesAfter:Math.min(8,Math.max(0,supplies+method.supplies)),insightAfter:Math.min(4,insight+method.insight),reason,available:!reason};
   }
@@ -1190,6 +1281,7 @@
     if(s.expeditions.active || !p?.available || s.expeditions.serial>=1e9) return false;
     s.expeditions.active={id,token:++s.expeditions.serial,stage:0,legs:[],leg:null,dust:0,samples:0,
       initialSupplies:p.suppliesBefore,initialInsight:p.insightBefore,supplies:p.suppliesBefore,insight:p.insightBefore};
+    reserveVoyageSupport(s,id,s.expeditions.active.token);
     s.automation.dispatch=false;
     log(s, `已编排${byId(D.VOYAGES,id).name}，每段由你决定；离线等待没有失败倒计时。`);return true;
   }
@@ -1199,6 +1291,7 @@
     const p=voyagePreview(s,a.id,choice);
     if(!p?.available) return false;
     s.dust-=p.dustCost;s.samples-=p.costSamples;
+    consumeVoyageSupport(s,a);
     a.leg={stage:a.stage,choice,seconds:p.seconds,diversion:p.diversion,dustCost:p.dustCost,costSamples:p.costSamples,dust:p.dust,samples:p.samples,
       equipment:p.equipment,levels:p.levels,suppliesBefore:p.suppliesBefore,insightBefore:p.insightBefore,start:s.clock,end:s.clock+p.seconds};
     log(s,`${byId(D.VOYAGES,a.id).stages[a.stage]}已出发：${byId(D.VOYAGE_METHODS,choice).name}。`);return true;
@@ -1229,6 +1322,7 @@
     const seconds=a.legs.reduce((n,l)=>n+l.seconds,0);h.best[a.id]=Math.min(h.best[a.id]||Infinity,seconds);
     h.dust=bounded(h.dust+a.dust);h.samples=bounded(h.samples+a.samples+(first?6:0));
     h.active=null;
+    if(s.continuation?.reviews) s.continuation.reviews.aid=null;
     if(s.continuation?.sequence?.token===a.token) s.continuation.sequence=null;
     log(s,`${byId(D.VOYAGES,a.id).name}归航，回收物已交给港务值班组，航行档案与${fresh.length}件新纪念已保存。`);return true;
   }
@@ -1293,7 +1387,7 @@
     const seconds = Math.max(30, Math.ceil((90 + node * 60 - Math.min(30, evidence * 5)) * method.time * (1 - equipped(s,'nav') * .06)));
     const costSamples = method.cost;
     const reason = s.discoveries < 3 ? '领取三份成功探索报告后开放图谱' : node >= chain.nodes.length ? '本线三处节点已全部归档'
-      : s.mission || s.result || s.atlas.active || s.expeditions.active ? '先处理当前航程与报告' : s.samples < costSamples ? `还需 ${costSamples-s.samples} 份样本；安全调查无需样本` : rawRate(s) <= 0 ? '先启动生产舰队' : '';
+      : s.mission || s.result || s.atlas.active || s.expeditions.active || reviewBusy(s) ? '先处理当前航程与报告' : s.samples < costSamples ? `还需 ${costSamples-s.samples} 份样本；安全调查无需样本` : rawRate(s) <= 0 ? '先启动生产舰队' : '';
     return { chain:id, node, approach, seconds, diversion:method.diversion, costSamples,
       dust: Math.min(250000, Math.floor(Math.max(20,rawRate(s) * (30 + node * 15) * method.dust * (1 + equipped(s,'scanner') * .1)))),
       samples:method.samples + (node === 2 ? 3 : 0), equipment:[...s.equipped], evidence, reason, available:!reason };
@@ -1683,7 +1777,7 @@
   }
   function prestige(s) {
     const gain = prestigeGain(s);
-    if (!gain || s.mission || s.result || s.atlas.active || s.expeditions.active) return false;
+    if (!gain || s.mission || s.result || s.atlas.active || s.expeditions.active || reviewBusy(s)) return false;
     recordTiming(s, "prestige");
     s.records.unshift({
       seconds: s.clock - s.run.startedClock,
@@ -1729,6 +1823,7 @@
     const projects = D.HARBOR_PROJECTS.filter(p => harborProjectOffer(s, p.id).available);
     if (projects.length) tasks.push(`${projects.length} 项长期工程可手动确认建设`);
     if(s.expeditions.active) tasks.push(voyageGoal(s).title);
+    if(reviewBusy(s)) tasks.push(reviewGoal(s).title);
     if(s.atlas.active) tasks.push(s.clock>=s.atlas.active.end ? "星区调查可以归档" : "星区调查仍在航行");
     return tasks;
   }
@@ -1888,7 +1983,7 @@
     return (
       ["home", "fleet"].includes(action) ||
       (action === "explore" &&
-        (s.run.dust >= 600 || Boolean(s.mission || s.result || s.atlas.active || s.expeditions.active))) ||
+        (s.run.dust >= 600 || Boolean(s.mission || s.result || s.atlas.active || s.expeditions.active || reviewBusy(s)))) ||
       (action === "jump" &&
         (s.run.dust >= D.PRESTIGE_DUST * 0.3 || s.rebirths > 0))
     );
@@ -2320,6 +2415,7 @@
         target: 1,
         eta: 0,
       };
+    if (reviewBusy(s) && !s.encounters.pending) return reviewGoal(s);
     if (!s.buildings.drone)
       return {
         title: "启动第一艘拾荒无人机",
@@ -3057,6 +3153,7 @@
     onboarding,
     portFacilities,
     portActivity,
+    reviewPreview, startReview, claimReview, reviewGoal, reviewDone, selectVoyageSupport,
     itineraryOffer, saveItinerary, startItinerary, itineraryStatus, pauseItinerary, restoreItineraryEquipment, equipItinerary, stopItinerary, advanceItinerary,
     voyagePreview, voyageReason, startVoyage, dispatchVoyageLeg, claimVoyageLeg, finishVoyage, voyageGoal,
     surveyCount, surveyPreview, setSurveyPriority, startSurvey, claimSurvey, surveyGoal,

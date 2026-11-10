@@ -1,0 +1,41 @@
+[
+  {
+    "file": "screens/cloud-fresh-1280.png",
+    "sourceSha": "358de6d8e215e64e86ea2980cbf7a0fdf381be35",
+    "environment": "Codex Cloud Node22.23.4/PW1.55.0/Chromium151.0.7922.173",
+    "viewport": "1280x900",
+    "imagePixels": [
+      1280,
+      900
+    ],
+    "sha256": "2a27ac007cb1ada40baaa7ed31601dfa3630a31c35c21868d879674e4dcfcb1e",
+    "publicUrl": false,
+    "actuallyViewed": true
+  },
+  {
+    "file": "screens/cloud-touch-320.png",
+    "sourceSha": "358de6d8e215e64e86ea2980cbf7a0fdf381be35",
+    "environment": "Codex Cloud Node22.23.4/PW1.55.0/Chromium151.0.7922.173",
+    "viewport": "320x700; deviceScaleFactor=2",
+    "imagePixels": [
+      640,
+      1400
+    ],
+    "sha256": "27e2f86d7a0ab67b1269a9c38d0f94dc681b080cf25c86cfc4703a4a0b41dd65",
+    "publicUrl": false,
+    "actuallyViewed": true
+  },
+  {
+    "file": "screens/cloud-voyage-375.png",
+    "sourceSha": "358de6d8e215e64e86ea2980cbf7a0fdf381be35",
+    "environment": "Codex Cloud Node22.23.4/PW1.55.0/Chromium151.0.7922.173",
+    "viewport": "375x900",
+    "imagePixels": [
+      375,
+      900
+    ],
+    "sha256": "72693308df44850a4e9d799bfe93d9f5152a7b46d62bcd04117aee39c2132170",
+    "publicUrl": false,
+    "actuallyViewed": true
+  }
+]

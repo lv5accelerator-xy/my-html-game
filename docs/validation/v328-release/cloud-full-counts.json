@@ -1,0 +1,208 @@
+{
+  "rules": {
+    "conditions": 6,
+    "continuation": 63,
+    "expansion": 51,
+    "gameplay": 86,
+    "quality": 20
+  },
+  "rule_groups": 226,
+  "canonical_snapshots": 145,
+  "compatibility_groups": [
+    22,
+    30,
+    18,
+    9,
+    18,
+    21,
+    9,
+    9,
+    9
+  ],
+  "browser_flows": [
+    "115"
+  ],
+  "subcommands": [
+    {
+      "command": "node --check game.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node --check game-math.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node --check cloud-save.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node --check v2-systems.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node --check legacy-systems.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node --check v3/data.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node --check v3/engine.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node --check v3/storage.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node --check v3/app.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/browser-smoke.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/companion-story.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/daily-route.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/doctrine-build.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/linked-journey-browser.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/linked-journey.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/mobile-performance.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/numeric-balance.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/retention-flow.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/save-migration-v200.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/season.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/usability-flow.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/v3-balance.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/v3-browser.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/v3-compatibility.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/v3-conditions.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/v3-continuation.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/v3-expansion.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/v3-gameplay.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/v3-quality.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    },
+    {
+      "command": "node tests/v3-strategy.test.js",
+      "exit": 0,
+      "signal": null,
+      "error": null
+    }
+  ],
+  "footer": "RESULT: 9 syntax checks, 21 test scripts, 0 failed checks."
+}

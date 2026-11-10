@@ -1,0 +1,1347 @@
+{
+  "pr_head": "20121ba934ebbc660e7e2c5177680a83f81e8513",
+  "file_count": 129,
+  "categories": {
+    "documentation": 11,
+    "historical evidence": 101,
+    "isolated audit tool": 3,
+    "canonical fixture": 3,
+    "regression test": 5,
+    "runtime/interface-content": 4,
+    "runtime/high risk": 2
+  },
+  "json_errors": [],
+  "historical_final_hash_mismatches": [],
+  "files": [
+    {
+      "file": "CODEX_HANDOFF.md",
+      "category": "documentation",
+      "bytes": 15617,
+      "sha256": "b34d7094edb53f524bcf6885ec279c789436e0ed0672c92c4c8ec4fa74bb00e3",
+      "details": {}
+    },
+    {
+      "file": "README.md",
+      "category": "documentation",
+      "bytes": 11584,
+      "sha256": "28a6e61bab4f17ff85bb7602a40b84af396a38f46bd5ab263c0a4d2d30575938",
+      "details": {}
+    },
+    {
+      "file": "docs/README.md",
+      "category": "documentation",
+      "bytes": 1336,
+      "sha256": "a412c004b4bf2cb3dc385eeb5fc1f274e838f1493aafdff8f07caa3ad2180adc",
+      "details": {}
+    },
+    {
+      "file": "docs/v3-playable.md",
+      "category": "documentation",
+      "bytes": 62571,
+      "sha256": "26ce2d43960faa36463b6c5774528952890d7b0ecbf037146f2c2a11d0dccaaf",
+      "details": {}
+    },
+    {
+      "file": "docs/v325-v328-validation.md",
+      "category": "documentation",
+      "bytes": 17556,
+      "sha256": "9b9baf773b798a2c425ecd58ebff6f8fc67b2e41a94385561b180ba31df23603",
+      "details": {}
+    },
+    {
+      "file": "docs/v328-stability-checklist.md",
+      "category": "documentation",
+      "bytes": 5273,
+      "sha256": "6375bd9083e205f972c0ecbb9e9ac9d4296e332e505074187c6f39ac01dd9069",
+      "details": {}
+    },
+    {
+      "file": "docs/validation/v325-v328/baseline.json",
+      "category": "historical evidence",
+      "bytes": 3915,
+      "sha256": "fefa6cf4391c257e9ee9a27f9d24b6c13ee2da544d0415e7708b9abc5a7dbe7b",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/baseline.txt",
+      "category": "historical evidence",
+      "bytes": 49215,
+      "sha256": "9d244cc3c792440731d99f45fae2a577ff3d8e9f17879d00c006243009e47128",
+      "details": {
+        "check_results": 28,
+        "lines": 429,
+        "success_footer": [
+          "v3 browser ok: 107 complete flows; identity/content/assets/console checked in every flow",
+          "RESULT: 9 syntax checks, 19 test scripts, 0 failed checks."
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/commands.md",
+      "category": "historical evidence",
+      "bytes": 6318,
+      "sha256": "b257304c9e4bb677a1acf60ea82e2d86ba8fafc8d10fcb4ac69264679c2dee08",
+      "details": {}
+    },
+    {
+      "file": "docs/validation/v325-v328/final-source-hashes.json",
+      "category": "historical evidence",
+      "bytes": 5916,
+      "sha256": "cfc1673276a931682716a9648f1376edafe31d998f50f21549a6750ad379cfe6",
+      "details": {
+        "json": "valid"
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/pace-after-data.json",
+      "category": "historical evidence",
+      "bytes": 50964,
+      "sha256": "3e9707ce7d79a5f1fd210b08e8fcbf4e9ed595a567dc6c5354eb70ecbbca9a06",
+      "details": {
+        "json": "valid"
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/pace-after.json",
+      "category": "historical evidence",
+      "bytes": 4185,
+      "sha256": "58621338ca7c8a051acaa32f48ab0ab6897b7e8769deee2f8591450d4001cca8",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/pace-after.txt",
+      "category": "historical evidence",
+      "bytes": 59576,
+      "sha256": "5d21686574efc1f0ce7177059b233bf00670168a5344e3d5bb0ba2faf0844716",
+      "details": {
+        "check_results": 0,
+        "lines": 2080,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/pace-before-data.json",
+      "category": "historical evidence",
+      "bytes": 50964,
+      "sha256": "d2919aac8fadd739f6da7fb73a796c1a7b4106d2872c74f338b1486c285d8346",
+      "details": {
+        "json": "valid"
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/pace-before.json",
+      "category": "historical evidence",
+      "bytes": 3977,
+      "sha256": "cce9824f26a6fecc4350e2c4a9c39292c1cc4f3c7b5b79203443dce506ca9400",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/pace-before.txt",
+      "category": "historical evidence",
+      "bytes": 59576,
+      "sha256": "bbe6b101ce07366532c9b36fce7901a81e95567c75dc7f1dad93156538f90d62",
+      "details": {
+        "check_results": 0,
+        "lines": 2080,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/pace-reference-detailed-data.json",
+      "category": "historical evidence",
+      "bytes": 63110,
+      "sha256": "b3efeac44181efcb5b81b11b742d14f1427898290979a45946aa43ac738778c7",
+      "details": {
+        "json": "valid"
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/pace-reference-detailed.json",
+      "category": "historical evidence",
+      "bytes": 4199,
+      "sha256": "95b788c95bb69584fb31b227abe56bde19bb37d8c12ab8db60f99f51b2dc2d2f",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/pace-reference-detailed.txt",
+      "category": "historical evidence",
+      "bytes": 71722,
+      "sha256": "5fe3aad7a36d4b4584af488b43269b43725acf4bef83378dfaa1f406c58ab887",
+      "details": {
+        "check_results": 0,
+        "lines": 2568,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-after-cpu.json",
+      "category": "historical evidence",
+      "bytes": 4232,
+      "sha256": "42879e66a3ed3c919d53bb53321404e1e604540b292d3bc2cf4bf1b4dfbbc70c",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-after-cpu.txt",
+      "category": "historical evidence",
+      "bytes": 2184,
+      "sha256": "2060e574f66f967ec5a01ebaaddef02de1b5b84829fda8babbf2ff6110b28140",
+      "details": {
+        "check_results": 0,
+        "lines": 86,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-after-verified.json",
+      "category": "historical evidence",
+      "bytes": 4269,
+      "sha256": "7b3e0b432f6d73efc3e93b74c8ad38abe66bf81bd4e4c42860c637c2c22dabb0",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-after-verified.txt",
+      "category": "historical evidence",
+      "bytes": 2642,
+      "sha256": "1f2902882c64f515d699039d394e1df963dbfef8443af2048acd05ce83c59932",
+      "details": {
+        "check_results": 0,
+        "lines": 87,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-after.json",
+      "category": "historical evidence",
+      "bytes": 4269,
+      "sha256": "369164584eed4483db037bbeac550bdad8591044c93a19421bc1fc090963a61a",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-after.txt",
+      "category": "historical evidence",
+      "bytes": 2269,
+      "sha256": "ced59b05a12ecf593da3b32da3fe4aa3cc3af4ce7afb8174d9fb7d173e34db7f",
+      "details": {
+        "check_results": 0,
+        "lines": 77,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-before-fixed.json",
+      "category": "historical evidence",
+      "bytes": 3919,
+      "sha256": "cf24cacd157e4d709c64f37f495426b10467eb8f780717369782dd35511a3837",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-before-fixed.txt",
+      "category": "historical evidence",
+      "bytes": 629,
+      "sha256": "4eec2f93732774fab25f83c72a4e0809e1a352f692334597a9e115141a9d9f60",
+      "details": {
+        "check_results": 0,
+        "lines": 28,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-before-timers.json",
+      "category": "historical evidence",
+      "bytes": 3920,
+      "sha256": "eb56c41b04bf63b8ea647a8b51bb599b8f6a8f7b9f2dc61494851bca3de03684",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-before-timers.txt",
+      "category": "historical evidence",
+      "bytes": 1400,
+      "sha256": "bb5faa0109b2a7b4f8e2ef86468305a2ab63e834be3a2439eb962efbdb763d0b",
+      "details": {
+        "check_results": 0,
+        "lines": 56,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-before.json",
+      "category": "historical evidence",
+      "bytes": 3920,
+      "sha256": "ad761c5cbce93dffeccf4637df88a60cbace0b1f25c84b190d4d7b744bc30bcc",
+      "details": {
+        "json": "valid",
+        "historical_exit": 1
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-before.txt",
+      "category": "historical evidence",
+      "bytes": 114,
+      "sha256": "f6feff461a500858237fb4bb092dd61d93fa93046a855add438d9f5912c2b63b",
+      "details": {
+        "check_results": 0,
+        "lines": 2,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-comparison.json",
+      "category": "historical evidence",
+      "bytes": 4822,
+      "sha256": "9566a34cb88c695fc4d2ff93a5d83fc70f6b62a637da2ac01ea818cdb2cb7a60",
+      "details": {
+        "json": "valid"
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-final-comparison.json",
+      "category": "historical evidence",
+      "bytes": 7401,
+      "sha256": "391df052a043985b84d28984c61038f303af9c504ac4809020f7f1e6aa8823e4",
+      "details": {
+        "json": "valid"
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-reference-cpu.json",
+      "category": "historical evidence",
+      "bytes": 4303,
+      "sha256": "cd8a628c4740f566963f7a78cb830583f40527b63a9310289722c60a6a1dadd8",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-reference-cpu.txt",
+      "category": "historical evidence",
+      "bytes": 3045,
+      "sha256": "e5ba9ab79b8b8d4b96e187b0d52f6adca03caa1bbbca53c91a8e720db92d9020",
+      "details": {
+        "check_results": 0,
+        "lines": 117,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-reference-final.json",
+      "category": "historical evidence",
+      "bytes": 4129,
+      "sha256": "723985f8546913818e78362651fa1b37ebfc682f56023d0c09f6b0ed1964c677",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-reference-final.txt",
+      "category": "historical evidence",
+      "bytes": 2675,
+      "sha256": "226088ecff7a4fbb0912a728cd6daf0471aaf4ac8c9da18d94d0708844f6b472",
+      "details": {
+        "check_results": 0,
+        "lines": 108,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-reference-soak.json",
+      "category": "historical evidence",
+      "bytes": 4130,
+      "sha256": "1db62b1d02862b624b411d560b4e7b278877853c3b14524a2fa5830097f17905",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-reference-soak.txt",
+      "category": "historical evidence",
+      "bytes": 3084,
+      "sha256": "02e0081bfc6425f3ceaf4b781e00e32f1cf4e1ee735357ddde565c2b6b0d0b48",
+      "details": {
+        "check_results": 0,
+        "lines": 106,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-reference-verified.json",
+      "category": "historical evidence",
+      "bytes": 4340,
+      "sha256": "390eb70ad9aff37034cac0d3de77352ca3dece3d93321e520840aafea05b1e81",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/profile-reference-verified.txt",
+      "category": "historical evidence",
+      "bytes": 3486,
+      "sha256": "0a606c28f2ee978891186358d15e0cfecb9d1f5c38dac2ea12886c368212b10a",
+      "details": {
+        "check_results": 0,
+        "lines": 118,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/reference-source-hashes.json",
+      "category": "historical evidence",
+      "bytes": 716,
+      "sha256": "a8a80ff0de35f7b9a35cd3d6322976704d0b4c71f3e057b5c4e1a0378260a802",
+      "details": {
+        "json": "valid"
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/strategy-comparison-data.json",
+      "category": "historical evidence",
+      "bytes": 48813,
+      "sha256": "65a65776ce0c1f3786050312d6287226f913084646d4ce7ed54ebc631905c187",
+      "details": {
+        "json": "valid"
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/strategy-comparison.json",
+      "category": "historical evidence",
+      "bytes": 4302,
+      "sha256": "9a15c5a1993b918fc26c5baba771c89f93c5c90c56f6a05bf1a8c563abf16321",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/strategy-comparison.txt",
+      "category": "historical evidence",
+      "bytes": 48814,
+      "sha256": "d55091c24bb43819274ba86649b4413d0ab1477ed9f7f830f6e174b0e0f23267",
+      "details": {
+        "check_results": 0,
+        "lines": 1753,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/unprepared-baseline.txt",
+      "category": "historical evidence",
+      "bytes": 91,
+      "sha256": "68d70b3142b9de9e880e4f5e717922ac74c820354d73515e57a8b069ec9272c2",
+      "details": {
+        "check_results": 0,
+        "lines": 1,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-browser.json",
+      "category": "historical evidence",
+      "bytes": 4129,
+      "sha256": "77e7f29d567a81ca0057e53ab5a28574a227a04da6433c17d07102fd8b949270",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-browser.txt",
+      "category": "historical evidence",
+      "bytes": 199,
+      "sha256": "dab68f528f0c09cb6b8169defea6eea66e6e23af814a7cc8f5a126f10f795ec3",
+      "details": {
+        "check_results": 0,
+        "lines": 2,
+        "success_footer": [
+          "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-fixed-full.json",
+      "category": "historical evidence",
+      "bytes": 4124,
+      "sha256": "f441c73172b6104e31ff79a3a5f9521d6961a4db9bbff8a4e1eebeabaa9dc92b",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-fixed-full.txt",
+      "category": "historical evidence",
+      "bytes": 50555,
+      "sha256": "ee8f6ad50fd29e0689e8f6d72069ddd34d48403cdc0d90c6b5616acc37b69702",
+      "details": {
+        "check_results": 29,
+        "lines": 444,
+        "success_footer": [
+          "v3 browser ok: 108 complete flows; identity/content/assets/console checked in every flow",
+          "RESULT: 9 syntax checks, 20 test scripts, 0 failed checks."
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-full.json",
+      "category": "historical evidence",
+      "bytes": 4124,
+      "sha256": "8d3fb59795235f63bbec2d8fc62335cac180b25dd98d9d8972b7254d8e935707",
+      "details": {
+        "json": "valid",
+        "historical_exit": 1
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-full.txt",
+      "category": "historical evidence",
+      "bytes": 39553,
+      "sha256": "d94be97e31128dd8be691ae1c9592414e30fe5d6278fd3deb678712301a9aa5c",
+      "details": {
+        "check_results": 29,
+        "lines": 359,
+        "success_footer": [
+          "RESULT: 9 syntax checks, 20 test scripts, 1 failed checks."
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-navigation-fix.json",
+      "category": "historical evidence",
+      "bytes": 4129,
+      "sha256": "f66857473c063ca683a877baa144759c2c7c4a269b97adc641cd26bcd0905de3",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-navigation-fix.txt",
+      "category": "historical evidence",
+      "bytes": 204,
+      "sha256": "9f0ac65806a2ec883a1588d126ff2c796afdb17ab84cf6aa9e8c9b7c5f885f61",
+      "details": {
+        "check_results": 0,
+        "lines": 2,
+        "success_footer": [
+          "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-rules.json",
+      "category": "historical evidence",
+      "bytes": 4129,
+      "sha256": "fd1a865695242ed8b185a513e1b22a7c0497085a17b3d2b37db1291ae765c396",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v325-rules.txt",
+      "category": "historical evidence",
+      "bytes": 1047,
+      "sha256": "1c8fc3fa02a881246ac9765b807e358f5b08c3578f7352c0ad49af4e8711fd01",
+      "details": {
+        "check_results": 0,
+        "lines": 12,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-browser-fixed.json",
+      "category": "historical evidence",
+      "bytes": 4129,
+      "sha256": "48bf93aec0260945e394df46022b7f2f47206abe4339d0c943fb0b23876302cf",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-browser-fixed.txt",
+      "category": "historical evidence",
+      "bytes": 447,
+      "sha256": "a3c28ec385c75ab681e5fcefa2bb2406f7ecc054c28646b93feca9d011e9b376",
+      "details": {
+        "check_results": 0,
+        "lines": 4,
+        "success_footer": [
+          "v3 browser ok: 3 complete flows; identity/content/assets/console checked in every flow"
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-browser.json",
+      "category": "historical evidence",
+      "bytes": 4130,
+      "sha256": "c183121905b79d5d540fced15baa0d711da2c46b10bc8a869ee6eeeaddc9845c",
+      "details": {
+        "json": "valid",
+        "historical_exit": 1
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-browser.txt",
+      "category": "historical evidence",
+      "bytes": 1248,
+      "sha256": "eda2c2038d2a2100790ffd2bcf9c51801d1c869cd39160f733a55fd59913ffbb",
+      "details": {
+        "check_results": 0,
+        "lines": 24,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-full.json",
+      "category": "historical evidence",
+      "bytes": 4124,
+      "sha256": "4d3408ead761cb1d214c06429f569445121950c2d032401464328819a5398ea0",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-full.txt",
+      "category": "historical evidence",
+      "bytes": 51783,
+      "sha256": "465723c2a3b3a79fb2b45207fe09ffdb9a0b99aa8a1fc4ab1a4a5b04fcaeb802",
+      "details": {
+        "check_results": 29,
+        "lines": 455,
+        "success_footer": [
+          "v3 browser ok: 111 complete flows; identity/content/assets/console checked in every flow",
+          "RESULT: 9 syntax checks, 20 test scripts, 0 failed checks."
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-rules-fixed.json",
+      "category": "historical evidence",
+      "bytes": 4129,
+      "sha256": "0c418d2ebc1648ab8a3ba95a9bcb2236e34daafd17a32df418f63fb3ea386310",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-rules-fixed.txt",
+      "category": "historical evidence",
+      "bytes": 1909,
+      "sha256": "b142713e2eba67425f50a2d01a547b5ef1fe26efb23844b532d99c5c3d21b848",
+      "details": {
+        "check_results": 0,
+        "lines": 20,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-rules.json",
+      "category": "historical evidence",
+      "bytes": 4128,
+      "sha256": "a16f037d24af668d3a99db85b12f9744f05af58fe17469458f9f23737a4bc3d4",
+      "details": {
+        "json": "valid",
+        "historical_exit": 1
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v326-rules.txt",
+      "category": "historical evidence",
+      "bytes": 1924,
+      "sha256": "210c06d558ff8a231d562272bc76468c0d359c9c5cd24734265f955740f3b4ba",
+      "details": {
+        "check_results": 0,
+        "lines": 35,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-browser.json",
+      "category": "historical evidence",
+      "bytes": 4329,
+      "sha256": "dea78764c0dc2fd7be8b1a3f694c718b38451685c46e15a95c2cc1d8ed497dc8",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-browser.txt",
+      "category": "historical evidence",
+      "bytes": 435,
+      "sha256": "73e9dfe89c8317e30814efbc590a937801e25f4e6b06fcfbafe9cbcf5c7c9ed2",
+      "details": {
+        "check_results": 0,
+        "lines": 4,
+        "success_footer": [
+          "v3 browser ok: 3 complete flows; identity/content/assets/console checked in every flow"
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-conditions.json",
+      "category": "historical evidence",
+      "bytes": 4234,
+      "sha256": "f788e4583f3a69712908a02bda3fadb116d098db89fa28642f856af4fe153e1e",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-conditions.txt",
+      "category": "historical evidence",
+      "bytes": 771,
+      "sha256": "81c84a80be5dea513188ebe0391bd95bc96b8694e98c17e9aeca589df043d91e",
+      "details": {
+        "check_results": 0,
+        "lines": 7,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-fixed-full-interruption.json",
+      "category": "historical evidence",
+      "bytes": 357,
+      "sha256": "c25992d49d40ab944c60c11688d8a0f5f8dbce41759f418bfc812bfcc7420e57",
+      "details": {
+        "json": "valid",
+        "historical_exit": null
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-fixed-full.txt",
+      "category": "historical evidence",
+      "bytes": 808,
+      "sha256": "29920099e1c4d3907a4608434fe00999b48fdf882c8376200a8ffc5435a3cda6",
+      "details": {
+        "check_results": 9,
+        "lines": 9,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-focus-fix.json",
+      "category": "historical evidence",
+      "bytes": 4264,
+      "sha256": "60f3e12db90b9df615dea04ad7e3a2bdf17d24fb9ceb24c78a2212a4aebd6aa6",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-focus-fix.txt",
+      "category": "historical evidence",
+      "bytes": 423,
+      "sha256": "fb4c7046ea0027eefcc3dd9117eba555a5edbcacb22197a806a269e5dc109a94",
+      "details": {
+        "check_results": 0,
+        "lines": 4,
+        "success_footer": [
+          "v3 browser ok: 3 complete flows; identity/content/assets/console checked in every flow"
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-full.json",
+      "category": "historical evidence",
+      "bytes": 4227,
+      "sha256": "7eaff56ab86cf109719998a6f7d39084b387904e6191d8ee9729f0ece23644d0",
+      "details": {
+        "json": "valid",
+        "historical_exit": 1
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-full.txt",
+      "category": "historical evidence",
+      "bytes": 42994,
+      "sha256": "efeeb5d3bbf94bcd4a199555bca037599e659400874cb2c06262bd3113b8b705",
+      "details": {
+        "check_results": 30,
+        "lines": 386,
+        "success_footer": [
+          "RESULT: 9 syntax checks, 21 test scripts, 1 failed checks."
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-balance.json",
+      "category": "historical evidence",
+      "bytes": 4232,
+      "sha256": "41a639684bd175bbfc8606781ca33a0c69b22c48237daa76db2c9a23f5a1a49b",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-balance.txt",
+      "category": "historical evidence",
+      "bytes": 8611,
+      "sha256": "421a499d1f68d93add9a446c43d949a70e93cb842f90ec2359c368cb94cd30cc",
+      "details": {
+        "check_results": 0,
+        "lines": 63,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-compatibility.json",
+      "category": "historical evidence",
+      "bytes": 4238,
+      "sha256": "09680bc85b696070366ebddd8f20d7bbe61869888b68a8779b3bb3fe5fb5800d",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-compatibility.txt",
+      "category": "historical evidence",
+      "bytes": 872,
+      "sha256": "6e58291f8d79e7c93aabec922b77fc38d74317e54200143e981991df4a41a041",
+      "details": {
+        "check_results": 0,
+        "lines": 8,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-continuation.json",
+      "category": "historical evidence",
+      "bytes": 4237,
+      "sha256": "6cdaeea65662eb94427c8b48c6e96be104133025a44c6189bc0a1a6ddd58c3d4",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-continuation.txt",
+      "category": "historical evidence",
+      "bytes": 6887,
+      "sha256": "f905d647382aab7dee6dc136d5c92e140bd16a44183438b342fdd68b526c6220",
+      "details": {
+        "check_results": 0,
+        "lines": 64,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-expansion.json",
+      "category": "historical evidence",
+      "bytes": 4234,
+      "sha256": "8afb32c46ae5ba236b5e853b7d074da939bf7c85c816f7ba8621d8c8c3574124",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-expansion.txt",
+      "category": "historical evidence",
+      "bytes": 6088,
+      "sha256": "5813a25de4a15add3db18f875b7ac4094ea79ec2190fc986a267c2cbf96e00d8",
+      "details": {
+        "check_results": 0,
+        "lines": 58,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-quality.json",
+      "category": "historical evidence",
+      "bytes": 4231,
+      "sha256": "c38ac7fbdb53499d1dc104d918903d7f2cb4d506874530c5ac646db73b3920cf",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-quality.txt",
+      "category": "historical evidence",
+      "bytes": 1909,
+      "sha256": "b142713e2eba67425f50a2d01a547b5ef1fe26efb23844b532d99c5c3d21b848",
+      "details": {
+        "check_results": 0,
+        "lines": 20,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-strategy.json",
+      "category": "historical evidence",
+      "bytes": 4233,
+      "sha256": "238cddee1b8f6664dd2c32c749150c472347cf0f5097ea72f90d75141d3cdaae",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-v3-strategy.txt",
+      "category": "historical evidence",
+      "bytes": 143,
+      "sha256": "6264701780ed03641c01a92540d3b47e940cd0c7ab4a1d7d9683e9dbdfa45189",
+      "details": {
+        "check_results": 0,
+        "lines": 1,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-verified-full.json",
+      "category": "historical evidence",
+      "bytes": 4227,
+      "sha256": "8516b4a67ff4eb0a03b9db5c87e3aed6fea72b815ae3d7c4182a029d918c8053",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v327-verified-full.txt",
+      "category": "historical evidence",
+      "bytes": 53090,
+      "sha256": "e15271186fd1a03db6b087cea6b49d0c836c1dcbf405cca52b69ef2fdd8cdeb9",
+      "details": {
+        "check_results": 30,
+        "lines": 467,
+        "success_footer": [
+          "v3 browser ok: 114 complete flows; identity/content/assets/console checked in every flow",
+          "RESULT: 9 syntax checks, 21 test scripts, 0 failed checks."
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-browser-cooldown-fix.json",
+      "category": "historical evidence",
+      "bytes": 4328,
+      "sha256": "703c02ba837780248880138e5ed2a62818ff50db14ad833779e665108f5f3c3b",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-browser-cooldown-fix.txt",
+      "category": "historical evidence",
+      "bytes": 206,
+      "sha256": "764ba4c9bcb619a46e3235a83a11fd3a3b3380661eca249ca280311f29d65347",
+      "details": {
+        "check_results": 0,
+        "lines": 2,
+        "success_footer": [
+          "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-browser.json",
+      "category": "historical evidence",
+      "bytes": 4328,
+      "sha256": "ab7219bc9ce57fa63d73a165ced891eb03d9a28993eaf8e32ea19e37964827cd",
+      "details": {
+        "json": "valid",
+        "historical_exit": 1
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-browser.txt",
+      "category": "historical evidence",
+      "bytes": 649,
+      "sha256": "de13f624370e9e6d4b4b78a5c3862b19c89b93ed947b8002b40e1b49fc8601dd",
+      "details": {
+        "check_results": 0,
+        "lines": 15,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-compatibility.json",
+      "category": "historical evidence",
+      "bytes": 4237,
+      "sha256": "78f87a147dac92094a87299ed5632dc5aef4fd1263123242cc2911419054a474",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-compatibility.txt",
+      "category": "historical evidence",
+      "bytes": 957,
+      "sha256": "ea7a34b0108111cfba0c3382b11680350fb1effbe79d826b4043cb6aae0a2eff",
+      "details": {
+        "check_results": 0,
+        "lines": 9,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-full.json",
+      "category": "historical evidence",
+      "bytes": 4227,
+      "sha256": "265ab634e3d8ed2a5f1fc71470c87a6e8729f3e7119fe31937ed91285e738b49",
+      "details": {
+        "json": "valid",
+        "historical_exit": 1
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-full.txt",
+      "category": "historical evidence",
+      "bytes": 43892,
+      "sha256": "3783e47416fa2820b07b9c0e5e09b0dafb2bd861f69a9d853e2e2d4568afb191",
+      "details": {
+        "check_results": 30,
+        "lines": 397,
+        "success_footer": [
+          "RESULT: 9 syntax checks, 21 test scripts, 1 failed checks."
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-rules.json",
+      "category": "historical evidence",
+      "bytes": 4232,
+      "sha256": "5697a4600e2b84d57d161c10f15b1fe7ab4519c4e59bb46379295cff16b81165",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-rules.txt",
+      "category": "historical evidence",
+      "bytes": 2015,
+      "sha256": "b80770ee1f126d9db0a24c6bf3de5fbf5809d165c074b9b3b8bec0ae8629dc82",
+      "details": {
+        "check_results": 0,
+        "lines": 21,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-svg-fix.json",
+      "category": "historical evidence",
+      "bytes": 4263,
+      "sha256": "fcd681ffdf892c2dc68217df4cf5f5622518c62f2337fde93bbf5652d4bbd5a6",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-svg-fix.txt",
+      "category": "historical evidence",
+      "bytes": 176,
+      "sha256": "a7f27fc2ff3a22187a09526867e577c1ea6930df1f2ae76d597b5b37bb5bf6ca",
+      "details": {
+        "check_results": 0,
+        "lines": 2,
+        "success_footer": [
+          "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-touch-svg-fixed.json",
+      "category": "historical evidence",
+      "bytes": 4327,
+      "sha256": "be53998e13922a3b154d738b2275c5dee02cd38c21fa387aa14c30db997d4b32",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-touch-svg-fixed.txt",
+      "category": "historical evidence",
+      "bytes": 206,
+      "sha256": "764ba4c9bcb619a46e3235a83a11fd3a3b3380661eca249ca280311f29d65347",
+      "details": {
+        "check_results": 0,
+        "lines": 2,
+        "success_footer": [
+          "v3 browser ok: 1 complete flows; identity/content/assets/console checked in every flow"
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-verified-full.json",
+      "category": "historical evidence",
+      "bytes": 4227,
+      "sha256": "94bc00c17a6a895b44525bcca55ef19afe32fb27e09ab2b00de0f0740e5cbff3",
+      "details": {
+        "json": "valid",
+        "historical_exit": 0
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/v328-verified-full.txt",
+      "category": "historical evidence",
+      "bytes": 53402,
+      "sha256": "e3bf51dfd32a953c2e4ea12adfefd7fbb9962c2c9909d8b13767b92e8cc43a19",
+      "details": {
+        "check_results": 30,
+        "lines": 470,
+        "success_footer": [
+          "v3 browser ok: 115 complete flows; identity/content/assets/console checked in every flow",
+          "RESULT: 9 syntax checks, 21 test scripts, 0 failed checks."
+        ]
+      }
+    },
+    {
+      "file": "docs/validation/v325-v328/webkit-install.txt",
+      "category": "historical evidence",
+      "bytes": 3806,
+      "sha256": "404d4d54d15c9a1a120edbcff8e9a90fb5620b91b7ba2926011c04ef6410410d",
+      "details": {
+        "check_results": 0,
+        "lines": 36,
+        "success_footer": []
+      }
+    },
+    {
+      "file": "patch-notes/README.md",
+      "category": "documentation",
+      "bytes": 2322,
+      "sha256": "ce981337612963009723d883038587da3b1c1378c3913f165ab186bbedb4ee27",
+      "details": {}
+    },
+    {
+      "file": "patch-notes/v3-3.25.0-preview.1.md",
+      "category": "documentation",
+      "bytes": 1054,
+      "sha256": "538661188f41b6254744d8cecdde1da9521c12f22f2042194a643416294119df",
+      "details": {}
+    },
+    {
+      "file": "patch-notes/v3-3.26.0-preview.1.md",
+      "category": "documentation",
+      "bytes": 859,
+      "sha256": "8cfbfca02f0b86bc6f6f5c3ca27795f197d6f3ea46a78af369584f75c954fac6",
+      "details": {}
+    },
+    {
+      "file": "patch-notes/v3-3.27.0-preview.1.md",
+      "category": "documentation",
+      "bytes": 912,
+      "sha256": "bb9a32eb0b2fa815c3dc6922c6cc86d3c6f560f7d076cbbf385b026eb1737b37",
+      "details": {}
+    },
+    {
+      "file": "patch-notes/v3-3.28.0-preview.1.md",
+      "category": "documentation",
+      "bytes": 1222,
+      "sha256": "a2b2df0bacf78417f619d30b238a78fe8b6962042939c13056342c47d9cec6a2",
+      "details": {}
+    },
+    {
+      "file": "scripts/v325-pace-audit.cjs",
+      "category": "isolated audit tool",
+      "bytes": 2978,
+      "sha256": "740c427d565eb0357e5489ab3ac3bcddf5057d950c42f3d8f82991dfd5467859",
+      "details": {}
+    },
+    {
+      "file": "scripts/v327-strategy-audit.cjs",
+      "category": "isolated audit tool",
+      "bytes": 1845,
+      "sha256": "b651563d5a02e57deaa2c5afe54d65857c561b20a1885e1ba9d8bc8eca2d6dd8",
+      "details": {}
+    },
+    {
+      "file": "scripts/v328-profile.cjs",
+      "category": "isolated audit tool",
+      "bytes": 4837,
+      "sha256": "b205bbb85df02e8546b766d72d86248834e9a62ef168ece26a2111fd1850ea20",
+      "details": {}
+    },
+    {
+      "file": "tests/fixtures/v324-saves.json",
+      "category": "canonical fixture",
+      "bytes": 213806,
+      "sha256": "87c4241f09af3c98ed166b7ed1e2b54f3f8a5a14dc216960ab471bbc1e7a234f",
+      "details": {
+        "json": "valid",
+        "states": 9,
+        "names": [
+          "city-v324-mature",
+          "city-v324-contract",
+          "city-v324-paid",
+          "watch-v324-mature",
+          "watch-v324-contract",
+          "watch-v324-paid",
+          "voyage-v324-mature",
+          "voyage-v324-contract",
+          "voyage-v324-paid"
+        ],
+        "versions": [
+          32
+        ]
+      }
+    },
+    {
+      "file": "tests/fixtures/v326-saves.json",
+      "category": "canonical fixture",
+      "bytes": 212041,
+      "sha256": "e7d6cded13b7e7bdb119672935f81c1981a74d6c96a4bc6ab1debbd85a8225fa",
+      "details": {
+        "json": "valid",
+        "states": 9,
+        "names": [
+          "city-v326-active",
+          "city-v326-ready",
+          "city-v326-settled",
+          "watch-v326-active",
+          "watch-v326-ready",
+          "watch-v326-settled",
+          "voyage-v326-active",
+          "voyage-v326-ready",
+          "voyage-v326-settled"
+        ],
+        "versions": [
+          32
+        ]
+      }
+    },
+    {
+      "file": "tests/fixtures/v327-saves.json",
+      "category": "canonical fixture",
+      "bytes": 216264,
+      "sha256": "0b6e4971264a97b32a07a8f13da8f200e327f5d440ed367569fa37e2f613414d",
+      "details": {
+        "json": "valid",
+        "states": 9,
+        "names": [
+          "city-v327-paid",
+          "city-v327-ready",
+          "city-v327-complete",
+          "watch-v327-paid",
+          "watch-v327-ready",
+          "watch-v327-complete",
+          "voyage-v327-paid",
+          "voyage-v327-ready",
+          "voyage-v327-complete"
+        ],
+        "versions": [
+          32
+        ]
+      }
+    },
+    {
+      "file": "tests/helpers/quality-browser.cjs",
+      "category": "regression test",
+      "bytes": 13097,
+      "sha256": "66b6a8359bd1613d17d3e5f69f7d1a6857fbdbac7aa363e42f64df3314d8227d",
+      "details": {}
+    },
+    {
+      "file": "tests/v3-browser.test.js",
+      "category": "regression test",
+      "bytes": 167758,
+      "sha256": "5babeb4253e00cbfc580358da212bdce89e02ecff3fc330f34cf5acbc0bcda8b",
+      "details": {}
+    },
+    {
+      "file": "tests/v3-compatibility.test.js",
+      "category": "regression test",
+      "bytes": 4898,
+      "sha256": "16604dbcef8da9453a149aaec37e0d530287d9c49010b10ca478f0ed29231b86",
+      "details": {}
+    },
+    {
+      "file": "tests/v3-conditions.test.js",
+      "category": "regression test",
+      "bytes": 6054,
+      "sha256": "1e148c4eae7b5d214685bbf0c7a14af672b0a3808c68115aef9848bce81b1664",
+      "details": {}
+    },
+    {
+      "file": "tests/v3-quality.test.js",
+      "category": "regression test",
+      "bytes": 6518,
+      "sha256": "ce21441d629ebd477ac1fdbfdd27b7f99c638ded172549b689a64b2cd5ebb684",
+      "details": {}
+    },
+    {
+      "file": "v3/app.js",
+      "category": "runtime/interface-content",
+      "bytes": 156939,
+      "sha256": "4678dc7fa7dd2e5d7c69db89488bae34444c32767734e28e787ec123e0a7b2f0",
+      "details": {}
+    },
+    {
+      "file": "v3/data.js",
+      "category": "runtime/interface-content",
+      "bytes": 149348,
+      "sha256": "040e7aac92c00edf69253e676757f6a722c48aecc5e6b62d7f1a1c2825c38a99",
+      "details": {}
+    },
+    {
+      "file": "v3/engine.js",
+      "category": "runtime/high risk",
+      "bytes": 173715,
+      "sha256": "03e65e5f9dc7c41bf56343c2f5517462a57c898a0d15eddf0d98768682ade524",
+      "details": {}
+    },
+    {
+      "file": "v3/index.html",
+      "category": "runtime/interface-content",
+      "bytes": 2833,
+      "sha256": "280cbe693270b2f1db981f372029f398e2ebd757efb589567118a2d745fcda69",
+      "details": {}
+    },
+    {
+      "file": "v3/storage.js",
+      "category": "runtime/high risk",
+      "bytes": 11284,
+      "sha256": "44f22e45a3699a253697faf630b661d5dc44cd89a12300b7a7dc2faf71ea65d4",
+      "details": {}
+    },
+    {
+      "file": "v3/style.css",
+      "category": "runtime/interface-content",
+      "bytes": 49279,
+      "sha256": "0e3120f9c61a4b2109efad1a7963a4e58a73d3730e028582b8751dda7a347e14",
+      "details": {}
+    }
+  ]
+}

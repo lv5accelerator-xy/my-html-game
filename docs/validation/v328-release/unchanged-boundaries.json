@@ -1,0 +1,17 @@
+{
+  "index.html": "3c223c934e023d2495433008e7d8363ea5983e9d42ecb4b8033b4b9c29de6a83",
+  "styles.css": "b81fc3362e99eeb861ae48cdcb300a0a3c922aed0996770b9fbd22ab3b07f3e6",
+  "game.js": "d2dacbb2e25bc4c056da5a76bce83eea477a169905ef99c4731a1e86a9c5ecb2",
+  "game-math.js": "518b0621e307ca638d2f2566c90785a3e3d9c38bd361ff272a025756ba22b673",
+  "cloud-save.js": "7dc97474b83d393b0f3f1f9da3a9831ca61379b85a0ebcb16276dd61dee59d8f",
+  "v2-systems.js": "3cdc0590c84c2743a5684c38e84cbc8dfe2300cb1f1f291281656db6c41718c5",
+  "legacy-systems.js": "e8ec704c1a2458d7e697ffa5cf9d5cd3b44708901e5f7657f7e1d345eca51ead",
+  "firebase-config.js": "5288e2e0d233603a81c8fa97584bf781f2ce2cc38efe4c7ce222ab14736ca341",
+  "firestore.rules": "b5883f0c2f7628747105f672864e9a489164db55e74f5df16e5080f824b8e0c6",
+  "firebase.json": "66ef4f23a1827256eb78ec2dcc50d108b7c1eda2a74317b88cbab2b90f09a8c0",
+  ".github/workflows/deploy-pages.yml": "3e905115cd581186f43afafa6f2950d4580da709e99fc35489ddf308658aff06",
+  ".github/workflows/pr-checks.yml": "bf12f4f9f5f1a62ef335046354f1849201fd5ddaba9cd76abffccc9d13c2b31c",
+  ".github/workflows/public-acceptance.yml": "18f6aca16ee2879c5989e2ab9a8c7a81e14a8f658064de853fd44ee292b79d62",
+  "firebase/functions/index.js": "88ee2f3500d26b33ca12081601ceb409df2dea52332689bf4ae4442b5f3c1742",
+  "firebase/functions/package.json": "3ace1a56a595cdfed4bd4eea3f4118754464ad0cbb8ef369737f4f1da0db3c7b"
+}

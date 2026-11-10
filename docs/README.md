@@ -21,3 +21,5 @@
 
 - [v3.25～v3.28连续开发验收](v325-v328-validation.md)
 - [3.28新玩家说明与稳定候选检查表](v328-stability-checklist.md)
+
+- [3.28正式发布、独立云验收与公网记录](v328-release-validation.md)

@@ -29,7 +29,7 @@ jobs:
         run: npm install --no-save playwright@1.55.0
       - name: Verify pinned source and actual runtime
         run: |
-          test "$(git rev-parse HEAD)" = "$AUDITED_GAME_SHA"
+          test "$(git -c safe.directory="$GITHUB_WORKSPACE" rev-parse HEAD)" = "$AUDITED_GAME_SHA"
           node <<'JS'
           const assert = require('node:assert/strict'), fs = require('node:fs');
           const p = require('playwright');

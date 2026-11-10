@@ -59,7 +59,21 @@
     "webkit": "failed: test clicked tutorial underneath timed announcement",
     "chromium": "full flows in progress",
     "fix": "only test startup ordering; release runtime unchanged",
-    "final_result": "pending"
+    "final_result": "pending after image-completion fix",
+    "first_chromium": {
+      "exit": 0,
+      "runtime_hashes": 14,
+      "extra_flows": 7,
+      "complete_v3_flows": 94,
+      "v316_unique_snapshots": 30
+    },
+    "second_run": 42743083976,
+    "second_webkit": {
+      "exit": 1,
+      "completed_extra_flows": 6,
+      "reason": "active CSS background request cancelled by test reload",
+      "fix": "wait for actual HTTP200 and fully finished image body before and after deliberate reload; retain zero-failed-request assertion"
+    }
   },
   "real_iphone_safari": "not run",
   "production_firebase": "untouched",
@@ -74,5 +88,12 @@
     "build": "success",
     "deploy": "success",
     "reported_success_utc": "2026-11-10T02:24:30Z"
+  },
+  "environment_limits": {
+    "artifact_download_probe_exit": 22,
+    "artifact_download_http": 403,
+    "public_screenshots_manually_viewed": false,
+    "local_screenshots_manually_viewed": true,
+    "git_upstream_query": "restricted main-only fetch refspec; use explicit remote refs/API head comparison"
   }
 }

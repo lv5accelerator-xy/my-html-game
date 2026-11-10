@@ -61,6 +61,10 @@ V3_BROWSER_ENGINE=chromium node tests/v3-browser.test.js
 
 本地只验证新脚本可运行：`PUBLIC_GAME_URL=http://127.0.0.1:8763/ ... node scripts/verify-public-v320.cjs`退出0，14目标哈希/7流程/30唯一旧档。此前四次开发脚本失败亦保留：前三次是v2延迟启动弹层，第四次是Playwright受控时钟无navigation timing，改为仅真实新档上下文测性能。[日志目录](validation/v320-release/)中的本地结果不能算线上通过。
 
+第二轮[公开运行42743083976](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42743083976)的WebKit已真实完成前六流程，第七个旧档刷新取消了动态插入、尚未下载完成的场景背景，退出1；[原始失败](validation/v320-release/public-webkit-second-failure.txt)保留。补强仅在验收脚本：初次进入及每次主动刷新前后，等待该可见图片的真实response，断言HTTP200且`response.finished()`无错误；失败请求断言继续要求空数组，未忽略该图片或取消错误。本地补强后七流程再次退出0，随后重新执行完整公开双引擎。
+
+第一轮Chromium已经完成公开14哈希/7额外流程/30份v3.16副本及全部94条v3流程，退出0，[实际结果](validation/v320-release/public-chromium-first-result.json)和[日志](validation/v320-release/public-chromium-first-excerpt.txt)独立保留。Actions产物包含桌面/手机截图；云环境下载产物返回403，未人工查看线上截图。本地手机截图已查看，两类记录不混用。原PR并发规则会在修正提交后取消较旧的维护分支CI，这些取消不当作通过；最终head必须另查。
+
 ## 兼容与未执行项
 
 v3继续schema32与`stellarOutpostIdleSave_v3`；v2的v1键和schema独立。三十份v3.16快照在原主线、三个永久结局、装备等级/双槽方案、需求合同、工程、在途/待领和收藏上逐字段相同，迁移幂等、不重发奖励。新增atlas/expeditions为空可选字段；不要求重做主线。只承诺旧档向本版本迁移，旧构建不能反向读写新字段。

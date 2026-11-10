@@ -195,4 +195,11 @@ test('v3.24 partial community escrow remains finite and actual offline work is i
  const report=E.advance(s,s.lastAt+86400000,{offline:true,report:true});assert.equal(report.seconds,28800);assert.ok(report.continuationChanges.some(x=>x.includes('居民协作')));assert.equal(s.continuation.community.completed.includes('meals-2'),false);assert.equal(E.communityStatus(s).available,false,'zero samples still block payment');
 });
 
+
+test('v3.24 carried resident work never points to a locked exploration page after jump',()=>{
+ const s=structuredClone(prepared.city);assert.ok(E.acceptCommunity(s,'meals-1',1));const accepted=structuredClone(s.continuation.community.active);assert.ok(E.prestige(s));assert.deepEqual(s.continuation.community.active,accepted);
+ while(s.dust<E.buildingCost(s,'drone')){assert.ok(E.scan(s));E.advance(s,s.lastAt+1000);}assert.ok(E.buy(s,'drone',1));assert.ok(E.chooseRoute(s,'industry'));assert.ok(s.run.dust<600);const goal=E.nextGoal(s);assert.equal(E.reachable(s,goal.action),true);assert.notEqual(goal.focus,'community-life');
+ E.advance(s,s.lastAt+1000000);assert.ok(E.reachable(s,'explore'));assert.equal(E.nextGoal(s).focus,'community-life');assert.equal(s.continuation.community.active.serial,accepted.serial);
+});
+
 console.log(`v3 continuation ok: ${checks} behavioral checks`);

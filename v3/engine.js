@@ -1194,7 +1194,7 @@
     if(voyage?id===g.voyage:a.routes.includes(id)) a.trips=Math.min(a.tripsRequired,a.trips+1);
   }
   function communityGoal(s) {
-    const a=communityStatus(s);if(!a) return null;
+    const a=communityStatus(s);if(!a||!reachable(s,'explore')) return null;
     return {title:a.available?'居民协作已备齐':byId(D.COMMUNITY_STORIES,a.id).name,detail:a.reason||'准备完成，确认交接后保存居民回信。',action:'explore',label:'查看居民协作',focus:'community-life',value:a.path==='production'?a.produced:a.trips,target:a.path==='production'?a.productionGoal:a.tripsRequired,eta:a.path==='production'?a.secondsLeft:0};
   }
   function cleanCommunity(raw,s) {

@@ -1,6 +1,6 @@
 # 实际测试调用
 
-每行均来自run.py的实际执行记录；专项过滤列出环境，不替代完整入口。脚本内子命令及结果见同名原文。
+以下为实际run.py记录。专项过滤显式列出；完整入口未过滤。-15为为修复已确认缺陷而中止的子进程（外层241），不计通过或最终跳过；远端CI原始失败另见actions-42812952113-test-failure.txt。
 
 | 调用 | 实际命令 | 测试环境 | 退出码 | 秒 |
 | --- | --- | --- | ---: | ---: |
@@ -49,3 +49,11 @@
 | [v324-inherited-browser-fix](v324-inherited-browser-fix.txt) | `node tests/v3-browser.test.js` | `{"V3_TEST_FILTER": "v3.20"}` | 0 | 16.88 |
 | [v324-acceptance-harness-final](v324-acceptance-harness-final.txt) | `node scripts/verify-public-v324.cjs` | `{}` | 0 | 53.39 |
 | [v324-final-full](v324-final-full.txt) | `node scripts/check.cjs` | `{}` | 0 | 443.92 |
+| [v324-jump-goal-before](v324-jump-goal-before.txt) | `node tests/v3-continuation.test.js` | `{}` | 1 | 2.41 |
+| [v324-jump-goal-fixed](v324-jump-goal-fixed.txt) | `node tests/v3-continuation.test.js` | `{}` | 0 | 2.55 |
+| [v324-jump-browser-fixed](v324-jump-browser-fixed.txt) | `node tests/v3-browser.test.js` | `{"V3_TEST_FILTER": "v3.24 carried resident work"}` | 0 | 3.19 |
+| [v324-release-fix-full](v324-release-fix-full.txt) | `node scripts/check.cjs` | `{}` | -15 | 195.49 |
+| [v324-import-sync-browser](v324-import-sync-browser.txt) | `node tests/v3-browser.test.js` | `{"V3_TEST_FILTER": "v3.24"}` | 0 | 12.08 |
+| [v324-guarded-full](v324-guarded-full.txt) | `node scripts/check.cjs` | `{}` | -15 | 178.82 |
+| [v324-navigation-browser](v324-navigation-browser.txt) | `node tests/v3-browser.test.js` | `{"V3_TEST_FILTER": "v3.24"}` | 0 | 11.33 |
+| [v324-release-final-full](v324-release-final-full.txt) | `node scripts/check.cjs` | `{}` | 0 | 441.51 |

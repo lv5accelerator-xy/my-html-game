@@ -1,0 +1,124 @@
+{"label": "v324-release-fix-full", "command": ["node", "scripts/check.cjs"], "parent_sha": "788180d850628923b1065b138c216df7a9ff0c60", "node": "v22.23.4", "playwright": "1.55.0", "utc_start": "2026-11-10T12:15:01Z", "sources": {"v3/engine.js": "aa347f8ea7beb282e5b4c21e5abb4a0995636dbb8663c12a485ca5e624753922", "v3/data.js": "0d955731ac1c73561bfc6bb6a32011bd631808e56b48033072803d32261fa21c", "v3/storage.js": "c5ecc2cefb05f299f8637453d7ba3d76f40746ab3b1f5175bd5249b8080aaec9", "v3/app.js": "81e316a1fd7545b52376ce72f71f898e1b0dff8e09822961f627537688e172f6", "v3/style.css": "908f8bd21ea188c9daf1a18c430ab97e4d68a058b9629090721d8305faa301ce", "v3/index.html": "0c0e693258669be6d868739c7cd4e7331e523bccc0e8024b14824eb0f898b423", "tests/v3-strategy.test.js": "01033bfe00687c05f67f1609c386f52afcc97ba60664791be10ffdb2bcc120dd", "tests/v3-continuation.test.js": "5bb88787f4bcd2b63b4a3be3cd1c73a6efe93e0e7271c3915b3eea3488a11c34", "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45", "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24", "tests/v3-browser.test.js": "ea2d5d2f1c9cab238b0dc922e8c65d31e7445f63fc281ee9cae8f0865de87ccc", "tests/v3-compatibility.test.js": "dcf239e0dc307e12419bb76af810b2ecc659ee578202bde596b9123ca96ecc42", "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393", "tests/helpers/community-fixture.cjs": "ebe7143ff8b4422323fd1b8407a787469aa982bfb36a5139289e79094a73d777", "tests/helpers/v3-fixtures.cjs": "dc93cdd461b08d038470ef5610c29664c22af3912792a34ef680b55a9e1ba6a4", "tests/helpers/honors-fixture.cjs": "e4cb4fbdee6482235cf50b7f18888bfb65210e0a1a9aad87c75c30c09a8b4a40", "tests/helpers/continuation-browser.cjs": "766f633c0d6880cbc9e5ba74ab8644b24e6aa7a9469c07aedb342cbf3b6b1df5", "tests/helpers/isolate-browser.cjs": "027b21b83819602a970e2fa18163c9a7a9ae3e0f2358e31c5c7cdf604d241112", "scripts/verify-public-v324.cjs": "0245e37362703a3357822a622e154eff99b32dc6fcfd6402c1e93e82f9a6c2b8", "scripts/check.cjs": "a3b846e0b5ce98d37ebcaf4e03ddfc24528f09385d93551bc58d3e974b750443", "scripts/verify-public-v320.cjs": "4a0f20fa976b78c7eec435d6d1143476edcf49194baa6240200e70ef507b9da7"}, "test_environment": {}}
+CHECK_RESULT: {"command":"node --check game.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check game-math.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check cloud-save.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v2-systems.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check legacy-systems.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/data.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/engine.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/storage.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/app.js","exit":0,"signal":null,"error":null}
+browser smoke ok: dust=224M, rate=20.6488M / 秒, cores=33.9K
+CHECK_RESULT: {"command":"node tests/browser-smoke.test.js","exit":0,"signal":null,"error":null}
+companion story ok: 8 distinct three-stage memories, behavior gates, endings, safe migration and one-shot feedback
+CHECK_RESULT: {"command":"node tests/companion-story.test.js","exit":0,"signal":null,"error":null}
+daily route ok: three routes, one main, two optional, one reroll, daily reset
+CHECK_RESULT: {"command":"node tests/daily-route.test.js","exit":0,"signal":null,"error":null}
+doctrine build ok: deterministic offers, tradeoffs, run lock, report and migration
+CHECK_RESULT: {"command":"node tests/doctrine-build.test.js","exit":0,"signal":null,"error":null}
+linked browser ok: 390px, route click and keyboard order/plan/interpret/claim, reward deduction, reload persistence, zero pageerrors
+CHECK_RESULT: {"command":"node tests/linked-journey-browser.test.js","exit":0,"signal":null,"error":null}
+linked journey ok: 69 assertions; orders, eight collections, time gates, duplicate claims, migration
+CHECK_RESULT: {"command":"node tests/linked-journey.test.js","exit":0,"signal":null,"error":null}
+mobile performance ok: eco=24fps/250ms, quality=60fps/100ms
+CHECK_RESULT: {"command":"node tests/mobile-performance.test.js","exit":0,"signal":null,"error":null}
+numeric balance ok: stream=1.9M, legacyDust=189M, legacyCores=33.9K
+CHECK_RESULT: {"command":"node tests/numeric-balance.test.js","exit":0,"signal":null,"error":null}
+retention flow ok: opt-in, whitelist, anonymous payload, bounded migration
+CHECK_RESULT: {"command":"node tests/retention-flow.test.js","exit":0,"signal":null,"error":null}
+save migration v200 ok: v1.10 resources and progression preserved, v2 fields safely filled
+CHECK_RESULT: {"command":"node tests/save-migration-v200.test.js","exit":0,"signal":null,"error":null}
+season ok: injectable dates, 14+7 phases, catch-up points, cosmetics, recurring fallback and server contract
+CHECK_RESULT: {"command":"node tests/season.test.js","exit":0,"signal":null,"error":null}
+usability static checks ok: 3-step tutorial, 4 lazy illustrations, 11 primary pages
+usability browser ok: visible goal at 1280/375px; recommendations reachable
+CHECK_RESULT: {"command":"node tests/usability-flow.test.js","exit":0,"signal":null,"error":null}
+v3.16 earned management city: 42 deliveries, 15 construction stages in 5385s; zero resource injection
+v3.16 earned management watch: 42 deliveries, 15 construction stages in 5385s; zero resource injection
+v3.16 earned management voyage: 42 deliveries, 15 construction stages in 5385s; zero resource injection
+┌─────────┬────────────┬───────┬───────────┬───────┬───────────┬────────────┬─────────┐
+│ (index) │ route      │ drone │ milestone │ story │ firstJump │ secondJump │ samples │
+├─────────┼────────────┼───────┼───────────┼───────┼───────────┼────────────┼─────────┤
+│ 0       │ '工业航线' │ 15    │ 135       │ 210   │ 1133      │ 706        │ 1       │
+│ 1       │ '回收航线' │ 15    │ 90        │ 150   │ 1185      │ 810        │ 1       │
+│ 2       │ '探索航线' │ 15    │ 135       │ 180   │ 1125      │ 765        │ 50      │
+└─────────┴────────────┴───────┴───────────┴───────┴───────────┴────────────┴─────────┘
+v3 balance ok: three routes, first-run beats, 15–25 minute jumps and faster second runs; starport 3180s, chapter two +1815s, complete campaign 4995s
+┌─────────┬─────────────┬─────────────────────┬───────────────┐
+│ (index) │ preparation │ chapterThreeSeconds │ earnedSamples │
+├─────────┼─────────────┼─────────────────────┼───────────────┤
+│ 0       │ '校准优先'  │ 345                 │ 53            │
+│ 1       │ '补给优先'  │ 480                 │ 65            │
+│ 2       │ '分段接续'  │ 435                 │ 59            │
+└─────────┴─────────────┴─────────────────────┴───────────────┘
+┌─────────┬─────────────┬────────────┬────────────────────┬────────────┐
+│ (index) │ preparation │ port       │ chapterFourSeconds │ netSamples │
+├─────────┼─────────────┼────────────┼────────────────────┼────────────┤
+│ 0       │ '校准优先'  │ '接待扩容' │ 345                │ 43         │
+│ 1       │ '校准优先'  │ '生态补给' │ 345                │ 47         │
+│ 2       │ '校准优先'  │ '档案校准' │ 315                │ 43         │
+│ 3       │ '补给优先'  │ '接待扩容' │ 465                │ 55         │
+│ 4       │ '补给优先'  │ '生态补给' │ 465                │ 59         │
+│ 5       │ '补给优先'  │ '档案校准' │ 420                │ 55         │
+│ 6       │ '分段接续'  │ '接待扩容' │ 405                │ 49         │
+│ 7       │ '分段接续'  │ '生态补给' │ 405                │ 53         │
+│ 8       │ '分段接续'  │ '档案校准' │ 360                │ 49         │
+└─────────┴─────────────┴────────────┴────────────────────┴────────────┘
+┌─────────┬─────────────┬────────────┬──────────────────────┬────────────────────┬────────────┐
+│ (index) │ preparation │ port       │ energy               │ chapterFiveSeconds │ netSamples │
+├─────────┼─────────────┼────────────┼──────────────────────┼────────────────────┼────────────┤
+│ 0       │ '校准优先'  │ '接待扩容' │ '轮换照明与储能'     │ 495                │ 72         │
+│ 1       │ '校准优先'  │ '接待扩容' │ '转接空闲采集阵列'   │ 420                │ 66         │
+│ 2       │ '校准优先'  │ '接待扩容' │ '回收观测站备用设备' │ 450                │ 70         │
+│ 3       │ '校准优先'  │ '生态补给' │ '轮换照明与储能'     │ 495                │ 78         │
+│ 4       │ '校准优先'  │ '生态补给' │ '转接空闲采集阵列'   │ 420                │ 72         │
+│ 5       │ '校准优先'  │ '生态补给' │ '回收观测站备用设备' │ 450                │ 76         │
+│ 6       │ '校准优先'  │ '档案校准' │ '轮换照明与储能'     │ 450                │ 72         │
+│ 7       │ '校准优先'  │ '档案校准' │ '转接空闲采集阵列'   │ 360                │ 66         │
+│ 8       │ '校准优先'  │ '档案校准' │ '回收观测站备用设备' │ 420                │ 70         │
+│ 9       │ '补给优先'  │ '接待扩容' │ '轮换照明与储能'     │ 660                │ 84         │
+│ 10      │ '补给优先'  │ '接待扩容' │ '转接空闲采集阵列'   │ 540                │ 78         │
+│ 11      │ '补给优先'  │ '接待扩容' │ '回收观测站备用设备' │ 585                │ 82         │
+│ 12      │ '补给优先'  │ '生态补给' │ '轮换照明与储能'     │ 660                │ 90         │
+│ 13      │ '补给优先'  │ '生态补给' │ '转接空闲采集阵列'   │ 540                │ 84         │
+│ 14      │ '补给优先'  │ '生态补给' │ '回收观测站备用设备' │ 585                │ 88         │
+│ 15      │ '补给优先'  │ '档案校准' │ '轮换照明与储能'     │ 585                │ 84         │
+│ 16      │ '补给优先'  │ '档案校准' │ '转接空闲采集阵列'   │ 465                │ 78         │
+│ 17      │ '补给优先'  │ '档案校准' │ '回收观测站备用设备' │ 540                │ 82         │
+│ 18      │ '分段接续'  │ '接待扩容' │ '轮换照明与储能'     │ 585                │ 78         │
+│ 19      │ '分段接续'  │ '接待扩容' │ '转接空闲采集阵列'   │ 465                │ 72         │
+│ 20      │ '分段接续'  │ '接待扩容' │ '回收观测站备用设备' │ 540                │ 76         │
+│ 21      │ '分段接续'  │ '生态补给' │ '轮换照明与储能'     │ 585                │ 84         │
+│ 22      │ '分段接续'  │ '生态补给' │ '转接空闲采集阵列'   │ 465                │ 78         │
+│ 23      │ '分段接续'  │ '生态补给' │ '回收观测站备用设备' │ 540                │ 82         │
+│ 24      │ '分段接续'  │ '档案校准' │ '轮换照明与储能'     │ 540                │ 78         │
+│ 25      │ '分段接续'  │ '档案校准' │ '转接空闲采集阵列'   │ 420                │ 72         │
+│ 26      │ '分段接续'  │ '档案校准' │ '回收观测站备用设备' │ 465                │ 76         │
+└─────────┴─────────────┴────────────┴──────────────────────┴────────────────────┴────────────┘
+v3 ending balance ok: 81 earned-save branches, zero added resource costs or wait timers, free play retained
+CHECK_RESULT: {"command":"node tests/v3-balance.test.js","exit":0,"signal":null,"error":null}
+ok 1 - v3.21 freight/city: saved four-leg plan, manual discovery, five confirmations, home handoff, focus, reload and import
+ok 2 - v3.21 science/watch: saved four-leg plan, manual discovery, five confirmations, home handoff, focus, reload and import
+ok 3 - v3.21 beacon/voyage: saved four-leg plan, manual discovery, five confirmations, home handoff, focus, reload and import
+ok 4 - v3.22 freight/city: three evidence reviews, actual choices, locked reload/offline, one-use first-leg support and free practice
+ok 5 - v3.22 science/watch: three evidence reviews, actual choices, locked reload/offline, one-use first-leg support and free practice
+ok 6 - v3.22 quiet/voyage: three evidence reviews, actual choices, locked reload/offline, one-use first-leg support and free practice
+ok 7 - v3.23 city/production: nine resident letters, real work/supply, frozen focus, SVG, mobile focus and export continuity
+ok 8 - v3.23 watch/reception: nine resident letters, real work/supply, frozen focus, SVG, mobile focus and export continuity
+ok 9 - v3.23 voyage/exploration: nine resident letters, real work/supply, frozen focus, SVG, mobile focus and export continuity
+ok 10 - v3.24 city: twelve manual honors, exact voyage ledgers, real two-fit comparison, refresh/import and finite postgame
+ok 11 - v3.24 watch: twelve manual honors, exact voyage ledgers, real two-fit comparison, refresh/import and finite postgame
+ok 12 - v3.24 voyage: twelve manual honors, exact voyage ledgers, real two-fit comparison, refresh/import and finite postgame
+ok 13 - v3.24 carried resident work: real post-jump scan, drone, route, reachable goal, unlock and preserved contract
+ok 14 - v3.20 失落货运航道/归航之城: full earned voyage, formation switch, eight-hour absence, import and repeat
+ok 15 - v3.20 静潮观测深域/守望之港: full earned voyage, formation switch, eight-hour absence, import and repeat
+ok 16 - v3.20 遥远居民信标/携种远航: full earned voyage, formation switch, eight-hour absence, import and repeat
+ok 17 - v3.19 归航之城: live scheduling, real escrow, construction credit, alternate voyage and locked terms
+ok 18 - v3.19 守望之港: live scheduling, real escrow, construction credit, alternate voyage and locked terms
+ok 19 - v3.19 携种远航: live scheduling, real escrow, construction credit, alternate voyage and locked terms
+ok 20 - v3.18 失联货运网络: three real investigations, phone map keyboard, in-transit refresh and export
+ok 21 - v3.18 旧时代科研遗迹: three real investigations, phone map keyboard, in-transit refresh and export
+clock.runFor: Target page, context or browser has been closed
+    at /workspace/starport-v324/tests/v3-browser.test.js:249:28
+    at async scenario (/workspace/starport-v324/tests/v3-browser.test.js:91:7)
+    at async run (/workspace/starport-v324/tests/v3-browser.test.js:236:7)

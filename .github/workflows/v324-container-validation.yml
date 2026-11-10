@@ -1,0 +1,58 @@
+# Diagnostic only: checks a pinned game commit; never merges, deploys or writes saves.
+name: v3.24 container runtime verification
+on:
+  push:
+    branches: [codex/v324-container-validation]
+permissions:
+  contents: read
+concurrency:
+  group: v324-container-validation
+  cancel-in-progress: true
+jobs:
+  same-game-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.0-noble
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+      AUDITED_GAME_SHA: 1f15971c74bc89e3011a00034c5e4b26fa2c4e19
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: 1f15971c74bc89e3011a00034c5e4b26fa2c4e19
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install matching test module without changing system dependencies
+        run: npm install --no-save playwright@1.55.0
+      - name: Verify pinned source and actual runtime
+        run: |
+          test "$(git rev-parse HEAD)" = "$AUDITED_GAME_SHA"
+          node <<'JS'
+          const assert = require('node:assert/strict'), fs = require('node:fs');
+          const p = require('playwright');
+          assert.equal(Number(process.versions.node.split('.')[0]), 22);
+          assert.equal(require('playwright/package.json').version, '1.55.0');
+          for (const type of ['chromium', 'webkit']) assert.ok(fs.existsSync(p[type].executablePath()), type + ' bundled browser');
+          console.log(JSON.stringify({ gameSha: process.env.AUDITED_GAME_SHA, node: process.version, playwright: '1.55.0', chromium: p.chromium.executablePath(), webkit: p.webkit.executablePath() }));
+          JS
+      - name: Full original check entry in Chromium
+        env:
+          CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
+          V3_SCREENSHOT_DIR: /tmp/v324-container-audit/chromium
+        run: node scripts/check.cjs
+      - name: Full v3 suite in WebKit
+        env:
+          CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
+          V3_BROWSER_ENGINE: webkit
+          V3_SCREENSHOT_DIR: /tmp/v324-container-audit/webkit
+        run: node tests/v3-browser.test.js
+      - name: Preserve diagnostic screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v324-container-diagnostic
+          path: /tmp/v324-container-audit/
+          retention-days: 14

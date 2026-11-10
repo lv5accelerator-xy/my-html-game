@@ -1,4 +1,14 @@
-# 当前交接：3.20.0-preview.1 已完成云端验收
+# 当前交接：v3.20 发布验收
+
+2026-11-10：用户本次明确授权检查后合并PR #18及正式Pages发布，覆盖下方旧开发任务“不合并/不发布”的历史限制；不授权改生产Firebase、玩家档、可见性或部署工作流。head精确为d2fc83cda98d0162ba585d9027d724ceae8458e1，先ready再按expected_head_sha用merge方式合并；实际main/merge为a7bfea836a2285b22f1a1f1767defbdf832e62a2。
+
+Pages运行42739585599的archive已成功，test运行中，尚未确认部署成功；云公网CONNECT403、云WebKit未安装。发布前在当前云Node22/PW1.55/Chromium151再次全量9语法/17脚本/137规则组/52旧档/94流程退出0。开发head的Actions Chromium完整入口与WebKit94流程均成功。
+
+本轮隔离worktree `/workspace/starport-v320-release`、分支`codex/v320-release-audit`；准备独立只读公开验收Actions与文档/只读计划，不改玩法和原部署工作流。最新状态、命令/原始失败和未运行项以[发布验收](docs/v320-release-validation.md)为准；下一轮仅有[v3.21～v3.24计划](docs/v321-v324-plan.md)，尚未施工。
+
+## 以下为开发时的历史交接（状态不代表当前发布）
+
+# 3.20.0-preview.1 开发完成时记录
 
 规范仓库lv5accelerator-xy/my-html-game。起始main `7034b5c7f75f52eb65acce58c00c373d8e312bfd`，PR #17已合并、该SHA的Pages工作流42673214026成功，GitHub Releases为空。#8/#12未合入，本轮未覆盖历史旧代码。
 

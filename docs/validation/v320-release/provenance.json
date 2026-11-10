@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-10",
+  "repository": "lv5accelerator-xy/my-html-game",
+  "start_main": "7034b5c7f75f52eb65acce58c00c373d8e312bfd",
+  "expected_head": "d2fc83cda98d0162ba585d9027d724ceae8458e1",
+  "merge_sha": "a7bfea836a2285b22f1a1f1767defbdf832e62a2",
+  "merge_method": "merge",
+  "expected_head_sha_guard": true,
+  "node": "22.23.4",
+  "playwright": "1.55.0",
+  "cloud_chromium": "151.0.7922.173",
+  "preflight": {
+    "command": "PATH=/workspace/scratch/starport-tools/node_modules/node/bin:$PATH CODEX_PLAYWRIGHT_PATH=/workspace/scratch/starport-tools/node_modules/playwright CODEX_CHROMIUM_PATH=/usr/bin/chromium node scripts/check.cjs",
+    "exit": 0,
+    "syntax": 9,
+    "test_scripts": 17,
+    "named_v3_rule_groups": 137,
+    "canonical_saves": 52,
+    "complete_v3_flows": 94,
+    "failed": 0,
+    "skipped": 0
+  },
+  "public_helper_local": {
+    "target": "http://127.0.0.1:8763/",
+    "command": "PUBLIC_GAME_URL=http://127.0.0.1:8763/ PUBLIC_AUDIT_DIR=/workspace/scratch/v320-release-audit/local-helper-5 CODEX_PLAYWRIGHT_PATH=/workspace/scratch/starport-tools/node_modules/playwright CODEX_CHROMIUM_PATH=/usr/bin/chromium /workspace/scratch/starport-tools/node_modules/node/bin/node scripts/verify-public-v320.cjs",
+    "exit": 0,
+    "flows": 7,
+    "v316_unique_snapshots": 30,
+    "runtime_hashes": 14,
+    "prior_failed_development_runs": 4,
+    "counts_as_public_verification": false
+  },
+  "cloud_webkit_probe": {
+    "exit": 1,
+    "browser_flows_run": 0,
+    "reason": "missing webkit-2203/pw_run.sh"
+  },
+  "cloud_public_probe": {
+    "command": "curl -I --max-time 20 https://lv5accelerator-xy.github.io/my-html-game/v3/",
+    "exit": 56,
+    "reason": "CONNECT 403 environment policy"
+  },
+  "premerge_ci": {
+    "run": 42699912273,
+    "source_sha": "d2fc83cda98d0162ba585d9027d724ceae8458e1",
+    "conclusion": "success",
+    "chromium_complete_flows": 94,
+    "webkit_complete_flows": 94
+  },
+  "pages_run": 42739585599,
+  "public_acceptance": "pending",
+  "real_iphone_safari": "not run",
+  "production_firebase": "untouched",
+  "real_player_saves": "untouched"
+}

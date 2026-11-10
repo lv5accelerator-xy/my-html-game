@@ -1,0 +1,255 @@
+{
+  "engine": "chromium",
+  "expectedVersion": "3.20.0-preview.1",
+  "referenceSha": null,
+  "publicUrl": "http://127.0.0.1:8763/",
+  "assets": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "bytes": 125785,
+      "sha256": "3c223c934e023d2495433008e7d8363ea5983e9d42ecb4b8033b4b9c29de6a83"
+    },
+    {
+      "file": "styles.css",
+      "status": 200,
+      "bytes": 312981,
+      "sha256": "b81fc3362e99eeb861ae48cdcb300a0a3c922aed0996770b9fbd22ab3b07f3e6"
+    },
+    {
+      "file": "game.js",
+      "status": 200,
+      "bytes": 698660,
+      "sha256": "d2dacbb2e25bc4c056da5a76bce83eea477a169905ef99c4731a1e86a9c5ecb2"
+    },
+    {
+      "file": "game-math.js",
+      "status": 200,
+      "bytes": 10446,
+      "sha256": "518b0621e307ca638d2f2566c90785a3e3d9c38bd361ff272a025756ba22b673"
+    },
+    {
+      "file": "v2-systems.js",
+      "status": 200,
+      "bytes": 82581,
+      "sha256": "3cdc0590c84c2743a5684c38e84cbc8dfe2300cb1f1f291281656db6c41718c5"
+    },
+    {
+      "file": "legacy-systems.js",
+      "status": 200,
+      "bytes": 44339,
+      "sha256": "e8ec704c1a2458d7e697ffa5cf9d5cd3b44708901e5f7657f7e1d345eca51ead"
+    },
+    {
+      "file": "firebase-config.js",
+      "status": 200,
+      "bytes": 454,
+      "sha256": "5288e2e0d233603a81c8fa97584bf781f2ce2cc38efe4c7ce222ab14736ca341"
+    },
+    {
+      "file": "cloud-save.js",
+      "status": 200,
+      "bytes": 73048,
+      "sha256": "7dc97474b83d393b0f3f1f9da3a9831ca61379b85a0ebcb16276dd61dee59d8f"
+    },
+    {
+      "file": "v3/index.html",
+      "status": 200,
+      "bytes": 2833,
+      "sha256": "cba257437762a168b9cb3d1a2346bd1e02c6879511a757ba9e327c6bf685f1b1"
+    },
+    {
+      "file": "v3/style.css",
+      "status": 200,
+      "bytes": 43606,
+      "sha256": "09635a3d660c5a3e1e1f47468862f5a71ab666e52ae884338285ad4b95dedc07"
+    },
+    {
+      "file": "v3/data.js",
+      "status": 200,
+      "bytes": 133403,
+      "sha256": "22807438b034a9ecfc86b52390c94facb250ad2d822d98544c1fc2e1dcfd9bed"
+    },
+    {
+      "file": "v3/engine.js",
+      "status": 200,
+      "bytes": 130770,
+      "sha256": "53be028aef235727590fdd6496188ae3c8678f077e380d924a41b32cbf135cb8"
+    },
+    {
+      "file": "v3/storage.js",
+      "status": 200,
+      "bytes": 10473,
+      "sha256": "a039cb7db647d7eeea618e08e25695442d90217ee91740162f3d819b4867bdce"
+    },
+    {
+      "file": "v3/app.js",
+      "status": 200,
+      "bytes": 123550,
+      "sha256": "385ea8c6d6331ff328b3d256c690801a782444ca2e1fe72c71aefcd1cfddc8e1"
+    }
+  ],
+  "flows": [
+    {
+      "name": "v2-fresh-1280",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "navigation": {
+        "measured": true,
+        "domContentLoadedMs": 714.3000000000466,
+        "loadMs": 807.9000000001397,
+        "transferBytes": 126085,
+        "resources": 9
+      },
+      "layout": {
+        "width": 1280,
+        "document": 1280,
+        "body": 1280
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v3-fresh-1280",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "navigation": {
+        "measured": true,
+        "domContentLoadedMs": 174.39999999990687,
+        "loadMs": 201.19999999995343,
+        "transferBytes": 3133,
+        "resources": 6
+      },
+      "layout": {
+        "width": 1280,
+        "document": 1280,
+        "body": 1280
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v2-fresh-375",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": true,
+        "domContentLoadedMs": 386.10000000009313,
+        "loadMs": 446.80000000004657,
+        "transferBytes": 126085,
+        "resources": 9
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v3-fresh-375",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": true,
+        "domContentLoadedMs": 106.20000000018626,
+        "loadMs": 156.20000000018626,
+        "transferBytes": 3133,
+        "resources": 6
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v316-restore-city-ending",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": false,
+        "reason": "Migration fixtures use a controlled clock; loading timings are measured in fresh contexts."
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v316-restore-watch-ending",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": false,
+        "reason": "Migration fixtures use a controlled clock; loading timings are measured in fresh contexts."
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v316-restore-voyage-ending",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": false,
+        "reason": "Migration fixtures use a controlled clock; loading timings are measured in fresh contexts."
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    }
+  ],
+  "canonicalSnapshots": 30,
+  "notes": []
+}

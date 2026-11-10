@@ -1,5 +1,7 @@
 # v3.17～v3.20 连续开发验收
 
+本文保留2026-11-09开发时的原始状态及失败记录。2026-11-10发布任务已将PR #18合并；准确main、Pages和公开验收状态见[v3.20发布验收](v320-release-validation.md)。下文的“不合并/未发布”是当时开发授权与状态，不能用来判断当前线上版本。
+
 ## 来源与环境
 
 2026-11-09 起始 main `7034b5c7f75f52eb65acce58c00c373d8e312bfd`。已读取 README、AGENTS、CODEX_HANDOFF、docs/README、v3-playable、v3-main-story 与 v312-v316-validation。原工作区 `/workspace/my-html-game` 为干净的旧 work 分支，未改写；`git fetch origin` 后从实际最新 main 建立 `/workspace/starport-v320` / `codex/v317-v320-gameplay-expansion`。PR #17 已合并；#8/#12 仍开放，未合并旧代码。GitHub 工具读得 main 的 Pages 工作流 [42673214026](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42673214026) 成功，GitHub Releases 列表为空。历史验收不代替本次验证。

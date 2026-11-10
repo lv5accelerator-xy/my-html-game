@@ -1,0 +1,86 @@
+{
+  "version": "3.28.0-preview.1",
+  "browser": "151.0.7922.173",
+  "model": "fixed v3.24 earned full-history save;375px;60 virtual seconds per surface/state;instrumentation overhead included",
+  "rows": [
+    {
+      "surface": "home",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 179.8679999999999,
+      "scriptMs": 1.6450000000000076,
+      "layouts": 68,
+      "wallMs": 1132.7553710000002,
+      "calls": {
+        "advance": 240,
+        "reachable": 180,
+        "nextGoal": 120,
+        "communityStatus": 120,
+        "voyagePreview": 540,
+        "harborStatus": 120,
+        "harborProjectOffer": 300,
+        "productionRate": 60,
+        "purchasePreview": 60,
+        "scanValue": 60,
+        "harborSchedule": 60
+      },
+      "mutations": 300,
+      "writes": 12,
+      "nodes": 296,
+      "overflow": false
+    },
+    {
+      "surface": "home",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 14.979999999999993,
+      "scriptMs": 2.121999999999999,
+      "layouts": 1,
+      "wallMs": 1042.1582360000002,
+      "calls": {},
+      "mutations": 5,
+      "writes": 0,
+      "nodes": 296,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 646.2909999999999,
+      "scriptMs": 2.6329999999999965,
+      "layouts": 251,
+      "wallMs": 1790.2693769999996,
+      "calls": {
+        "advance": 240,
+        "reachable": 180,
+        "nextGoal": 120,
+        "communityStatus": 120,
+        "voyagePreview": 540,
+        "harborStatus": 120,
+        "harborProjectOffer": 300,
+        "productionRate": 60,
+        "itineraryOffer": 180,
+        "harborSchedule": 60
+      },
+      "mutations": 420,
+      "writes": 12,
+      "nodes": 2710,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 19.222999999999992,
+      "scriptMs": 0.7119999999999904,
+      "layouts": 1,
+      "wallMs": 1058.9768279999998,
+      "calls": {},
+      "mutations": 4,
+      "writes": 0,
+      "nodes": 2710,
+      "overflow": false
+    }
+  ]
+}

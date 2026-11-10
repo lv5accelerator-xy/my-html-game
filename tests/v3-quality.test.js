@@ -24,4 +24,10 @@ test('v3.26 damaged replies retain independent once-only markers; malformed/unkn
  const s=E.sanitize(structuredClone(F.states[0].state),0);assert.equal(E.linkOffer(s,'constructor'),null);assert.equal(E.acceptLink(s,'constructor'),false);assert.equal(E.completeLink(s,'cargo-table','constructor'),false);assert.equal(E.acceptLink(E.createState(0),'cargo-table'),false);E.acceptLink(s,'cargo-table');const q=E.harborOffers(s)[0];E.acceptHarborNeed(s,q.id,q.terms.serial);E.advance(s,s.lastAt+3600000);E.deliverHarborNeed(s,q.terms.serial);E.completeLink(s,'cargo-table','share');s.continuation.links.records[0].choice='invalid';const clean=E.sanitize(s,s.lastAt);assert.deepEqual(clean.continuation.links.earned,['cargo-table']);assert.deepEqual(clean.continuation.links.records,[]);assert.equal(E.acceptLink(clean,'cargo-table'),false);assert.equal(E.completeLink(clean,'cargo-table','share'),false);assert.deepEqual(E.sanitize(clean,clean.lastAt),clean);
 });
 
+test('v3.28 backup validation cache observes changed bytes and never bypasses expected-write protection',()=>{
+ const map=new Map(),storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)},s=E.createState(1000);S.save(storage,s,1000,{expected:null});let text=JSON.stringify(s);
+ for(let t=1;t<5;t++){E.advance(s,s.lastAt+1000);S.save(storage,s,1000+t*1000,{expected:text});text=JSON.stringify(s);}
+ const entry=S.backups(storage).entries.find(x=>x.valid),key=S.BACKUP_PREFIX+entry.id;storage.setItem(key,'{"broken":true}');E.advance(s,s.lastAt+1000);S.save(storage,s,6000,{expected:text});assert.ok(S.backups(storage).entries.some(x=>x.valid));text=JSON.stringify(s);storage.setItem(S.KEY,'another writer');assert.throws(()=>S.save(storage,s,7000,{expected:text}),/另一窗口/);assert.equal(storage.getItem(S.KEY),'another writer');
+});
+
 console.log(`v3 quality ok: ${checks} behavioral checks`);

@@ -1,0 +1,15 @@
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert.ok(await scan.evaluate(n=>n===window.__phoneControl&&n.isConnected&&document.activeElement===n))
+
+    at scenario.isMobile (/workspace/starport-v328/tests/helpers/quality-browser.cjs:52:165)
+    at async scenario (/workspace/starport-v328/tests/v3-browser.test.js:92:7)
+    at async module.exports (/workspace/starport-v328/tests/helpers/quality-browser.cjs:50:2)
+    at async run (/workspace/starport-v328/tests/v3-browser.test.js:120:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}

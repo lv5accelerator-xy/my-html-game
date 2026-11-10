@@ -22,15 +22,15 @@ const server=http.createServer((req,res)=>{
    Object.defineProperty(globalThis,'SalvageEngine',{value:wrap});
   }});
  },{key:S.KEY,text:JSON.stringify(s)});
- const page=await context.newPage();await page.clock.install({time:Date.now()});await page.goto(url);await page.locator('#next-goal-title').waitFor();
+ const page=await context.newPage(),metricsSession=await context.newCDPSession(page);await metricsSession.send('Performance.enable');const metrics=async()=>Object.fromEntries((await metricsSession.send('Performance.getMetrics')).metrics.map(x=>[x.name,x.value]));await page.clock.install({time:Date.now()});await page.goto(url);await page.locator('#next-goal-title').waitFor();
  await page.evaluate(()=>new MutationObserver(ms=>window.__cost.mutations+=ms.length).observe(document.querySelector('#main'),{subtree:true,childList:true,characterData:true,attributes:true}));
  const rows=[];
  const visible=async hidden=>page.evaluate(hidden=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>hidden});document.dispatchEvent(new Event('visibilitychange'));window.__cost={calls:{},mutations:0,writes:0};},hidden);
  for(const surface of ['home','explore']){
   if(surface==='explore')await page.locator('#navigation [data-id="explore"]').click();
   for(const hidden of [false,true]){
-   await visible(hidden);const start=performance.now();await page.clock.runFor(60000);
-   rows.push({surface,hidden,simulatedSeconds:60,wallMs:performance.now()-start,...await page.evaluate(()=>({...window.__cost,nodes:document.querySelectorAll('*').length,overflow:document.documentElement.scrollWidth>innerWidth}))});
+   await visible(hidden);const cpuStart=await metrics(),start=performance.now();await page.clock.runFor(60000);const cpuEnd=await metrics();
+   rows.push({surface,hidden,simulatedSeconds:60,mainThreadTaskMs:(cpuEnd.TaskDuration-cpuStart.TaskDuration)*1000,scriptMs:(cpuEnd.ScriptDuration-cpuStart.ScriptDuration)*1000,layouts:cpuEnd.LayoutCount-cpuStart.LayoutCount,wallMs:performance.now()-start,...await page.evaluate(()=>({...window.__cost,nodes:document.querySelectorAll('*').length,overflow:document.documentElement.scrollWidth>innerWidth}))});
   }
   await visible(false);await page.evaluate(()=>document.querySelector('#dialog[open]')?.close());
  }

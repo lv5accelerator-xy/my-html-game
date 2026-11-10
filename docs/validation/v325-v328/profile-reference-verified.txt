@@ -1,0 +1,118 @@
+SOAK {"simulatedSeconds":1800,"wallMs":57617.501644,"samples":[{"virtualSeconds":0,"heapBytes":3453756,"nodes":2604},{"virtualSeconds":300,"heapBytes":3878620,"nodes":2604},{"virtualSeconds":600,"heapBytes":4013624,"nodes":2604},{"virtualSeconds":900,"heapBytes":4221016,"nodes":2604},{"virtualSeconds":1200,"heapBytes":4194780,"nodes":2604},{"virtualSeconds":1500,"heapBytes":4201260,"nodes":2604},{"virtualSeconds":1800,"heapBytes":4211164,"nodes":2604}]}
+{
+  "version": "3.24.0-preview.1",
+  "browser": "151.0.7922.173",
+  "model": "fixed v3.24 earned full-history save;375px;60 virtual seconds per surface/state;instrumentation overhead included",
+  "rows": [
+    {
+      "surface": "home",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 490.05000000000007,
+      "scriptMs": 4.214999999999996,
+      "layouts": 86,
+      "wallMs": 1609.7239610000001,
+      "calls": {
+        "advance": 240,
+        "reachable": 720,
+        "nextGoal": 480,
+        "communityStatus": 480,
+        "voyagePreview": 2160,
+        "harborStatus": 480,
+        "harborProjectOffer": 1200,
+        "productionRate": 240,
+        "purchasePreview": 240,
+        "scanValue": 240,
+        "harborSchedule": 240,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1200,
+      "writes": 12,
+      "nodes": 265,
+      "overflow": false
+    },
+    {
+      "surface": "home",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 560.5290000000001,
+      "scriptMs": 5.353999999999997,
+      "layouts": 92,
+      "wallMs": 1693.0628199999992,
+      "calls": {
+        "advance": 240,
+        "reachable": 720,
+        "nextGoal": 480,
+        "communityStatus": 480,
+        "voyagePreview": 2160,
+        "harborStatus": 480,
+        "harborProjectOffer": 1200,
+        "productionRate": 240,
+        "purchasePreview": 240,
+        "scanValue": 240,
+        "harborSchedule": 240,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1205,
+      "writes": 12,
+      "nodes": 265,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 1074.738,
+      "scriptMs": 1.6270000000000173,
+      "layouts": 288,
+      "wallMs": 2107.982661,
+      "calls": {
+        "advance": 240,
+        "reachable": 720,
+        "nextGoal": 480,
+        "communityStatus": 480,
+        "voyagePreview": 2160,
+        "harborStatus": 480,
+        "harborProjectOffer": 1200,
+        "productionRate": 240,
+        "harborSchedule": 240,
+        "itineraryOffer": 180,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1140,
+      "writes": 12,
+      "nodes": 2604,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 1606.6949999999997,
+      "scriptMs": 5.300000000000027,
+      "layouts": 305,
+      "wallMs": 2746.1432459999996,
+      "calls": {
+        "advance": 240,
+        "reachable": 720,
+        "nextGoal": 480,
+        "communityStatus": 480,
+        "voyagePreview": 2160,
+        "harborStatus": 480,
+        "harborProjectOffer": 1200,
+        "productionRate": 240,
+        "harborSchedule": 240,
+        "itineraryOffer": 180,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1144,
+      "writes": 12,
+      "nodes": 2604,
+      "overflow": false
+    }
+  ]
+}

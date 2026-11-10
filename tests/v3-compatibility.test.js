@@ -58,3 +58,7 @@ console.log(`v3.24 compatibility ok: ${v324.states.length} canonical earned snap
 const v326=require('./fixtures/v326-saves.json');
 for(const {name,state} of v326.states){const current=E.sanitize(state,state.lastAt);assert.deepEqual(current,state,name+': active/ready/settled cross-system work, immutable choices and every old field preserved');}
 console.log(`v3.26 compatibility ok: ${v326.states.length} canonical earned snapshots; every original field preserved`);
+
+const v327=require('./fixtures/v327-saves.json');
+for(const {name,state} of v327.states){const current=E.sanitize(state,state.lastAt);assert.deepEqual(current,state,name+': every environment, dispatch schedule, paid term, ready voyage and archive preserved');}
+console.log(`v3.27 compatibility ok: ${v327.states.length} canonical earned snapshots; every original field preserved`);

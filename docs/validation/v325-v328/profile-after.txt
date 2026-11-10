@@ -1,0 +1,77 @@
+SOAK {"simulatedSeconds":1800,"wallMs":36675.782132,"samples":[{"virtualSeconds":0,"heapBytes":3300116,"nodes":2710},{"virtualSeconds":300,"heapBytes":3602492,"nodes":2710},{"virtualSeconds":600,"heapBytes":3704608,"nodes":2710},{"virtualSeconds":900,"heapBytes":3899532,"nodes":2710},{"virtualSeconds":1200,"heapBytes":3936016,"nodes":2710},{"virtualSeconds":1500,"heapBytes":3972568,"nodes":2710},{"virtualSeconds":1800,"heapBytes":3983004,"nodes":2710}]}
+{
+  "version": "3.28.0-preview.1",
+  "browser": "151.0.7922.173",
+  "model": "fixed v3.24 earned full-history save;375px;60 virtual seconds per surface/state;instrumentation overhead included",
+  "rows": [
+    {
+      "surface": "home",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "wallMs": 1108.8667220000002,
+      "calls": {
+        "advance": 240,
+        "reachable": 180,
+        "nextGoal": 120,
+        "communityStatus": 120,
+        "voyagePreview": 540,
+        "harborStatus": 120,
+        "harborProjectOffer": 300,
+        "productionRate": 60,
+        "purchasePreview": 60,
+        "scanValue": 60,
+        "harborSchedule": 60,
+        "sanitize": 1,
+        "routeArchive": 1
+      },
+      "mutations": 300,
+      "writes": 12,
+      "nodes": 296,
+      "overflow": false
+    },
+    {
+      "surface": "home",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "wallMs": 1029.074482,
+      "calls": {},
+      "mutations": 5,
+      "writes": 0,
+      "nodes": 296,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "wallMs": 1176.4351349999997,
+      "calls": {
+        "advance": 240,
+        "reachable": 180,
+        "nextGoal": 120,
+        "communityStatus": 120,
+        "voyagePreview": 540,
+        "harborStatus": 120,
+        "harborProjectOffer": 300,
+        "productionRate": 60,
+        "itineraryOffer": 180,
+        "harborSchedule": 60
+      },
+      "mutations": 420,
+      "writes": 12,
+      "nodes": 2710,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "wallMs": 1015.8939649999993,
+      "calls": {},
+      "mutations": 7,
+      "writes": 0,
+      "nodes": 2710,
+      "overflow": false
+    }
+  ]
+}

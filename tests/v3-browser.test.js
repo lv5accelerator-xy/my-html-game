@@ -54,11 +54,12 @@ async function run() {
   const screenshotDir = process.env.V3_SCREENSHOT_DIR;
   if (screenshotDir) fs.mkdirSync(screenshotDir, { recursive: true });
   let checks = 0;
-  async function scenario(name, initial, check) {
+  async function scenario(name, initial, check, options = {}) {
     if (process.env.V3_TEST_FILTER && !name.includes(process.env.V3_TEST_FILTER)) return;
     const context = await browser.newContext({
       viewport: { width: 1280, height: 900 },
       acceptDownloads: true,
+      ...options,
     });
     await require("./helpers/isolate-browser.cjs")(context, url);
     const page = await context.newPage();

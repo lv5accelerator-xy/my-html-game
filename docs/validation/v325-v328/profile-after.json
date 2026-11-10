@@ -1,0 +1,51 @@
+{
+  "command": [
+    "node",
+    "scripts/v328-profile.cjs"
+  ],
+  "env": {
+    "PATH": "/workspace/scratch/starport-tools/node_modules/node/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+    "CODEX_PLAYWRIGHT_PATH": "/workspace/scratch/starport-tools/node_modules/playwright",
+    "CODEX_CHROMIUM_PATH": "/usr/bin/chromium",
+    "PROFILE_SOAK_SECONDS": "1800"
+  },
+  "parentHead": "ef30e4c41a271e574309b84eb3a091d3f9790132",
+  "sources": {
+    "v3/engine.js": "03e65e5f9dc7c41bf56343c2f5517462a57c898a0d15eddf0d98768682ade524",
+    "v3/app.js": "08e7077d9bf9b10f2df7568f9fe9540af8f1ff600bc63ab3046889245ffa8ae7",
+    "v3/index.html": "280cbe693270b2f1db981f372029f398e2ebd757efb589567118a2d745fcda69",
+    "v3/style.css": "0e3120f9c61a4b2109efad1a7963a4e58a73d3730e028582b8751dda7a347e14",
+    "v3/data.js": "040e7aac92c00edf69253e676757f6a722c48aecc5e6b62d7f1a1c2825c38a99",
+    "v3/storage.js": "44f22e45a3699a253697faf630b661d5dc44cd89a12300b7a7dc2faf71ea65d4",
+    "tests/v3-browser.test.js": "5babeb4253e00cbfc580358da212bdce89e02ecff3fc330f34cf5acbc0bcda8b",
+    "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45",
+    "tests/companion-story.test.js": "042f65a3aa7f254645f5c449eb1fd7e800ee5673b5973deddce1a33f57ad130d",
+    "tests/season.test.js": "737d411bdf511a7fdfc4ded451aa4ff6f5d4a4d6f76d179d68487d015aee8c83",
+    "tests/retention-flow.test.js": "0e1f6a2f67e17b11a0940677b476e5fb919b7d3661266c986c86279ed5e53cf0",
+    "tests/browser-smoke.test.js": "315ed5829ab65913fdaf9690633193438651af3fe295f321b2840cfb5621f053",
+    "tests/numeric-balance.test.js": "aaed3dc9fbfd737b3e1c62a4f22f4112b0d77b492f441f8b0ae3210165015421",
+    "tests/v3-quality.test.js": "ce21441d629ebd477ac1fdbfdd27b7f99c638ded172549b689a64b2cd5ebb684",
+    "tests/daily-route.test.js": "6948cfb2589ca4d4b17376e97e963230b1f6ede7edb0d6fe8f095238b4b4eecc",
+    "tests/save-migration-v200.test.js": "491092a6e9df0127a156c8500aa58db35d53805ae72cfd95c5e5976ba92f6fed",
+    "tests/linked-journey-browser.test.js": "11d53226ea1e279bd6af2506e1501325edfa252661f1268b6c3475a6aab889c2",
+    "tests/usability-flow.test.js": "e46a816388aa2abe30388bb47d15af1440523e68216e371bbaec095cdd39f738",
+    "tests/v3-compatibility.test.js": "16604dbcef8da9453a149aaec37e0d530287d9c49010b10ca478f0ed29231b86",
+    "tests/v3-strategy.test.js": "01033bfe00687c05f67f1609c386f52afcc97ba60664791be10ffdb2bcc120dd",
+    "tests/linked-journey.test.js": "f6d3533c9854d41d18cf962ced891973f0ef241b15252c646db6cc8d7da84c96",
+    "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24",
+    "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393",
+    "tests/v3-continuation.test.js": "5bb88787f4bcd2b63b4a3be3cd1c73a6efe93e0e7271c3915b3eea3488a11c34",
+    "tests/v3-conditions.test.js": "1e148c4eae7b5d214685bbf0c7a14af672b0a3808c68115aef9848bce81b1664",
+    "tests/mobile-performance.test.js": "09a9cd942ffdfc18ff12caa951fc5a4746331039e9b7d1587b85a43c0db1db76",
+    "tests/doctrine-build.test.js": "38fef74336d3ac76e2770bb140557027946265b2d7397b8a069e949cddf40bca",
+    "tests/helpers/continuation-browser.cjs": "c5246c1277de022713dc169e4c922988c4d34dd869f32a6c18c0c83504102898",
+    "tests/helpers/quality-browser.cjs": "66b6a8359bd1613d17d3e5f69f7d1a6857fbdbac7aa363e42f64df3314d8227d",
+    "tests/helpers/v3-fixtures.cjs": "dc93cdd461b08d038470ef5610c29664c22af3912792a34ef680b55a9e1ba6a4",
+    "tests/helpers/isolate-browser.cjs": "027b21b83819602a970e2fa18163c9a7a9ae3e0f2358e31c5c7cdf604d241112",
+    "tests/helpers/honors-fixture.cjs": "e4cb4fbdee6482235cf50b7f18888bfb65210e0a1a9aad87c75c30c09a8b4a40",
+    "tests/helpers/community-fixture.cjs": "ebe7143ff8b4422323fd1b8407a787469aa982bfb36a5139289e79094a73d777"
+  },
+  "start": 1794337470.6324553,
+  "exit": 0,
+  "seconds": 42.61
+}

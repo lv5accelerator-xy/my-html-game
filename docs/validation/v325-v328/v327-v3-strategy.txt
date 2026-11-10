@@ -1,0 +1,1 @@
+v3 strategy ok: 2 parameter audits; 6561 Pareto scenarios, 114192 bounded quotes, minimum 2 non-dominated alternatives; 0 single universal fit

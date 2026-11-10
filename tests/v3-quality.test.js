@@ -1,0 +1,33 @@
+'use strict';
+const assert=require('node:assert/strict'),E=require('../v3/engine.js'),D=require('../v3/data.js'),S=require('../v3/storage.js'),F=require('./fixtures/v324-saves.json');let checks=0;
+const test=(name,fn)=>{fn();console.log(`ok ${++checks} - ${name}`);};
+for(const row of F.states)test(`v3.25 action center ${row.name}: unique, reachable, observational and compatible`,()=>{
+ const s=E.sanitize(structuredClone(row.state),row.state.lastAt),before=structuredClone(s),groups=E.actionCenter(s),items=['ready','prepare','ongoing','later'].flatMap(k=>groups[k]);
+ assert.equal(new Set(items.map(x=>x.key)).size,items.length);assert.ok(items.every(x=>x.focus&&x.title));assert.deepEqual(s,before);assert.deepEqual(s,row.state,'every v3.24 field remains equal');assert.deepEqual(S.inspect(JSON.stringify(s),s.lastAt).state,s);
+});
+test('v3.25 new and post-jump saves never suggest locked secondary navigation',()=>{const s=E.createState(0);assert.equal(Object.values(E.actionCenter(s)).flat().filter(x=>x?.focus).length,0);const old=E.sanitize(structuredClone(F.states[0].state),F.states[0].state.lastAt);assert.ok(E.prestige(old));assert.equal(Object.values(E.actionCenter(old)).flat().filter(x=>x?.focus).length,0);});
+test('v3.25 ready commands reuse atomic once-only delivery and voyage report rules',()=>{const raw=F.states.find(x=>x.name==='city-v324-contract').state,s=E.sanitize(structuredClone(raw),raw.lastAt);E.advance(s,s.lastAt+3600000);const item=E.actionCenter(s).ready.find(x=>x.key==='need');assert.equal(item.command,'harbor-deliver');assert.ok(E.deliverHarborNeed(s,item.id));assert.equal(E.deliverHarborNeed(s,item.id),false);assert.equal(E.actionCenter(s).ready.some(x=>x.key==='need'),false);});
+for(const ending of D.ENDINGS)for(const choice of ['share','care'])test(`v3.26 ${ending.id}/${choice}: six earned cross-system stories, new gameplay, frozen history and finite awards`,()=>{
+ let s=E.sanitize(structuredClone(F.states.find(x=>x.name===ending.id+'-v324-mature').state),0);const permanent=structuredClone(s.epilogue),lore=structuredClone(s.lore);
+ for(const d of D.RESIDENT_LINKS){assert.ok(E.linkOffer(s,d.id).available,d.id);assert.ok(E.acceptLink(s,d.id));assert.equal(E.completeLink(s,d.id,choice),false,'old completed work cannot satisfy a new assignment');const a=structuredClone(s.continuation.links.active);s=S.inspect(JSON.stringify(s),s.lastAt).state;assert.deepEqual(s.continuation.links.active,a);
+  const q=E.harborOffers(s)[0];assert.ok(E.acceptHarborNeed(s,q.id,q.terms.serial));const terms=structuredClone(s.management.active);E.setHarborFocus(s,s.management.focus==='production'?'reception':'production');assert.deepEqual(s.management.active,terms);E.advance(s,s.lastAt+3600000);assert.ok(E.deliverHarborNeed(s,q.terms.serial));assert.ok(E.linkStatus(s).ready);
+  const preview=E.linkChoiceOffer(s,d.id,choice),dust=s.dust,samples=s.samples;assert.ok(E.completeLink(s,d.id,choice));assert.equal(s.dust,dust-preview.dustCost+preview.dust);assert.equal(s.samples,samples-preview.costSamples+preview.samples);const done=structuredClone(s);assert.equal(E.completeLink(s,d.id,choice),false);assert.deepEqual(E.linkOffer(s,d.id).record.choice,choice);assert.deepEqual(s,done);s=S.inspect(JSON.stringify(s),s.lastAt).state;assert.deepEqual(s,done);
+ }
+ assert.equal(s.continuation.links.earned.length,6);assert.equal(s.continuation.links.records.length,6);assert.deepEqual(s.epilogue,permanent);assert.deepEqual(s.lore,lore);assert.match(E.linkOffer(s,'two-addresses').echo,choice==='share'?/共同练习板/:/带班核验/);const history=structuredClone(s.continuation.links);assert.ok(E.prestige(s));assert.deepEqual(s.continuation.links,history);assert.deepEqual(E.sanitize(s,s.lastAt),s);
+});
+test('v3.26 partial flight is insufficient, complete voyage counts once; no expiry or offline auto-choice',()=>{
+ let s=E.sanitize(structuredClone(F.states[0].state),0);assert.ok(E.acceptLink(s,'cargo-table'));assert.ok(E.startVoyage(s,'freight'));const token=s.expeditions.active.token;
+ for(let stage=0;stage<4;stage++){assert.ok(E.dispatchVoyageLeg(s,token,stage,'secure'));E.advance(s,s.lastAt+86400000,{offline:true});assert.equal(E.linkStatus(s).ready,false);assert.ok(E.claimVoyageLeg(s,token,stage));assert.equal(E.linkStatus(s).ready,false);}
+ assert.ok(E.finishVoyage(s,token));assert.equal(E.linkStatus(s).ready,true);assert.equal(s.continuation.links.earned.length,0);assert.ok(E.completeLink(s,'cargo-table','share'));assert.equal(E.finishVoyage(s,token),false);assert.equal(E.completeLink(s,'cargo-table','care'),false);
+});
+test('v3.26 damaged replies retain independent once-only markers; malformed/unknown inputs cannot change history',()=>{
+ const s=E.sanitize(structuredClone(F.states[0].state),0);assert.equal(E.linkOffer(s,'constructor'),null);assert.equal(E.acceptLink(s,'constructor'),false);assert.equal(E.completeLink(s,'cargo-table','constructor'),false);assert.equal(E.acceptLink(E.createState(0),'cargo-table'),false);E.acceptLink(s,'cargo-table');const q=E.harborOffers(s)[0];E.acceptHarborNeed(s,q.id,q.terms.serial);E.advance(s,s.lastAt+3600000);E.deliverHarborNeed(s,q.terms.serial);E.completeLink(s,'cargo-table','share');s.continuation.links.records[0].choice='invalid';const clean=E.sanitize(s,s.lastAt);assert.deepEqual(clean.continuation.links.earned,['cargo-table']);assert.deepEqual(clean.continuation.links.records,[]);assert.equal(E.acceptLink(clean,'cargo-table'),false);assert.equal(E.completeLink(clean,'cargo-table','share'),false);assert.deepEqual(E.sanitize(clean,clean.lastAt),clean);
+});
+
+test('v3.28 backup validation cache observes changed bytes and never bypasses expected-write protection',()=>{
+ const map=new Map(),storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)},s=E.createState(1000);S.save(storage,s,1000,{expected:null});let text=JSON.stringify(s);
+ for(let t=1;t<5;t++){E.advance(s,s.lastAt+1000);S.save(storage,s,1000+t*1000,{expected:text});text=JSON.stringify(s);}
+ const entry=S.backups(storage).entries.find(x=>x.valid),key=S.BACKUP_PREFIX+entry.id;storage.setItem(key,'{"broken":true}');E.advance(s,s.lastAt+1000);S.save(storage,s,6000,{expected:text});assert.ok(S.backups(storage).entries.some(x=>x.valid));text=JSON.stringify(s);storage.setItem(S.KEY,'another writer');assert.throws(()=>S.save(storage,s,7000,{expected:text}),/另一窗口/);assert.equal(storage.getItem(S.KEY),'another writer');
+});
+
+console.log(`v3 quality ok: ${checks} behavioral checks`);

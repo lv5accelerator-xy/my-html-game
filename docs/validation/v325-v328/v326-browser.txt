@@ -1,0 +1,24 @@
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-action="link-accept"][data-id="signal-class"]')[22m
+[2m    - locator resolved to <button disabled class="outline" data-id="signal-class" data-action="link-accept" data-focus="link-accept-signal-class">接下这次协作</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    58 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+    at /workspace/starport-v328/tests/helpers/quality-browser.cjs:24:74
+    at async scenario (/workspace/starport-v328/tests/v3-browser.test.js:91:7)
+    at async module.exports (/workspace/starport-v328/tests/helpers/quality-browser.cjs:20:3)
+    at async run (/workspace/starport-v328/tests/v3-browser.test.js:119:5) {
+  name: 'TimeoutError'
+}

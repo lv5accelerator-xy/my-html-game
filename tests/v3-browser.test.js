@@ -54,11 +54,12 @@ async function run() {
   const screenshotDir = process.env.V3_SCREENSHOT_DIR;
   if (screenshotDir) fs.mkdirSync(screenshotDir, { recursive: true });
   let checks = 0;
-  async function scenario(name, initial, check) {
+  async function scenario(name, initial, check, options = {}) {
     if (process.env.V3_TEST_FILTER && !name.includes(process.env.V3_TEST_FILTER)) return;
     const context = await browser.newContext({
       viewport: { width: 1280, height: 900 },
       acceptDownloads: true,
+      ...options,
     });
     await require("./helpers/isolate-browser.cjs")(context, url);
     const page = await context.newPage();
@@ -116,6 +117,7 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    await require("./helpers/quality-browser.cjs")({scenario,read,E,D,S,TIME,openDetails,fs,path,screenshotDir});
     await require("./helpers/continuation-browser.cjs")({scenario,read,E,D,S,TIME,openDetails,fs,path,screenshotDir});
     for(let routeIndex=0;routeIndex<D.VOYAGES.length;routeIndex++) {
       const def=D.VOYAGES[routeIndex],ending=D.ENDINGS[routeIndex];

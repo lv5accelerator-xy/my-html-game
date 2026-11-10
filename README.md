@@ -43,9 +43,9 @@
 
 ## 当前版本
 
-v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)，当前代码版本 **3.24.0-preview.1**。新增四段重访安排、九项星区证据复查、三组九段居民接班生活、十二项有限长期荣誉、真实远航收支和双槽编成取舍。保留六章、三个永久结局、旧装备与方案、12类动态事件、图谱与长期远航、港务需求/工程和本机备份；原生HTML/CSS/JavaScript、schema32、v2/v3独立存储与8h离线上限继续保留。v3不连接旧版Firebase。
+v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)，当前开发分支代码版本 **3.28.0-preview.1**（草稿PR #21，尚未合并/部署）。增加行动中心、六段居民与发现互动、六种远航环境与三调度、手机触摸与后台性能优化。[开发验收](docs/v325-v328-validation.md)和[新玩家/稳定候选说明](docs/v328-stability-checklist.md)列出准确测试与限制。公开main的3.24历史内容：新增四段重访安排、九项星区证据复查、三组九段居民接班生活、十二项有限长期荣誉、真实远航收支和双槽编成取舍。保留六章、三个永久结局、旧装备与方案、12类动态事件、图谱与长期远航、港务需求/工程和本机备份；原生HTML/CSS/JavaScript、schema32、v2/v3独立存储与8h离线上限继续保留。v3不连接旧版Firebase。
 
-本轮实际合并提交、Pages部署、公开Chromium/WebKit验收和精确计数见[连续开发与发布记录](docs/v321-v324-validation.md)及[PR #20最终验收](https://github.com/lv5accelerator-xy/my-html-game/pull/20)。版本保留preview命名，不另建GitHub Release。另见[试玩说明](docs/v3-playable.md)、[四阶段更新记录](patch-notes/README.md#v3-后续可玩性)；[3.20历史发布](docs/v320-release-validation.md)仍可查阅。
+v3.24上一轮的实际合并提交、Pages部署、公开Chromium/WebKit验收和精确计数见[连续开发与发布记录](docs/v321-v324-validation.md)及[PR #20最终验收](https://github.com/lv5accelerator-xy/my-html-game/pull/20)。版本保留preview命名，不另建GitHub Release。另见[试玩说明](docs/v3-playable.md)、[四阶段更新记录](patch-notes/README.md#v3-后续可玩性)；[3.20历史发布](docs/v320-release-validation.md)仍可查阅。
 
 旧版主入口保留 **v2.3.0「归航之约」**。
 
@@ -125,7 +125,7 @@ my-html-game/
 
 ## 测试
 
-统一完整入口为 `node scripts/check.cjs`，需设置 `CODEX_PLAYWRIGHT_PATH`，可通过 `CODEX_CHROMIUM_PATH` 指定浏览器。执行 9 项运行脚本语法检查与 tests/ 中全部 17 个测试脚本。
+统一完整入口为 `node scripts/check.cjs`，需设置 `CODEX_PLAYWRIGHT_PATH`，可通过 `CODEX_CHROMIUM_PATH` 指定浏览器。执行 9 项运行脚本语法检查与 tests/ 中全部 21 个测试脚本。
 
 基础语法与数值测试只需要 Node.js：
 

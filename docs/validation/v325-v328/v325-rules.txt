@@ -1,0 +1,12 @@
+ok 1 - v3.25 action center city-v324-mature: unique, reachable, observational and compatible
+ok 2 - v3.25 action center city-v324-contract: unique, reachable, observational and compatible
+ok 3 - v3.25 action center city-v324-paid: unique, reachable, observational and compatible
+ok 4 - v3.25 action center watch-v324-mature: unique, reachable, observational and compatible
+ok 5 - v3.25 action center watch-v324-contract: unique, reachable, observational and compatible
+ok 6 - v3.25 action center watch-v324-paid: unique, reachable, observational and compatible
+ok 7 - v3.25 action center voyage-v324-mature: unique, reachable, observational and compatible
+ok 8 - v3.25 action center voyage-v324-contract: unique, reachable, observational and compatible
+ok 9 - v3.25 action center voyage-v324-paid: unique, reachable, observational and compatible
+ok 10 - v3.25 new and post-jump saves never suggest locked secondary navigation
+ok 11 - v3.25 ready commands reuse atomic once-only delivery and voyage report rules
+v3 quality ok: 11 behavioral checks

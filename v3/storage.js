@@ -39,6 +39,7 @@
       voyages:Object.values(state.expeditions.completed).reduce((n,v)=>n+v,0),
       voyageCollections:state.expeditions.collections.length,
       reviewArchives:state.continuation.reviews.earned.length,communityLetters:state.continuation.community.completed.length,honors:state.continuation.honors.claimed.length,
+      residentLinks:state.continuation.links?.earned.length||0,linkChoices:(state.continuation.links?.records||[]).map(r=>r.id+':'+r.choice).join('、')||'无',
       itineraryPlans:Object.keys(state.continuation.plans).length,itineraryActive:Boolean(state.continuation.sequence),
       mission: state.mission?.id || null, pending: state.result?.id || null,
     };
@@ -133,6 +134,7 @@
       };
     }
   }
+  const automaticCache=new WeakMap();
   function save(storage, state, now = Date.now(), options = {}) {
     const text = JSON.stringify(state);
     const current = storage.getItem(KEY);
@@ -142,9 +144,15 @@
     verifiedWrite(storage, KEY, text);
     let backupError = null;
     try {
-      const automatic = BACKUP_IDS.filter(id => id.startsWith("auto-")).map(id => readBackup(storage, id, now)).filter(entry => entry?.valid);
-      if (!automatic.length || now - Math.max(...automatic.map(entry => entry.createdAt)) >= BACKUP_INTERVAL)
-        checkpoint(storage, current || text, "auto", "", now);
+      const ids=BACKUP_IDS.filter(id=>id.startsWith("auto-")), signatures=ids.map(id=>storage.getItem(BACKUP_PREFIX+id));
+      let cached=automaticCache.get(storage);
+      if(!cached||!signatures.every((text,i)=>text===cached.signatures[i])){
+        const valid=ids.map(id=>readBackup(storage,id,now)).filter(entry=>entry?.valid);
+        cached={signatures,latest:valid.length?Math.max(...valid.map(e=>e.createdAt)):null};automaticCache.set(storage,cached);
+      }
+      if(cached.latest===null||now-cached.latest>=BACKUP_INTERVAL){
+        checkpoint(storage,current||text,"auto","",now);automaticCache.delete(storage);
+      }
     } catch (error) { backupError = error.message; }
     if (storage.getItem(KEY) !== text) throw new Error("另一窗口已更新进度，请重新载入后再保存。");
     return { backupError };

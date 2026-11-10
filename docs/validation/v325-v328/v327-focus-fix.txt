@@ -1,0 +1,4 @@
+ok 1 - v3.19 归航之城: live scheduling, real escrow, construction credit, alternate voyage and locked terms
+ok 2 - v3.19 守望之港: live scheduling, real escrow, construction credit, alternate voyage and locked terms
+ok 3 - v3.19 携种远航: live scheduling, real escrow, construction credit, alternate voyage and locked terms
+v3 browser ok: 3 complete flows; identity/content/assets/console checked in every flow

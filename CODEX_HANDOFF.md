@@ -1,3 +1,15 @@
+# 当前交接：3.28.0-preview.1 开发完成，草稿PR待审批
+
+本轮起始最新main9e14610a197580d2b377dc8e2f1f8684f2c57e63；隔离/workspace/starport-v328，分支codex/v325-v328-quality-and-depth。已依次完成并全量验证v3.25行动中心/草稿效率（7cbdb03）、v3.26六段居民回响（0f2339c）、v3.27六环境与三调度（ef30e4c）、v3.28触摸/性能/保存品质（本交接所属提交）。schema32与永久历史、根v2、8h上限保留。
+
+最终云Node22.23.4/PW1.55.0/Chromium151，完整node scripts/check.cjs 491.66秒退出0：9语法/21脚本/226命名规则/145规范旧档/115浏览器，另114192+2592报价；30子命令均0、最终失败/跳过0，源哈希一致。原始开发失败/修复、一次无退出码会话中断、无效性能采样均保留于docs/v325-v328-validation.md和validation/v325-v328。
+
+草稿PR #21最终报告列精确四SHA、最终head、推送和GitHub完整入口/独立WebKit状态，以实际Git和最终checks为准；不能把较早head或云Chromium冒充WebKit。云WebKit官方安装403；真实iPhone/手机软键盘/真实低端机长挂机未执行。当前只授权开发/提交/推送/草稿PR，不合并、不发布、不改部署/生产Firebase/玩家档/权限；旧交接中的发布授权不适用于本轮。原/workspace/my-html-game仍work/5084568，仓库外工具与截图在scratch。
+
+若会话中断，从git status/log/ls-remote和PR实际head恢复，不假装后台继续；origin默认fetchspec只跟踪main，分支远端用ls-remote核对。建议保留preview作为稳定候选，后续先补实机与发布审批。
+
+## 以下为历史交接
+
 # 当前任务：v3.21～v3.24 连续开发与发布
 
 2026-11-10用户明确授权“直接施工至3.24并上线”。起始main a7bfea836a2285b22f1a1f1767defbdf832e62a2；分支codex/v321-v324-gameplay-expansion，worktree /workspace/starport-v324，从维护PR #19/eb1999b起步包含其文档，最终PR #20一并交付并替代#19；#8/#12不合入。原工作区work/5084568干净。原生架构、双槽、schema32、独立存储、3永久结局、8h离线上限保留；v2运行文件、生产Firebase、真实玩家档、原部署/历史归档工作流未改。

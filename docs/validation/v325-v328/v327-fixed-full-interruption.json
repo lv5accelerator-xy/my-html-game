@@ -1,0 +1,7 @@
+{
+  "command": "node scripts/check.cjs",
+  "exit": null,
+  "status": "interrupted; no completion metadata produced",
+  "observation": "exec session29945 no longer registered; no live runner/check process; original log ends after 9 syntax checks; environment still running/connected/current",
+  "reason": "unknown; do not count as pass or invent exit code"
+}

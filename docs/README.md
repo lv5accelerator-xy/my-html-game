@@ -18,3 +18,6 @@
 - [v3.21～v3.24 最初审计与已授权开发范围](v321-v324-plan.md)
 
 - [v3.21～v3.24 连续开发与发布验收](v321-v324-validation.md)
+
+- [v3.25～v3.28连续开发验收](v325-v328-validation.md)
+- [3.28新玩家说明与稳定候选检查表](v328-stability-checklist.md)

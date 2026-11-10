@@ -1,0 +1,108 @@
+{
+  "version": "3.24.0-preview.1",
+  "model": "earned full-history save; same375px browser,60s virtual foreground and hidden, instrumentation overhead included",
+  "rows": [
+    {
+      "surface": "home",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "wallMs": 1381.9612000000002,
+      "calls": {
+        "advance": 240,
+        "reachable": 720,
+        "nextGoal": 480,
+        "communityStatus": 480,
+        "voyagePreview": 2160,
+        "harborStatus": 480,
+        "harborProjectOffer": 1200,
+        "productionRate": 240,
+        "purchasePreview": 240,
+        "scanValue": 240,
+        "harborSchedule": 240,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1200,
+      "writes": 12,
+      "nodes": 265,
+      "heap": null,
+      "overflow": false
+    },
+    {
+      "surface": "home",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "wallMs": 1767.9097849999998,
+      "calls": {
+        "advance": 241,
+        "reachable": 723,
+        "nextGoal": 482,
+        "communityStatus": 482,
+        "voyagePreview": 2169,
+        "harborStatus": 482,
+        "harborProjectOffer": 1205,
+        "productionRate": 241,
+        "purchasePreview": 241,
+        "scanValue": 241,
+        "harborSchedule": 241,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1210,
+      "writes": 12,
+      "nodes": 265,
+      "heap": null,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "wallMs": 1471.8638449999999,
+      "calls": {
+        "advance": 240,
+        "reachable": 720,
+        "nextGoal": 480,
+        "communityStatus": 480,
+        "voyagePreview": 2160,
+        "harborStatus": 480,
+        "harborProjectOffer": 1200,
+        "productionRate": 240,
+        "harborSchedule": 240,
+        "itineraryOffer": 180,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1140,
+      "writes": 12,
+      "nodes": 2604,
+      "heap": null,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "wallMs": 1658.6521509999993,
+      "calls": {
+        "advance": 241,
+        "reachable": 723,
+        "nextGoal": 482,
+        "communityStatus": 482,
+        "voyagePreview": 2169,
+        "harborStatus": 482,
+        "harborProjectOffer": 1205,
+        "productionRate": 241,
+        "harborSchedule": 241,
+        "itineraryOffer": 180,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1148,
+      "writes": 12,
+      "nodes": 2604,
+      "heap": null,
+      "overflow": false
+    }
+  ]
+}

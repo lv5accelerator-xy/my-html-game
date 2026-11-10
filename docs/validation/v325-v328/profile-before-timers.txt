@@ -1,0 +1,56 @@
+{
+  "version": "3.24.0-preview.1",
+  "model": "earned full-history save; same375px browser,60s virtual foreground and hidden, instrumentation overhead included",
+  "rows": [
+    {
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "wallMs": 1454.8176879999999,
+      "calls": {
+        "advance": 240,
+        "reachable": 720,
+        "nextGoal": 480,
+        "communityStatus": 480,
+        "voyagePreview": 2160,
+        "harborStatus": 480,
+        "harborProjectOffer": 1200,
+        "productionRate": 240,
+        "purchasePreview": 240,
+        "scanValue": 240,
+        "harborSchedule": 240,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1200,
+      "writes": 12,
+      "nodes": 265,
+      "heap": null,
+      "overflow": false
+    },
+    {
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "wallMs": 1261.2557819999997,
+      "calls": {
+        "advance": 240,
+        "reachable": 720,
+        "nextGoal": 480,
+        "communityStatus": 480,
+        "voyagePreview": 2160,
+        "harborStatus": 480,
+        "harborProjectOffer": 1200,
+        "productionRate": 240,
+        "purchasePreview": 240,
+        "scanValue": 240,
+        "harborSchedule": 240,
+        "sanitize": 12,
+        "routeArchive": 12
+      },
+      "mutations": 1205,
+      "writes": 12,
+      "nodes": 265,
+      "heap": null,
+      "overflow": false
+    }
+  ]
+}

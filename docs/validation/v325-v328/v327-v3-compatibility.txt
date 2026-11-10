@@ -1,0 +1,8 @@
+v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration
+v3.16 compatibility ok: 30 canonical earned snapshots, active needs/voyages/reports and permanent records equal
+v3.20 compatibility ok: 18 canonical snapshots; all old fields/archives/locked terms preserved
+v3.21 compatibility ok: 9 canonical snapshots; saved plans, active/paused authorizations and every prior field equal
+v3.22 compatibility ok: 18 canonical snapshots; active/ready reviews, earned letters and selected/reserved/used permits preserved
+v3.23 compatibility ok: 21 canonical snapshots; accepted/work/ready/escrow, letters and earned permanent proofs preserved; no auto honors
+v3.24 compatibility ok: 9 canonical earned snapshots; every original field preserved
+v3.26 compatibility ok: 9 canonical earned snapshots; every original field preserved

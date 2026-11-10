@@ -1,0 +1,25 @@
+{"label": "v322-browser", "command": ["node", "tests/v3-browser.test.js"], "parent_sha": "5b32d4c154aad1fb71a22950bc2ab69e582a057e", "node": "v22.23.4", "playwright": "1.55.0", "utc_start": "2026-11-10T11:08:26Z", "sources": {"v3/engine.js": "a084e1f0c165ff1a5582366b8124b38bf0825396adef882e47aebbe3676d4ce0", "v3/data.js": "632bdf251370f03b08245662e201e4477f48ee465dd6dc8a031d88eac0283734", "v3/storage.js": "a039cb7db647d7eeea618e08e25695442d90217ee91740162f3d819b4867bdce", "v3/app.js": "5f974eab7f67b4de7426e7fe16e04c712f40f59c4f0c9bcdc091c14000484ac0", "v3/style.css": "cfb674382b66dabf5d9f3c9d4f71fb7e7ce71aceee7e108127327918e8ce967d", "v3/index.html": "14afa919ef6e99d2c8ac440aa922c59578a195a8217b66d1c3e2c70f39a8013b", "tests/v3-continuation.test.js": "b33a71bc39df3f20ad9b49638402b19426e4d9c28bb2b60bdecfe90abfd05f12", "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45", "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24", "tests/v3-browser.test.js": "ea2d5d2f1c9cab238b0dc922e8c65d31e7445f63fc281ee9cae8f0865de87ccc", "tests/v3-compatibility.test.js": "62110b46c7c8300fd19362d3b3be2bb822b81f09fb4d78749a0922629233dcb8", "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393"}}
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-action="review-start"][data-id="salvage"][data-review-id="freight-cabins"]')[22m
+[2m    - locator resolved to <button class="outline" data-serial="2" data-id="salvage" data-action="review-start" data-review-id="freight-cabins" data-focus="review-start-salvage">按此方法复查</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not visible[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not visible[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    58 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not visible[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+    at /workspace/starport-v324/tests/helpers/continuation-browser.cjs:49:113
+    at async scenario (/workspace/starport-v324/tests/v3-browser.test.js:91:7)
+    at async module.exports (/workspace/starport-v324/tests/helpers/continuation-browser.cjs:43:3)
+    at async run (/workspace/starport-v324/tests/v3-browser.test.js:119:5) {
+  name: 'TimeoutError'
+}

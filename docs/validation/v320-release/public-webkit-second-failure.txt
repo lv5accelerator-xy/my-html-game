@@ -1,0 +1,92 @@
+2026-11-10T02:32:19.0848055Z ##[group]Run mkdir -p "$PUBLIC_AUDIT_DIR"
+2026-11-10T02:32:19.0848610Z [36;1mmkdir -p "$PUBLIC_AUDIT_DIR"[0m
+2026-11-10T02:32:19.0849183Z [36;1mnode scripts/verify-public-v320.cjs 2>&1 | tee "$PUBLIC_AUDIT_DIR/acceptance.log"[0m
+2026-11-10T02:32:19.0849767Z [36;1mcat "$PUBLIC_AUDIT_DIR/result.json"[0m
+2026-11-10T02:32:19.0865697Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-10T02:32:19.0866141Z env:
+2026-11-10T02:32:19.0866516Z   RELEASE_SOURCE_SHA: a7bfea836a2285b22f1a1f1767defbdf832e62a2
+2026-11-10T02:32:19.0867116Z   PUBLIC_GAME_URL: https://lv5accelerator-xy.github.io/my-html-game/
+2026-11-10T02:32:19.0867777Z   V3_TEST_URL: https://lv5accelerator-xy.github.io/my-html-game/v3/
+2026-11-10T02:32:19.0868342Z   V3_BROWSER_ENGINE: webkit
+2026-11-10T02:32:19.0868852Z   CODEX_PLAYWRIGHT_PATH: /home/runner/work/my-html-game/my-html-game/node_modules/playwright
+2026-11-10T02:32:19.0869617Z   PUBLIC_AUDIT_DIR: /home/runner/work/my-html-game/my-html-game/public-audit/webkit
+2026-11-10T02:32:19.0870266Z   V3_SCREENSHOT_DIR: /home/runner/work/my-html-game/my-html-game/public-audit/webkit/flows
+2026-11-10T02:32:19.0870783Z ##[endgroup]
+2026-11-10T02:32:19.3366814Z AUDIT_TARGET https://lv5accelerator-xy.github.io/my-html-game/ engine=webkit
+2026-11-10T02:32:40.7940014Z PUBLIC_FLOW_OK v2-fresh-1280
+2026-11-10T02:32:46.8312747Z PUBLIC_FLOW_OK v3-fresh-1280
+2026-11-10T02:33:01.3709519Z PUBLIC_FLOW_OK v2-fresh-375
+2026-11-10T02:33:07.2003547Z PUBLIC_FLOW_OK v3-fresh-375
+2026-11-10T02:33:08.0479097Z PUBLIC_FLOW_OK v316-restore-city-ending
+2026-11-10T02:33:09.0245409Z PUBLIC_FLOW_OK v316-restore-watch-ending
+2026-11-10T02:33:09.7913138Z AssertionError [ERR_ASSERTION]: v316-restore-voyage-ending: failed resource requests
+2026-11-10T02:33:09.7913922Z + actual - expected
+2026-11-10T02:33:09.7914160Z 
+2026-11-10T02:33:09.7914280Z + [
+2026-11-10T02:33:09.7914557Z +   {
+2026-11-10T02:33:09.7914974Z +     error: 'Load request cancelled',
+2026-11-10T02:33:09.7915785Z +     url: 'https://lv5accelerator-xy.github.io/my-html-game/v3/assets/salvage-orbit.webp'
+2026-11-10T02:33:09.7916444Z +   }
+2026-11-10T02:33:09.7916716Z + ]
+2026-11-10T02:33:09.7916971Z - []
+2026-11-10T02:33:09.7917164Z 
+2026-11-10T02:33:09.7917612Z     at flow (/home/runner/work/my-html-game/my-html-game/scripts/verify-public-v320.cjs:78:14)
+2026-11-10T02:33:09.7918797Z     at async run (/home/runner/work/my-html-game/my-html-game/scripts/verify-public-v320.cjs:140:7) {
+2026-11-10T02:33:09.7919602Z   generatedMessage: false,
+2026-11-10T02:33:09.7919993Z   code: 'ERR_ASSERTION',
+2026-11-10T02:33:09.7920401Z   actual: [Array],
+2026-11-10T02:33:09.7920739Z   expected: [],
+2026-11-10T02:33:09.7921118Z   operator: 'deepStrictEqual',
+2026-11-10T02:33:09.7921554Z   diff: 'simple'
+2026-11-10T02:33:09.7921889Z }
+2026-11-10T02:33:09.8036335Z ##[error]Process completed with exit code 1.
+2026-11-10T02:33:09.8128972Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T02:33:09.8129284Z with:
+2026-11-10T02:33:09.8129507Z   name: v320-public-webkit
+2026-11-10T02:33:09.8129772Z   path: public-audit/
+2026-11-10T02:33:09.8129997Z   retention-days: 14
+2026-11-10T02:33:09.8130227Z   if-no-files-found: warn
+2026-11-10T02:33:09.8130464Z   compression-level: 6
+2026-11-10T02:33:09.8130685Z   overwrite: false
+2026-11-10T02:33:09.8130906Z   include-hidden-files: false
+2026-11-10T02:33:09.8131137Z env:
+2026-11-10T02:33:09.8131402Z   RELEASE_SOURCE_SHA: a7bfea836a2285b22f1a1f1767defbdf832e62a2
+2026-11-10T02:33:09.8131850Z   PUBLIC_GAME_URL: https://lv5accelerator-xy.github.io/my-html-game/
+2026-11-10T02:33:09.8132294Z   V3_TEST_URL: https://lv5accelerator-xy.github.io/my-html-game/v3/
+2026-11-10T02:33:09.8132643Z   V3_BROWSER_ENGINE: webkit
+2026-11-10T02:33:09.8133034Z   CODEX_PLAYWRIGHT_PATH: /home/runner/work/my-html-game/my-html-game/node_modules/playwright
+2026-11-10T02:33:09.8133610Z   PUBLIC_AUDIT_DIR: /home/runner/work/my-html-game/my-html-game/public-audit/webkit
+2026-11-10T02:33:09.8134143Z   V3_SCREENSHOT_DIR: /home/runner/work/my-html-game/my-html-game/public-audit/webkit/flows
+2026-11-10T02:33:09.8134697Z ##[endgroup]
+2026-11-10T02:33:09.9754453Z (node:5644) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T02:33:09.9755360Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T02:33:09.9839718Z With the provided path, there will be 8 files uploaded
+2026-11-10T02:33:09.9841276Z Artifact name is valid!
+2026-11-10T02:33:09.9841817Z Root directory input is valid!
+2026-11-10T02:33:10.2207415Z Beginning upload of artifact content to blob storage
+2026-11-10T02:33:10.3386372Z (node:5644) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T02:33:10.4251938Z Uploaded bytes 2587326
+2026-11-10T02:33:10.4380524Z Finished uploading artifact content to blob storage!
+2026-11-10T02:33:10.4381403Z SHA256 digest of uploaded artifact zip is 4260e326d584e73c174346a01dbae23ddd2e56982ddccf43d1d55bc8f2f412f7
+2026-11-10T02:33:10.4383045Z Finalizing artifact upload
+2026-11-10T02:33:10.7596152Z Artifact v320-public-webkit.zip successfully finalized. Artifact ID 13730136624
+2026-11-10T02:33:10.7597022Z Artifact v320-public-webkit has been successfully uploaded! Final size is 2587326 bytes. Artifact ID is 13730136624
+2026-11-10T02:33:10.7603193Z Artifact download URL: https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42743083976/artifacts/13730136624
+2026-11-10T02:33:10.7803931Z Post job cleanup.
+2026-11-10T02:33:10.8662323Z [command]/usr/bin/git version
+2026-11-10T02:33:10.8700064Z git version 2.56.0
+2026-11-10T02:33:10.8735278Z Temporarily overriding HOME='/home/runner/work/_temp/16d5117b-9806-49b2-a74c-5a927c3e19c5' before making global git config changes
+2026-11-10T02:33:10.8736603Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T02:33:10.8741061Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/my-html-game/my-html-game
+2026-11-10T02:33:10.8772814Z Removing SSH command configuration
+2026-11-10T02:33:10.8780478Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T02:33:10.8812429Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T02:33:10.9014028Z Removing HTTP extra header
+2026-11-10T02:33:10.9018871Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T02:33:10.9050081Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T02:33:10.9269796Z Removing includeIf entries pointing to credentials config files
+2026-11-10T02:33:10.9274271Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T02:33:10.9305333Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T02:33:10.9665785Z Cleaning up orphan processes
+2026-11-10T02:33:10.9985193Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

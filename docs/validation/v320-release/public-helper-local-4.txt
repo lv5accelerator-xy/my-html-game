@@ -1,0 +1,10 @@
+PUBLIC_FLOW_OK v2-fresh-1280
+PUBLIC_FLOW_OK v3-fresh-1280
+PUBLIC_FLOW_OK v2-fresh-375
+PUBLIC_FLOW_OK v3-fresh-375
+page.evaluate: TypeError: Cannot read properties of undefined (reading 'domContentLoadedEventEnd')
+    at eval (eval at evaluate (:291:30), <anonymous>:3:40)
+    at UtilityScript.evaluate (<anonymous>:293:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at flow (/workspace/starport-v320-release/scripts/verify-public-v320.cjs:64:37)
+    at async run (/workspace/starport-v320-release/scripts/verify-public-v320.cjs:135:7)

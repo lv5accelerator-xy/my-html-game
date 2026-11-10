@@ -1,0 +1,1324 @@
+{
+  "sourceSha": "d2fc83cda98d0162ba585d9027d724ceae8458e1",
+  "scope": "Read-only model comparison of three actual earned ending fixtures, after paying for all nine safe surveys. Stage-zero previews only; not player telemetry or a complete economy/optimality proof.",
+  "profiles": [
+    {
+      "ending": "city",
+      "modules": {
+        "scanner": 3,
+        "medbay": 1,
+        "nav": 2
+      },
+      "baseBuildings": {
+        "drone": 92,
+        "sail": 74,
+        "forge": 53,
+        "relay": 41
+      },
+      "baseResearch": [
+        "laser",
+        "panels",
+        "compact",
+        "navigation",
+        "network"
+      ],
+      "loadouts": 7,
+      "cases": [
+        {
+          "route": "freight",
+          "method": "recover",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 569,
+              "diversion": 0.24000000000000002,
+              "dustNet": 717400,
+              "samplesNet": 1
+            }
+          ]
+        },
+        {
+          "route": "freight",
+          "method": "investigate",
+          "legalPreviews": 3,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 711,
+              "diversion": 0.21000000000000002,
+              "dustNet": 212050,
+              "samplesNet": 3
+            }
+          ]
+        },
+        {
+          "route": "freight",
+          "method": "secure",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 626,
+              "diversion": 0.06999999999999999,
+              "dustNet": 316000,
+              "samplesNet": 2
+            }
+          ]
+        },
+        {
+          "route": "science",
+          "method": "recover",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 853,
+              "diversion": 0.24000000000000002,
+              "dustNet": 410500,
+              "samplesNet": 3
+            }
+          ]
+        },
+        {
+          "route": "science",
+          "method": "investigate",
+          "legalPreviews": 3,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 1066,
+              "diversion": 0.21000000000000002,
+              "dustNet": 118275,
+              "samplesNet": 5
+            },
+            {
+              "equipment": [
+                "medbay",
+                "nav"
+              ],
+              "seconds": 1066,
+              "diversion": 0.18000000000000002,
+              "dustNet": 93525,
+              "samplesNet": 5
+            },
+            {
+              "equipment": [
+                "nav"
+              ],
+              "seconds": 1066,
+              "diversion": 0.18000000000000002,
+              "dustNet": 93525,
+              "samplesNet": 5
+            }
+          ]
+        },
+        {
+          "route": "science",
+          "method": "secure",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 939,
+              "diversion": 0.06999999999999999,
+              "dustNet": 179600,
+              "samplesNet": 4
+            }
+          ]
+        },
+        {
+          "route": "beacon",
+          "method": "recover",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 683,
+              "diversion": 0.24000000000000002,
+              "dustNet": 494200,
+              "samplesNet": 2
+            }
+          ]
+        },
+        {
+          "route": "beacon",
+          "method": "investigate",
+          "legalPreviews": 3,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "medbay"
+              ],
+              "seconds": 948,
+              "diversion": 0.21000000000000002,
+              "dustNet": 143850,
+              "samplesNet": 4
+            },
+            {
+              "equipment": [
+                "medbay",
+                "nav"
+              ],
+              "seconds": 853,
+              "diversion": 0.18000000000000002,
+              "dustNet": 114150,
+              "samplesNet": 4
+            }
+          ]
+        },
+        {
+          "route": "beacon",
+          "method": "secure",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 751,
+              "diversion": 0.06999999999999999,
+              "dustNet": 216800,
+              "samplesNet": 3
+            }
+          ]
+        }
+      ],
+      "harbor": [
+        {
+          "focus": "production",
+          "need": "food",
+          "dustCost": 4800,
+          "samplesCost": 4,
+          "workSeconds": 96,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "repair",
+          "dustCost": 6400,
+          "samplesCost": 3,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "energy",
+          "dustCost": 8000,
+          "samplesCost": 3,
+          "workSeconds": 144,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "routes",
+          "dustCost": 5600,
+          "samplesCost": 4,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "cargo",
+          "dustCost": 7200,
+          "samplesCost": 3,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "reception",
+          "dustCost": 4800,
+          "samplesCost": 4,
+          "workSeconds": 96,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "comms",
+          "dustCost": 6400,
+          "samplesCost": 4,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "food",
+          "dustCost": 6000,
+          "samplesCost": 2,
+          "workSeconds": 132,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "repair",
+          "dustCost": 8000,
+          "samplesCost": 1,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "energy",
+          "dustCost": 10000,
+          "samplesCost": 1,
+          "workSeconds": 199,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "routes",
+          "dustCost": 7000,
+          "samplesCost": 2,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "cargo",
+          "dustCost": 9000,
+          "samplesCost": 1,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "reception",
+          "dustCost": 6000,
+          "samplesCost": 2,
+          "workSeconds": 132,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "comms",
+          "dustCost": 8000,
+          "samplesCost": 2,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "exploration",
+          "need": "food",
+          "dustCost": 6601,
+          "samplesCost": 3,
+          "workSeconds": 156,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "repair",
+          "dustCost": 8800,
+          "samplesCost": 2,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "energy",
+          "dustCost": 11000,
+          "samplesCost": 2,
+          "workSeconds": 234,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "routes",
+          "dustCost": 7701,
+          "samplesCost": 3,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "cargo",
+          "dustCost": 9900,
+          "samplesCost": 2,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "reception",
+          "dustCost": 6601,
+          "samplesCost": 3,
+          "workSeconds": 156,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "comms",
+          "dustCost": 8800,
+          "samplesCost": 3,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        }
+      ]
+    },
+    {
+      "ending": "watch",
+      "modules": {
+        "scanner": 3,
+        "medbay": 1,
+        "nav": 2
+      },
+      "baseBuildings": {
+        "drone": 92,
+        "sail": 74,
+        "forge": 53,
+        "relay": 41
+      },
+      "baseResearch": [
+        "laser",
+        "panels",
+        "compact",
+        "navigation",
+        "network"
+      ],
+      "loadouts": 7,
+      "cases": [
+        {
+          "route": "freight",
+          "method": "recover",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 569,
+              "diversion": 0.24000000000000002,
+              "dustNet": 717400,
+              "samplesNet": 1
+            }
+          ]
+        },
+        {
+          "route": "freight",
+          "method": "investigate",
+          "legalPreviews": 3,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 711,
+              "diversion": 0.21000000000000002,
+              "dustNet": 212050,
+              "samplesNet": 3
+            }
+          ]
+        },
+        {
+          "route": "freight",
+          "method": "secure",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 626,
+              "diversion": 0.06999999999999999,
+              "dustNet": 316000,
+              "samplesNet": 2
+            }
+          ]
+        },
+        {
+          "route": "science",
+          "method": "recover",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 853,
+              "diversion": 0.24000000000000002,
+              "dustNet": 410500,
+              "samplesNet": 3
+            }
+          ]
+        },
+        {
+          "route": "science",
+          "method": "investigate",
+          "legalPreviews": 3,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 1066,
+              "diversion": 0.21000000000000002,
+              "dustNet": 118275,
+              "samplesNet": 5
+            },
+            {
+              "equipment": [
+                "medbay",
+                "nav"
+              ],
+              "seconds": 1066,
+              "diversion": 0.18000000000000002,
+              "dustNet": 93525,
+              "samplesNet": 5
+            },
+            {
+              "equipment": [
+                "nav"
+              ],
+              "seconds": 1066,
+              "diversion": 0.18000000000000002,
+              "dustNet": 93525,
+              "samplesNet": 5
+            }
+          ]
+        },
+        {
+          "route": "science",
+          "method": "secure",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 939,
+              "diversion": 0.06999999999999999,
+              "dustNet": 179600,
+              "samplesNet": 4
+            }
+          ]
+        },
+        {
+          "route": "beacon",
+          "method": "recover",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 683,
+              "diversion": 0.24000000000000002,
+              "dustNet": 494200,
+              "samplesNet": 2
+            }
+          ]
+        },
+        {
+          "route": "beacon",
+          "method": "investigate",
+          "legalPreviews": 3,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "medbay"
+              ],
+              "seconds": 948,
+              "diversion": 0.21000000000000002,
+              "dustNet": 143850,
+              "samplesNet": 4
+            },
+            {
+              "equipment": [
+                "medbay",
+                "nav"
+              ],
+              "seconds": 853,
+              "diversion": 0.18000000000000002,
+              "dustNet": 114150,
+              "samplesNet": 4
+            }
+          ]
+        },
+        {
+          "route": "beacon",
+          "method": "secure",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 751,
+              "diversion": 0.06999999999999999,
+              "dustNet": 216800,
+              "samplesNet": 3
+            }
+          ]
+        }
+      ],
+      "harbor": [
+        {
+          "focus": "production",
+          "need": "food",
+          "dustCost": 4800,
+          "samplesCost": 4,
+          "workSeconds": 96,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "repair",
+          "dustCost": 6400,
+          "samplesCost": 3,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "energy",
+          "dustCost": 8000,
+          "samplesCost": 3,
+          "workSeconds": 144,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "routes",
+          "dustCost": 5600,
+          "samplesCost": 4,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "cargo",
+          "dustCost": 7200,
+          "samplesCost": 3,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "reception",
+          "dustCost": 4800,
+          "samplesCost": 4,
+          "workSeconds": 96,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "comms",
+          "dustCost": 6400,
+          "samplesCost": 4,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "food",
+          "dustCost": 6000,
+          "samplesCost": 2,
+          "workSeconds": 132,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "repair",
+          "dustCost": 8000,
+          "samplesCost": 1,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "energy",
+          "dustCost": 10000,
+          "samplesCost": 1,
+          "workSeconds": 199,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "routes",
+          "dustCost": 7000,
+          "samplesCost": 2,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "cargo",
+          "dustCost": 9000,
+          "samplesCost": 1,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "reception",
+          "dustCost": 6000,
+          "samplesCost": 2,
+          "workSeconds": 132,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "comms",
+          "dustCost": 8000,
+          "samplesCost": 2,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "exploration",
+          "need": "food",
+          "dustCost": 6601,
+          "samplesCost": 3,
+          "workSeconds": 156,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "repair",
+          "dustCost": 8800,
+          "samplesCost": 2,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "energy",
+          "dustCost": 11000,
+          "samplesCost": 2,
+          "workSeconds": 234,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "routes",
+          "dustCost": 7701,
+          "samplesCost": 3,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "cargo",
+          "dustCost": 9900,
+          "samplesCost": 2,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "reception",
+          "dustCost": 6601,
+          "samplesCost": 3,
+          "workSeconds": 156,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "comms",
+          "dustCost": 8800,
+          "samplesCost": 3,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        }
+      ]
+    },
+    {
+      "ending": "voyage",
+      "modules": {
+        "scanner": 3,
+        "medbay": 1,
+        "nav": 2
+      },
+      "baseBuildings": {
+        "drone": 92,
+        "sail": 74,
+        "forge": 53,
+        "relay": 41
+      },
+      "baseResearch": [
+        "laser",
+        "panels",
+        "compact",
+        "navigation",
+        "network"
+      ],
+      "loadouts": 7,
+      "cases": [
+        {
+          "route": "freight",
+          "method": "recover",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 569,
+              "diversion": 0.24000000000000002,
+              "dustNet": 717400,
+              "samplesNet": 1
+            }
+          ]
+        },
+        {
+          "route": "freight",
+          "method": "investigate",
+          "legalPreviews": 3,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 711,
+              "diversion": 0.21000000000000002,
+              "dustNet": 212050,
+              "samplesNet": 3
+            }
+          ]
+        },
+        {
+          "route": "freight",
+          "method": "secure",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 626,
+              "diversion": 0.06999999999999999,
+              "dustNet": 316000,
+              "samplesNet": 2
+            }
+          ]
+        },
+        {
+          "route": "science",
+          "method": "recover",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 853,
+              "diversion": 0.24000000000000002,
+              "dustNet": 410500,
+              "samplesNet": 3
+            }
+          ]
+        },
+        {
+          "route": "science",
+          "method": "investigate",
+          "legalPreviews": 3,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 1066,
+              "diversion": 0.21000000000000002,
+              "dustNet": 118275,
+              "samplesNet": 5
+            },
+            {
+              "equipment": [
+                "medbay",
+                "nav"
+              ],
+              "seconds": 1066,
+              "diversion": 0.18000000000000002,
+              "dustNet": 93525,
+              "samplesNet": 5
+            },
+            {
+              "equipment": [
+                "nav"
+              ],
+              "seconds": 1066,
+              "diversion": 0.18000000000000002,
+              "dustNet": 93525,
+              "samplesNet": 5
+            }
+          ]
+        },
+        {
+          "route": "science",
+          "method": "secure",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 939,
+              "diversion": 0.06999999999999999,
+              "dustNet": 179600,
+              "samplesNet": 4
+            }
+          ]
+        },
+        {
+          "route": "beacon",
+          "method": "recover",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 683,
+              "diversion": 0.24000000000000002,
+              "dustNet": 494200,
+              "samplesNet": 2
+            }
+          ]
+        },
+        {
+          "route": "beacon",
+          "method": "investigate",
+          "legalPreviews": 3,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "medbay"
+              ],
+              "seconds": 948,
+              "diversion": 0.21000000000000002,
+              "dustNet": 143850,
+              "samplesNet": 4
+            },
+            {
+              "equipment": [
+                "medbay",
+                "nav"
+              ],
+              "seconds": 853,
+              "diversion": 0.18000000000000002,
+              "dustNet": 114150,
+              "samplesNet": 4
+            }
+          ]
+        },
+        {
+          "route": "beacon",
+          "method": "secure",
+          "legalPreviews": 7,
+          "pareto": [
+            {
+              "equipment": [
+                "scanner",
+                "nav"
+              ],
+              "seconds": 751,
+              "diversion": 0.06999999999999999,
+              "dustNet": 216800,
+              "samplesNet": 3
+            }
+          ]
+        }
+      ],
+      "harbor": [
+        {
+          "focus": "production",
+          "need": "food",
+          "dustCost": 4800,
+          "samplesCost": 4,
+          "workSeconds": 96,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "repair",
+          "dustCost": 6400,
+          "samplesCost": 3,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "energy",
+          "dustCost": 8000,
+          "samplesCost": 3,
+          "workSeconds": 144,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "routes",
+          "dustCost": 5600,
+          "samplesCost": 4,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "cargo",
+          "dustCost": 7200,
+          "samplesCost": 3,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "reception",
+          "dustCost": 4800,
+          "samplesCost": 4,
+          "workSeconds": 96,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "production",
+          "need": "comms",
+          "dustCost": 6400,
+          "samplesCost": 4,
+          "workSeconds": 120,
+          "tripsRequired": 1,
+          "mode": "production",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "food",
+          "dustCost": 6000,
+          "samplesCost": 2,
+          "workSeconds": 132,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "repair",
+          "dustCost": 8000,
+          "samplesCost": 1,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "energy",
+          "dustCost": 10000,
+          "samplesCost": 1,
+          "workSeconds": 199,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "routes",
+          "dustCost": 7000,
+          "samplesCost": 2,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "cargo",
+          "dustCost": 9000,
+          "samplesCost": 1,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "reception",
+          "dustCost": 6000,
+          "samplesCost": 2,
+          "workSeconds": 132,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "reception",
+          "need": "comms",
+          "dustCost": 8000,
+          "samplesCost": 2,
+          "workSeconds": 165,
+          "tripsRequired": 1,
+          "mode": "reception",
+          "alternates": []
+        },
+        {
+          "focus": "exploration",
+          "need": "food",
+          "dustCost": 6601,
+          "samplesCost": 3,
+          "workSeconds": 156,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "repair",
+          "dustCost": 8800,
+          "samplesCost": 2,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "energy",
+          "dustCost": 11000,
+          "samplesCost": 2,
+          "workSeconds": 234,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "routes",
+          "dustCost": 7701,
+          "samplesCost": 3,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "cargo",
+          "dustCost": 9900,
+          "samplesCost": 2,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "reception",
+          "dustCost": 6601,
+          "samplesCost": 3,
+          "workSeconds": 156,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        },
+        {
+          "focus": "exploration",
+          "need": "comms",
+          "dustCost": 8800,
+          "samplesCost": 3,
+          "workSeconds": 195,
+          "tripsRequired": 1,
+          "mode": "exploration",
+          "alternates": [
+            "belt",
+            "supply-run"
+          ]
+        }
+      ]
+    }
+  ],
+  "previews": 153
+}

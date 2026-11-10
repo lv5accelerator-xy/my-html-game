@@ -85,6 +85,7 @@
       discoveries: 0,
       atlas: { priority:null, serial:0, claimed:0, active:null, nodes:[] },
       expeditions:{serial:0,settled:0,active:null,completed:{},collections:[],records:[],archives:{},best:{},dust:0,samples:0},
+      continuation: freshContinuation(),
       encounters: { serial: 0, settled: 0, nextAt: 0, rng: (Number(seed) ^ 0x3e72a1) >>> 0 || 1, pending: null, history: [], catalog: [] },
       starport: 0,
       chapter: [],
@@ -164,7 +165,8 @@
     if (s.chapter?.includes("relay")) rate *= 1.05;
     return bounded(rate);
   }
-  function travel(s) { return s.mission || (s.expeditions.active?.leg && s.clock<s.expeditions.active.leg.end?s.expeditions.active.leg:null) || (s.atlas.active && s.clock < s.atlas.active.end ? s.atlas.active : null); }
+  function reviewBusy(s) { return s.continuation?.reviews?.active; }
+  function travel(s) { return s.mission || (reviewBusy(s) && s.clock<reviewBusy(s).end ? reviewBusy(s) : null) || (s.expeditions.active?.leg && s.clock<s.expeditions.active.leg.end?s.expeditions.active.leg:null) || (s.atlas.active && s.clock < s.atlas.active.end ? s.atlas.active : null); }
   function productionRate(s) {
     return bounded(
       rawRate(s) *
@@ -927,7 +929,7 @@
   function startMission(s, id) {
     if (
       s.run.dust < 600 ||
-      s.atlas.active || s.expeditions.active ||
+      s.atlas.active || s.expeditions.active || reviewBusy(s) ||
       s.mission ||
       s.result ||
       !missionOptions(s).some((m) => m.id === id) ||
@@ -960,6 +962,8 @@
     };
     const order = s.management.active;
     if (s.epilogue.ending && order && (order.mission === id || order.plan?.alternates.includes(id))) s.mission.harborOrder = order.serial;
+    const community=s.continuation.community.active;
+    if(community&&community.routes.includes(id)) s.mission.communityOrder=community.serial;
     const encounter = succeeded && rollEncounter(s, m);
     if (encounter) s.mission.encounter = encounter;
     if (storyMission(m)) track.preparation = null;
@@ -990,6 +994,7 @@
         : {}),
     };
     if (m.harborOrder) s.result.harborOrder = m.harborOrder;
+    if (m.communityOrder) s.result.communityOrder=m.communityOrder;
     if (m.encounter && !s.encounters.pending) s.encounters.pending = clone(m.encounter);
     s.mission = null;
     log(
@@ -1040,6 +1045,343 @@
     );
     return true;
   }
+  function freshReviews() { return { serial:0, settled:0, active:null, records:[], earned:[], used:[], uses:[], selected:null, aid:null }; }
+  function reviewDone(s,id) { return s.continuation.reviews.earned.includes(id); }
+  function reviewPreview(s,id,method='safe') {
+    const def=byId(D.REVIEWS,id),m=byId(D.REVIEW_METHODS,method);
+    if(!def||!m) return null;
+    const h=s.continuation.reviews,practice=reviewDone(s,id),previous=D.REVIEWS.find(r=>r.chain===def.chain&&r.index===def.index-1);
+    const evidence=def.events.filter(event=>s.encounters.catalog.some(key=>key.startsWith(event+':')));
+    const seconds=Math.max(60,Math.ceil((180+def.index*90)*m.time*(evidence.length ? .85 : 1)*(1-equipped(s,'nav')*.05)));
+    const dustCost=practice?0:3000+def.index*2000,costSamples=practice?0:m.costSamples;
+    const reason=surveyCount(s,def.chain)<3?'先完成本线三处原始调查':previous&&!reviewDone(s,previous.id)?'先归档本线前一项证据复查':s.mission||s.result||s.atlas.active||s.expeditions.active||h.active?'先处理当前航程与报告':s.dust<dustCost?`还需 ${Math.ceil(dustCost-s.dust)} 星尘`:s.samples<costSamples?`还需 ${costSamples-s.samples} 样本`:rawRate(s)<=0?'先启动生产舰队':'';
+    return {id,method,practice,evidence,seconds,diversion:m.diversion,dustCost,costSamples,dust:practice?0:Math.floor(dustCost*m.refund),samples:practice?0:m.samples+def.index,equipment:[...s.equipped],levels:Object.fromEntries(s.equipped.map(key=>[key,s.modules[key]])),reason,available:!reason};
+  }
+  function startReview(s,id,method,expectedSerial) {
+    const h=s.continuation.reviews,p=reviewPreview(s,id,method);
+    if(!p?.available||h.serial>=1e9||Number(expectedSerial)!==h.serial+1) return false;
+    s.dust-=p.dustCost;s.samples-=p.costSamples;
+    const {reason,available,...locked}=p;
+    h.active={...locked,token:++h.serial,start:s.clock,end:s.clock+p.seconds};s.automation.dispatch=false;
+    log(s,`证据复查已出发：${byId(D.REVIEWS,id).name}；${p.evidence.length?'旧记录作对照':'本次直接补录实测来源'}。`);return true;
+  }
+  function claimReview(s,token) {
+    const h=s.continuation.reviews,a=h.active;
+    if(!a||a.token!==Number(token)||a.token<=h.settled||s.clock<a.end) return false;
+    if(!a.practice&&!reviewDone(s,a.id)) {addDust(s,a.dust);s.samples=bounded(s.samples+a.samples);h.records.push({...clone(a),claimedAt:s.clock});h.earned.push(a.id);}
+    h.settled=a.token;h.active=null;log(s,a.practice?'复查演练已归档，没有重复资源或许可奖励。':'复查档案与一次首段支援许可已保存。');return true;
+  }
+  function reviewGoal(s) {
+    const a=s.continuation.reviews.active;if(!a)return null;
+    return {title:s.clock>=a.end?'证据复查等待归档':'证据复查正在进行',detail:'旧发现作为对照；缺失来源在本次安全复查补录。没有随机卡关与领取期限。',action:'explore',label:'查看证据复查',focus:'sector-reviews',value:Math.min(a.seconds,s.clock-a.start),target:a.seconds,eta:Math.max(0,a.end-s.clock)};
+  }
+  function selectVoyageSupport(s,id) {
+    const h=s.continuation.reviews;
+    if(s.expeditions.active)return false;
+    if(id!==null&&(!reviewDone(s,id)||h.used.includes(id)))return false;
+    h.selected=id;return true;
+  }
+  function voyageSupport(s,id,stage) {
+    if(stage!==0)return null;
+    const h=s.continuation?.reviews;if(!h)return null;
+    const run=s.expeditions.active;
+    const key=run?.token?(h.aid?.token===run.token?h.aid.id:null):h.selected;
+    const def=byId(D.REVIEWS,key),route=byId(D.VOYAGES,id);
+    return def&&route?.chain===def.chain&&reviewDone(s,key)&&(!h.used.includes(key)||h.aid?.token===run?.token)?def:null;
+  }
+  function reserveVoyageSupport(s,id,token) {
+    const h=s.continuation.reviews,def=byId(D.REVIEWS,h.selected),route=byId(D.VOYAGES,id);
+    h.aid=def&&route.chain===def.chain&&reviewDone(s,def.id)&&!h.used.includes(def.id)?{id:def.id,token}:null;
+  }
+  function consumeVoyageSupport(s,a) {
+    const h=s.continuation.reviews;
+    if(a.stage!==0||h.aid?.token!==a.token||h.used.includes(h.aid.id))return;
+    h.used.push(h.aid.id);h.uses.push({id:h.aid.id,token:a.token,route:a.id});h.selected=null;
+  }
+  function cleanReviews(raw,s) {
+    const h=freshReviews();if(!raw||typeof raw!=='object')return h;
+    h.serial=integer(raw.serial,1e9);h.settled=integer(raw.settled,h.serial);
+    for(const id of (Array.isArray(raw.earned)?raw.earned:[]).slice(0,9)) {
+      const def=byId(D.REVIEWS,id),previous=def&&D.REVIEWS.find(d=>d.chain===def.chain&&d.index===def.index-1);
+      if(def&&!h.earned.includes(id)&&surveyCount(s,def.chain)===3&&h.earned.length<h.settled&&(!previous||h.earned.includes(previous.id)))h.earned.push(id);
+    }
+    function record(r,active=false) {
+      const def=byId(D.REVIEWS,r?.id),m=byId(D.REVIEW_METHODS,r?.method);
+      if(!def||!m||surveyCount(s,def.chain)<3||!Number.isInteger(r.token)||r.token<1||r.token>h.serial||(active?(r.token!==h.serial||r.token<=h.settled):r.token>h.settled)||!Array.isArray(r.equipment)||JSON.stringify(cleanEquipment(r.equipment))!==JSON.stringify(r.equipment)||r.equipment.some(id=>!Number.isInteger(r.levels?.[id])||r.levels[id]<1||r.levels[id]>3))return null;
+      const previous=D.REVIEWS.find(x=>x.chain===def.chain&&x.index===def.index-1);
+      if(previous&&!h.earned.includes(previous.id))return null;
+      if(!Array.isArray(r.evidence)||r.evidence.length>def.events.length||new Set(r.evidence).size!==r.evidence.length||r.evidence.some(id=>!def.events.includes(id)))return null;
+      const seconds=Math.max(60,Math.ceil((180+def.index*90)*m.time*(r.evidence.length ? .85 : 1)*(1-(r.equipment.includes('nav')?r.levels.nav:0)*.05)));
+      const practice=r.practice===true,dustCost=practice?0:3000+def.index*2000;
+      if(r.seconds!==seconds||r.diversion!==m.diversion||r.dustCost!==dustCost||r.costSamples!==(practice?0:m.costSamples)||r.dust!==(practice?0:Math.floor(dustCost*m.refund))||r.samples!==(practice?0:m.samples+def.index)||!Number.isInteger(r.start)||r.start<0||r.start>s.clock||r.end!==r.start+seconds||(!active&&r.end>s.clock))return null;
+      return {id:def.id,method:m.id,practice,evidence:[...r.evidence],seconds,diversion:m.diversion,dustCost,costSamples:r.costSamples,dust:r.dust,samples:r.samples,equipment:[...r.equipment],levels:Object.fromEntries(r.equipment.map(id=>[id,r.levels[id]])),token:r.token,start:r.start,end:r.end};
+    }
+    const seen=new Set(),tokens=new Set();
+    for(const r of (Array.isArray(raw.records)?raw.records:[]).slice(0,9)){
+      const a=record(r);if(!a||a.practice||seen.has(a.id)||tokens.has(a.token))continue;
+      seen.add(a.id);if(!h.earned.includes(a.id))h.earned.push(a.id);tokens.add(a.token);h.records.push({...a,claimedAt:Math.max(a.end,Math.min(s.clock,bounded(r.claimedAt)))});
+    }
+    h.used=[...new Set(Array.isArray(raw.used)?raw.used:[])].filter(id=>h.earned.includes(id));
+    const routes=D.VOYAGES,used=new Set();
+    for(const r of (Array.isArray(raw.uses)?raw.uses:[]).slice(0,9)) {
+      if(!h.earned.includes(r?.id)||used.has(r.id)||byId(D.REVIEWS,r.id).chain!==byId(routes,r.route)?.chain||!Number.isInteger(r.token)||r.token<1||r.token>s.expeditions.serial)continue;
+      used.add(r.id);h.uses.push({id:r.id,token:r.token,route:r.route});if(!h.used.includes(r.id))h.used.push(r.id);
+    }
+    if(h.earned.includes(raw.selected)&&!h.used.includes(raw.selected))h.selected=raw.selected;
+    const a=s.expeditions.active,aid=raw.aid;
+    if(a&&aid?.token===a.token&&h.earned.includes(aid.id)&&byId(D.REVIEWS,aid.id).chain===byId(routes,a.id).chain&&((a.stage===0&&!a.leg&&!h.used.includes(aid.id))||((a.stage>0||a.leg)&&h.used.includes(aid.id))))h.aid={id:aid.id,token:a.token};
+    if(!s.mission&&!s.result&&!s.atlas.active&&!s.expeditions.active){const a=record(raw.active,true);if(a&&a.practice===h.earned.includes(a.id))h.active=a;}
+    return h;
+  }
+
+  function freshCommunity() { return {serial:0,settled:0,active:null,completed:[],records:[]}; }
+  function communityTerms(s,id,mode=s.management.focus) {
+    const d=byId(D.COMMUNITY_STORIES,id),focus=byId(D.HARBOR_FOCUSES,mode);
+    if(!d||!focus) return null;
+    const g=byId(D.COMMUNITY_GROUPS,d.group),level=p=>s.management.projects[p]||0;
+    const workSeconds=Math.ceil((240+d.stage*120)*focus.work);
+    return {id,serial:s.continuation.community.serial+1,mode,path:'production',acceptedClock:s.clock,
+      dustCost:Math.round((4000+d.stage*4000)*focus.dust),samplesCost:Math.max(0,1+d.stage+focus.samples),
+      workSeconds,productionGoal:Math.min(250000,Math.max(600,Math.ceil(rawRate(s)*workSeconds))),produced:0,
+      tripsRequired:mode==='exploration'?1:2,trips:0,packedDust:0,packedSamples:0,
+      careFactor:Math.max(.35,.6-(level('public-berths')+level('habitat'))*.025),
+      voyageToken:null, routes:mode==='exploration'?[g.mission,...['belt','supply-run'].filter(x=>x!==g.mission)]:[g.mission]};
+  }
+  function communityOffer(s,id,mode=s.management.focus) {
+    const d=byId(D.COMMUNITY_STORIES,id),terms=communityTerms(s,id,mode);
+    if(!d||!terms) return null;
+    const h=s.continuation.community,g=byId(D.COMMUNITY_GROUPS,d.group),previous=D.COMMUNITY_STORIES.find(x=>x.group===d.group&&x.stage===d.stage-1);
+    const reason=!s.epilogue.ending?'确认正式结局后开放':h.completed.includes(id)?'这份居民回信已经归档':h.active?'先完成已接下的居民协作':h.serial>=1e9?'协作档案已达到安全上限':previous&&!h.completed.includes(previous.id)?'先完成这个值班组的上一封回信':s.management.stats.deliveries<d.stage*2?`先完成 ${d.stage*2} 份港务需求`:(s.management.projects[g.project]||0)<d.stage?`先完成${byId(D.HARBOR_PROJECTS,g.project).name}第 ${d.stage} 期`:'';
+    return {...terms,available:!reason,reason};
+  }
+  function acceptCommunity(s,id,serial) {
+    const q=communityOffer(s,id);
+    if(!q?.available||q.serial!==Number(serial)) return false;
+    const {available,reason,...terms}=q,h=s.continuation.community;
+    h.serial=terms.serial;h.active=terms;
+    log(s,`居民协作：${byId(D.COMMUNITY_STORIES,id).name}。方向与筹备条件已记录，可以随时改选生产或补给路径。`);return true;
+  }
+  function communityStatus(s) {
+    const a=s.continuation.community.active;if(!a) return null;
+    const dustLeft=Math.max(0,a.dustCost-a.packedDust),samplesLeft=Math.max(0,a.samplesCost-a.packedSamples),packed=a.mode==='reception'&&!dustLeft&&!samplesLeft;
+    const secondsLeft=Math.max(0,a.acceptedClock+Math.ceil(a.workSeconds*(packed?a.careFactor:1))-s.clock);
+    const workReady=!secondsLeft&&(packed||a.produced>=a.productionGoal),tripReady=a.trips>=a.tripsRequired;
+    const ready=a.path==='production'?workReady:tripReady;
+    const reason=!ready?(a.path==='production'?`港内筹备还需 ${secondsLeft} 秒并完成工作量`:`还需 ${Math.max(0,a.tripsRequired-a.trips)} 次匹配补给交接`):s.dust<dustLeft?`还需 ${Math.ceil(dustLeft-s.dust)} 星尘`:s.samples<samplesLeft?`还需 ${samplesLeft-s.samples} 样本`:'';
+    return {...clone(a),dustLeft,samplesLeft,secondsLeft,workReady,tripReady,available:!reason,reason};
+  }
+  function setCommunityPath(s,serial,path) {
+    const a=s.continuation.community.active;
+    if(!a||a.serial!==Number(serial)||!['production','exploration'].includes(path)) return false;
+    a.path=path;return true;
+  }
+  function packCommunity(s,serial) {
+    const a=s.continuation.community.active;if(!a||a.serial!==Number(serial)||a.mode!=='reception') return false;
+    const dust=Math.min(s.dust,a.dustCost-a.packedDust),samples=Math.min(s.samples,a.samplesCost-a.packedSamples);
+    if(dust<=0&&samples<=0) return false;
+    s.dust-=dust;s.samples-=samples;a.packedDust+=dust;a.packedSamples+=samples;return true;
+  }
+  function deliverCommunity(s,serial) {
+    const a=communityStatus(s),h=s.continuation.community;
+    if(!a?.available||a.serial!==Number(serial)||h.completed.includes(a.id)||a.serial<=h.settled) return false;
+    s.dust-=a.dustLeft;s.samples-=a.samplesLeft;h.completed.push(a.id);h.settled=a.serial;
+    h.records.push({id:a.id,serial:a.serial,clock:s.clock,mode:a.mode,path:a.path,dustCost:a.dustCost,samplesCost:a.samplesCost});h.active=null;
+    log(s,`居民来信：${byId(D.COMMUNITY_STORIES,a.id).name}。值班记录与纪念回信已归档，没有新增生产倍率。`);return true;
+  }
+  function creditCommunityTrip(s,id,serial,voyage=false) {
+    const a=s.continuation.community.active;if(!a||a.serial!==serial) return;
+    const g=byId(D.COMMUNITY_GROUPS,byId(D.COMMUNITY_STORIES,a.id).group);
+    if(voyage?id===g.voyage:a.routes.includes(id)) a.trips=Math.min(a.tripsRequired,a.trips+1);
+  }
+  function communityGoal(s) {
+    const a=communityStatus(s);if(!a||!reachable(s,'explore')) return null;
+    return {title:a.available?'居民协作已备齐':byId(D.COMMUNITY_STORIES,a.id).name,detail:a.reason||'准备完成，确认交接后保存居民回信。',action:'explore',label:'查看居民协作',focus:'community-life',value:a.path==='production'?a.produced:a.trips,target:a.path==='production'?a.productionGoal:a.tripsRequired,eta:a.path==='production'?a.secondsLeft:0};
+  }
+  function cleanCommunity(raw,s) {
+    const h=freshCommunity();if(!raw||typeof raw!=='object'||!s.epilogue.ending) return h;
+    h.serial=integer(raw.serial,1e9);h.settled=integer(raw.settled,h.serial);
+    for(const d of D.COMMUNITY_STORIES){
+      const previous=D.COMMUNITY_STORIES.find(x=>x.group===d.group&&x.stage===d.stage-1),g=byId(D.COMMUNITY_GROUPS,d.group);
+      if(Array.isArray(raw.completed)&&raw.completed.includes(d.id)&&h.completed.length<h.settled&&(!previous||h.completed.includes(previous.id))&&s.management.stats.deliveries>=d.stage*2&&(s.management.projects[g.project]||0)>=d.stage) h.completed.push(d.id);
+    }
+    h.completed=Array.isArray(raw.completed)?[...new Set(raw.completed.filter(id=>h.completed.includes(id)))]:[];
+    for(const id of h.completed){const r=Array.isArray(raw.records)&&raw.records.find(x=>x?.id===id);if(r&&Number.isInteger(r.serial)&&r.serial>0&&r.serial<=h.settled&&Number.isInteger(r.clock)&&r.clock>=0&&r.clock<=s.clock&&byId(D.HARBOR_FOCUSES,r.mode)&&['production','exploration'].includes(r.path)&&Number.isFinite(r.dustCost)&&r.dustCost>=0&&r.dustCost<=13200&&Number.isInteger(r.samplesCost)&&r.samplesCost>=0&&r.samplesCost<=4) h.records.push({id,serial:r.serial,clock:r.clock,mode:r.mode,path:r.path,dustCost:r.dustCost,samplesCost:r.samplesCost});}
+    const a=raw.active,d=a&&byId(D.COMMUNITY_STORIES,a.id),q=d&&communityTerms(s,a.id,a.mode),previous=d&&D.COMMUNITY_STORIES.find(x=>x.group===d.group&&x.stage===d.stage-1),g=d&&byId(D.COMMUNITY_GROUPS,d.group);
+    if(q&&!h.completed.includes(a.id)&&a.serial===h.serial&&a.serial>h.settled&&(!previous||h.completed.includes(previous.id))&&s.management.stats.deliveries>=d.stage*2&&(s.management.projects[g.project]||0)>=d.stage&&['production','exploration'].includes(a.path)&&Number.isInteger(a.acceptedClock)&&a.acceptedClock>=0&&a.acceptedClock<=s.clock&&a.dustCost===q.dustCost&&a.samplesCost===q.samplesCost&&a.workSeconds===q.workSeconds&&a.tripsRequired===q.tripsRequired&&JSON.stringify(a.routes)===JSON.stringify(q.routes)&&Number.isFinite(a.careFactor)&&a.careFactor>=.35&&a.careFactor<=.6&&Number.isFinite(a.productionGoal)&&a.productionGoal>=600&&a.productionGoal<=250000&&Number.isFinite(a.produced)&&a.produced>=0&&a.produced<=a.productionGoal&&Number.isInteger(a.trips)&&a.trips>=0&&a.trips<=a.tripsRequired&&Number.isFinite(a.packedDust)&&a.packedDust>=0&&a.packedDust<=a.dustCost&&Number.isInteger(a.packedSamples)&&a.packedSamples>=0&&a.packedSamples<=a.samplesCost&&(a.mode==='reception'||(!a.packedDust&&!a.packedSamples))) h.active={...q,serial:a.serial,path:a.path,acceptedClock:a.acceptedClock,careFactor:a.careFactor,productionGoal:a.productionGoal,produced:a.produced,trips:a.trips,voyageToken:Number.isInteger(a.voyageToken)&&a.voyageToken>0&&a.voyageToken<=s.expeditions.serial?a.voyageToken:null,packedDust:a.packedDust,packedSamples:a.packedSamples};
+    return h;
+  }
+
+  function freshHonors() { return {claimed:[]}; }
+  function honorProgress(s,id) {
+    const d=byId(D.HONORS,id);if(!d||!s.epilogue.ending) return 0;
+    const completed=s.continuation.community.completed;
+    const groups=D.COMMUNITY_GROUPS.map(g=>D.COMMUNITY_STORIES.filter(x=>x.group===g.id&&completed.includes(x.id)).length);
+    return d.kind==='voyage'?Math.min(1,Object.values(s.expeditions.completed).reduce((n,v)=>n+v,0)):
+      d.kind==='cargo'||d.kind==='care'?D.VOYAGES.filter(v=>s.expeditions.collections.includes(`${d.kind}-${v.id}`)).length:
+      d.kind==='town'?(s.management.projects['public-berths']||0)+(s.management.projects.habitat||0):
+      d.kind==='atlas'?s.atlas.nodes.length:d.kind==='reviews'?s.continuation.reviews.earned.length:
+      d.kind==='group'?Math.max(...groups):d.kind==='teams'?groups.filter(n=>n>0).length:d.kind==='community'?completed.length:0;
+  }
+  function honorOffer(s,id) {
+    const d=byId(D.HONORS,id);if(!d) return null;
+    const value=Math.min(d.target,honorProgress(s,id)),claimed=s.continuation.honors.claimed.includes(id);
+    return {...clone(d),value,claimed,available:!claimed&&value>=d.target};
+  }
+  function claimHonor(s,id) {
+    const q=honorOffer(s,id);if(!q?.available) return false;
+    s.continuation.honors.claimed.push(id);log(s,`长期荣誉「${q.name}」已陈列；只保存纪念，不发放货币或倍率。`);return true;
+  }
+  function cleanHonors(raw,s) {
+    return {claimed:Array.isArray(raw?.claimed)?[...new Set(raw.claimed.filter(id=>byId(D.HONORS,id)&&honorProgress(s,id)>=byId(D.HONORS,id).target))].slice(0,12):[]};
+  }
+  function voyageLedger(record) {
+    if(!record||!Array.isArray(record.legs)||record.legs.length!==4) return null;
+    const sum=key=>record.legs.reduce((n,l)=>n+l[key],0),seconds=sum('seconds'),dustCost=sum('dustCost'),costSamples=sum('costSamples');
+    const divertedSeconds=record.legs.reduce((n,l)=>n+l.seconds*l.diversion,0);
+    return {seconds,dustCost,costSamples,dust:record.dust,samples:record.samples,firstBonus:record.firstBonus||0,
+      netDust:record.dust-dustCost,netSamples:record.samples+(record.firstBonus||0)-costSamples,
+      diversion:seconds?divertedSeconds/seconds:0,divertedSeconds};
+  }
+  function longVoyageComparison(s,id,choice='secure') {
+    const options=[{id:'current',name:'当前双槽',equipment:s.equipped},...D.LOADOUTS.map(p=>({...p,equipment:s.loadouts[p.id]}))];
+    return options.map(o=>{
+      if(!validLoadout(s,o.equipment)) return {id:o.id,name:o.name,legal:false};
+      const q=voyagePreview(s,id,choice,o.equipment);
+      return {id:o.id,name:o.name,legal:true,equipment:[...o.equipment],...q,netDust:q.dust-q.dustCost,netSamples:q.samples-q.costSamples,
+        portDiversionSeconds:q.seconds*q.diversion};
+    });
+  }
+  function recentHarborChanges(s) {
+    const changes=[...s.expeditions.records.map(r=>({clock:r.clock,text:`${byId(D.VOYAGES,r.id).name}已完整归航`})),
+      ...s.continuation.reviews.records.map(r=>({clock:r.claimedAt,text:`证据归档：${byId(D.REVIEWS,r.id).name}`})),
+      ...s.continuation.community.records.map(r=>({clock:r.clock,text:`居民来信：${byId(D.COMMUNITY_STORIES,r.id).name}`})),
+      ...s.management.history.map(r=>({clock:r.clock,text:`港务交接：${byId(D.HARBOR_NEEDS,r.id).name}`}))];
+    return changes.sort((a,b)=>b.clock-a.clock).slice(0,5);
+  }
+
+  function freshContinuation() { return { plans: {}, sequence: null, reviews: freshReviews(), community:freshCommunity(), honors:freshHonors() }; }
+  function cleanPlanSteps(s, steps, capture = false) {
+    if (!Array.isArray(steps) || steps.length !== 4) return null;
+    const result = [];
+    for (const step of steps) {
+      if (!byId(D.VOYAGE_METHODS, step?.choice) || !Array.isArray(step.equipment) || JSON.stringify(cleanEquipment(step.equipment)) !== JSON.stringify(step.equipment) || step.equipment.some(id => !s.modules[id])) return null;
+      const levels = {};
+      for (const id of step.equipment) {
+        const level = capture || step.levels === undefined ? s.modules[id] : step.levels?.[id];
+        if (!Number.isInteger(level) || level < 1 || level > s.modules[id]) return null;
+        levels[id] = level;
+      }
+      result.push({ choice: step.choice, equipment: [...step.equipment], levels });
+    }
+    return result;
+  }
+  const sameEquipment = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+  function itineraryOffer(s, id, rawSteps) {
+    const def = byId(D.VOYAGES, id), steps = cleanPlanSteps(s, rawSteps);
+    if (!def || !steps) return null;
+    const local = clone(s), quotes = [];
+    const initial = voyagePreview(s, id);
+    local.expeditions.active = { id, stage: 0, leg: null, supplies: initial.suppliesBefore, insight: initial.insightBefore };
+    local.mission = local.result = local.atlas.active = null;
+    local.dust = D.MAX_NUMBER; local.samples = D.MAX_NUMBER;
+    let reason = !s.expeditions.completed[id] ? '完成本线首航后才能保存重访安排' : '';
+    for (let stage = 0; stage < 4; stage++) {
+      const step = steps[stage]; local.equipped = [...step.equipment];
+      const p = voyagePreview(local, id, step.choice);
+      if (!reason && p.reason) reason = p.reason;
+      if (!reason && step.equipment.some(key => s.modules[key] !== step.levels[key])) reason = '舰装等级已变化，请重新保存安排以确认预览';
+      quotes.push(p); local.expeditions.active.stage++;
+      local.expeditions.active.supplies = p.suppliesAfter; local.expeditions.active.insight = p.insightAfter;
+    }
+    const total = key => quotes.reduce((n, p) => n + p[key], 0);
+    return { id, steps, quotes, seconds: total('seconds'), dustCost: total('dustCost'), costSamples: total('costSamples'),
+      dust: total('dust'), samples: total('samples'), dustGap: Math.max(0, total('dustCost') - s.dust), sampleGap: Math.max(0, total('costSamples') - s.samples), reason, available: !reason };
+  }
+  function saveItinerary(s, id, rawSteps) {
+    const steps = cleanPlanSteps(s, rawSteps, true), offer = steps && itineraryOffer(s, id, steps);
+    if (!offer?.available) return false;
+    s.continuation.plans[id] = { steps };
+    log(s, '四段重访安排已保存；每次接续仍由你确认，离线不自动出发。'); return true;
+  }
+  function itineraryBlock(s, sequence, stage) {
+    if (!sequence || !s.expeditions.active || sequence.token !== s.expeditions.active.token) return '本次安排已结束';
+    if (s.encounters.pending || s.result?.story) return '先处理等待你的事件或剧情选择';
+    const step = sequence.steps[stage];
+    if (!step) return '';
+    if (step.equipment.some(id => s.modules[id] !== step.levels[id]) || !sameEquipment(s.equipped, step.equipment)) return '编成或等级已变化；恢复已确认编成，或暂停后手动安排';
+    return '';
+  }
+  function startItinerary(s, id) {
+    const saved = s.continuation.plans[id], offer = saved && itineraryOffer(s, id, saved.steps);
+    if (!offer?.available || s.expeditions.active || s.encounters.pending || !sameEquipment(s.equipped, offer.steps[0].equipment)) return false;
+    const candidate = clone(s);
+    if (!startVoyage(candidate, id) || !dispatchVoyageLeg(candidate, candidate.expeditions.active.token, 0, offer.steps[0].choice)) return false;
+    candidate.continuation.sequence = { id, token: candidate.expeditions.active.token, steps: clone(offer.steps), paused: false, stop: null };
+    Object.assign(s, candidate); return true;
+  }
+  function itineraryStatus(s) {
+    const a = s.expeditions.active, q = s.continuation.sequence;
+    if (!a || !q || q.token !== a.token) return null;
+    const stage = a.leg ? a.stage + 1 : a.stage;
+    let reason = itineraryBlock(s, q, stage);
+    if (!reason && a.leg && s.clock >= a.leg.end && stage < 4) {
+      const candidate = clone(s); claimVoyageLeg(candidate, a.token, a.stage);
+      reason = voyagePreview(candidate, a.id, q.steps[stage].choice).reason;
+    }
+    return { ...q, stage, reason: reason || (q.paused ? '安排已暂停，当前航段仍会正常归航' : ''), ready: Boolean(a.leg && s.clock >= a.leg.end) };
+  }
+  function pauseItinerary(s, token, resume = false) {
+    const q = s.continuation.sequence, a = s.expeditions.active;
+    if (!q || !a || q.token !== Number(token) || a.token !== q.token) return false;
+    if (resume && itineraryBlock(s, q, a.leg ? a.stage + 1 : a.stage)) return false;
+    q.paused = !resume; q.stop = resume ? null : 'manual'; return true;
+  }
+  function restoreItineraryEquipment(s, token) {
+    const q = s.continuation.sequence, a = s.expeditions.active;
+    if (!q || !a || q.token !== Number(token) || q.token !== a.token) return false;
+    const stage = a.leg ? a.stage + 1 : a.stage;
+    const step = q.steps[stage];
+    if (!step || step.equipment.some(id => !s.modules[id] || s.modules[id] !== step.levels[id])) return false;
+    s.equipped = [...step.equipment]; return true;
+  }
+  function equipItinerary(s, id) {
+    const plan = s.continuation.plans[id], offer = plan && itineraryOffer(s, id, plan.steps);
+    if (!offer?.available) return false;
+    s.equipped = [...offer.steps[0].equipment]; return true;
+  }
+  function stopItinerary(s, token) {
+    if (s.continuation.sequence?.token !== Number(token) || s.expeditions.active?.token !== Number(token)) return false;
+    s.continuation.sequence = null; return true;
+  }
+  function advanceItinerary(s, token, stage) {
+    const q = s.continuation.sequence, a = s.expeditions.active;
+    if (!q || q.paused || !a?.leg || a.token !== Number(token) || q.token !== a.token || a.stage !== Number(stage) || s.clock < a.leg.end) return false;
+    const candidate = clone(s);
+    if (!claimVoyageLeg(candidate, token, stage)) return false;
+    const next = candidate.expeditions.active.stage;
+    let reason = next < 4 ? itineraryBlock(candidate, q, next) : (s.encounters.pending ? '先处理等待你的事件或剧情选择' : '');
+    if (!reason && next < 4) reason = voyagePreview(candidate, a.id, q.steps[next].choice).reason;
+    if (reason) { q.paused = true; q.stop = reason.includes('编成') ? 'equipment' : s.encounters.pending ? 'decision' : 'resources'; return false; }
+    if (next === 4) { if (!finishVoyage(candidate, token)) return false; candidate.continuation.sequence = null; }
+    else if (!dispatchVoyageLeg(candidate, token, next, q.steps[next].choice)) return false;
+    Object.assign(s, candidate); return true;
+  }
+  function cleanContinuation(raw, s) {
+    const h = freshContinuation();
+    if (!raw || typeof raw !== 'object') return h;
+    for (const def of D.VOYAGES) if (Object.hasOwn(raw.plans || {}, def.id) && s.expeditions.completed[def.id]) {
+      const steps = cleanPlanSteps(s, raw.plans[def.id]?.steps); if (steps) h.plans[def.id] = { steps };
+    }
+    h.reviews = cleanReviews(raw.reviews,s);
+    h.community = cleanCommunity(raw.community,s);
+    h.honors = cleanHonors(raw.honors,{...s,continuation:h});
+    const q = raw.sequence, a = s.expeditions.active, steps = cleanPlanSteps(s, q?.steps);
+    if (a && q?.token === a.token && q.id === a.id && s.expeditions.completed[a.id] && steps &&
+      [...a.legs, ...(a.leg ? [a.leg] : [])].every(l => l.choice === steps[l.stage].choice && sameEquipment(l.equipment, steps[l.stage].equipment)))
+      h.sequence = { id: a.id, token: a.token, steps, paused: q.paused === true, stop: ['manual', 'equipment', 'decision', 'resources'].includes(q.stop) ? q.stop : null };
+    return h;
+  }
+
   function voyageReason(s,id) {
     const def=byId(D.VOYAGES,id);
     return !def ? '未知航线' : !s.epilogue.ending ? '确认任一正式结局后开放' : surveyCount(s,def.chain)<3 ? '先完成对应星区的三处调查' : '';
@@ -1051,16 +1393,16 @@
     const slots=cleanEquipment(equipment).filter(x=>s.modules[x]>0), local={...s,equipped:slots};
     const supplies=run?.id===id?run.supplies:Math.min(3,s.management.projects['public-berths']||0);
     const insight=run?.id===id?run.insight:Math.min(2,D.SECTORS.filter(c=>c.id!==def.chain&&surveyCount(s,c.id)===3).length);
-    const nav=equipped(local,'nav'), scanner=equipped(local,'scanner');
-    const seconds=Math.max(120,Math.ceil((def.seconds[stage]||def.seconds[3])*method.time*(1-nav*.05)*(1-insight*.03)*(supplies===0?1.12:supplies>=4?.94:1)*(1-(s.management.projects['route-station']||0)*.03)));
-    const diversion=Math.max(.04,Math.min(.4,method.diversion-(s.management.projects['repair-dock']||0)*.01-insight*.01+(choice==='investigate'&&scanner? .03:0)));
-    const dustCost=Math.ceil((8000+stage*7000)*method.cost*(1-(s.management.projects['supply-network']||0)*.04));
+    const nav=equipped(local,'nav'), scanner=equipped(local,'scanner'),battery=equipped(local,'battery'),solar=equipped(local,'solar'),medbay=equipped(local,'medbay'),fit=D.LONG_VOYAGE_FITS, support=voyageSupport(s,id,stage);
+    const seconds=Math.max(120,Math.ceil((def.seconds[stage]||def.seconds[3])*method.time*(1-nav*.05)*(1-insight*.03)*(supplies===0?1.12:supplies>=4?.94:1)*(1-(s.management.projects['route-station']||0)*.03)*(support?.kind==='time'?.95:1)));
+    const diversion=Math.max(.04,Math.min(.4,method.diversion-(s.management.projects['repair-dock']||0)*.01-insight*.01-battery*fit.batteryDiversion-(id==='beacon'?medbay*fit.medbayDiversion:0)+(choice==='investigate'&&scanner? .03:0)));
+    const dustCost=Math.ceil((8000+stage*7000)*method.cost*(1-(s.management.projects['supply-network']||0)*.04)*(1-solar*fit.solarCost)*(support?.kind==='cost'?.95:1));
     const costSamples=method.costSamples;
-    const dust=Math.floor(Math.min(250000,Math.max(500,rawRate(local)*(70+stage*30)))*method.dust*def.dust*(1+scanner*.08));
-    const samples=method.samples+def.samples+(stage===3?(s.management.projects.habitat||0):0);
-    const reason=voyageReason(s,id) || (s.mission||s.result||s.atlas.active?'先处理当前探索与调查':run && run.id!==id ? '先完成当前远航':run?.leg?'先领取当前阶段报告':stage>=4?'所有阶段已完成，等待归航封存':s.afterword.active&&!run?'先完成当前居民委托':
+    const dust=Math.floor(Math.min(250000,Math.max(500,rawRate(local)*(70+stage*30)))*method.dust*def.dust*(1+scanner*(id==='freight'?fit.scannerFreight:fit.scannerOther)));
+    const samples=method.samples+def.samples+(id==='beacon'&&medbay>=fit.medbaySamplesLevel?1:0)+(id==='science'&&choice==='investigate'&&scanner>=fit.scannerScienceLevel?1:0)+(stage===3?(s.management.projects.habitat||0):0)+(support?.kind==='samples'?1:0);
+    const reason=voyageReason(s,id) || (s.mission||s.result||s.atlas.active||reviewBusy(s)?'先处理当前探索与调查':run && run.id!==id ? '先完成当前远航':run?.leg?'先领取当前阶段报告':stage>=4?'所有阶段已完成，等待归航封存':s.afterword.active&&!run?'先完成当前居民委托':
       choice==='investigate' && (!slots.includes(def.module)||!s.modules[def.module])?`此调查需要装备${byId(D.MODULES,def.module).name}；安全补给不需要特定舰装`:s.dust<dustCost?`还需 ${Math.ceil(dustCost-s.dust)} 星尘`:s.samples<costSamples?`还需 ${costSamples-s.samples} 样本`:rawRate(s)<=0?'先启动生产舰队':'');
-    return {id,stage,choice,seconds,diversion,dustCost,costSamples,dust,samples,equipment:slots,
+    return {id,stage,choice,seconds,diversion,dustCost,costSamples,dust,samples,support:support?.id||null,equipment:slots,
       levels:Object.fromEntries(slots.map(x=>[x,s.modules[x]])),suppliesBefore:supplies,insightBefore:insight,
       suppliesAfter:Math.min(8,Math.max(0,supplies+method.supplies)),insightAfter:Math.min(4,insight+method.insight),reason,available:!reason};
   }
@@ -1069,6 +1411,8 @@
     if(s.expeditions.active || !p?.available || s.expeditions.serial>=1e9) return false;
     s.expeditions.active={id,token:++s.expeditions.serial,stage:0,legs:[],leg:null,dust:0,samples:0,
       initialSupplies:p.suppliesBefore,initialInsight:p.insightBefore,supplies:p.suppliesBefore,insight:p.insightBefore};
+    reserveVoyageSupport(s,id,s.expeditions.active.token);
+    const community=s.continuation.community.active;if(community) community.voyageToken=s.expeditions.active.token;
     s.automation.dispatch=false;
     log(s, `已编排${byId(D.VOYAGES,id).name}，每段由你决定；离线等待没有失败倒计时。`);return true;
   }
@@ -1078,6 +1422,7 @@
     const p=voyagePreview(s,a.id,choice);
     if(!p?.available) return false;
     s.dust-=p.dustCost;s.samples-=p.costSamples;
+    consumeVoyageSupport(s,a);
     a.leg={stage:a.stage,choice,seconds:p.seconds,diversion:p.diversion,dustCost:p.dustCost,costSamples:p.costSamples,dust:p.dust,samples:p.samples,
       equipment:p.equipment,levels:p.levels,suppliesBefore:p.suppliesBefore,insightBefore:p.insightBefore,start:s.clock,end:s.clock+p.seconds};
     log(s,`${byId(D.VOYAGES,a.id).stages[a.stage]}已出发：${byId(D.VOYAGE_METHODS,choice).name}。`);return true;
@@ -1107,7 +1452,11 @@
     if(first) h.archives[a.id]=clone(h.records[0]);
     const seconds=a.legs.reduce((n,l)=>n+l.seconds,0);h.best[a.id]=Math.min(h.best[a.id]||Infinity,seconds);
     h.dust=bounded(h.dust+a.dust);h.samples=bounded(h.samples+a.samples+(first?6:0));
+    const community=s.continuation.community.active;
+    if(community&&community.voyageToken===a.token) creditCommunityTrip(s,a.id,community.serial,true);
     h.active=null;
+    if(s.continuation?.reviews) s.continuation.reviews.aid=null;
+    if(s.continuation?.sequence?.token===a.token) s.continuation.sequence=null;
     log(s,`${byId(D.VOYAGES,a.id).name}归航，回收物已交给港务值班组，航行档案与${fresh.length}件新纪念已保存。`);return true;
   }
   function voyageGoal(s) {
@@ -1171,7 +1520,7 @@
     const seconds = Math.max(30, Math.ceil((90 + node * 60 - Math.min(30, evidence * 5)) * method.time * (1 - equipped(s,'nav') * .06)));
     const costSamples = method.cost;
     const reason = s.discoveries < 3 ? '领取三份成功探索报告后开放图谱' : node >= chain.nodes.length ? '本线三处节点已全部归档'
-      : s.mission || s.result || s.atlas.active || s.expeditions.active ? '先处理当前航程与报告' : s.samples < costSamples ? `还需 ${costSamples-s.samples} 份样本；安全调查无需样本` : rawRate(s) <= 0 ? '先启动生产舰队' : '';
+      : s.mission || s.result || s.atlas.active || s.expeditions.active || reviewBusy(s) ? '先处理当前航程与报告' : s.samples < costSamples ? `还需 ${costSamples-s.samples} 份样本；安全调查无需样本` : rawRate(s) <= 0 ? '先启动生产舰队' : '';
     return { chain:id, node, approach, seconds, diversion:method.diversion, costSamples,
       dust: Math.min(250000, Math.floor(Math.max(20,rawRate(s) * (30 + node * 15) * method.dust * (1 + equipped(s,'scanner') * .1)))),
       samples:method.samples + (node === 2 ? 3 : 0), equipment:[...s.equipped], evidence, reason, available:!reason };
@@ -1463,6 +1812,7 @@
       order.trips = Math.min(order.tripsRequired, order.trips + 1);
       s.management.stats.voyages = integer(s.management.stats.voyages + 1, 1e9);
     }
+    if(r.succeeded) creditCommunityTrip(s,r.id,r.communityOrder);
     s.result = null;
     return true;
   }
@@ -1561,7 +1911,7 @@
   }
   function prestige(s) {
     const gain = prestigeGain(s);
-    if (!gain || s.mission || s.result || s.atlas.active || s.expeditions.active) return false;
+    if (!gain || s.mission || s.result || s.atlas.active || s.expeditions.active || reviewBusy(s)) return false;
     recordTiming(s, "prestige");
     s.records.unshift({
       seconds: s.clock - s.run.startedClock,
@@ -1607,6 +1957,7 @@
     const projects = D.HARBOR_PROJECTS.filter(p => harborProjectOffer(s, p.id).available);
     if (projects.length) tasks.push(`${projects.length} 项长期工程可手动确认建设`);
     if(s.expeditions.active) tasks.push(voyageGoal(s).title);
+    if(reviewBusy(s)) tasks.push(reviewGoal(s).title);
     if(s.atlas.active) tasks.push(s.clock>=s.atlas.active.end ? "星区调查可以归档" : "星区调查仍在航行");
     return tasks;
   }
@@ -1617,6 +1968,8 @@
       buildings: { ...s.buildings },
       research: [...s.research],
       modules: { ...s.modules },
+      continuationCounts:{reviews:s.continuation.reviews.earned.length,letters:s.continuation.community.completed.length,honors:s.continuation.honors.claimed.length},
+      communityWork:s.continuation.community.active?{serial:s.continuation.community.active.serial,produced:s.continuation.community.active.produced}:null,
       harborWork: s.management.active ? { serial: s.management.active.serial, produced: s.management.active.produced, trips: s.management.active.trips } : null,
       harborDeliveries: s.management.stats.deliveries,
       harborProjects: { ...s.management.projects },
@@ -1635,6 +1988,11 @@
       modules: D.MODULES.filter(
         (m) => (s.modules[m.id] || 0) > (before.modules[m.id] || 0),
       ).map((m) => ({ id: m.id, level: s.modules[m.id] })),
+      continuationChanges:[
+        ...(s.continuation.reviews.earned.length>(before.continuationCounts?.reviews||0)?[`证据档案 +${s.continuation.reviews.earned.length-(before.continuationCounts?.reviews||0)}`]:[]),
+        ...(s.continuation.community.completed.length>(before.continuationCounts?.letters||0)?[`居民回信 +${s.continuation.community.completed.length-(before.continuationCounts?.letters||0)}`]:[]),
+        ...(s.continuation.community.active&&s.continuation.community.active.serial===before.communityWork?.serial&&s.continuation.community.active.produced>before.communityWork.produced?[`居民协作的实际筹备产出增加，${communityStatus(s).available?'现在可以交接':'仍可继续准备'}`]:[]),
+      ],
       harborChanges: [
         ...(s.management.active && before.harborWork?.serial === s.management.active.serial && (s.management.active.produced > before.harborWork.produced || s.management.active.trips > before.harborWork.trips)
           ? [`居民需求筹备：生产工作量 ${Math.floor(s.management.active.produced)}/${s.management.active.productionGoal}，匹配补给 ${s.management.active.trips}/${s.management.active.tripsRequired}，交付仍待确认`] : []),
@@ -1652,6 +2010,8 @@
       const task = s.management.active;
       task.produced = Math.min(task.productionGoal, bounded(task.produced + produced));
     }
+    const community=s.continuation.community.active;
+    if(community) community.produced=Math.min(community.productionGoal,bounded(community.produced+produced));
     s.clock++;
     if (offline) s.timing.offlineSeconds++;
     else if (active) s.timing.foregroundSeconds++;
@@ -1766,7 +2126,7 @@
     return (
       ["home", "fleet"].includes(action) ||
       (action === "explore" &&
-        (s.run.dust >= 600 || Boolean(s.mission || s.result || s.atlas.active || s.expeditions.active))) ||
+        (s.run.dust >= 600 || Boolean(s.mission || s.result || s.atlas.active || s.expeditions.active || reviewBusy(s)))) ||
       (action === "jump" &&
         (s.run.dust >= D.PRESTIGE_DUST * 0.3 || s.rebirths > 0))
     );
@@ -2198,6 +2558,7 @@
         target: 1,
         eta: 0,
       };
+    if (reviewBusy(s) && !s.encounters.pending) return reviewGoal(s);
     if (!s.buildings.drone)
       return {
         title: "启动第一艘拾荒无人机",
@@ -2243,6 +2604,7 @@
     if(voyage) return voyage;
     const survey = surveyGoal(s);
     if (survey) return survey;
+    const community=communityGoal(s);if(community) return community;
     const readyProject = D.HARBOR_PROJECTS.find(p => harborProjectOffer(s, p.id).available);
     const harbor = harborGoal(s);
     if (harborStatus(s)?.available) return harbor;
@@ -2814,6 +3176,9 @@
       s.legacyArchive = clone(raw.legacyArchive);
     cleanAtlas(raw.atlas,s);
     cleanExpeditions(raw.expeditions,s);
+    s.continuation = cleanContinuation(raw.continuation, s);
+    const community=s.continuation.community.active;
+    for(const [clean,saved] of [[s.mission,raw.mission],[s.result,raw.result]]) if(clean&&community&&saved?.communityOrder===community.serial&&community.routes.includes(clean.id)&&(!s.mission||s.mission.start>=community.acceptedClock)) clean.communityOrder=community.serial;
     return s;
   }
   function migrateLegacy(raw, now = Date.now()) {
@@ -2934,6 +3299,10 @@
     onboarding,
     portFacilities,
     portActivity,
+    honorProgress,honorOffer,claimHonor,voyageLedger,longVoyageComparison,recentHarborChanges,
+    communityTerms,communityOffer,acceptCommunity,communityStatus,setCommunityPath,packCommunity,deliverCommunity,communityGoal,
+    reviewPreview, startReview, claimReview, reviewGoal, reviewDone, selectVoyageSupport,
+    itineraryOffer, saveItinerary, startItinerary, itineraryStatus, pauseItinerary, restoreItineraryEquipment, equipItinerary, stopItinerary, advanceItinerary,
     voyagePreview, voyageReason, startVoyage, dispatchVoyageLeg, claimVoyageLeg, finishVoyage, voyageGoal,
     surveyCount, surveyPreview, setSurveyPriority, startSurvey, claimSurvey, surveyGoal,
     harborSchedule, packHarborNeed, reserveHarborNeed,

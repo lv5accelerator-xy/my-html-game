@@ -1,0 +1,38 @@
+2026-11-10T01:59:37.5853501Z node: v22.23.4
+2026-11-10T02:09:25.0738149Z Chromium 140.0.7339.16 (playwright build v1187) downloaded to /home/runner/.cache/ms-playwright/chromium-1187
+2026-11-10T02:09:25.2994206Z FFMPEG playwright build v1011 downloaded to /home/runner/.cache/ms-playwright/ffmpeg-1011
+2026-11-10T02:09:30.4298917Z Chromium Headless Shell 140.0.7339.16 (playwright build v1187) downloaded to /home/runner/.cache/ms-playwright/chromium_headless_shell-1187
+2026-11-10T02:09:33.8565924Z Webkit 26.0 (playwright build v2203) downloaded to /home/runner/.cache/ms-playwright/webkit-2203
+2026-11-10T02:09:34.4868801Z CHECK_RESULT: {"command":"node --check game.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:09:34.5091545Z CHECK_RESULT: {"command":"node --check game-math.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:09:34.5342834Z CHECK_RESULT: {"command":"node --check cloud-save.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:09:34.5580109Z CHECK_RESULT: {"command":"node --check v2-systems.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:09:34.5817127Z CHECK_RESULT: {"command":"node --check legacy-systems.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:09:34.6055964Z CHECK_RESULT: {"command":"node --check v3/data.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:09:34.6319653Z CHECK_RESULT: {"command":"node --check v3/engine.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:09:34.6548492Z CHECK_RESULT: {"command":"node --check v3/storage.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:09:34.6801094Z CHECK_RESULT: {"command":"node --check v3/app.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:05.2932020Z CHECK_RESULT: {"command":"node tests/browser-smoke.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:05.3235342Z CHECK_RESULT: {"command":"node tests/companion-story.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:05.3573971Z CHECK_RESULT: {"command":"node tests/daily-route.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:05.3878547Z CHECK_RESULT: {"command":"node tests/doctrine-build.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:08.1514574Z CHECK_RESULT: {"command":"node tests/linked-journey-browser.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:08.1816686Z CHECK_RESULT: {"command":"node tests/linked-journey.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:15.3703227Z CHECK_RESULT: {"command":"node tests/mobile-performance.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:15.4196465Z CHECK_RESULT: {"command":"node tests/numeric-balance.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:15.4490379Z CHECK_RESULT: {"command":"node tests/retention-flow.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:16.2097591Z CHECK_RESULT: {"command":"node tests/save-migration-v200.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:16.2388450Z CHECK_RESULT: {"command":"node tests/season.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:17.0798300Z CHECK_RESULT: {"command":"node tests/usability-flow.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:10:17.3447137Z CHECK_RESULT: {"command":"node tests/v3-balance.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:14:37.9184896Z v3 browser ok: 94 complete flows; identity/content/assets/console checked in every flow
+2026-11-10T02:14:37.9542911Z CHECK_RESULT: {"command":"node tests/v3-browser.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:14:37.9928123Z v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration
+2026-11-10T02:14:38.0026572Z v3.16 compatibility ok: 30 canonical earned snapshots, active needs/voyages/reports and permanent records equal
+2026-11-10T02:14:38.0069570Z CHECK_RESULT: {"command":"node tests/v3-compatibility.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:14:40.5016206Z v3 expansion ok: 51 behavioral checks
+2026-11-10T02:14:40.5138009Z CHECK_RESULT: {"command":"node tests/v3-expansion.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:14:47.4071877Z v3 gameplay ok: 86 behavioral checks
+2026-11-10T02:14:47.4204007Z CHECK_RESULT: {"command":"node tests/v3-gameplay.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:14:47.4204577Z RESULT: 9 syntax checks, 17 test scripts, 0 failed checks.
+2026-11-10T02:21:41.8685468Z v3 browser ok: 94 complete flows; identity/content/assets/console checked in every flow

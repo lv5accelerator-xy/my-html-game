@@ -1,0 +1,99 @@
+##[group]Run mkdir -p "$PUBLIC_AUDIT_DIR"
+2026-11-10T02:24:39.8079138Z [36;1mmkdir -p "$PUBLIC_AUDIT_DIR"[0m
+2026-11-10T02:24:39.8079572Z [36;1mnode scripts/verify-public-v320.cjs 2>&1 | tee "$PUBLIC_AUDIT_DIR/acceptance.log"[0m
+2026-11-10T02:24:39.8080043Z [36;1mcat "$PUBLIC_AUDIT_DIR/result.json"[0m
+2026-11-10T02:24:39.8101869Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-10T02:24:39.8102209Z env:
+2026-11-10T02:24:39.8102485Z   RELEASE_SOURCE_SHA: a7bfea836a2285b22f1a1f1767defbdf832e62a2
+2026-11-10T02:24:39.8102943Z   PUBLIC_GAME_URL: https://lv5accelerator-xy.github.io/my-html-game/
+2026-11-10T02:24:39.8103414Z   V3_TEST_URL: https://lv5accelerator-xy.github.io/my-html-game/v3/
+2026-11-10T02:24:39.8103772Z   V3_BROWSER_ENGINE: webkit
+2026-11-10T02:24:39.8104173Z   CODEX_PLAYWRIGHT_PATH: /home/runner/work/my-html-game/my-html-game/node_modules/playwright
+2026-11-10T02:24:39.8104791Z   PUBLIC_AUDIT_DIR: /home/runner/work/my-html-game/my-html-game/public-audit/webkit
+2026-11-10T02:24:39.8105355Z   V3_SCREENSHOT_DIR: /home/runner/work/my-html-game/my-html-game/public-audit/webkit/flows
+2026-11-10T02:24:39.8105773Z ##[endgroup]
+2026-11-10T02:24:40.0852504Z AUDIT_TARGET https://lv5accelerator-xy.github.io/my-html-game/ engine=webkit
+2026-11-10T02:25:24.9278571Z locator.click: Timeout 30000ms exceeded.
+2026-11-10T02:25:24.9279121Z Call log:
+2026-11-10T02:25:24.9279398Z   - waiting for locator('#tutorial-skip')
+2026-11-10T02:25:24.9280271Z     - locator resolved to <button type="button" id="tutorial-skip" aria-label="直接开始游戏">开始游戏</button>
+2026-11-10T02:25:24.9280768Z   - attempting click action
+2026-11-10T02:25:24.9281187Z     2 × waiting for element to be visible, enabled and stable
+2026-11-10T02:25:24.9281583Z       - element is visible, enabled and stable
+2026-11-10T02:25:24.9281915Z       - scrolling into view if needed
+2026-11-10T02:25:24.9282218Z       - done scrolling
+2026-11-10T02:25:24.9283434Z       - <header class="communication-header">…</header> from <div id="communication-backdrop" class="modal-backdrop communication-backdrop">…</div> subtree intercepts pointer events
+2026-11-10T02:25:24.9284336Z     - retrying click action
+2026-11-10T02:25:24.9284596Z     - waiting 20ms
+2026-11-10T02:25:24.9285001Z     2 × waiting for element to be visible, enabled and stable
+2026-11-10T02:25:24.9285407Z       - element is visible, enabled and stable
+2026-11-10T02:25:24.9285779Z       - scrolling into view if needed
+2026-11-10T02:25:24.9286068Z       - done scrolling
+2026-11-10T02:25:24.9287073Z       - <header class="communication-header">…</header> from <div id="communication-backdrop" class="modal-backdrop communication-backdrop">…</div> subtree intercepts pointer events
+2026-11-10T02:25:24.9288184Z     - retrying click action
+2026-11-10T02:25:24.9288442Z       - waiting 100ms
+2026-11-10T02:25:24.9288860Z     19 × waiting for element to be visible, enabled and stable
+2026-11-10T02:25:24.9289267Z        - element is visible, enabled and stable
+2026-11-10T02:25:24.9289932Z        - scrolling into view if needed
+2026-11-10T02:25:24.9290219Z        - done scrolling
+2026-11-10T02:25:24.9291239Z        - <header class="communication-header">…</header> from <div id="communication-backdrop" class="modal-backdrop communication-backdrop">…</div> subtree intercepts pointer events
+2026-11-10T02:25:24.9292051Z      - retrying click action
+2026-11-10T02:25:24.9292314Z        - waiting 500ms
+2026-11-10T02:25:24.9292639Z     - waiting for element to be visible, enabled and stable
+2026-11-10T02:25:24.9292912Z 
+2026-11-10T02:25:24.9293235Z     at /home/runner/work/my-html-game/my-html-game/scripts/verify-public-v320.cjs:95:40
+2026-11-10T02:25:24.9293980Z     at async flow (/home/runner/work/my-html-game/my-html-game/scripts/verify-public-v320.cjs:72:7)
+2026-11-10T02:25:24.9294749Z     at async run (/home/runner/work/my-html-game/my-html-game/scripts/verify-public-v320.cjs:87:7) {
+2026-11-10T02:25:24.9295261Z   name: 'TimeoutError'
+2026-11-10T02:25:24.9295486Z }
+2026-11-10T02:25:24.9384853Z ##[error]Process completed with exit code 1.
+2026-11-10T02:25:24.9474696Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T02:25:24.9475012Z with:
+2026-11-10T02:25:24.9475219Z   name: v320-public-webkit
+2026-11-10T02:25:24.9475461Z   path: public-audit/
+2026-11-10T02:25:24.9475679Z   retention-days: 14
+2026-11-10T02:25:24.9475893Z   if-no-files-found: warn
+2026-11-10T02:25:24.9476121Z   compression-level: 6
+2026-11-10T02:25:24.9476328Z   overwrite: false
+2026-11-10T02:25:24.9476541Z   include-hidden-files: false
+2026-11-10T02:25:24.9476775Z env:
+2026-11-10T02:25:24.9477045Z   RELEASE_SOURCE_SHA: a7bfea836a2285b22f1a1f1767defbdf832e62a2
+2026-11-10T02:25:24.9477723Z   PUBLIC_GAME_URL: https://lv5accelerator-xy.github.io/my-html-game/
+2026-11-10T02:25:24.9478216Z   V3_TEST_URL: https://lv5accelerator-xy.github.io/my-html-game/v3/
+2026-11-10T02:25:24.9478577Z   V3_BROWSER_ENGINE: webkit
+2026-11-10T02:25:24.9478987Z   CODEX_PLAYWRIGHT_PATH: /home/runner/work/my-html-game/my-html-game/node_modules/playwright
+2026-11-10T02:25:24.9479599Z   PUBLIC_AUDIT_DIR: /home/runner/work/my-html-game/my-html-game/public-audit/webkit
+2026-11-10T02:25:24.9480153Z   V3_SCREENSHOT_DIR: /home/runner/work/my-html-game/my-html-game/public-audit/webkit/flows
+2026-11-10T02:25:24.9480572Z ##[endgroup]
+2026-11-10T02:25:25.1196965Z (node:5507) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T02:25:25.1216528Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T02:25:25.1278298Z With the provided path, there will be 2 files uploaded
+2026-11-10T02:25:25.1285293Z Artifact name is valid!
+2026-11-10T02:25:25.1286112Z Root directory input is valid!
+2026-11-10T02:25:25.3374066Z Beginning upload of artifact content to blob storage
+2026-11-10T02:25:25.3587727Z (node:5507) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T02:25:25.4038274Z Uploaded bytes 2341
+2026-11-10T02:25:25.4210102Z Finished uploading artifact content to blob storage!
+2026-11-10T02:25:25.4211421Z SHA256 digest of uploaded artifact zip is b82f4faa627a013d3871ece753fe0ef12958c6cc4ba42bef544a42a4b2d5b29f
+2026-11-10T02:25:25.4212451Z Finalizing artifact upload
+2026-11-10T02:25:25.7463387Z Artifact v320-public-webkit.zip successfully finalized. Artifact ID 13729553450
+2026-11-10T02:25:25.7465011Z Artifact v320-public-webkit has been successfully uploaded! Final size is 2341 bytes. Artifact ID is 13729553450
+2026-11-10T02:25:25.7472035Z Artifact download URL: https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42741301733/artifacts/13729553450
+2026-11-10T02:25:25.7685019Z Post job cleanup.
+2026-11-10T02:25:25.8557222Z [command]/usr/bin/git version
+2026-11-10T02:25:25.8639758Z git version 2.56.0
+2026-11-10T02:25:25.8683425Z Temporarily overriding HOME='/home/runner/work/_temp/0c335e8d-1e23-410a-bb6f-bb8c052c1c05' before making global git config changes
+2026-11-10T02:25:25.8688988Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T02:25:25.8690851Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/my-html-game/my-html-game
+2026-11-10T02:25:25.8735941Z Removing SSH command configuration
+2026-11-10T02:25:25.8743612Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T02:25:25.8788453Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T02:25:25.9067253Z Removing HTTP extra header
+2026-11-10T02:25:25.9083180Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T02:25:25.9116149Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T02:25:25.9399655Z Removing includeIf entries pointing to credentials config files
+2026-11-10T02:25:25.9411426Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T02:25:25.9461746Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T02:25:25.9882209Z Cleaning up orphan processes
+2026-11-10T02:25:26.0377085Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

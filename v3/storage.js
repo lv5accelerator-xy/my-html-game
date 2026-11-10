@@ -38,6 +38,8 @@
       sectors:state.atlas.nodes.length,
       voyages:Object.values(state.expeditions.completed).reduce((n,v)=>n+v,0),
       voyageCollections:state.expeditions.collections.length,
+      reviewArchives:state.continuation.reviews.earned.length,communityLetters:state.continuation.community.completed.length,honors:state.continuation.honors.claimed.length,
+      itineraryPlans:Object.keys(state.continuation.plans).length,itineraryActive:Boolean(state.continuation.sequence),
       mission: state.mission?.id || null, pending: state.result?.id || null,
     };
   }

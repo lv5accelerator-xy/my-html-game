@@ -1,0 +1,40 @@
+{
+  "parameterMatrix": true,
+  "earnedBase": "v320 city-three-archives",
+  "modules": [
+    "battery",
+    "scanner",
+    "medbay",
+    "nav",
+    "solar"
+  ],
+  "gears": 16,
+  "levelSets": 243,
+  "productionProfiles": [
+    {
+      "drone": 12,
+      "sail": 2,
+      "forge": 0,
+      "relay": 0
+    },
+    {
+      "drone": 45,
+      "sail": 30,
+      "forge": 12,
+      "relay": 1
+    },
+    {
+      "drone": 92,
+      "sail": 74,
+      "forge": 53,
+      "relay": 41
+    }
+  ],
+  "scenarios": 6561,
+  "quotes": 104976,
+  "singleFrontiers": 0,
+  "singleOrdinaryFrontiers": 0,
+  "minFront": 2,
+  "maxFront": 10,
+  "examples": []
+}

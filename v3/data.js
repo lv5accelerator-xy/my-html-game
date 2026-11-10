@@ -195,7 +195,7 @@
   }
 ],
     VERSION: 32,
-    GAME_VERSION: "3.20.0-preview.1",
+    GAME_VERSION: "3.24.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -703,33 +703,33 @@
         id: "battery",
         name: "储能矩阵",
         samples: 4,
-        detail: "每级全舰队产量 +12%；180秒以上基础航程每级少分流1.5个百分点。",
+        detail: "每级全舰队产量 +12%；180秒以上普通航程少分流1.5个百分点，长期远航少分流1.2个百分点。",
       },
       {
         id: "scanner",
         name: "残骸透镜",
         samples: 4,
-        detail: "每级扫描与信标收益 +25%；2级起测绘任务多1样本。",
+        detail: "每级扫描与信标收益 +25%；2级起测绘多1样本。长期货运每级回收+8%，其他长航+4%；2级起科研取样多1样本。",
       },
       {
         id: "medbay",
         name: "医疗舱电源",
         samples: 4,
         story: "hospital",
-        detail: "每级全舰队产量 +10%；2级起医疗与补给任务多1样本。来自废弃医院船。",
+        detail: "每级全舰队产量 +10%；2级起医疗与补给任务多1样本。来自废弃医院船。长期居民信标每级少分流0.6个百分点，2级起多1样本。",
       },
       {
         id: "nav",
         name: "惯性导航仪",
         samples: 6,
-        detail: "每级探索时间缩短 10%。",
+        detail: "每级普通探索时间缩短10%；长期远航时间缩短5%。",
       },
       {
         id: "solar",
         name: "温室集光阵",
         samples: 6,
         story: "garden",
-        detail: "每级光帆采集器产量 +30%；2级起生态与补给任务多1样本。来自失落温室。",
+        detail: "每级光帆采集器产量 +30%；2级起生态与补给任务多1样本。来自失落温室。长期远航每级减少3%星尘费用。",
       },
     ],
     MISSIONS: [
@@ -3234,5 +3234,355 @@
     {id:`survey-${v.id}`,name:`${v.name} · 交叉观测册`,text:'航前资料和本次调查共同留下两份以上证据，下一班可以据此核验。'},
     {id:`care-${v.id}`,name:`${v.name} · 共同值班来信`,text:'归航仍保有四份以上补给。通信班收到远方的下一班安排，照料者有了明确交接。'}
   ]).concat({id:'three-addresses',name:'三条远航 · 连通星图',text:'货运、观测和居民信标均已完成远航。记录由两港与沿线共同保存，可继续用不同编成重访。'});
+  data.REVIEWS = [
+  {
+    "id": "freight-tags",
+    "chain": "freight",
+    "index": 0,
+    "name": "货签上的第二次核对",
+    "events": [
+      "freighter",
+      "crate"
+    ],
+    "kind": "time",
+    "detail": "对照无人货船和漂流箱的编号，分清货签与真正的交接位置。",
+    "letter": "三处货签对上了同一条接力线，值班组把可复核的停靠位置标在旁边。"
+  },
+  {
+    "id": "freight-cabins",
+    "chain": "freight",
+    "index": 1,
+    "name": "运输舱的装卸顺序",
+    "events": [
+      "capsule"
+    ],
+    "kind": "cost",
+    "detail": "复核损坏运输舱的固定点，记录一次拆检后能够复用的接头。",
+    "letter": "回收员保留了损坏处和替换处的两个编号，下一班不必把整座舱重新拆开。"
+  },
+  {
+    "id": "freight-dust",
+    "chain": "freight",
+    "index": 2,
+    "name": "星尘损耗的来路",
+    "events": [
+      "stardust"
+    ],
+    "kind": "samples",
+    "detail": "沿已登记的富集带交叉取样，确认货柜外侧的沉积来源。",
+    "letter": "回收量与沉积样本分开记账，旧时代的运输习惯终于有了可以检查的注脚。"
+  },
+  {
+    "id": "science-probe",
+    "chain": "science",
+    "index": 0,
+    "name": "探针读数的盲区",
+    "events": [
+      "probe"
+    ],
+    "kind": "time",
+    "detail": "用失联采矿探针的旧读数与本次直接观测互证，不等待随机事件再次出现。",
+    "letter": "空白不再被当成零。没有旧读数的位置，观测员留下了本次实测的来源。"
+  },
+  {
+    "id": "science-tools",
+    "chain": "science",
+    "index": 1,
+    "name": "科研设备的备用接口",
+    "events": [
+      "research",
+      "component"
+    ],
+    "kind": "cost",
+    "detail": "对照科研设备与航站组件的接头，留下可重复使用的校准顺序。",
+    "letter": "设备并没有恢复成旧时代的样子，但下一位维护者知道哪些接口仍能安全使用。"
+  },
+  {
+    "id": "science-record",
+    "chain": "science",
+    "index": 2,
+    "name": "通信记录里的时间差",
+    "events": [
+      "record"
+    ],
+    "kind": "samples",
+    "detail": "把旧通信记录与两港当前时标对照，补上一份能说明来源的观测档案。",
+    "letter": "记录注明了旧讯息与新回执的不同日期。历史没有被改写，今天也没有被误记为昨天。"
+  },
+  {
+    "id": "quiet-beacon",
+    "chain": "quiet",
+    "index": 0,
+    "name": "偏移信标与残骸阴影",
+    "events": [
+      "beacon",
+      "debris"
+    ],
+    "kind": "time",
+    "detail": "复核旧信标在残骸边缘的遮蔽范围，标出安全航路的实际边界。",
+    "letter": "航图没有把阴影擦掉，而是在旁边留下了可等待、可返回的位置。"
+  },
+  {
+    "id": "quiet-signal",
+    "chain": "quiet",
+    "index": 1,
+    "name": "未知信号的登记口",
+    "events": [
+      "signal"
+    ],
+    "kind": "cost",
+    "detail": "检查旧求助信号的登记路径，确保核验的是记录，不凭空推定新的幸存者。",
+    "letter": "通信班记下了哪些结论已经确认，哪些仍只是历史中的讯号。未确认的部分保持留白。"
+  },
+  {
+    "id": "quiet-shelter",
+    "chain": "quiet",
+    "index": 2,
+    "name": "小型避难舱的交接地址",
+    "events": [
+      "shelter"
+    ],
+    "kind": "samples",
+    "detail": "沿已登记短线验证避难舱记录的交接位置，由当前居民值班组接收档案。",
+    "letter": "地址写在现在的值班表上。来信送往仍生活在两港的人，历史记录继续按原意保存。"
+  }
+];
+  data.REVIEW_METHODS = [
+  {
+    "id": "safe",
+    "name": "安全复核",
+    "time": 1.2,
+    "diversion": 0.08,
+    "refund": 0.5,
+    "samples": 2,
+    "costSamples": 0
+  },
+  {
+    "id": "salvage",
+    "name": "拆检回收",
+    "time": 1,
+    "diversion": 0.22,
+    "refund": 0.9,
+    "samples": 1,
+    "costSamples": 0
+  },
+  {
+    "id": "analysis",
+    "name": "交叉取样",
+    "time": 1.3,
+    "diversion": 0.18,
+    "refund": 0.3,
+    "samples": 6,
+    "costSamples": 2
+  }
+];
+  data.COMMUNITY_GROUPS = [
+  {
+    "id": "meals",
+    "name": "公共食堂值班组",
+    "project": "habitat",
+    "mission": "garden",
+    "voyage": "beacon"
+  },
+  {
+    "id": "workshop",
+    "name": "祁岳与维修班",
+    "project": "repair-dock",
+    "mission": "belt",
+    "voyage": "freight"
+  },
+  {
+    "id": "signals",
+    "name": "阿遥与通信班",
+    "project": "route-station",
+    "mission": "supply-run",
+    "voyage": "science"
+  }
+];
+  data.COMMUNITY_STORIES = [
+  {
+    "id": "meals-1",
+    "group": "meals",
+    "stage": 0,
+    "name": "第一顿轮班饭",
+    "detail": "值班组想把安全种植舱的第一批收成分给夜班。先备齐餐具与培养样本，再用生产筹备或一趟实际补给完成交接。",
+    "letter": "我们把第一份夜班饭留给了仍在岗位上的人。禾的旧记录放在餐桌旁的档案架上，只作纪念。"
+  },
+  {
+    "id": "meals-2",
+    "group": "meals",
+    "stage": 1,
+    "name": "两港种植表",
+    "detail": "居民生活区有了固定轮班后，两港需要一张能接续的种植表。这次要核对生态样本，安排下一批食物的去向。",
+    "letter": "新种植表已经由现在的值班组签字。苇留下的种子与录音仍在历史档案里，新的照料由居民接班。"
+  },
+  {
+    "id": "meals-3",
+    "group": "meals",
+    "stage": 2,
+    "name": "能带走的晚餐",
+    "detail": "第二期生活区需要让出航者也能带走一份补给。请备齐打包设备与样本，把餐食装进真正能交接的箱子。",
+    "letter": "这次晚餐有了箱号，也有回收容器。等下一班归来，我们还会问他们路上吃得怎么样。"
+  },
+  {
+    "id": "workshop-1",
+    "group": "workshop",
+    "stage": 0,
+    "name": "工具柜与学徒",
+    "detail": "祁岳通过维修频道发来工具清单。维修班希望整理公共工具柜，让新值班的人也能找到合用的零件。",
+    "letter": "工具柜贴上了借用说明。祁岳在维修频道确认了尺寸，实际交接由当班的人完成。"
+  },
+  {
+    "id": "workshop-2",
+    "group": "workshop",
+    "stage": 1,
+    "name": "备用件接班",
+    "detail": "第一期维修设施运转后，备用件不能只由一个人记住。请准备一批样件，交给下一组维修值班员核对。",
+    "letter": "第二组维修员已经能独立核对备用件。现在有人休息时，其他人也知道该接哪一道工序。"
+  },
+  {
+    "id": "workshop-3",
+    "group": "workshop",
+    "stage": 2,
+    "name": "维护轮班表",
+    "detail": "第二期维修设施需要一份能持续交接的轮班表。整理维修设备并完成补给或工位准备，让维修班按表接续。",
+    "letter": "维护轮班表写上了休息时间。祁岳说，能按时把工具交给下一班，也是修复的一部分。"
+  },
+  {
+    "id": "signals-1",
+    "group": "signals",
+    "stage": 0,
+    "name": "第一份独立回执",
+    "detail": "阿遥仍通过既有灯塔频道联络。通信班想独立发出一份送达回执，不再让每一条通信都依赖同一个人。",
+    "letter": "第一份回执已经从当班频道发出。阿遥在灯塔频道回了确认，地址和来源都保留在记录中。"
+  },
+  {
+    "id": "signals-2",
+    "group": "signals",
+    "stage": 1,
+    "name": "复核旧档来源",
+    "detail": "第一期航线维护站接续了更多通信。居民想把现在的来信与旧时代记录分开核对，避免把纪念误作仍在线的消息。",
+    "letter": "现在的回执注明了值班日期，旧记录注明了来源。我们会记得过去，也会准确回答今天谁在当班。"
+  },
+  {
+    "id": "signals-3",
+    "group": "signals",
+    "stage": 2,
+    "name": "两个地址的下一班",
+    "detail": "第二期航线维护站需要确认两处地址的下一次接班。安排通信样本与设备，再用实际运输或港内筹备完成登记。",
+    "letter": "两个地址都收到了下一班的名单。通信仍有等待，但现在每个等待都有可以接续的人。"
+  }
+];
+  data.HONORS = [
+  {
+    "id": "thrift-first",
+    "name": "第一次完整交接",
+    "group": "budget",
+    "kind": "voyage",
+    "target": 1,
+    "focus": "long-voyages",
+    "detail": "完成任一四段远航并归航入库。"
+  },
+  {
+    "id": "thrift-cargo",
+    "name": "货箱里的余量",
+    "group": "budget",
+    "kind": "cargo",
+    "target": 1,
+    "focus": "long-voyages",
+    "detail": "任一路线至少两段选择回收，取得货运纪念。"
+  },
+  {
+    "id": "thrift-network",
+    "name": "三条货运账本",
+    "group": "budget",
+    "kind": "cargo",
+    "target": 3,
+    "focus": "long-voyages",
+    "detail": "三条路线均取得货运纪念；各路线保留真实安排。"
+  },
+  {
+    "id": "care-first",
+    "name": "带着余粮归来",
+    "group": "care",
+    "kind": "care",
+    "target": 1,
+    "focus": "long-voyages",
+    "detail": "任一路线带足补给归航，取得保障纪念。"
+  },
+  {
+    "id": "care-network",
+    "name": "三条安全接班线",
+    "group": "care",
+    "kind": "care",
+    "target": 3,
+    "focus": "long-voyages",
+    "detail": "三条路线均取得补给保障纪念。"
+  },
+  {
+    "id": "care-town",
+    "name": "生活有了固定地址",
+    "group": "care",
+    "kind": "town",
+    "target": 6,
+    "focus": "harbor-project-habitat",
+    "detail": "公共泊位与居民生活区均完成三期。"
+  },
+  {
+    "id": "proof-map",
+    "name": "九处原始座标",
+    "group": "proof",
+    "kind": "atlas",
+    "target": 9,
+    "focus": "sector-atlas",
+    "detail": "完成原星区图谱的九处调查。"
+  },
+  {
+    "id": "proof-review",
+    "name": "证据开始接续",
+    "group": "proof",
+    "kind": "reviews",
+    "target": 3,
+    "focus": "sector-reviews",
+    "detail": "首次归档三项证据复查。"
+  },
+  {
+    "id": "proof-all",
+    "name": "每一页都有来源",
+    "group": "proof",
+    "kind": "reviews",
+    "target": 9,
+    "focus": "sector-reviews",
+    "detail": "首次归档全部九项证据复查。"
+  },
+  {
+    "id": "life-first",
+    "name": "有人接下一班",
+    "group": "life",
+    "kind": "group",
+    "target": 3,
+    "focus": "community-life",
+    "detail": "任一居民值班组完成三封连续回信。"
+  },
+  {
+    "id": "life-teams",
+    "name": "三个频道都有人",
+    "group": "life",
+    "kind": "teams",
+    "target": 3,
+    "focus": "community-life",
+    "detail": "三个居民组均至少完成一次协作。"
+  },
+  {
+    "id": "life-all",
+    "name": "下一班的日常",
+    "group": "life",
+    "kind": "community",
+    "target": 9,
+    "focus": "community-life",
+    "detail": "收藏全部九封居民生活回信。"
+  }
+];
+  data.LONG_VOYAGE_FITS = { batteryDiversion:.012, solarCost:.03, medbayDiversion:.006, medbaySamplesLevel:2, scannerFreight:.08, scannerOther:.04, scannerScienceLevel:2 };
   return Object.freeze(data);
 });

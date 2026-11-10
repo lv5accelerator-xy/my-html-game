@@ -1,0 +1,18 @@
+{
+  "game_source_commit": "1f15971c74bc89e3011a00034c5e4b26fa2c4e19",
+  "runtime_and_test_files_changed": false,
+  "codex_full_exit": 0,
+  "codex_full_seconds": 441.51,
+  "node_major": 22,
+  "playwright": "1.55.0",
+  "official_image": "mcr.microsoft.com/playwright:v1.55.0-noble",
+  "image_digest": "sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29",
+  "changed_readonly_workflows": [
+    ".github/workflows/pr-checks.yml",
+    ".github/workflows/public-acceptance.yml"
+  ],
+  "unchanged_publish_workflow_sha256": "3e905115cd581186f43afafa6f2950d4580da709e99fc35489ddf308658aff06",
+  "environment_incident_run": 42816634394,
+  "container_diagnostic_run": 42821652004,
+  "verification_status_at_commit": "diagnostic full suites and new head CI pending; not yet merged or deployed"
+}

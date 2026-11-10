@@ -1,0 +1,180 @@
+{
+  "profiles": 3,
+  "legalStageZeroPreviews": 153,
+  "harborComparisons": 63,
+  "fronts": [
+    {
+      "route": "freight",
+      "method": "recover",
+      "pareto": [
+        {
+          "equipment": [
+            "scanner",
+            "nav"
+          ],
+          "seconds": 569,
+          "diversion": 0.24000000000000002,
+          "dustNet": 717400,
+          "samplesNet": 1
+        }
+      ]
+    },
+    {
+      "route": "freight",
+      "method": "investigate",
+      "pareto": [
+        {
+          "equipment": [
+            "scanner",
+            "nav"
+          ],
+          "seconds": 711,
+          "diversion": 0.21000000000000002,
+          "dustNet": 212050,
+          "samplesNet": 3
+        }
+      ]
+    },
+    {
+      "route": "freight",
+      "method": "secure",
+      "pareto": [
+        {
+          "equipment": [
+            "scanner",
+            "nav"
+          ],
+          "seconds": 626,
+          "diversion": 0.06999999999999999,
+          "dustNet": 316000,
+          "samplesNet": 2
+        }
+      ]
+    },
+    {
+      "route": "science",
+      "method": "recover",
+      "pareto": [
+        {
+          "equipment": [
+            "scanner",
+            "nav"
+          ],
+          "seconds": 853,
+          "diversion": 0.24000000000000002,
+          "dustNet": 410500,
+          "samplesNet": 3
+        }
+      ]
+    },
+    {
+      "route": "science",
+      "method": "investigate",
+      "pareto": [
+        {
+          "equipment": [
+            "scanner",
+            "nav"
+          ],
+          "seconds": 1066,
+          "diversion": 0.21000000000000002,
+          "dustNet": 118275,
+          "samplesNet": 5
+        },
+        {
+          "equipment": [
+            "medbay",
+            "nav"
+          ],
+          "seconds": 1066,
+          "diversion": 0.18000000000000002,
+          "dustNet": 93525,
+          "samplesNet": 5
+        },
+        {
+          "equipment": [
+            "nav"
+          ],
+          "seconds": 1066,
+          "diversion": 0.18000000000000002,
+          "dustNet": 93525,
+          "samplesNet": 5
+        }
+      ]
+    },
+    {
+      "route": "science",
+      "method": "secure",
+      "pareto": [
+        {
+          "equipment": [
+            "scanner",
+            "nav"
+          ],
+          "seconds": 939,
+          "diversion": 0.06999999999999999,
+          "dustNet": 179600,
+          "samplesNet": 4
+        }
+      ]
+    },
+    {
+      "route": "beacon",
+      "method": "recover",
+      "pareto": [
+        {
+          "equipment": [
+            "scanner",
+            "nav"
+          ],
+          "seconds": 683,
+          "diversion": 0.24000000000000002,
+          "dustNet": 494200,
+          "samplesNet": 2
+        }
+      ]
+    },
+    {
+      "route": "beacon",
+      "method": "investigate",
+      "pareto": [
+        {
+          "equipment": [
+            "scanner",
+            "medbay"
+          ],
+          "seconds": 948,
+          "diversion": 0.21000000000000002,
+          "dustNet": 143850,
+          "samplesNet": 4
+        },
+        {
+          "equipment": [
+            "medbay",
+            "nav"
+          ],
+          "seconds": 853,
+          "diversion": 0.18000000000000002,
+          "dustNet": 114150,
+          "samplesNet": 4
+        }
+      ]
+    },
+    {
+      "route": "beacon",
+      "method": "secure",
+      "pareto": [
+        {
+          "equipment": [
+            "scanner",
+            "nav"
+          ],
+          "seconds": 751,
+          "diversion": 0.06999999999999999,
+          "dustNet": 216800,
+          "samplesNet": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{"label": "v324-rules-hardened", "command": ["node", "tests/v3-continuation.test.js"], "parent_sha": "4a79f4658e831c90508f8e207926385107d3be81", "node": "v22.23.4", "playwright": "1.55.0", "utc_start": "2026-11-10T11:52:33Z", "sources": {"v3/engine.js": "784cb302480b211dddfd386c1c594bf6e5cc96dcce90bdbaa0fd2ef9644a7e69", "v3/data.js": "a1eee2e19c34322d2c2bd59796049031d8ee7686c795a3e7f663b169be97f6d5", "v3/storage.js": "c5ecc2cefb05f299f8637453d7ba3d76f40746ab3b1f5175bd5249b8080aaec9", "v3/app.js": "121ea66601936741e293ea3352628cab5d44657749217e509fcd578b24c0c417", "v3/style.css": "908f8bd21ea188c9daf1a18c430ab97e4d68a058b9629090721d8305faa301ce", "v3/index.html": "0c0e693258669be6d868739c7cd4e7331e523bccc0e8024b14824eb0f898b423", "tests/v3-strategy.test.js": "01033bfe00687c05f67f1609c386f52afcc97ba60664791be10ffdb2bcc120dd", "tests/v3-continuation.test.js": "8feff78c7ba77e8c3ef84f0fc05ae197f6c6efaec5e6b14388cc795c54f4b747", "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45", "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24", "tests/v3-browser.test.js": "ea2d5d2f1c9cab238b0dc922e8c65d31e7445f63fc281ee9cae8f0865de87ccc", "tests/v3-compatibility.test.js": "dcf239e0dc307e12419bb76af810b2ecc659ee578202bde596b9123ca96ecc42", "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393", "tests/helpers/community-fixture.cjs": "ebe7143ff8b4422323fd1b8407a787469aa982bfb36a5139289e79094a73d777", "tests/helpers/v3-fixtures.cjs": "dc93cdd461b08d038470ef5610c29664c22af3912792a34ef680b55a9e1ba6a4", "tests/helpers/honors-fixture.cjs": "e4cb4fbdee6482235cf50b7f18888bfb65210e0a1a9aad87c75c30c09a8b4a40", "tests/helpers/continuation-browser.cjs": "644c4685335148a4c6013ba72c886af0b8318d907e819d78cb75067cdd04402f", "tests/helpers/isolate-browser.cjs": "027b21b83819602a970e2fa18163c9a7a9ae3e0f2358e31c5c7cdf604d241112", "scripts/verify-public-v324.cjs": "0245e37362703a3357822a622e154eff99b32dc6fcfd6402c1e93e82f9a6c2b8", "scripts/check.cjs": "a3b846e0b5ce98d37ebcaf4e03ddfc24528f09385d93551bc58d3e974b750443", "scripts/verify-public-v320.cjs": "4a0f20fa976b78c7eec435d6d1143476edcf49194baa6240200e70ef507b9da7"}, "test_environment": {}}
+ok 1 - v3.21 city/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 2 - v3.21 city/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 3 - v3.21 city/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 4 - v3.21 watch/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 5 - v3.21 watch/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 6 - v3.21 watch/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 7 - v3.21 voyage/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 8 - v3.21 voyage/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 9 - v3.21 voyage/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 10 - v3.21 pending discoveries require the player before a saved itinerary can depart
+ok 11 - v3.21 missing fees pause atomically, preserve ready leg, then allow deliberate resume
+ok 12 - v3.21 changed equipment pauses without changing locked results and explicit restore resumes
+ok 13 - v3.21 eight-hour offline cap never chooses/claims; pausing and stopping retain paid voyage
+ok 14 - v3.21 malformed/first-run plans and stale tokens cannot acquire authorization or remove old progress
+ok 15 - v3.21 a different next-leg loadout can be prepared during flight without changing the paid leg
+ok 16 - v3.21 saved plans persist across jump without replaying first-voyage awards
+ok 17 - v3.22 freight-tags: all three methods, frozen results, eight-hour recovery and one reward
+ok 18 - v3.22 freight-cabins: all three methods, frozen results, eight-hour recovery and one reward
+ok 19 - v3.22 freight-dust: all three methods, frozen results, eight-hour recovery and one reward
+ok 20 - v3.22 science-probe: all three methods, frozen results, eight-hour recovery and one reward
+ok 21 - v3.22 science-tools: all three methods, frozen results, eight-hour recovery and one reward
+ok 22 - v3.22 science-record: all three methods, frozen results, eight-hour recovery and one reward
+ok 23 - v3.22 quiet-beacon: all three methods, frozen results, eight-hour recovery and one reward
+ok 24 - v3.22 quiet-signal: all three methods, frozen results, eight-hour recovery and one reward
+ok 25 - v3.22 quiet-shelter: all three methods, frozen results, eight-hour recovery and one reward
+ok 26 - v3.22 freight-tags: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 27 - v3.22 freight-cabins: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 28 - v3.22 freight-dust: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 29 - v3.22 science-probe: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 30 - v3.22 science-tools: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 31 - v3.22 science-record: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 32 - v3.22 quiet-beacon: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 33 - v3.22 quiet-signal: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 34 - v3.22 quiet-shelter: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 35 - v3.22 nine archives are finite; reward-free practice keeps permits, atlas and permanent endings
+ok 36 - v3.22 stale/illegal snapshots and double departure cannot duplicate fees, records or permissions
+ok 37 - v3.22 a damaged archive retains its first-claim marker and cannot replay its reward
+ok 38 - v3.22 a partially surveyed atlas cannot start another real survey while reviewing
+ok 39 - v3.22 a saved four-leg plan consumes exactly one permit and restores its paid snapshot
+ok 40 - v3.23 city/production: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 41 - v3.23 city/reception: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 42 - v3.23 city/exploration: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 43 - v3.23 watch/production: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 44 - v3.23 watch/reception: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 45 - v3.23 watch/exploration: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 46 - v3.23 voyage/production: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 47 - v3.23 voyage/reception: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 48 - v3.23 voyage/exploration: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 49 - v3.23 gated stages, unknown state, late focus changes, damaged letters and finite escrow are safe
+ok 50 - v3.23 all three management directions have a measurable advantage and accepted work does not change
+ok 51 - v3.23 a pre-existing flight cannot retroactively fulfill a new community request
+ok 52 - v3.23 only complete voyages arranged after acceptance count, never stage reports or old flights
+ok 53 - v3.23 interleaved resident groups retain chronological receipts across restoration and jump
+ok 54 - v3.24 city: all twelve honors earned through existing paid systems, explicit finite claims, archive proofs and save restoration
+ok 55 - v3.24 watch: all twelve honors earned through existing paid systems, explicit finite claims, archive proofs and save restoration
+ok 56 - v3.24 voyage: all twelve honors earned through existing paid systems, explicit finite claims, archive proofs and save restoration
+ok 57 - v3.24 honors reject invented history, unknown IDs, premature rewards and unproved imported claims
+ok 58 - v3.24 completed voyage ledgers use actual locked costs, weighted diversion and one first reward
+ok 59 - v3.24 both stored fits compare without mutation and new long-voyage roles have actual tradeoffs
+ok 60 - v3.24 evidence and resident honors remain provable after recent voyage records rotate
+ok 61 - v3.24 old-rule paid medical/solar voyages retain old time, diversion, fees and rewards across new balance
+ok 62 - v3.24 partial community escrow remains finite and actual offline work is included in the return brief
+v3 continuation ok: 62 behavioral checks

@@ -1,13 +1,14 @@
 # 《星港拾荒者》新电脑维护交接说明
 
-> 当前版本：v2.3.0「归航之约」；本轮入口、存档字段和验证方式见 [发布说明](RELEASE-v2.3.0.md)。
-> 更新日期：2026-08-25
-> 技术栈：纯 HTML、CSS、JavaScript；GitHub Pages + Firebase
+> 两个独立入口：根目录v2.3.0「归航之约」；`/v3/`代码版本为3.24.0-preview.1，沿用preview命名；本轮部署、精确main SHA与公网双引擎结果见[v3.21～v3.24验收](v321-v324-validation.md)及[PR #20最终记录](https://github.com/lv5accelerator-xy/my-html-game/pull/20)。旧版说明见[RELEASE-v2.3.0](RELEASE-v2.3.0.md)。
+> 更新日期：2026-11-10
+> 技术栈：原生HTML/CSS/JavaScript；GitHub Pages。仅根v2使用可选Firebase，v3不连接旧版云服务。
 
 ## 项目地址
 
 - GitHub：https://github.com/lv5accelerator-xy/my-html-game
 - 在线游戏：https://lv5accelerator-xy.github.io/my-html-game/
+- v3入口：https://lv5accelerator-xy.github.io/my-html-game/v3/
 - Firebase 项目：`stellar-outpost-idle`
 - 默认分支：`main`
 
@@ -35,9 +36,9 @@
 
    然后打开 `http://localhost:8000/`。
 
-5. 使用 Codex 继续维护时，让它先阅读本文件、`../README.md`、`COMMUNICATIONS-GUIDE.txt`、`FIREBASE-SETUP.txt` 和 `../patch-notes/` 中的最新 Patch Notes。
+5. 使用Codex继续维护时先读`../AGENTS.md`、`../README.md`、`../CODEX_HANDOFF.md`、本文件、`v3-playable.md`及相关验收。核对最新main/开放PR/工作区并建立完整基线。Firebase文档只适用于旧版相关维护，不要混用两版迁移或云键。
 
-## 当前产品方向
+## 旧版v2产品方向与历史
 
 v2.0.0 继续收束复杂度，把既有系统组织成“看见当前航程 → 做出少量选择 → 获得总结与下轮建议”的闭环：
 
@@ -89,7 +90,7 @@ v2.0.0 继续收束复杂度，把既有系统组织成“看见当前航程 →
 | `tests/` | 数值、浏览器与手机性能回归测试 |
 | `历史版本/` | 每个正式版本的独立 ZIP |
 
-## 存档与版本
+## 旧版v2存档与版本
 
 - 浏览器主存档键：`stellarOutpostIdleSave_v1`。
 - 当前 `SAVE_VERSION = 31`。
@@ -190,16 +191,26 @@ v2.0.0 继续收束复杂度，把既有系统组织成“看见当前航程 →
 
 ## 发布新版本
 
+两入口分别维护版本与schema。v3的`data.js`/页面缓存版本同步更新，当前schema32、键`stellarOutpostIdleSave_v3`，新增字段安全补默认值，不改根v2的schema31/v1键。v3离线最多八小时，三永久结局、首航档案和旧合同不得重放。兼容使用规范副本；禁止把真实玩家档放进测试。
+
+一般开发走codex分支与草稿PR；只有明确授权才合并发布。v3.20此次授权对应PR #18；检查准确head及CI、先ready、使用预期head SHA和保留历史的merge，追踪正确main提交的archive/test/build/deploy四项及公开URL。部署工作流仍读取根v2元数据决定是否补历史ZIP，构建只发布运行白名单，不包含docs/tests/ZIP。不要为了v3发布擅自改归档规则、Firebase或工作流。
+
+以下为根v2的原版本维护顺序，不能将其`SAVE_VERSION`和补包规则套用到v3：
+
 1. 先执行 `git pull --ff-only origin main`，确认没有覆盖其他电脑的更新。
 2. 修改 `GAME_VERSION`、`PATCH_NOTES_VERSION`；存档结构改变时修改 `SAVE_VERSION`。
 3. 更新 `index.html`、脚本、样式、音频的缓存查询版本。
 4. 更新游戏内 Patch Notes、累计 Patch Notes TXT、README 与本交接文档。
 5. 运行全部测试。
 6. 本地优先生成并验证 `历史版本/星港拾荒者-v版本号.zip`，同时更新索引；若推送提交缺少该包，GitHub Actions 会从同一源码提交自动补齐一次，且不会嵌套旧版 ZIP。
-7. 提交并推送 `main`；GitHub Actions 会自动发布 Pages。
+7. 通过隔离分支完整验证与审阅；得到合并/发布授权后更新main，GitHub Actions会自动发布Pages。
 8. 打开在线游戏，确认页脚版本、新页面、手机布局和云存档状态。
 
 ## 测试命令
+
+统一完整入口使用Node22与Playwright1.55.0，先在仓库外安装依赖并设置`CODEX_PLAYWRIGHT_PATH`；系统Chromium可另设`CODEX_CHROMIUM_PATH`。`node scripts/check.cjs`执行全部语法/系统/浏览器测试，独立`V3_BROWSER_ENGINE=webkit node tests/v3-browser.test.js`验证WebKit。浏览器必须使用临时context，保持测试网络隔离；仅测试响应清空Firebase配置，不能改生产配置。正式网站另用`scripts/verify-public-v320.cjs`和`V3_TEST_URL`指向公开URL，详见发布记录；本地通过不能替代公网验证，Linux WebKit不能替代真实iPhone。
+
+以下保留根v2专项命令；不代替完整入口：
 
 ```bash
 node --check game.js

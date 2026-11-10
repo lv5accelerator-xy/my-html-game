@@ -1,0 +1,49 @@
+{
+  "utc_after_regression": "2026-11-10T12:32:23.630407+00:00",
+  "parent_sha": "788180d850628923b1065b138c216df7a9ff0c60",
+  "regression": {
+    "label": "v324-release-final-full",
+    "command": [
+      "node",
+      "scripts/check.cjs"
+    ],
+    "exit": 0,
+    "seconds": 441.51,
+    "node": "v22.23.4",
+    "playwright": "1.55.0"
+  },
+  "sources_match_pre_execution_record": true,
+  "sha256_after_regression": {
+    ".github/workflows/deploy-pages.yml": "3e905115cd581186f43afafa6f2950d4580da709e99fc35489ddf308658aff06",
+    ".github/workflows/pr-checks.yml": "ecc5690a943970c0f64bb9e324b88be3ddda023c1b4daaa7d0293cfc940dae38",
+    ".github/workflows/public-acceptance.yml": "2315b429f2584e26597fb6db34ade0975aede264fa232c643552dba3200cb9ea",
+    "scripts/check.cjs": "a3b846e0b5ce98d37ebcaf4e03ddfc24528f09385d93551bc58d3e974b750443",
+    "scripts/verify-public-v320.cjs": "4a0f20fa976b78c7eec435d6d1143476edcf49194baa6240200e70ef507b9da7",
+    "scripts/verify-public-v324.cjs": "0245e37362703a3357822a622e154eff99b32dc6fcfd6402c1e93e82f9a6c2b8",
+    "tests/fixtures/v311-saves.json": "bcb916df5cc8b88ba9dd82a044e83609af7630c0c163f6400d05b969d70ad928",
+    "tests/fixtures/v316-earned.json": "25a88cf4f5e65dd40dfdfb9fcbc6328fbd7d664c15deaa24551bd5d169ffcd9f",
+    "tests/fixtures/v316-saves.json": "be8519b9b55e164a17334604c87ec05e4f8eb002c2193746ad05a11df396e7d4",
+    "tests/fixtures/v320-saves.json": "f0280b597ed47ef951a0cfc6a204508c567a8453f4c5f1a4bb0eba3553143f16",
+    "tests/fixtures/v321-saves.json": "32680a48cef8131f7bf543d90b7032525402c2d09f60f60327978dd8af6c6b67",
+    "tests/fixtures/v322-saves.json": "e64a3fc3bfd778999fae2d09ceec76ae339cfe2364196a4f76533de1da1a2f9a",
+    "tests/fixtures/v323-saves.json": "5677187f5527227df5c72b1906012d39accdf3bc1158fb845df64fff862a89c2",
+    "tests/helpers/community-fixture.cjs": "ebe7143ff8b4422323fd1b8407a787469aa982bfb36a5139289e79094a73d777",
+    "tests/helpers/continuation-browser.cjs": "c5246c1277de022713dc169e4c922988c4d34dd869f32a6c18c0c83504102898",
+    "tests/helpers/honors-fixture.cjs": "e4cb4fbdee6482235cf50b7f18888bfb65210e0a1a9aad87c75c30c09a8b4a40",
+    "tests/helpers/isolate-browser.cjs": "027b21b83819602a970e2fa18163c9a7a9ae3e0f2358e31c5c7cdf604d241112",
+    "tests/helpers/v3-fixtures.cjs": "dc93cdd461b08d038470ef5610c29664c22af3912792a34ef680b55a9e1ba6a4",
+    "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45",
+    "tests/v3-browser.test.js": "ea2d5d2f1c9cab238b0dc922e8c65d31e7445f63fc281ee9cae8f0865de87ccc",
+    "tests/v3-compatibility.test.js": "dcf239e0dc307e12419bb76af810b2ecc659ee578202bde596b9123ca96ecc42",
+    "tests/v3-continuation.test.js": "5bb88787f4bcd2b63b4a3be3cd1c73a6efe93e0e7271c3915b3eea3488a11c34",
+    "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24",
+    "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393",
+    "tests/v3-strategy.test.js": "01033bfe00687c05f67f1609c386f52afcc97ba60664791be10ffdb2bcc120dd",
+    "v3/app.js": "dfc7172102d3a647b757b6901161c2a52d134237a1a1448cdaed412b96d2fc2d",
+    "v3/data.js": "0d955731ac1c73561bfc6bb6a32011bd631808e56b48033072803d32261fa21c",
+    "v3/engine.js": "aa347f8ea7beb282e5b4c21e5abb4a0995636dbb8663c12a485ca5e624753922",
+    "v3/index.html": "0c0e693258669be6d868739c7cd4e7331e523bccc0e8024b14824eb0f898b423",
+    "v3/storage.js": "c5ecc2cefb05f299f8637453d7ba3d76f40746ab3b1f5175bd5249b8080aaec9",
+    "v3/style.css": "908f8bd21ea188c9daf1a18c430ab97e4d68a058b9629090721d8305faa301ce"
+  }
+}

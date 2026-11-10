@@ -1,0 +1,77 @@
+# Read-only acceptance after the existing Pages workflow succeeds.
+# Does not deploy, archive, write repository content, or access player profiles.
+name: Public game acceptance
+on:
+  workflow_run:
+    workflows: ["Deploy clean GitHub Pages site"]
+    types: [completed]
+permissions:
+  contents: read
+concurrency:
+  group: public-game-acceptance
+  cancel-in-progress: true
+jobs:
+  public-site:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.0-noble@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install isolated browser test runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          node <<'JS'
+          const assert = require('node:assert/strict'), fs = require('node:fs'), p = require('playwright');
+          assert.equal(Number(process.versions.node.split('.')[0]), 22);
+          assert.equal(require('playwright/package.json').version, '1.55.0');
+          for (const engine of ['chromium', 'webkit']) assert.ok(fs.existsSync(p[engine].executablePath()), engine + ' preinstalled browser');
+          console.log(JSON.stringify({ node: process.version, playwright: '1.55.0', browsers: ['chromium', 'webkit'] }));
+          JS
+      - name: Check public assets, viewport flows and canonical migration
+        env:
+          CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
+          V3_BROWSER_ENGINE: ${{ matrix.engine }}
+          RELEASE_SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          PUBLIC_AUDIT_DIR: public-audit/${{ matrix.engine }}
+        run: node scripts/verify-public-v324.cjs
+      - name: Report independent public evidence
+        env:
+          PUBLIC_AUDIT_DIR: public-audit/${{ matrix.engine }}
+        run: |
+          node <<'JS'
+          const fs = require('node:fs');
+          const result = JSON.parse(fs.readFileSync(process.env.PUBLIC_AUDIT_DIR + '/result.json', 'utf8'));
+          console.log('PUBLIC_EVIDENCE ' + JSON.stringify(result));
+          JS
+      - name: Run full browser suite against the published URL
+        env:
+          CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
+          V3_BROWSER_ENGINE: ${{ matrix.engine }}
+          V3_TEST_URL: https://lv5accelerator-xy.github.io/my-html-game/v3/
+          V3_SCREENSHOT_DIR: public-audit/${{ matrix.engine }}/full-suite
+        run: node tests/v3-browser.test.js
+      - name: Preserve screenshots, timing and machine-readable evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-game-${{ matrix.engine }}-${{ github.event.workflow_run.head_sha }}
+          path: public-audit/
+          retention-days: 14

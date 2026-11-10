@@ -1,0 +1,153 @@
+{
+  "date": "2026-11-10",
+  "repository": "lv5accelerator-xy/my-html-game",
+  "start_main": "7034b5c7f75f52eb65acce58c00c373d8e312bfd",
+  "expected_head": "d2fc83cda98d0162ba585d9027d724ceae8458e1",
+  "merge_sha": "a7bfea836a2285b22f1a1f1767defbdf832e62a2",
+  "merge_method": "merge",
+  "expected_head_sha_guard": true,
+  "node": "22.23.4",
+  "playwright": "1.55.0",
+  "cloud_chromium": "151.0.7922.173",
+  "preflight": {
+    "command": "PATH=/workspace/scratch/starport-tools/node_modules/node/bin:$PATH CODEX_PLAYWRIGHT_PATH=/workspace/scratch/starport-tools/node_modules/playwright CODEX_CHROMIUM_PATH=/usr/bin/chromium node scripts/check.cjs",
+    "exit": 0,
+    "syntax": 9,
+    "test_scripts": 17,
+    "named_v3_rule_groups": 137,
+    "canonical_saves": 52,
+    "complete_v3_flows": 94,
+    "failed": 0,
+    "skipped": 0
+  },
+  "public_helper_local": {
+    "target": "http://127.0.0.1:8763/",
+    "command": "PUBLIC_GAME_URL=http://127.0.0.1:8763/ PUBLIC_AUDIT_DIR=/workspace/scratch/v320-release-audit/local-helper-5 CODEX_PLAYWRIGHT_PATH=/workspace/scratch/starport-tools/node_modules/playwright CODEX_CHROMIUM_PATH=/usr/bin/chromium /workspace/scratch/starport-tools/node_modules/node/bin/node scripts/verify-public-v320.cjs",
+    "exit": 0,
+    "flows": 7,
+    "v316_unique_snapshots": 30,
+    "runtime_hashes": 14,
+    "prior_failed_development_runs": 4,
+    "counts_as_public_verification": false,
+    "overlay_fix_rerun": {
+      "exit": 0,
+      "flows": 7,
+      "runtime_hashes": 14,
+      "v316_unique_snapshots": 30
+    }
+  },
+  "cloud_webkit_probe": {
+    "exit": 1,
+    "browser_flows_run": 0,
+    "reason": "missing webkit-2203/pw_run.sh"
+  },
+  "cloud_public_probe": {
+    "command": "curl -I --max-time 20 https://lv5accelerator-xy.github.io/my-html-game/v3/",
+    "exit": 56,
+    "reason": "CONNECT 403 environment policy"
+  },
+  "premerge_ci": {
+    "run": 42699912273,
+    "source_sha": "d2fc83cda98d0162ba585d9027d724ceae8458e1",
+    "conclusion": "success",
+    "chromium_complete_flows": 94,
+    "webkit_complete_flows": 94
+  },
+  "pages_run": 42739585599,
+  "public_acceptance": {
+    "first_run": 42741301733,
+    "webkit": "failed: test clicked tutorial underneath timed announcement",
+    "chromium": "first run completed successfully; see first_chromium counts",
+    "fix": "only test startup ordering; release runtime unchanged",
+    "final_result": {
+      "run": 42744103954,
+      "audit_source_sha": "eb5287f23e92936c794043dc234e09950c775b99",
+      "runtime_source_sha": "a7bfea836a2285b22f1a1f1767defbdf832e62a2",
+      "conclusion": "success",
+      "chromium": {
+        "exit": 0,
+        "runtime_hashes": 14,
+        "extra_flows": 7,
+        "v3_flows": 94,
+        "v316_unique_snapshots": 30,
+        "failed": 0,
+        "skipped": 0,
+        "audio_navigation_cancellations": 2
+      },
+      "webkit": {
+        "exit": 0,
+        "runtime_hashes": 14,
+        "extra_flows": 7,
+        "v3_flows": 94,
+        "v316_unique_snapshots": 30,
+        "failed": 0,
+        "skipped": 0,
+        "audio_navigation_cancellations": 4
+      }
+    },
+    "first_chromium": {
+      "exit": 0,
+      "runtime_hashes": 14,
+      "extra_flows": 7,
+      "complete_v3_flows": 94,
+      "v316_unique_snapshots": 30
+    },
+    "second_run": 42743083976,
+    "second_webkit": {
+      "exit": 1,
+      "completed_extra_flows": 6,
+      "reason": "active CSS background request cancelled by test reload",
+      "fix": "wait for actual HTTP200 and fully finished image body before and after deliberate reload; retain zero-failed-request assertion"
+    }
+  },
+  "real_iphone_safari": "not run",
+  "production_firebase": "untouched",
+  "real_player_saves": "untouched",
+  "pages_result": {
+    "status": "completed",
+    "conclusion": "success",
+    "source_sha": "a7bfea836a2285b22f1a1f1767defbdf832e62a2",
+    "artifact": 13730060260,
+    "archive": "success",
+    "test": "success",
+    "build": "success",
+    "deploy": "success",
+    "reported_success_utc": "2026-11-10T02:24:30Z"
+  },
+  "environment_limits": {
+    "artifact_download_probe_exit": 22,
+    "artifact_download_http": 403,
+    "public_screenshots_manually_viewed": false,
+    "local_screenshots_manually_viewed": true,
+    "git_upstream_query": "restricted main-only fetch refspec; use explicit remote refs/API head comparison"
+  },
+  "workflow_archived_after_success": "docs/validation/v320-release/public-acceptance-workflow.yml",
+  "superseded_maintenance_ci": [
+    {
+      "run": 42741301593,
+      "conclusion": "cancelled",
+      "reason": "original PR concurrency policy after corrective push"
+    },
+    {
+      "run": 42743083435,
+      "conclusion": "cancelled",
+      "reason": "original PR concurrency policy after corrective push"
+    }
+  ],
+  "audit_branch": "codex/v320-release-audit",
+  "audit_pr": 19,
+  "audit_pr_draft": true,
+  "docs_merged_to_main": false,
+  "audit_tested_source_ci": {
+    "run": 42744103650,
+    "source_sha": "eb5287f23e92936c794043dc234e09950c775b99",
+    "conclusion": "success",
+    "syntax": 9,
+    "scripts": 17,
+    "named_v3_rule_groups": 137,
+    "canonical_saves": 52,
+    "chromium_flows": 94,
+    "webkit_flows": 94,
+    "exit": 0
+  }
+}

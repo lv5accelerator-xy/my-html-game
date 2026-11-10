@@ -1,0 +1,96 @@
+{
+  "runtime_reference_sha": "a7bfea836a2285b22f1a1f1767defbdf832e62a2",
+  "public_audit_source_sha": "eb5287f23e92936c794043dc234e09950c775b99",
+  "files": [
+    {
+      "path": "index.html",
+      "sha256": "3c223c934e023d2495433008e7d8363ea5983e9d42ecb4b8033b4b9c29de6a83",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "styles.css",
+      "sha256": "b81fc3362e99eeb861ae48cdcb300a0a3c922aed0996770b9fbd22ab3b07f3e6",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "game.js",
+      "sha256": "d2dacbb2e25bc4c056da5a76bce83eea477a169905ef99c4731a1e86a9c5ecb2",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "game-math.js",
+      "sha256": "518b0621e307ca638d2f2566c90785a3e3d9c38bd361ff272a025756ba22b673",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "v2-systems.js",
+      "sha256": "3cdc0590c84c2743a5684c38e84cbc8dfe2300cb1f1f291281656db6c41718c5",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "legacy-systems.js",
+      "sha256": "e8ec704c1a2458d7e697ffa5cf9d5cd3b44708901e5f7657f7e1d345eca51ead",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "firebase-config.js",
+      "sha256": "5288e2e0d233603a81c8fa97584bf781f2ce2cc38efe4c7ce222ab14736ca341",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "cloud-save.js",
+      "sha256": "7dc97474b83d393b0f3f1f9da3a9831ca61379b85a0ebcb16276dd61dee59d8f",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "v3/index.html",
+      "sha256": "cba257437762a168b9cb3d1a2346bd1e02c6879511a757ba9e327c6bf685f1b1",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "v3/style.css",
+      "sha256": "09635a3d660c5a3e1e1f47468862f5a71ab666e52ae884338285ad4b95dedc07",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "v3/data.js",
+      "sha256": "22807438b034a9ecfc86b52390c94facb250ad2d822d98544c1fc2e1dcfd9bed",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "v3/engine.js",
+      "sha256": "53be028aef235727590fdd6496188ae3c8678f077e380d924a41b32cbf135cb8",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "v3/storage.js",
+      "sha256": "a039cb7db647d7eeea618e08e25695442d90217ee91740162f3d819b4867bdce",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "v3/app.js",
+      "sha256": "385ea8c6d6331ff328b3d256c690801a782444ca2e1fe72c71aefcd1cfddc8e1",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "scripts/verify-public-v320.cjs",
+      "sha256": "4a0f20fa976b78c7eec435d6d1143476edcf49194baa6240200e70ef507b9da7",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "tests/v3-browser.test.js",
+      "sha256": "2b41791c5f9cbcdfc4cbb5c0caafe5597d5da18ef14f4a87edbcb31e52236add",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "tests/helpers/isolate-browser.cjs",
+      "sha256": "027b21b83819602a970e2fa18163c9a7a9ae3e0f2358e31c5c7cdf604d241112",
+      "equals_public_tested_commit": true
+    },
+    {
+      "path": "tests/fixtures/v316-saves.json",
+      "sha256": "be8519b9b55e164a17334604c87ec05e4f8eb002c2193746ad05a11df396e7d4",
+      "equals_public_tested_commit": true
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{"label": "v322-rules-hardened", "command": ["node", "tests/v3-continuation.test.js"], "parent_sha": "5b32d4c154aad1fb71a22950bc2ab69e582a057e", "node": "v22.23.4", "playwright": "1.55.0", "utc_start": "2026-11-10T11:12:29Z", "sources": {"v3/engine.js": "04d16e7869dd6be18e2e651fdaa67a8f3e9b8fb21fb6e56c8277fa4b5c2e2685", "v3/data.js": "632bdf251370f03b08245662e201e4477f48ee465dd6dc8a031d88eac0283734", "v3/storage.js": "a039cb7db647d7eeea618e08e25695442d90217ee91740162f3d819b4867bdce", "v3/app.js": "50c824be5e2cd75dc9cdf33a66aa21315db9ad4785a9d63379e174825f47cf4f", "v3/style.css": "cfb674382b66dabf5d9f3c9d4f71fb7e7ce71aceee7e108127327918e8ce967d", "v3/index.html": "14afa919ef6e99d2c8ac440aa922c59578a195a8217b66d1c3e2c70f39a8013b", "tests/v3-continuation.test.js": "b4cd506efd16040b06d94243fef57748b6b2f88dbc7ca80a5277ac707bc03fdb", "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45", "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24", "tests/v3-browser.test.js": "ea2d5d2f1c9cab238b0dc922e8c65d31e7445f63fc281ee9cae8f0865de87ccc", "tests/v3-compatibility.test.js": "62110b46c7c8300fd19362d3b3be2bb822b81f09fb4d78749a0922629233dcb8", "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393"}}
+ok 1 - v3.21 city/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 2 - v3.21 city/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 3 - v3.21 city/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 4 - v3.21 watch/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 5 - v3.21 watch/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 6 - v3.21 watch/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 7 - v3.21 voyage/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 8 - v3.21 voyage/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 9 - v3.21 voyage/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 10 - v3.21 pending discoveries require the player before a saved itinerary can depart
+ok 11 - v3.21 missing fees pause atomically, preserve ready leg, then allow deliberate resume
+ok 12 - v3.21 changed equipment pauses without changing locked results and explicit restore resumes
+ok 13 - v3.21 eight-hour offline cap never chooses/claims; pausing and stopping retain paid voyage
+ok 14 - v3.21 malformed/first-run plans and stale tokens cannot acquire authorization or remove old progress
+ok 15 - v3.21 a different next-leg loadout can be prepared during flight without changing the paid leg
+ok 16 - v3.21 saved plans persist across jump without replaying first-voyage awards
+ok 17 - v3.22 freight-tags: all three methods, frozen results, eight-hour recovery and one reward
+ok 18 - v3.22 freight-cabins: all three methods, frozen results, eight-hour recovery and one reward
+ok 19 - v3.22 freight-dust: all three methods, frozen results, eight-hour recovery and one reward
+ok 20 - v3.22 science-probe: all three methods, frozen results, eight-hour recovery and one reward
+ok 21 - v3.22 science-tools: all three methods, frozen results, eight-hour recovery and one reward
+ok 22 - v3.22 science-record: all three methods, frozen results, eight-hour recovery and one reward
+ok 23 - v3.22 quiet-beacon: all three methods, frozen results, eight-hour recovery and one reward
+ok 24 - v3.22 quiet-signal: all three methods, frozen results, eight-hour recovery and one reward
+ok 25 - v3.22 quiet-shelter: all three methods, frozen results, eight-hour recovery and one reward
+ok 26 - v3.22 freight-tags: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 27 - v3.22 freight-cabins: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 28 - v3.22 freight-dust: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 29 - v3.22 science-probe: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 30 - v3.22 science-tools: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 31 - v3.22 science-record: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 32 - v3.22 quiet-beacon: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 33 - v3.22 quiet-signal: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 34 - v3.22 quiet-shelter: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 35 - v3.22 nine archives are finite; reward-free practice keeps permits, atlas and permanent endings
+ok 36 - v3.22 stale/illegal snapshots and double departure cannot duplicate fees, records or permissions
+ok 37 - v3.22 a damaged archive retains its first-claim marker and cannot replay its reward
+ok 38 - v3.22 a partially surveyed atlas cannot start another real survey while reviewing
+v3 continuation ok: 38 behavioral checks

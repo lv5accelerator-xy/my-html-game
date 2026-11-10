@@ -1,0 +1,11 @@
+2026-11-10T02:24:57.6225651Z AUDIT_TARGET https://lv5accelerator-xy.github.io/my-html-game/ engine=chromium
+2026-11-10T02:25:13.5847383Z PUBLIC_FLOW_OK v2-fresh-1280
+2026-11-10T02:25:19.4720452Z PUBLIC_FLOW_OK v3-fresh-1280
+2026-11-10T02:25:31.6750829Z PUBLIC_FLOW_OK v2-fresh-375
+2026-11-10T02:25:37.2457125Z PUBLIC_FLOW_OK v3-fresh-375
+2026-11-10T02:25:37.6307401Z PUBLIC_FLOW_OK v316-restore-city-ending
+2026-11-10T02:25:37.9789458Z PUBLIC_FLOW_OK v316-restore-watch-ending
+2026-11-10T02:25:38.6961231Z PUBLIC_FLOW_OK v316-restore-voyage-ending
+2026-11-10T02:25:38.6992743Z PUBLIC_RESULT: 14 exact target runtime hashes, 7 browser flows, 30 unique v3.16 snapshots, 0 failed/0 skipped; chromium
+2026-11-10T02:29:56.4765100Z v3 browser ok: 94 complete flows; identity/content/assets/console checked in every flow
+2026-11-10T02:29:58.8538634Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

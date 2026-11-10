@@ -1,0 +1,53 @@
+{"label": "v323-rules-fixed", "command": ["node", "tests/v3-continuation.test.js"], "parent_sha": "996162906d412b27473936f16e0890886d023243", "node": "v22.23.4", "playwright": "1.55.0", "utc_start": "2026-11-10T11:35:01Z", "sources": {"v3/engine.js": "64791b21129ed497e4bd86dfdcf97073ad6b95367f6acf5c99fe7b369eb88e2e", "v3/data.js": "8c54236394c1a7f47ce58762d04f63820d45868d7a072674a5428b022d900204", "v3/storage.js": "a039cb7db647d7eeea618e08e25695442d90217ee91740162f3d819b4867bdce", "v3/app.js": "a45b06a4ee20108ff69a2fc83ed7140d6831cd69f6c3d4552d1b1292e032e3e3", "v3/style.css": "56f2aa1a560f8515744edb4ef14d7fa16bad297426ef7a1975856fc955d4cfde", "v3/index.html": "73e7c742ea71671ee5c436e247d09fd7d644823c84cd3a9ceb15bbffaf688430", "tests/v3-continuation.test.js": "72bb1748c4d327a38f068ada8162958f753113a9892f80701183770a3bc83036", "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45", "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24", "tests/v3-browser.test.js": "ea2d5d2f1c9cab238b0dc922e8c65d31e7445f63fc281ee9cae8f0865de87ccc", "tests/v3-compatibility.test.js": "76b40b1c81748b1786f34687c43aeef24b653352f288b05e1789960010d37ff8", "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393", "tests/helpers/community-fixture.cjs": "ebe7143ff8b4422323fd1b8407a787469aa982bfb36a5139289e79094a73d777", "tests/helpers/v3-fixtures.cjs": "dc93cdd461b08d038470ef5610c29664c22af3912792a34ef680b55a9e1ba6a4", "tests/helpers/continuation-browser.cjs": "1bb18b102095a6866d4b47d66e7c080a02ad95b5722be9d17317dc7eeb57045f", "tests/helpers/isolate-browser.cjs": "027b21b83819602a970e2fa18163c9a7a9ae3e0f2358e31c5c7cdf604d241112", "scripts/check.cjs": "a3b846e0b5ce98d37ebcaf4e03ddfc24528f09385d93551bc58d3e974b750443", "scripts/verify-public-v320.cjs": "4a0f20fa976b78c7eec435d6d1143476edcf49194baa6240200e70ef507b9da7"}, "test_environment": {}}
+ok 1 - v3.21 city/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 2 - v3.21 city/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 3 - v3.21 city/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 4 - v3.21 watch/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 5 - v3.21 watch/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 6 - v3.21 watch/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 7 - v3.21 voyage/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 8 - v3.21 voyage/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 9 - v3.21 voyage/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 10 - v3.21 pending discoveries require the player before a saved itinerary can depart
+ok 11 - v3.21 missing fees pause atomically, preserve ready leg, then allow deliberate resume
+ok 12 - v3.21 changed equipment pauses without changing locked results and explicit restore resumes
+ok 13 - v3.21 eight-hour offline cap never chooses/claims; pausing and stopping retain paid voyage
+ok 14 - v3.21 malformed/first-run plans and stale tokens cannot acquire authorization or remove old progress
+ok 15 - v3.21 a different next-leg loadout can be prepared during flight without changing the paid leg
+ok 16 - v3.21 saved plans persist across jump without replaying first-voyage awards
+ok 17 - v3.22 freight-tags: all three methods, frozen results, eight-hour recovery and one reward
+ok 18 - v3.22 freight-cabins: all three methods, frozen results, eight-hour recovery and one reward
+ok 19 - v3.22 freight-dust: all three methods, frozen results, eight-hour recovery and one reward
+ok 20 - v3.22 science-probe: all three methods, frozen results, eight-hour recovery and one reward
+ok 21 - v3.22 science-tools: all three methods, frozen results, eight-hour recovery and one reward
+ok 22 - v3.22 science-record: all three methods, frozen results, eight-hour recovery and one reward
+ok 23 - v3.22 quiet-beacon: all three methods, frozen results, eight-hour recovery and one reward
+ok 24 - v3.22 quiet-signal: all three methods, frozen results, eight-hour recovery and one reward
+ok 25 - v3.22 quiet-shelter: all three methods, frozen results, eight-hour recovery and one reward
+ok 26 - v3.22 freight-tags: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 27 - v3.22 freight-cabins: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 28 - v3.22 freight-dust: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 29 - v3.22 science-probe: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 30 - v3.22 science-tools: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 31 - v3.22 science-record: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 32 - v3.22 quiet-beacon: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 33 - v3.22 quiet-signal: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 34 - v3.22 quiet-shelter: one matching first-leg permit, exact preview, locked snapshot and no reuse
+ok 35 - v3.22 nine archives are finite; reward-free practice keeps permits, atlas and permanent endings
+ok 36 - v3.22 stale/illegal snapshots and double departure cannot duplicate fees, records or permissions
+ok 37 - v3.22 a damaged archive retains its first-claim marker and cannot replay its reward
+ok 38 - v3.22 a partially surveyed atlas cannot start another real survey while reviewing
+ok 39 - v3.22 a saved four-leg plan consumes exactly one permit and restores its paid snapshot
+ok 40 - v3.23 city/production: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 41 - v3.23 city/reception: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 42 - v3.23 city/exploration: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 43 - v3.23 watch/production: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 44 - v3.23 watch/reception: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 45 - v3.23 watch/exploration: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 46 - v3.23 voyage/production: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 47 - v3.23 voyage/reception: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 48 - v3.23 voyage/exploration: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery
+ok 49 - v3.23 gated stages, unknown state, late focus changes, damaged letters and finite escrow are safe
+ok 50 - v3.23 all three management directions have a measurable advantage and accepted work does not change
+ok 51 - v3.23 a pre-existing flight cannot retroactively fulfill a new community request
+v3 continuation ok: 51 behavioral checks

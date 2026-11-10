@@ -1,0 +1,68 @@
+name: v3.20 public-site acceptance
+
+# A read-only release check on the audit PR. It does not publish Pages, archive
+# releases, change repository settings, or connect test contexts to Firebase.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/v320-public-acceptance.yml'
+      - 'scripts/verify-public-v320.cjs'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  public-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    env:
+      RELEASE_SOURCE_SHA: a7bfea836a2285b22f1a1f1767defbdf832e62a2
+      PUBLIC_GAME_URL: https://lv5accelerator-xy.github.io/my-html-game/
+      V3_TEST_URL: https://lv5accelerator-xy.github.io/my-html-game/v3/
+      V3_BROWSER_ENGINE: ${{ matrix.browser }}
+      CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
+      PUBLIC_AUDIT_DIR: ${{ github.workspace }}/public-audit/${{ matrix.browser }}
+      V3_SCREENSHOT_DIR: ${{ github.workspace }}/public-audit/${{ matrix.browser }}/flows
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Confirm reference runtime has not changed
+        run: git diff --exit-code "$RELEASE_SOURCE_SHA" -- index.html styles.css game.js game-math.js v2-systems.js legacy-systems.js firebase-config.js cloud-save.js v3
+      - name: Install isolated browser runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Wait for the reviewed release deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run watch 42739585599 --repo lv5accelerator-xy/my-html-game --interval 30 --exit-status
+          deployed_sha="$(gh api repos/lv5accelerator-xy/my-html-game/actions/runs/42739585599 --jq .head_sha)"
+          test "$deployed_sha" = "$RELEASE_SOURCE_SHA"
+      - name: Verify public runtime, fresh saves, layouts and v3.16 compatibility
+        shell: bash
+        run: |
+          mkdir -p "$PUBLIC_AUDIT_DIR"
+          node scripts/verify-public-v320.cjs 2>&1 | tee "$PUBLIC_AUDIT_DIR/acceptance.log"
+          cat "$PUBLIC_AUDIT_DIR/result.json"
+      - name: Complete all v3 browser flows on the public URL
+        shell: bash
+        run: node tests/v3-browser.test.js 2>&1 | tee "$PUBLIC_AUDIT_DIR/full-v3.log"
+      - name: Preserve acceptance results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v320-public-${{ matrix.browser }}
+          path: public-audit/
+          retention-days: 14

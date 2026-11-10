@@ -1,0 +1,34 @@
+2026-11-10T02:38:28.9693305Z node: v22.23.4
+2026-11-10T02:39:11.1103513Z CHECK_RESULT: {"command":"node --check game.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:11.1316831Z CHECK_RESULT: {"command":"node --check game-math.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:11.1526363Z CHECK_RESULT: {"command":"node --check cloud-save.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:11.1749127Z CHECK_RESULT: {"command":"node --check v2-systems.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:11.1952205Z CHECK_RESULT: {"command":"node --check legacy-systems.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:11.2167956Z CHECK_RESULT: {"command":"node --check v3/data.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:11.2380110Z CHECK_RESULT: {"command":"node --check v3/engine.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:11.2594846Z CHECK_RESULT: {"command":"node --check v3/storage.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:11.2821109Z CHECK_RESULT: {"command":"node --check v3/app.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:42.5711061Z CHECK_RESULT: {"command":"node tests/browser-smoke.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:42.6000906Z CHECK_RESULT: {"command":"node tests/companion-story.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:42.6287328Z CHECK_RESULT: {"command":"node tests/daily-route.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:42.6536688Z CHECK_RESULT: {"command":"node tests/doctrine-build.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:45.5309477Z CHECK_RESULT: {"command":"node tests/linked-journey-browser.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:45.5577171Z CHECK_RESULT: {"command":"node tests/linked-journey.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:53.0708520Z CHECK_RESULT: {"command":"node tests/mobile-performance.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:53.1140199Z CHECK_RESULT: {"command":"node tests/numeric-balance.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:53.1413018Z CHECK_RESULT: {"command":"node tests/retention-flow.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:53.7572163Z CHECK_RESULT: {"command":"node tests/save-migration-v200.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:53.7839587Z CHECK_RESULT: {"command":"node tests/season.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:54.4890991Z CHECK_RESULT: {"command":"node tests/usability-flow.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:39:54.6661084Z CHECK_RESULT: {"command":"node tests/v3-balance.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:43:56.8585272Z v3 browser ok: 94 complete flows; identity/content/assets/console checked in every flow
+2026-11-10T02:43:56.8939671Z CHECK_RESULT: {"command":"node tests/v3-browser.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:43:56.9254490Z v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration
+2026-11-10T02:43:56.9322350Z v3.16 compatibility ok: 30 canonical earned snapshots, active needs/voyages/reports and permanent records equal
+2026-11-10T02:43:56.9368449Z CHECK_RESULT: {"command":"node tests/v3-compatibility.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:43:58.6798389Z v3 expansion ok: 51 behavioral checks
+2026-11-10T02:43:58.6928818Z CHECK_RESULT: {"command":"node tests/v3-expansion.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:44:03.4399252Z v3 gameplay ok: 86 behavioral checks
+2026-11-10T02:44:03.4545318Z CHECK_RESULT: {"command":"node tests/v3-gameplay.test.js","exit":0,"signal":null,"error":null}
+2026-11-10T02:44:03.4546058Z RESULT: 9 syntax checks, 17 test scripts, 0 failed checks.
+2026-11-10T02:50:14.5757583Z v3 browser ok: 94 complete flows; identity/content/assets/console checked in every flow

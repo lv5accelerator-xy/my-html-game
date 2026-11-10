@@ -1,0 +1,4 @@
+ok 1 - v3.27 city: six deterministic environment rotations, actual fit tradeoff, locked policy, offline and ledger
+ok 2 - v3.27 watch: six deterministic environment rotations, actual fit tradeoff, locked policy, offline and ledger
+ok 3 - v3.27 voyage: six deterministic environment rotations, actual fit tradeoff, locked policy, offline and ledger
+v3 browser ok: 3 complete flows; identity/content/assets/console checked in every flow

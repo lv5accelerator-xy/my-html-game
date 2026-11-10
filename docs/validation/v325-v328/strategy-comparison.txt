@@ -1,0 +1,1753 @@
+{
+  "version": "3.27.0-preview.1",
+  "model": "Same earned v324 save; normal paid module upgrades to3; actual six consecutive voyages per route; quotes from identical current fleet; no grants",
+  "previousEngine": "/workspace/scratch/v325-v328/baseline-site/v3/engine.js",
+  "rows": [
+    {
+      "route": "freight",
+      "token": 7,
+      "condition": "debris",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 496,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 316000,
+        "netSamples": 2
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "debris",
+          "schedule": "production",
+          "seconds": 516,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 413040,
+          "netSamples": 2
+        },
+        "production:battery+solar": {
+          "condition": "debris",
+          "schedule": "production",
+          "seconds": 662,
+          "diversion": 0.04,
+          "dustCost": 5533,
+          "netDust": 254467,
+          "netSamples": 2
+        },
+        "production:nav+medbay": {
+          "condition": "debris",
+          "schedule": "production",
+          "seconds": 516,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 253920,
+          "netSamples": 2
+        },
+        "reception:nav+scanner": {
+          "condition": "debris",
+          "schedule": "reception",
+          "seconds": 491,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 412400,
+          "netSamples": 3
+        },
+        "reception:battery+solar": {
+          "condition": "debris",
+          "schedule": "reception",
+          "seconds": 630,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 253884,
+          "netSamples": 3
+        },
+        "reception:nav+medbay": {
+          "condition": "debris",
+          "schedule": "reception",
+          "seconds": 491,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 253280,
+          "netSamples": 3
+        },
+        "exploration:nav+scanner": {
+          "condition": "debris",
+          "schedule": "exploration",
+          "seconds": 462,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 391764,
+          "netSamples": 2
+        },
+        "exploration:battery+solar": {
+          "condition": "debris",
+          "schedule": "exploration",
+          "seconds": 593,
+          "diversion": 0.04,
+          "dustCost": 5824,
+          "netDust": 241176,
+          "netSamples": 2
+        },
+        "exploration:nav+medbay": {
+          "condition": "debris",
+          "schedule": "exploration",
+          "seconds": 462,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 240600,
+          "netSamples": 2
+        }
+      }
+    },
+    {
+      "route": "freight",
+      "token": 8,
+      "condition": "interference",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 496,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 316000,
+        "netSamples": 2
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "interference",
+          "schedule": "production",
+          "seconds": 521,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6080,
+          "netDust": 316320,
+          "netSamples": 3
+        },
+        "production:battery+solar": {
+          "condition": "interference",
+          "schedule": "production",
+          "seconds": 613,
+          "diversion": 0.043999999999999984,
+          "dustCost": 5533,
+          "netDust": 254467,
+          "netSamples": 2
+        },
+        "production:nav+medbay": {
+          "condition": "interference",
+          "schedule": "production",
+          "seconds": 521,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6080,
+          "netDust": 253920,
+          "netSamples": 2
+        },
+        "reception:nav+scanner": {
+          "condition": "interference",
+          "schedule": "reception",
+          "seconds": 496,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 315680,
+          "netSamples": 4
+        },
+        "reception:battery+solar": {
+          "condition": "interference",
+          "schedule": "reception",
+          "seconds": 584,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 253884,
+          "netSamples": 3
+        },
+        "reception:nav+medbay": {
+          "condition": "interference",
+          "schedule": "reception",
+          "seconds": 496,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 253280,
+          "netSamples": 3
+        },
+        "exploration:nav+scanner": {
+          "condition": "interference",
+          "schedule": "exploration",
+          "seconds": 466,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6400,
+          "netDust": 299880,
+          "netSamples": 3
+        },
+        "exploration:battery+solar": {
+          "condition": "interference",
+          "schedule": "exploration",
+          "seconds": 549,
+          "diversion": 0.043999999999999984,
+          "dustCost": 5824,
+          "netDust": 241176,
+          "netSamples": 2
+        },
+        "exploration:nav+medbay": {
+          "condition": "interference",
+          "schedule": "exploration",
+          "seconds": 466,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6400,
+          "netDust": 240600,
+          "netSamples": 2
+        }
+      }
+    },
+    {
+      "route": "freight",
+      "token": 9,
+      "condition": "energy",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 496,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 316000,
+        "netSamples": 2
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "energy",
+          "schedule": "production",
+          "seconds": 521,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6080,
+          "netDust": 300200,
+          "netSamples": 2
+        },
+        "production:battery+solar": {
+          "condition": "energy",
+          "schedule": "production",
+          "seconds": 576,
+          "diversion": 0.04899999999999999,
+          "dustCost": 5201,
+          "netDust": 241799,
+          "netSamples": 2
+        },
+        "production:nav+medbay": {
+          "condition": "energy",
+          "schedule": "production",
+          "seconds": 521,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6080,
+          "netDust": 240920,
+          "netSamples": 2
+        },
+        "reception:nav+scanner": {
+          "condition": "energy",
+          "schedule": "reception",
+          "seconds": 496,
+          "diversion": 0.06999999999999999,
+          "dustCost": 6720,
+          "netDust": 299560,
+          "netSamples": 3
+        },
+        "reception:battery+solar": {
+          "condition": "energy",
+          "schedule": "reception",
+          "seconds": 549,
+          "diversion": 0.04,
+          "dustCost": 5749,
+          "netDust": 241251,
+          "netSamples": 3
+        },
+        "reception:nav+medbay": {
+          "condition": "energy",
+          "schedule": "reception",
+          "seconds": 496,
+          "diversion": 0.06999999999999999,
+          "dustCost": 6720,
+          "netDust": 240280,
+          "netSamples": 3
+        },
+        "exploration:nav+scanner": {
+          "condition": "energy",
+          "schedule": "exploration",
+          "seconds": 466,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6400,
+          "netDust": 284566,
+          "netSamples": 2
+        },
+        "exploration:battery+solar": {
+          "condition": "energy",
+          "schedule": "exploration",
+          "seconds": 516,
+          "diversion": 0.04899999999999999,
+          "dustCost": 5475,
+          "netDust": 229175,
+          "netSamples": 2
+        },
+        "exploration:nav+medbay": {
+          "condition": "energy",
+          "schedule": "exploration",
+          "seconds": 466,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6400,
+          "netDust": 228250,
+          "netSamples": 2
+        }
+      }
+    },
+    {
+      "route": "freight",
+      "token": 10,
+      "condition": "traffic",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 496,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 316000,
+        "netSamples": 2
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "traffic",
+          "schedule": "production",
+          "seconds": 521,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6567,
+          "netDust": 315833,
+          "netSamples": 2
+        },
+        "production:battery+solar": {
+          "condition": "traffic",
+          "schedule": "production",
+          "seconds": 613,
+          "diversion": 0.04,
+          "dustCost": 5976,
+          "netDust": 254024,
+          "netSamples": 2
+        },
+        "production:nav+medbay": {
+          "condition": "traffic",
+          "schedule": "production",
+          "seconds": 482,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6567,
+          "netDust": 253433,
+          "netSamples": 2
+        },
+        "reception:nav+scanner": {
+          "condition": "traffic",
+          "schedule": "reception",
+          "seconds": 496,
+          "diversion": 0.04,
+          "dustCost": 7258,
+          "netDust": 315142,
+          "netSamples": 3
+        },
+        "reception:battery+solar": {
+          "condition": "traffic",
+          "schedule": "reception",
+          "seconds": 584,
+          "diversion": 0.04,
+          "dustCost": 6605,
+          "netDust": 253395,
+          "netSamples": 3
+        },
+        "reception:nav+medbay": {
+          "condition": "traffic",
+          "schedule": "reception",
+          "seconds": 459,
+          "diversion": 0.04,
+          "dustCost": 7258,
+          "netDust": 252742,
+          "netSamples": 3
+        },
+        "exploration:nav+scanner": {
+          "condition": "traffic",
+          "schedule": "exploration",
+          "seconds": 466,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6912,
+          "netDust": 299368,
+          "netSamples": 2
+        },
+        "exploration:battery+solar": {
+          "condition": "traffic",
+          "schedule": "exploration",
+          "seconds": 549,
+          "diversion": 0.04,
+          "dustCost": 6290,
+          "netDust": 240710,
+          "netSamples": 2
+        },
+        "exploration:nav+medbay": {
+          "condition": "traffic",
+          "schedule": "exploration",
+          "seconds": 432,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6912,
+          "netDust": 240088,
+          "netSamples": 2
+        }
+      }
+    },
+    {
+      "route": "freight",
+      "token": 11,
+      "condition": "mapping",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 496,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 316000,
+        "netSamples": 2
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "mapping",
+          "schedule": "production",
+          "seconds": 573,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 284080,
+          "netSamples": 4
+        },
+        "production:battery+solar": {
+          "condition": "mapping",
+          "schedule": "production",
+          "seconds": 674,
+          "diversion": 0.04,
+          "dustCost": 5533,
+          "netDust": 228467,
+          "netSamples": 3
+        },
+        "production:nav+medbay": {
+          "condition": "mapping",
+          "schedule": "production",
+          "seconds": 573,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 227920,
+          "netSamples": 3
+        },
+        "reception:nav+scanner": {
+          "condition": "mapping",
+          "schedule": "reception",
+          "seconds": 546,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 283440,
+          "netSamples": 5
+        },
+        "reception:battery+solar": {
+          "condition": "mapping",
+          "schedule": "reception",
+          "seconds": 642,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 227884,
+          "netSamples": 4
+        },
+        "reception:nav+medbay": {
+          "condition": "mapping",
+          "schedule": "reception",
+          "seconds": 546,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 227280,
+          "netSamples": 4
+        },
+        "exploration:nav+scanner": {
+          "condition": "mapping",
+          "schedule": "exploration",
+          "seconds": 513,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 269252,
+          "netSamples": 4
+        },
+        "exploration:battery+solar": {
+          "condition": "mapping",
+          "schedule": "exploration",
+          "seconds": 604,
+          "diversion": 0.04,
+          "dustCost": 5824,
+          "netDust": 216476,
+          "netSamples": 3
+        },
+        "exploration:nav+medbay": {
+          "condition": "mapping",
+          "schedule": "exploration",
+          "seconds": 513,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 215900,
+          "netSamples": 3
+        }
+      }
+    },
+    {
+      "route": "freight",
+      "token": 12,
+      "condition": "supply",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 496,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 316000,
+        "netSamples": 2
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "supply",
+          "schedule": "production",
+          "seconds": 479,
+          "diversion": 0.04,
+          "dustCost": 6080,
+          "netDust": 300200,
+          "netSamples": 2
+        },
+        "production:battery+solar": {
+          "condition": "supply",
+          "schedule": "production",
+          "seconds": 564,
+          "diversion": 0.04,
+          "dustCost": 5533,
+          "netDust": 241467,
+          "netSamples": 3
+        },
+        "production:nav+medbay": {
+          "condition": "supply",
+          "schedule": "production",
+          "seconds": 479,
+          "diversion": 0.04,
+          "dustCost": 5716,
+          "netDust": 241284,
+          "netSamples": 2
+        },
+        "reception:nav+scanner": {
+          "condition": "supply",
+          "schedule": "reception",
+          "seconds": 457,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 299560,
+          "netSamples": 3
+        },
+        "reception:battery+solar": {
+          "condition": "supply",
+          "schedule": "reception",
+          "seconds": 537,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 240884,
+          "netSamples": 4
+        },
+        "reception:nav+medbay": {
+          "condition": "supply",
+          "schedule": "reception",
+          "seconds": 457,
+          "diversion": 0.04,
+          "dustCost": 6317,
+          "netDust": 240683,
+          "netSamples": 3
+        },
+        "exploration:nav+scanner": {
+          "condition": "supply",
+          "schedule": "exploration",
+          "seconds": 429,
+          "diversion": 0.04,
+          "dustCost": 6400,
+          "netDust": 284566,
+          "netSamples": 2
+        },
+        "exploration:battery+solar": {
+          "condition": "supply",
+          "schedule": "exploration",
+          "seconds": 505,
+          "diversion": 0.04,
+          "dustCost": 5824,
+          "netDust": 228826,
+          "netSamples": 3
+        },
+        "exploration:nav+medbay": {
+          "condition": "supply",
+          "schedule": "exploration",
+          "seconds": 429,
+          "diversion": 0.04,
+          "dustCost": 6016,
+          "netDust": 228634,
+          "netSamples": 2
+        }
+      }
+    },
+    {
+      "route": "science",
+      "token": 7,
+      "condition": "interference",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 744,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 161600,
+        "netSamples": 4
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "interference",
+          "schedule": "production",
+          "seconds": 781,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6080,
+          "netDust": 161920,
+          "netSamples": 5
+        },
+        "production:battery+solar": {
+          "condition": "interference",
+          "schedule": "production",
+          "seconds": 919,
+          "diversion": 0.043999999999999984,
+          "dustCost": 5533,
+          "netDust": 144467,
+          "netSamples": 4
+        },
+        "production:nav+medbay": {
+          "condition": "interference",
+          "schedule": "production",
+          "seconds": 781,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6080,
+          "netDust": 143920,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "interference",
+          "schedule": "reception",
+          "seconds": 744,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 161280,
+          "netSamples": 6
+        },
+        "reception:battery+solar": {
+          "condition": "interference",
+          "schedule": "reception",
+          "seconds": 875,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 143884,
+          "netSamples": 5
+        },
+        "reception:nav+medbay": {
+          "condition": "interference",
+          "schedule": "reception",
+          "seconds": 744,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 143280,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "interference",
+          "schedule": "exploration",
+          "seconds": 699,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6400,
+          "netDust": 153200,
+          "netSamples": 5
+        },
+        "exploration:battery+solar": {
+          "condition": "interference",
+          "schedule": "exploration",
+          "seconds": 823,
+          "diversion": 0.043999999999999984,
+          "dustCost": 5824,
+          "netDust": 136676,
+          "netSamples": 4
+        },
+        "exploration:nav+medbay": {
+          "condition": "interference",
+          "schedule": "exploration",
+          "seconds": 699,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6400,
+          "netDust": 136100,
+          "netSamples": 4
+        }
+      }
+    },
+    {
+      "route": "science",
+      "token": 8,
+      "condition": "energy",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 744,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 161600,
+        "netSamples": 4
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "energy",
+          "schedule": "production",
+          "seconds": 781,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6080,
+          "netDust": 153520,
+          "netSamples": 4
+        },
+        "production:battery+solar": {
+          "condition": "energy",
+          "schedule": "production",
+          "seconds": 864,
+          "diversion": 0.04899999999999999,
+          "dustCost": 5201,
+          "netDust": 137299,
+          "netSamples": 4
+        },
+        "production:nav+medbay": {
+          "condition": "energy",
+          "schedule": "production",
+          "seconds": 781,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6080,
+          "netDust": 136420,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "energy",
+          "schedule": "reception",
+          "seconds": 744,
+          "diversion": 0.06999999999999999,
+          "dustCost": 6720,
+          "netDust": 152880,
+          "netSamples": 5
+        },
+        "reception:battery+solar": {
+          "condition": "energy",
+          "schedule": "reception",
+          "seconds": 823,
+          "diversion": 0.04,
+          "dustCost": 5749,
+          "netDust": 136751,
+          "netSamples": 5
+        },
+        "reception:nav+medbay": {
+          "condition": "energy",
+          "schedule": "reception",
+          "seconds": 744,
+          "diversion": 0.06999999999999999,
+          "dustCost": 6720,
+          "netDust": 135780,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "energy",
+          "schedule": "exploration",
+          "seconds": 699,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6400,
+          "netDust": 145220,
+          "netSamples": 4
+        },
+        "exploration:battery+solar": {
+          "condition": "energy",
+          "schedule": "exploration",
+          "seconds": 773,
+          "diversion": 0.04899999999999999,
+          "dustCost": 5475,
+          "netDust": 129900,
+          "netSamples": 4
+        },
+        "exploration:nav+medbay": {
+          "condition": "energy",
+          "schedule": "exploration",
+          "seconds": 699,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6400,
+          "netDust": 128975,
+          "netSamples": 4
+        }
+      }
+    },
+    {
+      "route": "science",
+      "token": 9,
+      "condition": "traffic",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 744,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 161600,
+        "netSamples": 4
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "traffic",
+          "schedule": "production",
+          "seconds": 781,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6567,
+          "netDust": 161433,
+          "netSamples": 4
+        },
+        "production:battery+solar": {
+          "condition": "traffic",
+          "schedule": "production",
+          "seconds": 919,
+          "diversion": 0.04,
+          "dustCost": 5976,
+          "netDust": 144024,
+          "netSamples": 4
+        },
+        "production:nav+medbay": {
+          "condition": "traffic",
+          "schedule": "production",
+          "seconds": 723,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6567,
+          "netDust": 143433,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "traffic",
+          "schedule": "reception",
+          "seconds": 744,
+          "diversion": 0.04,
+          "dustCost": 7258,
+          "netDust": 160742,
+          "netSamples": 5
+        },
+        "reception:battery+solar": {
+          "condition": "traffic",
+          "schedule": "reception",
+          "seconds": 875,
+          "diversion": 0.04,
+          "dustCost": 6605,
+          "netDust": 143395,
+          "netSamples": 5
+        },
+        "reception:nav+medbay": {
+          "condition": "traffic",
+          "schedule": "reception",
+          "seconds": 688,
+          "diversion": 0.04,
+          "dustCost": 7258,
+          "netDust": 142742,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "traffic",
+          "schedule": "exploration",
+          "seconds": 699,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6912,
+          "netDust": 152688,
+          "netSamples": 4
+        },
+        "exploration:battery+solar": {
+          "condition": "traffic",
+          "schedule": "exploration",
+          "seconds": 823,
+          "diversion": 0.04,
+          "dustCost": 6290,
+          "netDust": 136210,
+          "netSamples": 4
+        },
+        "exploration:nav+medbay": {
+          "condition": "traffic",
+          "schedule": "exploration",
+          "seconds": 647,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6912,
+          "netDust": 135588,
+          "netSamples": 4
+        }
+      }
+    },
+    {
+      "route": "science",
+      "token": 10,
+      "condition": "mapping",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 744,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 161600,
+        "netSamples": 4
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "mapping",
+          "schedule": "production",
+          "seconds": 859,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 145120,
+          "netSamples": 6
+        },
+        "production:battery+solar": {
+          "condition": "mapping",
+          "schedule": "production",
+          "seconds": 1011,
+          "diversion": 0.04,
+          "dustCost": 5533,
+          "netDust": 129467,
+          "netSamples": 5
+        },
+        "production:nav+medbay": {
+          "condition": "mapping",
+          "schedule": "production",
+          "seconds": 859,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 128920,
+          "netSamples": 5
+        },
+        "reception:nav+scanner": {
+          "condition": "mapping",
+          "schedule": "reception",
+          "seconds": 818,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 144480,
+          "netSamples": 7
+        },
+        "reception:battery+solar": {
+          "condition": "mapping",
+          "schedule": "reception",
+          "seconds": 963,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 128884,
+          "netSamples": 6
+        },
+        "reception:nav+medbay": {
+          "condition": "mapping",
+          "schedule": "reception",
+          "seconds": 818,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 128280,
+          "netSamples": 6
+        },
+        "exploration:nav+scanner": {
+          "condition": "mapping",
+          "schedule": "exploration",
+          "seconds": 769,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 137240,
+          "netSamples": 6
+        },
+        "exploration:battery+solar": {
+          "condition": "mapping",
+          "schedule": "exploration",
+          "seconds": 905,
+          "diversion": 0.04,
+          "dustCost": 5824,
+          "netDust": 122426,
+          "netSamples": 5
+        },
+        "exploration:nav+medbay": {
+          "condition": "mapping",
+          "schedule": "exploration",
+          "seconds": 769,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 121850,
+          "netSamples": 5
+        }
+      }
+    },
+    {
+      "route": "science",
+      "token": 11,
+      "condition": "supply",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 744,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 161600,
+        "netSamples": 4
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "supply",
+          "schedule": "production",
+          "seconds": 719,
+          "diversion": 0.04,
+          "dustCost": 6080,
+          "netDust": 153520,
+          "netSamples": 4
+        },
+        "production:battery+solar": {
+          "condition": "supply",
+          "schedule": "production",
+          "seconds": 846,
+          "diversion": 0.04,
+          "dustCost": 5533,
+          "netDust": 136967,
+          "netSamples": 5
+        },
+        "production:nav+medbay": {
+          "condition": "supply",
+          "schedule": "production",
+          "seconds": 719,
+          "diversion": 0.04,
+          "dustCost": 5716,
+          "netDust": 136784,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "supply",
+          "schedule": "reception",
+          "seconds": 685,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 152880,
+          "netSamples": 5
+        },
+        "reception:battery+solar": {
+          "condition": "supply",
+          "schedule": "reception",
+          "seconds": 805,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 136384,
+          "netSamples": 6
+        },
+        "reception:nav+medbay": {
+          "condition": "supply",
+          "schedule": "reception",
+          "seconds": 685,
+          "diversion": 0.04,
+          "dustCost": 6317,
+          "netDust": 136183,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "supply",
+          "schedule": "exploration",
+          "seconds": 644,
+          "diversion": 0.04,
+          "dustCost": 6400,
+          "netDust": 145220,
+          "netSamples": 4
+        },
+        "exploration:battery+solar": {
+          "condition": "supply",
+          "schedule": "exploration",
+          "seconds": 757,
+          "diversion": 0.04,
+          "dustCost": 5824,
+          "netDust": 129551,
+          "netSamples": 5
+        },
+        "exploration:nav+medbay": {
+          "condition": "supply",
+          "schedule": "exploration",
+          "seconds": 644,
+          "diversion": 0.04,
+          "dustCost": 6016,
+          "netDust": 129359,
+          "netSamples": 4
+        }
+      }
+    },
+    {
+      "route": "science",
+      "token": 12,
+      "condition": "debris",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 744,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 161600,
+        "netSamples": 4
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "debris",
+          "schedule": "production",
+          "seconds": 773,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 212320,
+          "netSamples": 4
+        },
+        "production:battery+solar": {
+          "condition": "debris",
+          "schedule": "production",
+          "seconds": 992,
+          "diversion": 0.04,
+          "dustCost": 5533,
+          "netDust": 144467,
+          "netSamples": 4
+        },
+        "production:nav+medbay": {
+          "condition": "debris",
+          "schedule": "production",
+          "seconds": 773,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 143920,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "debris",
+          "schedule": "reception",
+          "seconds": 737,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 211680,
+          "netSamples": 5
+        },
+        "reception:battery+solar": {
+          "condition": "debris",
+          "schedule": "reception",
+          "seconds": 945,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 143884,
+          "netSamples": 5
+        },
+        "reception:nav+medbay": {
+          "condition": "debris",
+          "schedule": "reception",
+          "seconds": 737,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 143280,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "debris",
+          "schedule": "exploration",
+          "seconds": 692,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 201080,
+          "netSamples": 4
+        },
+        "exploration:battery+solar": {
+          "condition": "debris",
+          "schedule": "exploration",
+          "seconds": 889,
+          "diversion": 0.04,
+          "dustCost": 5824,
+          "netDust": 136676,
+          "netSamples": 4
+        },
+        "exploration:nav+medbay": {
+          "condition": "debris",
+          "schedule": "exploration",
+          "seconds": 692,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 136100,
+          "netSamples": 4
+        }
+      }
+    },
+    {
+      "route": "beacon",
+      "token": 7,
+      "condition": "energy",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 595,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 195200,
+        "netSamples": 3
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "energy",
+          "schedule": "production",
+          "seconds": 625,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6080,
+          "netDust": 185440,
+          "netSamples": 3
+        },
+        "production:battery+solar": {
+          "condition": "energy",
+          "schedule": "production",
+          "seconds": 691,
+          "diversion": 0.04899999999999999,
+          "dustCost": 5201,
+          "netDust": 165799,
+          "netSamples": 3
+        },
+        "production:nav+medbay": {
+          "condition": "energy",
+          "schedule": "production",
+          "seconds": 625,
+          "diversion": 0.06699999999999999,
+          "dustCost": 6080,
+          "netDust": 164920,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "energy",
+          "schedule": "reception",
+          "seconds": 595,
+          "diversion": 0.06999999999999999,
+          "dustCost": 6720,
+          "netDust": 184800,
+          "netSamples": 4
+        },
+        "reception:battery+solar": {
+          "condition": "energy",
+          "schedule": "reception",
+          "seconds": 658,
+          "diversion": 0.04,
+          "dustCost": 5749,
+          "netDust": 165251,
+          "netSamples": 4
+        },
+        "reception:nav+medbay": {
+          "condition": "energy",
+          "schedule": "reception",
+          "seconds": 595,
+          "diversion": 0.05199999999999999,
+          "dustCost": 6720,
+          "netDust": 164280,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "energy",
+          "schedule": "exploration",
+          "seconds": 560,
+          "diversion": 0.08499999999999999,
+          "dustCost": 6400,
+          "netDust": 175544,
+          "netSamples": 3
+        },
+        "exploration:battery+solar": {
+          "condition": "energy",
+          "schedule": "exploration",
+          "seconds": 619,
+          "diversion": 0.04899999999999999,
+          "dustCost": 5475,
+          "netDust": 156975,
+          "netSamples": 3
+        },
+        "exploration:nav+medbay": {
+          "condition": "energy",
+          "schedule": "exploration",
+          "seconds": 560,
+          "diversion": 0.06699999999999999,
+          "dustCost": 6400,
+          "netDust": 156050,
+          "netSamples": 4
+        }
+      }
+    },
+    {
+      "route": "beacon",
+      "token": 8,
+      "condition": "traffic",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 595,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 195200,
+        "netSamples": 3
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "traffic",
+          "schedule": "production",
+          "seconds": 625,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6567,
+          "netDust": 195033,
+          "netSamples": 3
+        },
+        "production:battery+solar": {
+          "condition": "traffic",
+          "schedule": "production",
+          "seconds": 735,
+          "diversion": 0.04,
+          "dustCost": 5976,
+          "netDust": 174024,
+          "netSamples": 3
+        },
+        "production:nav+medbay": {
+          "condition": "traffic",
+          "schedule": "production",
+          "seconds": 578,
+          "diversion": 0.04,
+          "dustCost": 6567,
+          "netDust": 173433,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "traffic",
+          "schedule": "reception",
+          "seconds": 595,
+          "diversion": 0.04,
+          "dustCost": 7258,
+          "netDust": 194342,
+          "netSamples": 4
+        },
+        "reception:battery+solar": {
+          "condition": "traffic",
+          "schedule": "reception",
+          "seconds": 700,
+          "diversion": 0.04,
+          "dustCost": 6605,
+          "netDust": 173395,
+          "netSamples": 4
+        },
+        "reception:nav+medbay": {
+          "condition": "traffic",
+          "schedule": "reception",
+          "seconds": 551,
+          "diversion": 0.04,
+          "dustCost": 7258,
+          "netDust": 172742,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "traffic",
+          "schedule": "exploration",
+          "seconds": 560,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6912,
+          "netDust": 184608,
+          "netSamples": 3
+        },
+        "exploration:battery+solar": {
+          "condition": "traffic",
+          "schedule": "exploration",
+          "seconds": 658,
+          "diversion": 0.04,
+          "dustCost": 6290,
+          "netDust": 164710,
+          "netSamples": 3
+        },
+        "exploration:nav+medbay": {
+          "condition": "traffic",
+          "schedule": "exploration",
+          "seconds": 518,
+          "diversion": 0.04,
+          "dustCost": 6912,
+          "netDust": 164088,
+          "netSamples": 4
+        }
+      }
+    },
+    {
+      "route": "beacon",
+      "token": 9,
+      "condition": "mapping",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 595,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 195200,
+        "netSamples": 3
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "mapping",
+          "schedule": "production",
+          "seconds": 688,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 175360,
+          "netSamples": 5
+        },
+        "production:battery+solar": {
+          "condition": "mapping",
+          "schedule": "production",
+          "seconds": 809,
+          "diversion": 0.04,
+          "dustCost": 5533,
+          "netDust": 156467,
+          "netSamples": 4
+        },
+        "production:nav+medbay": {
+          "condition": "mapping",
+          "schedule": "production",
+          "seconds": 688,
+          "diversion": 0.04,
+          "dustCost": 6080,
+          "netDust": 155920,
+          "netSamples": 5
+        },
+        "reception:nav+scanner": {
+          "condition": "mapping",
+          "schedule": "reception",
+          "seconds": 655,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 174720,
+          "netSamples": 6
+        },
+        "reception:battery+solar": {
+          "condition": "mapping",
+          "schedule": "reception",
+          "seconds": 770,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 155884,
+          "netSamples": 5
+        },
+        "reception:nav+medbay": {
+          "condition": "mapping",
+          "schedule": "reception",
+          "seconds": 655,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 155280,
+          "netSamples": 6
+        },
+        "exploration:nav+scanner": {
+          "condition": "mapping",
+          "schedule": "exploration",
+          "seconds": 616,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 165968,
+          "netSamples": 5
+        },
+        "exploration:battery+solar": {
+          "condition": "mapping",
+          "schedule": "exploration",
+          "seconds": 724,
+          "diversion": 0.04,
+          "dustCost": 5824,
+          "netDust": 148076,
+          "netSamples": 4
+        },
+        "exploration:nav+medbay": {
+          "condition": "mapping",
+          "schedule": "exploration",
+          "seconds": 616,
+          "diversion": 0.04,
+          "dustCost": 6400,
+          "netDust": 147500,
+          "netSamples": 5
+        }
+      }
+    },
+    {
+      "route": "beacon",
+      "token": 10,
+      "condition": "supply",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 595,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 195200,
+        "netSamples": 3
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "supply",
+          "schedule": "production",
+          "seconds": 575,
+          "diversion": 0.04,
+          "dustCost": 6080,
+          "netDust": 185440,
+          "netSamples": 3
+        },
+        "production:battery+solar": {
+          "condition": "supply",
+          "schedule": "production",
+          "seconds": 677,
+          "diversion": 0.04,
+          "dustCost": 5533,
+          "netDust": 165467,
+          "netSamples": 4
+        },
+        "production:nav+medbay": {
+          "condition": "supply",
+          "schedule": "production",
+          "seconds": 575,
+          "diversion": 0.04,
+          "dustCost": 5716,
+          "netDust": 165284,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "supply",
+          "schedule": "reception",
+          "seconds": 548,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 184800,
+          "netSamples": 4
+        },
+        "reception:battery+solar": {
+          "condition": "supply",
+          "schedule": "reception",
+          "seconds": 644,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 164884,
+          "netSamples": 5
+        },
+        "reception:nav+medbay": {
+          "condition": "supply",
+          "schedule": "reception",
+          "seconds": 548,
+          "diversion": 0.04,
+          "dustCost": 6317,
+          "netDust": 164683,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "supply",
+          "schedule": "exploration",
+          "seconds": 515,
+          "diversion": 0.04,
+          "dustCost": 6400,
+          "netDust": 175544,
+          "netSamples": 3
+        },
+        "exploration:battery+solar": {
+          "condition": "supply",
+          "schedule": "exploration",
+          "seconds": 606,
+          "diversion": 0.04,
+          "dustCost": 5824,
+          "netDust": 156626,
+          "netSamples": 4
+        },
+        "exploration:nav+medbay": {
+          "condition": "supply",
+          "schedule": "exploration",
+          "seconds": 515,
+          "diversion": 0.04,
+          "dustCost": 6016,
+          "netDust": 156434,
+          "netSamples": 4
+        }
+      }
+    },
+    {
+      "route": "beacon",
+      "token": 11,
+      "condition": "debris",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 595,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 195200,
+        "netSamples": 3
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "debris",
+          "schedule": "production",
+          "seconds": 619,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6080,
+          "netDust": 256000,
+          "netSamples": 3
+        },
+        "production:battery+solar": {
+          "condition": "debris",
+          "schedule": "production",
+          "seconds": 794,
+          "diversion": 0.04,
+          "dustCost": 5533,
+          "netDust": 174467,
+          "netSamples": 3
+        },
+        "production:nav+medbay": {
+          "condition": "debris",
+          "schedule": "production",
+          "seconds": 619,
+          "diversion": 0.04,
+          "dustCost": 6080,
+          "netDust": 173920,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "debris",
+          "schedule": "reception",
+          "seconds": 589,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 255360,
+          "netSamples": 4
+        },
+        "reception:battery+solar": {
+          "condition": "debris",
+          "schedule": "reception",
+          "seconds": 756,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 173884,
+          "netSamples": 4
+        },
+        "reception:nav+medbay": {
+          "condition": "debris",
+          "schedule": "reception",
+          "seconds": 589,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 173280,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "debris",
+          "schedule": "exploration",
+          "seconds": 554,
+          "diversion": 0.04999999999999999,
+          "dustCost": 6400,
+          "netDust": 242576,
+          "netSamples": 3
+        },
+        "exploration:battery+solar": {
+          "condition": "debris",
+          "schedule": "exploration",
+          "seconds": 711,
+          "diversion": 0.04,
+          "dustCost": 5824,
+          "netDust": 165176,
+          "netSamples": 3
+        },
+        "exploration:nav+medbay": {
+          "condition": "debris",
+          "schedule": "exploration",
+          "seconds": 554,
+          "diversion": 0.04,
+          "dustCost": 6400,
+          "netDust": 164600,
+          "netSamples": 4
+        }
+      }
+    },
+    {
+      "route": "beacon",
+      "token": 12,
+      "condition": "interference",
+      "legacy": {
+        "condition": null,
+        "schedule": null,
+        "seconds": 595,
+        "diversion": 0.04999999999999999,
+        "dustCost": 6400,
+        "netDust": 195200,
+        "netSamples": 3
+      },
+      "quotes": {
+        "production:nav+scanner": {
+          "condition": "interference",
+          "schedule": "production",
+          "seconds": 625,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6080,
+          "netDust": 195520,
+          "netSamples": 4
+        },
+        "production:battery+solar": {
+          "condition": "interference",
+          "schedule": "production",
+          "seconds": 735,
+          "diversion": 0.043999999999999984,
+          "dustCost": 5533,
+          "netDust": 174467,
+          "netSamples": 3
+        },
+        "production:nav+medbay": {
+          "condition": "interference",
+          "schedule": "production",
+          "seconds": 625,
+          "diversion": 0.04,
+          "dustCost": 6080,
+          "netDust": 173920,
+          "netSamples": 4
+        },
+        "reception:nav+scanner": {
+          "condition": "interference",
+          "schedule": "reception",
+          "seconds": 595,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 194880,
+          "netSamples": 5
+        },
+        "reception:battery+solar": {
+          "condition": "interference",
+          "schedule": "reception",
+          "seconds": 700,
+          "diversion": 0.04,
+          "dustCost": 6116,
+          "netDust": 173884,
+          "netSamples": 4
+        },
+        "reception:nav+medbay": {
+          "condition": "interference",
+          "schedule": "reception",
+          "seconds": 595,
+          "diversion": 0.04,
+          "dustCost": 6720,
+          "netDust": 173280,
+          "netSamples": 5
+        },
+        "exploration:nav+scanner": {
+          "condition": "interference",
+          "schedule": "exploration",
+          "seconds": 560,
+          "diversion": 0.043999999999999984,
+          "dustCost": 6400,
+          "netDust": 185120,
+          "netSamples": 4
+        },
+        "exploration:battery+solar": {
+          "condition": "interference",
+          "schedule": "exploration",
+          "seconds": 658,
+          "diversion": 0.043999999999999984,
+          "dustCost": 5824,
+          "netDust": 165176,
+          "netSamples": 3
+        },
+        "exploration:nav+medbay": {
+          "condition": "interference",
+          "schedule": "exploration",
+          "seconds": 560,
+          "diversion": 0.04,
+          "dustCost": 6400,
+          "netDust": 164600,
+          "netSamples": 4
+        }
+      }
+    }
+  ]
+}

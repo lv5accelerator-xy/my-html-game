@@ -195,7 +195,7 @@
   }
 ],
     VERSION: 32,
-    GAME_VERSION: "3.26.0-preview.1",
+    GAME_VERSION: "3.27.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -3591,6 +3591,20 @@
     {id:'dock-handoff',group:'workshop',name:'不用祁岳一直守着',letter:'workshop-2',chain:'freight',project:'repair-dock',text:'维修设施已经能承担第二班工作。祁岳想把旧货运事故的复查与新的维修交接连起来，确认他不值班时流程仍能运转。',share:'把去名故障复盘贴到公共检修板',care:'将完整复盘留给维护员逐班交接',shared:'公共检修板标出了每一处允许暂停的工序。',cared:'维护员的交班箱里保存了带来源的完整复盘。'},
     {id:'garden-heirs',group:'meals',name:'窗前有了下一位照料者',letter:'meals-2',chain:'science',project:'habitat',text:'育种舱的新照料者按苇留下的历史培育档案核对遗迹光照记录。生活区建成后，休息的椅子旁终于有了稳定的值班表。苇只在旧记录里说话。',share:'公开后代植物的去名观测表',care:'由照料者保存原始记录，向来访者说明',shared:'窗前出现了人人能填写的新叶观测表，原作者仍署苇的名字。',cared:'照料者的柜中保存着原始记录，椅边留下了可预约的讲解时间。'},
     {id:'two-addresses',group:'signals',name:'档案之外的下一封回信',letter:'signals-2',chain:'quiet',after:'signal-class',allVoyages:true,text:'三条永久首航档案都已入库。阿遥请下一班通信员把今天的实际交接写进回信，港口未来的用途沿用你已经确认的正式结局。',share:'寄送可公开的去名交接副本',care:'只把完整交接寄给对应的下一班',shared:'两处地址开始交换去名的共同值班摘要。',cared:'下一班收到具名交接回执，两处地址各自保留原件。'}
+  ];
+
+  data.VOYAGE_CONDITIONS = [
+    {id:'debris',name:'残骸密集',detail:'航时+8%；导航每级抵消3%，透镜每级多10%随船星尘。'},
+    {id:'interference',name:'通信干扰',detail:'分流+3个百分点；导航每级抵消1.2个百分点，2级透镜多1样本。'},
+    {id:'energy',name:'能源紧张',detail:'分流+3.5个百分点、随船星尘-5%；储能每级缩时2%，集光每级再减费用2%。'},
+    {id:'traffic',name:'运输繁忙',detail:'费用+8%；医疗舱每级缩时2.5%，储能每级额外减分流0.6个百分点。'},
+    {id:'mapping',name:'高价值测绘',detail:'航时+10%、随船星尘-10%，多1样本；2级透镜再多1样本。'},
+    {id:'supply',name:'稳定补给窗口',detail:'航时-8%、分流-1个百分点、随船星尘-5%；2级集光多1样本，医疗舱每级再减费用2%。'}
+  ];
+  data.VOYAGE_SCHEDULES = [
+    {id:'production',name:'生产调度',detail:'远航费用-5%，航时+5%。已接居民需求不变。'},
+    {id:'reception',name:'接待调度',detail:'远航费用+5%，分流-1.5个百分点，多1样本。已接居民需求不变。'},
+    {id:'exploration',name:'探索调度',detail:'远航航时-6%，随船星尘-5%。已接居民需求不变。'}
   ];
 
   return Object.freeze(data);

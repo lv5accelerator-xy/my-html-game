@@ -30,4 +30,19 @@ module.exports=async function({scenario,read,E,D,S,TIME,openDetails,screenshotDi
    for(const width of [1280,375,320]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);if(screenshotDir)await page.screenshot({path:path.join(screenshotDir,`v326-${ending.id}-${width}.png`)});}
   });
  }
+ for(const [index,ending] of D.ENDINGS.entries()){
+  const s=E.sanitize(structuredClone(F.states.find(x=>x.name===ending.id+'-v324-mature').state),TIME);for(const id of ['battery','solar'])if(!s.modules[id])assert.ok(E.buildModule(s,id));E.saveLoadout(s,'voyage');for(const id of [...s.equipped])E.equip(s,id);E.equip(s,'battery');E.equip(s,'solar');E.saveLoadout(s,'production');s.lastAt=TIME;
+  await scenario(`v3.27 ${ending.id}: six deterministic environment rotations, actual fit tradeoff, locked policy, offline and ledger`,{[S.KEY]:JSON.stringify(s)},async page=>{
+   const close=async()=>{if(await page.locator('#dialog[open]').count())await page.locator('#dialog-close').click();};await nav(page,'explore');const conditions=new Set();
+   for(let run=0;run<6;run++){
+    const before=await read(page),q=E.voyagePreview(before,'freight');conditions.add(q.condition);assert.ok((await page.locator('#deep-route-freight').innerText()).includes(D.VOYAGE_CONDITIONS.find(x=>x.id===q.condition).name));await openDetails(page,'[data-details-key="long-fits-freight-secure-main"]');assert.equal(await page.locator('[data-details-key="long-fits-freight-secure-main"] [data-long-fit]').count(),3);
+    await page.locator('#deep-route-freight [data-action="deep-loadout"]').first().click();const p=E.voyagePreview(await read(page),'freight');await page.locator('[data-action="deep-start"][data-id="freight"]').click();await page.locator('[data-action="deep-dispatch"][data-id="secure"]').click();const locked=(await read(page)).expeditions.active.leg;assert.equal(locked.seconds,p.seconds);assert.equal(locked.dustCost,p.dustCost);
+    await openDetails(page,'[data-details-key="voyage-schedules"]');await page.locator('#long-voyages [data-action="voyage-focus"][data-id="reception"]').click();assert.deepEqual((await read(page)).expeditions.active.leg,locked);
+    if(run===0){await page.reload();await close();await nav(page,'explore');assert.deepEqual((await read(page)).expeditions.active.leg,locked);}
+    for(let stage=0;stage<4;stage++){if(stage)await page.locator('[data-action="deep-dispatch"][data-id="secure"]').click();const state=await read(page);await page.clock.fastForward(state.expeditions.active.leg.seconds*1000+1000);await close();await page.locator('#long-voyages [data-action="deep-claim"]').click();}
+    await page.locator('#long-voyages [data-action="deep-finish"]').click();const done=await read(page);assert.equal(done.expeditions.records[0].condition,q.condition);assert.equal(done.expeditions.records[0].firstBonus,0);assert.equal(done.epilogue.ending,ending.id);
+   }
+   assert.equal(conditions.size,6);await openDetails(page,'[data-details-key="deep-records"]');assert.match(await page.locator('#long-voyages').innerText(),/原始航行环境/);for(const width of [1280,375,320]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);if(screenshotDir)await page.screenshot({path:path.join(screenshotDir,`v327-${ending.id}-${width}.png`)});}
+  });
+ }
 };

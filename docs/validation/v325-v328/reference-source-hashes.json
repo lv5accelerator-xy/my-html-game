@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "9e14610a197580d2b377dc8e2f1f8684f2c57e63",
+  "creation": "git archive origin/main v3 extracted before new source changes; exact recorded original main",
+  "files": {
+    "v3/engine.js": "aa347f8ea7beb282e5b4c21e5abb4a0995636dbb8663c12a485ca5e624753922",
+    "v3/app.js": "dfc7172102d3a647b757b6901161c2a52d134237a1a1448cdaed412b96d2fc2d",
+    "v3/index.html": "0c0e693258669be6d868739c7cd4e7331e523bccc0e8024b14824eb0f898b423",
+    "v3/style.css": "908f8bd21ea188c9daf1a18c430ab97e4d68a058b9629090721d8305faa301ce",
+    "v3/data.js": "0d955731ac1c73561bfc6bb6a32011bd631808e56b48033072803d32261fa21c",
+    "v3/storage.js": "c5ecc2cefb05f299f8637453d7ba3d76f40746ab3b1f5175bd5249b8080aaec9"
+  }
+}

@@ -1,0 +1,7 @@
+ok 1 - v3.27 freight: six real successive conditions, all equipment/policies, fixed snapshot and finite repeat rewards
+ok 2 - v3.27 science: six real successive conditions, all equipment/policies, fixed snapshot and finite repeat rewards
+ok 3 - v3.27 beacon: six real successive conditions, all equipment/policies, fixed snapshot and finite repeat rewards
+ok 4 - v3.27 all schedules have measurable costs/benefits, accepted demand terms remain frozen
+ok 5 - v3.27 itinerary quote uses the same next condition and preserves old-rule active voyages
+ok 6 - v3.27 malformed conditions or dispatch policies are rejected without refund or first-award reset
+v3 conditions ok: 6 behavioral checks; 2592 bounded condition/fit/schedule quotes; minimum 2 non-dominated alternatives

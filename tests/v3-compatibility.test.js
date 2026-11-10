@@ -31,9 +31,18 @@ console.log(`v3.20 compatibility ok: ${v320.states.length} canonical snapshots; 
 
 const v321=require('./fixtures/v321-saves.json');
 for(const {name,state} of v321.states) {
- const current=E.sanitize(state,state.lastAt),{reviews,...prior}=current.continuation;
+ const current=E.sanitize(state,state.lastAt),{reviews,community,...prior}=current.continuation;
  assert.deepEqual({...current,continuation:prior},state,name+': v3.21 plans/authorization and paid voyage preserved');
  assert.deepEqual(reviews,E.createState(state.lastAt).continuation.reviews);
  assert.deepEqual(E.sanitize(current,current.lastAt),current);
 }
 console.log(`v3.21 compatibility ok: ${v321.states.length} canonical snapshots; saved plans, active/paused authorizations and every prior field equal`);
+
+const v322=require('./fixtures/v322-saves.json');
+for(const {name,state} of v322.states) {
+ const current=E.sanitize(state,state.lastAt),{community,...prior}=current.continuation;
+ assert.deepEqual({...current,continuation:prior},state,name+': every v3.22 review, permit and paid snapshot preserved');
+ assert.deepEqual(community,E.createState(state.lastAt).continuation.community);
+ assert.deepEqual(E.sanitize(current,current.lastAt),current);
+}
+console.log(`v3.22 compatibility ok: ${v322.states.length} canonical snapshots; active/ready reviews, earned letters and selected/reserved/used permits preserved`);

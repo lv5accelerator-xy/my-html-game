@@ -108,4 +108,50 @@ test('v3.22 a saved four-leg plan consumes exactly one permit and restores its p
  for(let stage=0;stage<4;stage++){E.advance(s,s.lastAt+s.expeditions.active.leg.seconds*1000);assert.ok(E.advanceItinerary(s,s.expeditions.active.token,stage));}
  assert.equal(s.continuation.reviews.used.length,1);assert.equal(s.continuation.reviews.uses.length,1);assert.equal(s.continuation.sequence,null);assert.deepEqual(E.sanitize(s,s.lastAt),s);
 });
+const mature=require('./helpers/community-fixture.cjs'),prepared={};
+for(const ending of D.ENDINGS) prepared[ending.id]=mature(E,saves.states.find(x=>x.name===ending.id+'-three-archives').state);
+for(const ending of D.ENDINGS) for(const focus of D.HARBOR_FOCUSES) test(`v3.23 ${ending.id}/${focus.id}: all nine letters, paid production and actual supply paths, fixed terms, migration and one delivery`,()=>{
+ let s=structuredClone(prepared[ending.id]);const epilogue=structuredClone(s.epilogue),beforeRate=E.rawRate(s);
+ E.setHarborFocus(s,focus.id);
+ for(const d of D.COMMUNITY_STORIES){
+  const q=E.communityOffer(s,d.id);assert.ok(q.available,q.reason);assert.ok(E.acceptCommunity(s,d.id,q.serial));assert.equal(E.acceptCommunity(s,d.id,q.serial),false);
+  const locked=structuredClone(s.continuation.community.active);E.setHarborFocus(s,focus.id==='production'?'reception':'production');assert.equal(s.continuation.community.active.mode,locked.mode);E.setHarborFocus(s,focus.id);
+  s=S.inspect(JSON.stringify(s),s.lastAt).state;assert.deepEqual(s.continuation.community.active,locked);
+  if(focus.id==='reception'){const dust=s.dust,samples=s.samples;assert.ok(E.packCommunity(s,q.serial));assert.equal(s.dust,dust-q.dustCost);assert.equal(s.samples,samples-q.samplesCost);assert.equal(E.packCommunity(s,q.serial),false);}
+  // Both routes use exactly this already accepted snapshot and pay exactly once.
+  let active=structuredClone(s);assert.ok(E.setCommunityPath(active,q.serial,'exploration'));
+  while(!E.communityStatus(active).tripReady){const id=active.continuation.community.active.routes[0];assert.ok(E.startMission(active,id));active=S.inspect(JSON.stringify(active),active.lastAt).state;assert.equal(active.mission.communityOrder,q.serial);E.advance(active,active.lastAt+active.mission.seconds*1000);const old=active.continuation.community.active.trips;assert.ok(E.claimMission(active,active.result.story?D.STORIES[active.result.story].choices[0].id:undefined));assert.equal(active.continuation.community.active.trips,old+1);assert.equal(E.claimMission(active),false);const event=E.encounterOffer(active);if(event&&!event.choice){assert.ok(E.chooseEncounter(active,event.token,event.choices.find(c=>!c.costSamples).id));if(active.encounters.pending)E.advance(active,active.lastAt+Math.max(0,active.encounters.pending.readyAt-active.clock)*1000);}}
+  assert.ok(E.communityStatus(active).available);assert.ok(E.deliverCommunity(active,q.serial));assert.equal(active.continuation.community.records.at(-1).path,'exploration');assert.equal(E.deliverCommunity(active,q.serial),false);
+  const clock=s.clock;E.advance(s,s.lastAt+86400000,{offline:true});assert.equal(s.clock-clock,28800);const ready=E.communityStatus(s),dust=s.dust,samples=s.samples;assert.ok(ready.available);assert.ok(E.deliverCommunity(s,q.serial));assert.equal(s.dust,dust-ready.dustLeft);assert.equal(s.samples,samples-ready.samplesLeft);const complete=structuredClone(s);assert.equal(E.deliverCommunity(s,q.serial),false);assert.deepEqual(s,complete);assert.equal(E.communityOffer(s,d.id).available,false);assert.deepEqual(E.sanitize(s,s.lastAt),s);
+ }
+ assert.equal(s.continuation.community.completed.length,9);assert.equal(s.continuation.community.records.length,9);assert.deepEqual(s.epilogue,epilogue);assert.equal(E.rawRate(s),beforeRate);assert.ok(s.samples>=0);
+});
+test('v3.23 gated stages, unknown state, late focus changes, damaged letters and finite escrow are safe',()=>{
+ const s=veteran(),first=D.COMMUNITY_STORIES[0],later=D.COMMUNITY_STORIES[1];assert.equal(E.communityOffer(s,later.id).available,false);assert.equal(E.communityOffer(s,'constructor'),null);assert.equal(E.acceptCommunity(s,first.id,99),false);
+ E.setHarborFocus(s,'reception');assert.ok(E.acceptCommunity(s,first.id,1));const empty=structuredClone(s);empty.dust=0;empty.samples=0;assert.equal(E.packCommunity(empty,1),false);assert.equal(E.deliverCommunity(empty,1),false);assert.equal(E.setCommunityPath(s,1,'invalid'),false);
+ let bad=structuredClone(s);bad.continuation.community.active.packedDust=1e100;assert.equal(E.sanitize(bad,bad.lastAt).continuation.community.active,null);
+ const full=structuredClone(prepared.city);E.acceptCommunity(full,first.id,1);E.advance(full,full.lastAt+3600000);assert.ok(E.deliverCommunity(full,1));bad=structuredClone(full);bad.continuation.community.records=[];const restored=E.sanitize(bad,bad.lastAt);assert.deepEqual(restored.continuation.community.completed,[first.id]);assert.equal(E.communityOffer(restored,first.id).available,false);assert.deepEqual(E.sanitize(restored,restored.lastAt),restored);
+});
+test('v3.23 all three management directions have a measurable advantage and accepted work does not change',()=>{
+ const s=structuredClone(prepared.city),id=D.COMMUNITY_STORIES[0].id,p=E.communityOffer(s,id,'production'),r=E.communityOffer(s,id,'reception'),x=E.communityOffer(s,id,'exploration');
+ assert.ok(p.dustCost<r.dustCost&&p.dustCost<x.dustCost);assert.ok(r.samplesCost<p.samplesCost&&r.samplesCost<x.samplesCost);assert.ok(x.tripsRequired<p.tripsRequired&&x.tripsRequired<r.tripsRequired);assert.ok(x.routes.length>p.routes.length);
+ E.setHarborFocus(s,'reception');E.acceptCommunity(s,id,1);E.packCommunity(s,1);assert.ok(E.communityStatus(s).secondsLeft<p.workSeconds,'prepacked reception is faster for unattended play');const accepted=structuredClone(s.continuation.community.active);E.setHarborFocus(s,'exploration');assert.deepEqual(s.continuation.community.active,accepted);
+});
+test('v3.23 a pre-existing flight cannot retroactively fulfill a new community request',()=>{
+ const s=structuredClone(prepared.city);E.startMission(s,'garden');E.acceptCommunity(s,'meals-1',1);E.advance(s,s.lastAt+s.mission.seconds*1000);E.claimMission(s);assert.equal(s.continuation.community.active.trips,0);
+ const a=s.continuation.community.active;assert.equal(E.setCommunityPath(s,a.serial,'exploration'),true);assert.equal(E.deliverCommunity(s,a.serial),false);
+});
+
+
+test('v3.23 only complete voyages arranged after acceptance count, never stage reports or old flights',()=>{
+ const s=structuredClone(prepared.city);assert.ok(E.startVoyage(s,'freight'));assert.ok(E.acceptCommunity(s,'workshop-1',1));
+ const finish=()=>{const a=s.expeditions.active;for(let stage=0;stage<4;stage++){assert.ok(E.dispatchVoyageLeg(s,a.token,stage,'secure'));E.advance(s,s.lastAt+a.leg.seconds*1000);assert.ok(E.claimVoyageLeg(s,a.token,stage));}return a.token;};
+ let token=finish();assert.ok(E.finishVoyage(s,token));assert.equal(s.continuation.community.active.trips,0,'same-clock earlier voyage was not authorized');
+ assert.ok(E.startVoyage(s,'freight'));token=finish();assert.equal(s.continuation.community.active.trips,0,'four partial reports do not count a complete delivery');assert.ok(E.finishVoyage(s,token));assert.equal(s.continuation.community.active.trips,1);assert.equal(E.finishVoyage(s,token),false);assert.deepEqual(E.sanitize(s,s.lastAt),s);
+});
+test('v3.23 interleaved resident groups retain chronological receipts across restoration and jump',()=>{
+ let s=structuredClone(prepared.city);for(const id of ['signals-1','meals-1','workshop-1']){const q=E.communityOffer(s,id);assert.ok(E.acceptCommunity(s,id,q.serial));E.advance(s,s.lastAt+3600000);assert.ok(E.deliverCommunity(s,q.serial));assert.deepEqual(E.sanitize(s,s.lastAt),s);}
+ assert.deepEqual(s.continuation.community.completed,['signals-1','meals-1','workshop-1']);const snapshot=structuredClone(s.continuation.community);assert.ok(E.prestige(s));assert.deepEqual(s.continuation.community,snapshot);
+});
+
 console.log(`v3 continuation ok: ${checks} behavioral checks`);

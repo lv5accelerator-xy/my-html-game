@@ -195,7 +195,7 @@
   }
 ],
     VERSION: 32,
-    GAME_VERSION: "3.22.0-preview.1",
+    GAME_VERSION: "3.23.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -3374,6 +3374,103 @@
     "refund": 0.3,
     "samples": 6,
     "costSamples": 2
+  }
+];
+  data.COMMUNITY_GROUPS = [
+  {
+    "id": "meals",
+    "name": "公共食堂值班组",
+    "project": "habitat",
+    "mission": "garden",
+    "voyage": "beacon"
+  },
+  {
+    "id": "workshop",
+    "name": "祁岳与维修班",
+    "project": "repair-dock",
+    "mission": "belt",
+    "voyage": "freight"
+  },
+  {
+    "id": "signals",
+    "name": "阿遥与通信班",
+    "project": "route-station",
+    "mission": "supply-run",
+    "voyage": "science"
+  }
+];
+  data.COMMUNITY_STORIES = [
+  {
+    "id": "meals-1",
+    "group": "meals",
+    "stage": 0,
+    "name": "第一顿轮班饭",
+    "detail": "值班组想把安全种植舱的第一批收成分给夜班。先备齐餐具与培养样本，再用生产筹备或一趟实际补给完成交接。",
+    "letter": "我们把第一份夜班饭留给了仍在岗位上的人。禾的旧记录放在餐桌旁的档案架上，只作纪念。"
+  },
+  {
+    "id": "meals-2",
+    "group": "meals",
+    "stage": 1,
+    "name": "两港种植表",
+    "detail": "居民生活区有了固定轮班后，两港需要一张能接续的种植表。这次要核对生态样本，安排下一批食物的去向。",
+    "letter": "新种植表已经由现在的值班组签字。苇留下的种子与录音仍在历史档案里，新的照料由居民接班。"
+  },
+  {
+    "id": "meals-3",
+    "group": "meals",
+    "stage": 2,
+    "name": "能带走的晚餐",
+    "detail": "第二期生活区需要让出航者也能带走一份补给。请备齐打包设备与样本，把餐食装进真正能交接的箱子。",
+    "letter": "这次晚餐有了箱号，也有回收容器。等下一班归来，我们还会问他们路上吃得怎么样。"
+  },
+  {
+    "id": "workshop-1",
+    "group": "workshop",
+    "stage": 0,
+    "name": "工具柜与学徒",
+    "detail": "祁岳通过维修频道发来工具清单。维修班希望整理公共工具柜，让新值班的人也能找到合用的零件。",
+    "letter": "工具柜贴上了借用说明。祁岳在维修频道确认了尺寸，实际交接由当班的人完成。"
+  },
+  {
+    "id": "workshop-2",
+    "group": "workshop",
+    "stage": 1,
+    "name": "备用件接班",
+    "detail": "第一期维修设施运转后，备用件不能只由一个人记住。请准备一批样件，交给下一组维修值班员核对。",
+    "letter": "第二组维修员已经能独立核对备用件。现在有人休息时，其他人也知道该接哪一道工序。"
+  },
+  {
+    "id": "workshop-3",
+    "group": "workshop",
+    "stage": 2,
+    "name": "维护轮班表",
+    "detail": "第二期维修设施需要一份能持续交接的轮班表。整理维修设备并完成补给或工位准备，让维修班按表接续。",
+    "letter": "维护轮班表写上了休息时间。祁岳说，能按时把工具交给下一班，也是修复的一部分。"
+  },
+  {
+    "id": "signals-1",
+    "group": "signals",
+    "stage": 0,
+    "name": "第一份独立回执",
+    "detail": "阿遥仍通过既有灯塔频道联络。通信班想独立发出一份送达回执，不再让每一条通信都依赖同一个人。",
+    "letter": "第一份回执已经从当班频道发出。阿遥在灯塔频道回了确认，地址和来源都保留在记录中。"
+  },
+  {
+    "id": "signals-2",
+    "group": "signals",
+    "stage": 1,
+    "name": "复核旧档来源",
+    "detail": "第一期航线维护站接续了更多通信。居民想把现在的来信与旧时代记录分开核对，避免把纪念误作仍在线的消息。",
+    "letter": "现在的回执注明了值班日期，旧记录注明了来源。我们会记得过去，也会准确回答今天谁在当班。"
+  },
+  {
+    "id": "signals-3",
+    "group": "signals",
+    "stage": 2,
+    "name": "两个地址的下一班",
+    "detail": "第二期航线维护站需要确认两处地址的下一次接班。安排通信样本与设备，再用实际运输或港内筹备完成登记。",
+    "letter": "两个地址都收到了下一班的名单。通信仍有等待，但现在每个等待都有可以接续的人。"
   }
 ];
   return Object.freeze(data);

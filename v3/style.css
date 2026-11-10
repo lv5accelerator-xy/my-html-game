@@ -1965,3 +1965,17 @@ html[data-paused="true"] * { animation-play-state:paused !important; }
 .review-support label {display:grid;gap:8px;}
 .review-support select {min-width:0;width:100%;min-height:44px;color:var(--text);background:var(--surface);padding:8px;}
 @media(max-width:700px){.review-chains{grid-template-columns:1fr;}.review-chains button{width:100%;min-height:44px;}}
+
+/* v3.23: state-derived work badges; no continuous rendering. */
+.community-scene svg { display:block;width:100%;max-width:540px;margin:auto; }
+.community-scene rect { fill:var(--panel);stroke:var(--muted); }
+.community-scene rect.is-built { fill:#155557;stroke:#75ddd5; }
+.community-scene text { fill:currentColor;font-size:12px; }
+.community-scene button,.community-focus button,#community-life button { min-height:44px;white-space:normal; }
+#community-life details { margin-block:16px; }
+.community-focus { display:flex;flex-wrap:wrap;gap:8px; }
+#community-life progress { width:100%; }
+
+.review-chains { align-items:start; }
+
+.community-scene rect.is-built[width="15"] { fill:#a6ffe7;stroke:#dbfff4; }

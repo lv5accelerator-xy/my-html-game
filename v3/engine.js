@@ -962,6 +962,8 @@
     };
     const order = s.management.active;
     if (s.epilogue.ending && order && (order.mission === id || order.plan?.alternates.includes(id))) s.mission.harborOrder = order.serial;
+    const community=s.continuation.community.active;
+    if(community&&community.routes.includes(id)) s.mission.communityOrder=community.serial;
     const encounter = succeeded && rollEncounter(s, m);
     if (encounter) s.mission.encounter = encounter;
     if (storyMission(m)) track.preparation = null;
@@ -992,6 +994,7 @@
         : {}),
     };
     if (m.harborOrder) s.result.harborOrder = m.harborOrder;
+    if (m.communityOrder) s.result.communityOrder=m.communityOrder;
     if (m.encounter && !s.encounters.pending) s.encounters.pending = clone(m.encounter);
     s.mission = null;
     log(
@@ -1131,7 +1134,84 @@
     return h;
   }
 
-  function freshContinuation() { return { plans: {}, sequence: null, reviews: freshReviews() }; }
+  function freshCommunity() { return {serial:0,settled:0,active:null,completed:[],records:[]}; }
+  function communityTerms(s,id,mode=s.management.focus) {
+    const d=byId(D.COMMUNITY_STORIES,id),focus=byId(D.HARBOR_FOCUSES,mode);
+    if(!d||!focus) return null;
+    const g=byId(D.COMMUNITY_GROUPS,d.group),level=p=>s.management.projects[p]||0;
+    const workSeconds=Math.ceil((240+d.stage*120)*focus.work);
+    return {id,serial:s.continuation.community.serial+1,mode,path:'production',acceptedClock:s.clock,
+      dustCost:Math.round((4000+d.stage*4000)*focus.dust),samplesCost:Math.max(0,1+d.stage+focus.samples),
+      workSeconds,productionGoal:Math.min(250000,Math.max(600,Math.ceil(rawRate(s)*workSeconds))),produced:0,
+      tripsRequired:mode==='exploration'?1:2,trips:0,packedDust:0,packedSamples:0,
+      careFactor:Math.max(.35,.6-(level('public-berths')+level('habitat'))*.025),
+      voyageToken:null, routes:mode==='exploration'?[g.mission,...['belt','supply-run'].filter(x=>x!==g.mission)]:[g.mission]};
+  }
+  function communityOffer(s,id,mode=s.management.focus) {
+    const d=byId(D.COMMUNITY_STORIES,id),terms=communityTerms(s,id,mode);
+    if(!d||!terms) return null;
+    const h=s.continuation.community,g=byId(D.COMMUNITY_GROUPS,d.group),previous=D.COMMUNITY_STORIES.find(x=>x.group===d.group&&x.stage===d.stage-1);
+    const reason=!s.epilogue.ending?'确认正式结局后开放':h.completed.includes(id)?'这份居民回信已经归档':h.active?'先完成已接下的居民协作':h.serial>=1e9?'协作档案已达到安全上限':previous&&!h.completed.includes(previous.id)?'先完成这个值班组的上一封回信':s.management.stats.deliveries<d.stage*2?`先完成 ${d.stage*2} 份港务需求`:(s.management.projects[g.project]||0)<d.stage?`先完成${byId(D.HARBOR_PROJECTS,g.project).name}第 ${d.stage} 期`:'';
+    return {...terms,available:!reason,reason};
+  }
+  function acceptCommunity(s,id,serial) {
+    const q=communityOffer(s,id);
+    if(!q?.available||q.serial!==Number(serial)) return false;
+    const {available,reason,...terms}=q,h=s.continuation.community;
+    h.serial=terms.serial;h.active=terms;
+    log(s,`居民协作：${byId(D.COMMUNITY_STORIES,id).name}。方向与筹备条件已记录，可以随时改选生产或补给路径。`);return true;
+  }
+  function communityStatus(s) {
+    const a=s.continuation.community.active;if(!a) return null;
+    const dustLeft=Math.max(0,a.dustCost-a.packedDust),samplesLeft=Math.max(0,a.samplesCost-a.packedSamples),packed=a.mode==='reception'&&!dustLeft&&!samplesLeft;
+    const secondsLeft=Math.max(0,a.acceptedClock+Math.ceil(a.workSeconds*(packed?a.careFactor:1))-s.clock);
+    const workReady=!secondsLeft&&(packed||a.produced>=a.productionGoal),tripReady=a.trips>=a.tripsRequired;
+    const ready=a.path==='production'?workReady:tripReady;
+    const reason=!ready?(a.path==='production'?`港内筹备还需 ${secondsLeft} 秒并完成工作量`:`还需 ${Math.max(0,a.tripsRequired-a.trips)} 次匹配补给交接`):s.dust<dustLeft?`还需 ${Math.ceil(dustLeft-s.dust)} 星尘`:s.samples<samplesLeft?`还需 ${samplesLeft-s.samples} 样本`:'';
+    return {...clone(a),dustLeft,samplesLeft,secondsLeft,workReady,tripReady,available:!reason,reason};
+  }
+  function setCommunityPath(s,serial,path) {
+    const a=s.continuation.community.active;
+    if(!a||a.serial!==Number(serial)||!['production','exploration'].includes(path)) return false;
+    a.path=path;return true;
+  }
+  function packCommunity(s,serial) {
+    const a=s.continuation.community.active;if(!a||a.serial!==Number(serial)||a.mode!=='reception') return false;
+    const dust=Math.min(s.dust,a.dustCost-a.packedDust),samples=Math.min(s.samples,a.samplesCost-a.packedSamples);
+    if(dust<=0&&samples<=0) return false;
+    s.dust-=dust;s.samples-=samples;a.packedDust+=dust;a.packedSamples+=samples;return true;
+  }
+  function deliverCommunity(s,serial) {
+    const a=communityStatus(s),h=s.continuation.community;
+    if(!a?.available||a.serial!==Number(serial)||h.completed.includes(a.id)||a.serial<=h.settled) return false;
+    s.dust-=a.dustLeft;s.samples-=a.samplesLeft;h.completed.push(a.id);h.settled=a.serial;
+    h.records.push({id:a.id,serial:a.serial,clock:s.clock,mode:a.mode,path:a.path,dustCost:a.dustCost,samplesCost:a.samplesCost});h.active=null;
+    log(s,`居民来信：${byId(D.COMMUNITY_STORIES,a.id).name}。值班记录与纪念回信已归档，没有新增生产倍率。`);return true;
+  }
+  function creditCommunityTrip(s,id,serial,voyage=false) {
+    const a=s.continuation.community.active;if(!a||a.serial!==serial) return;
+    const g=byId(D.COMMUNITY_GROUPS,byId(D.COMMUNITY_STORIES,a.id).group);
+    if(voyage?id===g.voyage:a.routes.includes(id)) a.trips=Math.min(a.tripsRequired,a.trips+1);
+  }
+  function communityGoal(s) {
+    const a=communityStatus(s);if(!a) return null;
+    return {title:a.available?'居民协作已备齐':byId(D.COMMUNITY_STORIES,a.id).name,detail:a.reason||'准备完成，确认交接后保存居民回信。',action:'explore',label:'查看居民协作',focus:'community-life',value:a.path==='production'?a.produced:a.trips,target:a.path==='production'?a.productionGoal:a.tripsRequired,eta:a.path==='production'?a.secondsLeft:0};
+  }
+  function cleanCommunity(raw,s) {
+    const h=freshCommunity();if(!raw||typeof raw!=='object'||!s.epilogue.ending) return h;
+    h.serial=integer(raw.serial,1e9);h.settled=integer(raw.settled,h.serial);
+    for(const d of D.COMMUNITY_STORIES){
+      const previous=D.COMMUNITY_STORIES.find(x=>x.group===d.group&&x.stage===d.stage-1),g=byId(D.COMMUNITY_GROUPS,d.group);
+      if(Array.isArray(raw.completed)&&raw.completed.includes(d.id)&&h.completed.length<h.settled&&(!previous||h.completed.includes(previous.id))&&s.management.stats.deliveries>=d.stage*2&&(s.management.projects[g.project]||0)>=d.stage) h.completed.push(d.id);
+    }
+    h.completed=Array.isArray(raw.completed)?[...new Set(raw.completed.filter(id=>h.completed.includes(id)))]:[];
+    for(const id of h.completed){const r=Array.isArray(raw.records)&&raw.records.find(x=>x?.id===id);if(r&&Number.isInteger(r.serial)&&r.serial>0&&r.serial<=h.settled&&Number.isInteger(r.clock)&&r.clock>=0&&r.clock<=s.clock&&byId(D.HARBOR_FOCUSES,r.mode)&&['production','exploration'].includes(r.path)&&Number.isFinite(r.dustCost)&&r.dustCost>=0&&r.dustCost<=13200&&Number.isInteger(r.samplesCost)&&r.samplesCost>=0&&r.samplesCost<=4) h.records.push({id,serial:r.serial,clock:r.clock,mode:r.mode,path:r.path,dustCost:r.dustCost,samplesCost:r.samplesCost});}
+    const a=raw.active,d=a&&byId(D.COMMUNITY_STORIES,a.id),q=d&&communityTerms(s,a.id,a.mode),previous=d&&D.COMMUNITY_STORIES.find(x=>x.group===d.group&&x.stage===d.stage-1),g=d&&byId(D.COMMUNITY_GROUPS,d.group);
+    if(q&&!h.completed.includes(a.id)&&a.serial===h.serial&&a.serial>h.settled&&(!previous||h.completed.includes(previous.id))&&s.management.stats.deliveries>=d.stage*2&&(s.management.projects[g.project]||0)>=d.stage&&['production','exploration'].includes(a.path)&&Number.isInteger(a.acceptedClock)&&a.acceptedClock>=0&&a.acceptedClock<=s.clock&&a.dustCost===q.dustCost&&a.samplesCost===q.samplesCost&&a.workSeconds===q.workSeconds&&a.tripsRequired===q.tripsRequired&&JSON.stringify(a.routes)===JSON.stringify(q.routes)&&Number.isFinite(a.careFactor)&&a.careFactor>=.35&&a.careFactor<=.6&&Number.isFinite(a.productionGoal)&&a.productionGoal>=600&&a.productionGoal<=250000&&Number.isFinite(a.produced)&&a.produced>=0&&a.produced<=a.productionGoal&&Number.isInteger(a.trips)&&a.trips>=0&&a.trips<=a.tripsRequired&&Number.isFinite(a.packedDust)&&a.packedDust>=0&&a.packedDust<=a.dustCost&&Number.isInteger(a.packedSamples)&&a.packedSamples>=0&&a.packedSamples<=a.samplesCost&&(a.mode==='reception'||(!a.packedDust&&!a.packedSamples))) h.active={...q,serial:a.serial,path:a.path,acceptedClock:a.acceptedClock,careFactor:a.careFactor,productionGoal:a.productionGoal,produced:a.produced,trips:a.trips,voyageToken:Number.isInteger(a.voyageToken)&&a.voyageToken>0&&a.voyageToken<=s.expeditions.serial?a.voyageToken:null,packedDust:a.packedDust,packedSamples:a.packedSamples};
+    return h;
+  }
+
+  function freshContinuation() { return { plans: {}, sequence: null, reviews: freshReviews(), community:freshCommunity() }; }
   function cleanPlanSteps(s, steps, capture = false) {
     if (!Array.isArray(steps) || steps.length !== 4) return null;
     const result = [];
@@ -1245,6 +1325,7 @@
       const steps = cleanPlanSteps(s, raw.plans[def.id]?.steps); if (steps) h.plans[def.id] = { steps };
     }
     h.reviews = cleanReviews(raw.reviews,s);
+    h.community = cleanCommunity(raw.community,s);
     const q = raw.sequence, a = s.expeditions.active, steps = cleanPlanSteps(s, q?.steps);
     if (a && q?.token === a.token && q.id === a.id && s.expeditions.completed[a.id] && steps &&
       [...a.legs, ...(a.leg ? [a.leg] : [])].every(l => l.choice === steps[l.stage].choice && sameEquipment(l.equipment, steps[l.stage].equipment)))
@@ -1282,6 +1363,7 @@
     s.expeditions.active={id,token:++s.expeditions.serial,stage:0,legs:[],leg:null,dust:0,samples:0,
       initialSupplies:p.suppliesBefore,initialInsight:p.insightBefore,supplies:p.suppliesBefore,insight:p.insightBefore};
     reserveVoyageSupport(s,id,s.expeditions.active.token);
+    const community=s.continuation.community.active;if(community) community.voyageToken=s.expeditions.active.token;
     s.automation.dispatch=false;
     log(s, `已编排${byId(D.VOYAGES,id).name}，每段由你决定；离线等待没有失败倒计时。`);return true;
   }
@@ -1321,6 +1403,8 @@
     if(first) h.archives[a.id]=clone(h.records[0]);
     const seconds=a.legs.reduce((n,l)=>n+l.seconds,0);h.best[a.id]=Math.min(h.best[a.id]||Infinity,seconds);
     h.dust=bounded(h.dust+a.dust);h.samples=bounded(h.samples+a.samples+(first?6:0));
+    const community=s.continuation.community.active;
+    if(community&&community.voyageToken===a.token) creditCommunityTrip(s,a.id,community.serial,true);
     h.active=null;
     if(s.continuation?.reviews) s.continuation.reviews.aid=null;
     if(s.continuation?.sequence?.token===a.token) s.continuation.sequence=null;
@@ -1679,6 +1763,7 @@
       order.trips = Math.min(order.tripsRequired, order.trips + 1);
       s.management.stats.voyages = integer(s.management.stats.voyages + 1, 1e9);
     }
+    if(r.succeeded) creditCommunityTrip(s,r.id,r.communityOrder);
     s.result = null;
     return true;
   }
@@ -1869,6 +1954,8 @@
       const task = s.management.active;
       task.produced = Math.min(task.productionGoal, bounded(task.produced + produced));
     }
+    const community=s.continuation.community.active;
+    if(community) community.produced=Math.min(community.productionGoal,bounded(community.produced+produced));
     s.clock++;
     if (offline) s.timing.offlineSeconds++;
     else if (active) s.timing.foregroundSeconds++;
@@ -2461,6 +2548,7 @@
     if(voyage) return voyage;
     const survey = surveyGoal(s);
     if (survey) return survey;
+    const community=communityGoal(s);if(community) return community;
     const readyProject = D.HARBOR_PROJECTS.find(p => harborProjectOffer(s, p.id).available);
     const harbor = harborGoal(s);
     if (harborStatus(s)?.available) return harbor;
@@ -3033,6 +3121,8 @@
     cleanAtlas(raw.atlas,s);
     cleanExpeditions(raw.expeditions,s);
     s.continuation = cleanContinuation(raw.continuation, s);
+    const community=s.continuation.community.active;
+    for(const [clean,saved] of [[s.mission,raw.mission],[s.result,raw.result]]) if(clean&&community&&saved?.communityOrder===community.serial&&community.routes.includes(clean.id)&&(!s.mission||s.mission.start>=community.acceptedClock)) clean.communityOrder=community.serial;
     return s;
   }
   function migrateLegacy(raw, now = Date.now()) {
@@ -3153,6 +3243,7 @@
     onboarding,
     portFacilities,
     portActivity,
+    communityTerms,communityOffer,acceptCommunity,communityStatus,setCommunityPath,packCommunity,deliverCommunity,communityGoal,
     reviewPreview, startReview, claimReview, reviewGoal, reviewDone, selectVoyageSupport,
     itineraryOffer, saveItinerary, startItinerary, itineraryStatus, pauseItinerary, restoreItineraryEquipment, equipItinerary, stopItinerary, advanceItinerary,
     voyagePreview, voyageReason, startVoyage, dispatchVoyageLeg, claimVoyageLeg, finishVoyage, voyageGoal,

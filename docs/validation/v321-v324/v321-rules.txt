@@ -1,0 +1,28 @@
+{"label": "v321-rules", "command": ["node", "tests/v3-continuation.test.js"], "parent_sha": "eb1999b287281a75633677ed9541b73bb900e1e6", "node": "v22.23.4", "playwright": "1.55.0", "utc_start": "2026-11-10T10:37:55Z", "sources": {"v3/engine.js": "279b7bfe841665905e5e2356e7a297479e7e34b8fd5e5f531b9d34da86be1b6f", "v3/data.js": "b6c01929201f00c2d5bc51e535f0d1e32cdf726f45ab43bc2220be28443110a9", "v3/storage.js": "a039cb7db647d7eeea618e08e25695442d90217ee91740162f3d819b4867bdce", "v3/app.js": "01b88ed41f71f26cd03b9ee56cd168fffac7d5f01b998d44f39edcdc366b35c3", "v3/style.css": "40f2be2480e5a8a8b6096754ca57f3706351fb7912b5cc70497f0060c8313732", "v3/index.html": "0f564500a9a4b3635944c38c27979038684c7ce30288fb04e933f995eec55891", "tests/v3-continuation.test.js": "bd5273dce3cf53b03381b30d9c874acd89a6ed5aaae7eff721f3979ae88a2a09", "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45", "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24", "tests/v3-browser.test.js": "2b41791c5f9cbcdfc4cbb5c0caafe5597d5da18ef14f4a87edbcb31e52236add", "tests/v3-compatibility.test.js": "70cb6a58db03f32aa693551e5fb886b58da38378eb0f2faf3d3f4f47ce8b48f8", "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393"}}
+node:internal/assert/utils:77
+    throw err;
+    ^
+
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert.ok(E.startItinerary(s,route.id))
+
+    at /workspace/starport-v324/tests/v3-continuation.test.js:11:9
+    at test (/workspace/starport-v324/tests/v3-continuation.test.js:4:24)
+    at Object.<anonymous> (/workspace/starport-v324/tests/v3-continuation.test.js:8:62)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v22.23.4

@@ -195,7 +195,7 @@
   }
 ],
     VERSION: 32,
-    GAME_VERSION: "3.20.0-preview.1",
+    GAME_VERSION: "3.21.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,

@@ -1,0 +1,34 @@
+  const itineraryDrafts = {};
+  function planDraft(id) {
+    const saved = itineraryDrafts[id] || state.continuation.plans[id]?.steps;
+    return (saved || Array.from({length:4}, () => ({choice:'secure', equipment:[...state.equipped]}))).map(p => ({choice:p.choice, equipment:[...p.equipment]}));
+  }
+  function planEditor(id) {
+    if (!state.expeditions.completed[id]) return '';
+    const draft = planDraft(id), offer = E.itineraryOffer(state,id,draft), saved=state.continuation.plans[id];
+    const current = saved && E.itineraryOffer(state,id,saved.steps);
+    const def=D.VOYAGES.find(v=>v.id===id), same=(a,b)=>JSON.stringify([...a].sort())===JSON.stringify([...b].sort());
+    const first=saved?.steps[0], firstOffer=first&&E.voyagePreview(state,id,first.choice);
+    const canStart=current?.available && firstOffer.available && !state.expeditions.active && !state.encounters.pending && same(state.equipped,first.equipment);
+    return `<details class="itinerary-editor" data-details-key="itinerary-${id}"><summary>四段重访安排${saved?' · 已保存':' · 首航后开放'}</summary><p>先比较四段，再保存。每次领取可按安排接续一次；离线不派遣下一段，不自动选择剧情。资源缺口按全程费用保守计算，未假设未来生产。</p>
+      ${draft.map((p,i)=>{const key=D.LOADOUTS.find(x=>state.loadouts[x.id]&&same(state.loadouts[x.id],p.equipment))?.id || 'current';return `<fieldset><legend>${i+1} · ${def.stages[i]}</legend><label>处置<select data-plan-route="${id}" data-plan-stage="${i}" data-plan-field="choice" data-focus="plan-${id}-${i}-choice">${D.VOYAGE_METHODS.map(m=>`<option value="${m.id}" ${m.id===p.choice?'selected':''}>${m.name}</option>`).join('')}</select></label><label>编成<select data-plan-route="${id}" data-plan-stage="${i}" data-plan-field="equipment" data-focus="plan-${id}-${i}-equipment"><option value="current" ${key==='current'?'selected':''}>编辑时的当前编成</option>${D.LOADOUTS.map(l=>`<option value="${l.id}" ${key===l.id?'selected':''} ${state.loadouts[l.id]?'':'disabled'}>${l.name}</option>`).join('')}</select></label><small>${p.equipment.map(x=>D.MODULES.find(m=>m.id===x)?.name).join('、')||'空槽'} · ${offer?duration(offer.quotes[i].seconds):'请重新选择合法编成'}</small></fieldset>`;}).join('')}
+      ${offer?`<p>四段合计 ${duration(offer.seconds)} · 星尘费用 ${number(offer.dustCost)} / 随船回收 ${number(offer.dust)} · 样本费用 ${offer.costSamples} / 回收 ${offer.samples}</p><p>全程保守缺口 ${number(offer.dustGap)} 星尘 / ${offer.sampleGap} 样本；实际每段分别扣费。</p><p>${escape(offer.reason)}</p>`:''}
+      <button class="outline" ${action('plan-save',id)} ${offer?.available?'':'disabled'}>保存四段安排</button>
+      ${saved?`<p>${escape(current?.reason||firstOffer?.reason||'首段按当前条件执行，后续每次由你确认。')}</p><button class="text-button" ${action('plan-equip',id)}>套用首段编成</button><button class="primary" ${action('plan-start',id)} ${canStart?'':'disabled'}>按已保存安排开始并派遣首段</button>`:''}</details>`;
+  }
+  function planControls() {
+    const q=E.itineraryStatus(state),a=state.expeditions.active;
+    if(!q || !a) return '';
+    return `<div class="itinerary-controls"><p>本次重访按已确认的四段安排接续 · ${q.paused?'已暂停':'每次接续由你确认'}</p><p>${escape(q.reason)}</p>
+      ${q.ready&&!q.paused?`<button class="primary" ${action('plan-next',String(a.token))} data-stage="${a.stage}">${a.stage===3?'领取末段并归航入库':'领取本段并按安排接续'}</button>`:''}
+      <button class="outline" ${action(q.paused?'plan-resume':'plan-pause',String(a.token))}>${q.paused?'恢复本次安排':'本次归航后暂停接续'}</button><button class="text-button" ${action('plan-restore',String(a.token))}>恢复已确认的下一段编成</button><button class="text-button" ${action('plan-stop',String(a.token))}>改为逐段手动安排</button></div>`;
+  }
+  function readyActions() {
+    const a=state.expeditions.active,q=E.itineraryStatus(state),need=E.harborStatus(state),buttons=[];
+    if(state.result&&!state.result.story) buttons.push(`<button class="primary" ${action('claim')}>领取普通探索报告</button>`);
+    if(state.atlas.active&&state.clock>=state.atlas.active.end) buttons.push(`<button class="outline" ${action('survey-claim',String(state.atlas.active.token))}>归档已完成调查</button>`);
+    if(need?.available) buttons.push(`<button class="outline" ${action('harbor-deliver',need.id)}>交付已备齐居民需求</button>`);
+    if(a?.leg&&state.clock>=a.leg.end) buttons.push(q&&!q.paused?`<button class="primary" ${action('plan-next',String(a.token))} data-stage="${a.stage}">${a.stage===3?'领取末段并归航入库':'领取并按安排接续'}</button>`:`<button class="outline" ${action('deep-claim',String(a.token))} data-stage="${a.stage}">领取远航阶段报告</button>`);
+    if(a?.stage===4) buttons.push(`<button class="primary" ${action('deep-finish',String(a.token))}>归航入库</button>`);
+    return buttons.length?`<section id="arrival-actions" class="arrival-actions" aria-label="归航就绪操作"><h2>归航待办 · 就地处理</h2>${buttons.join('')}</section>`:'';
+  }

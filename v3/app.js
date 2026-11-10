@@ -350,7 +350,7 @@
       <div class="scan-area"><button id="scan-control" class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
       <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p data-goal-detail>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
       <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
-      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${starportOverview()}${harborHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
+      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${readyActions()}${starportOverview()}${harborHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
   }
   function routePanel() {
     const route = D.ROUTES.find((r) => r.id === state.run.route);
@@ -662,13 +662,49 @@
     const alt=other&&E.voyagePreview(state,id,choice,state.loadouts[other.id]);
     return `<p>当前编成：${names(p.equipment)}</p><p>${duration(p.seconds)} · 分流 ${Math.round(p.diversion*100)}% · 支出 ${number(p.dustCost)} 星尘 / ${p.costSamples} 样本</p><p>随船回收 ${number(p.dust)} 星尘 / ${p.samples} 样本<br>补给 ${p.suppliesBefore} → ${p.suppliesAfter} · 调查 ${p.insightBefore} → ${p.insightAfter}</p>${alt?`<small>对比「${other.name}」：${duration(alt.seconds)} · 分流 ${Math.round(alt.diversion*100)}% · 回收 ${number(alt.dust)} 星尘 / ${alt.samples} 样本${alt.reason?' · '+escape(alt.reason):''}</small><button class="text-button" ${action('deep-loadout',other.id)}>切换${other.name}</button>`:''}<small>${escape(p.reason)}</small>`;
   }
+  const itineraryDrafts = {};
+  let lastItineraryClock = -1;
+  function planDraft(id) {
+    const saved = itineraryDrafts[id] || state.continuation.plans[id]?.steps;
+    return (saved || Array.from({length:4}, () => ({choice:'secure', equipment:[...state.equipped]}))).map(p => ({choice:p.choice, equipment:[...p.equipment], ...(p.preset?{preset:p.preset}:{})}));
+  }
+  function planEditor(id) {
+    if (!state.expeditions.completed[id]) return '';
+    const draft = planDraft(id), offer = E.itineraryOffer(state,id,draft), saved=state.continuation.plans[id];
+    const current = saved && E.itineraryOffer(state,id,saved.steps);
+    const def=D.VOYAGES.find(v=>v.id===id), same=(a,b)=>JSON.stringify([...a].sort())===JSON.stringify([...b].sort());
+    const first=saved?.steps[0], firstOffer=first&&E.voyagePreview(state,id,first.choice);
+    const canStart=current?.available && firstOffer.available && !state.expeditions.active && !state.encounters.pending && same(state.equipped,first.equipment);
+    return `<details class="itinerary-editor" data-details-key="itinerary-${id}"><summary>四段重访安排${saved?' · 已保存':' · 首航后开放'}</summary><p>先比较四段，再保存。每次领取可按安排接续一次；离线不派遣下一段，不自动选择剧情。资源缺口按全程费用保守计算，未假设未来生产。</p>
+      ${draft.map((p,i)=>{const key=p.preset||D.LOADOUTS.find(x=>state.loadouts[x.id]&&same(state.loadouts[x.id],p.equipment))?.id || 'current';return `<fieldset><legend>${i+1} · ${def.stages[i]}</legend><label>处置<select data-plan-route="${id}" data-plan-stage="${i}" data-plan-field="choice" data-focus="plan-${id}-${i}-choice">${D.VOYAGE_METHODS.map(m=>`<option value="${m.id}" ${m.id===p.choice?'selected':''}>${m.name}</option>`).join('')}</select></label><label>编成<select data-plan-route="${id}" data-plan-stage="${i}" data-plan-field="equipment" data-focus="plan-${id}-${i}-equipment"><option value="current" ${key==='current'?'selected':''}>编辑时的当前编成</option>${D.LOADOUTS.map(l=>`<option value="${l.id}" ${key===l.id?'selected':''} ${state.loadouts[l.id]?'':'disabled'}>${l.name}</option>`).join('')}</select></label><small>${p.equipment.map(x=>D.MODULES.find(m=>m.id===x)?.name).join('、')||'空槽'} · ${offer?duration(offer.quotes[i].seconds):'请重新选择合法编成'}</small></fieldset>`;}).join('')}
+      ${offer?`<p>四段合计 ${duration(offer.seconds)} · 星尘费用 ${number(offer.dustCost)} / 随船回收 ${number(offer.dust)} · 样本费用 ${offer.costSamples} / 回收 ${offer.samples}</p><p data-itinerary-gap="${id}">全程保守缺口 ${number(offer.dustGap)} 星尘 / ${offer.sampleGap} 样本；实际每段分别扣费。</p><p>${escape(offer.reason)}</p>`:''}
+      <button class="outline" ${action('plan-save',id)} ${offer?.available?'':'disabled'}>保存四段安排</button>
+      ${saved?`<p>${escape(current?.reason||(state.encounters.pending?'先处理等待你决定的动态发现':firstOffer?.reason)||'首段按当前条件执行，后续每次由你确认。')}</p><button class="text-button" ${action('plan-equip',id)}>套用首段编成</button><button class="primary" ${action('plan-start',id)} ${canStart?'':'disabled'}>按已保存安排开始并派遣首段</button>`:''}</details>`;
+  }
+  function planControls() {
+    const q=E.itineraryStatus(state),a=state.expeditions.active;
+    if(!q || !a) return '';
+    return `<div class="itinerary-controls"><p>本次重访按已确认的四段安排接续 · ${q.paused?'已暂停':'每次接续由你确认'}</p><p>${escape(q.reason)}</p>
+      ${q.ready&&!q.paused?`<button class="primary" ${action('plan-next',String(a.token))} data-stage="${a.stage}">${a.stage===3?'领取末段并归航入库':'领取本段并按安排接续'}</button>`:''}
+      <button class="outline" ${action(q.paused?'plan-resume':'plan-pause',String(a.token))}>${q.paused?'恢复本次安排':'本次归航后暂停接续'}</button>${q.stage<4?`<button class="text-button" ${action('plan-restore',String(a.token))}>恢复已确认的下一段编成</button>`:''}<button class="text-button" ${action('plan-stop',String(a.token))}>改为逐段手动安排</button></div>`;
+  }
+  function readyActions() {
+    const a=state.expeditions.active,q=E.itineraryStatus(state),need=E.harborStatus(state),buttons=[];
+    if(state.result&&!state.result.story) buttons.push(`<button class="primary" ${action('claim')}>领取普通探索报告</button>`);
+    if(state.atlas.active&&state.clock>=state.atlas.active.end) buttons.push(`<button class="outline" ${action('survey-claim',String(state.atlas.active.token))}>归档已完成调查</button>`);
+    if(need?.available) buttons.push(`<button class="outline" ${action('harbor-deliver',need.id)}>交付已备齐居民需求</button>`);
+    if(a?.leg&&state.clock>=a.leg.end) buttons.push(q&&!q.paused?`<button class="primary" ${action('plan-next',String(a.token))} data-stage="${a.stage}">${a.stage===3?'领取末段并归航入库':'领取并按安排接续'}</button>`:`<button class="outline" ${action('deep-claim',String(a.token))} data-stage="${a.stage}">领取远航阶段报告</button>`);
+    if(a?.stage===4) buttons.push(`<button class="primary" ${action('deep-finish',String(a.token))}>归航入库</button>`);
+    return buttons.length?`<section id="arrival-actions" class="arrival-actions" aria-label="归航就绪操作"><h2>归航待办 · 就地处理</h2>${buttons.join('')}</section>`:'';
+  }
+
   function longVoyages() {
     if(!state.epilogue.ending) return '';
     const h=state.expeditions,a=h.active,def=a&&D.VOYAGES.find(v=>v.id===a.id);
     const collectionName=id=>D.VOYAGE_COLLECTIONS.find(c=>c.id===id)?.name||id;
     return `<section class="long-voyages" id="long-voyages" tabindex="-1" aria-label="长期远航"><div class="section-title"><h2>长期远航</h2><span>已归航 ${Object.values(h.completed).reduce((n,v)=>n+v,0)} 次 · 纪念 ${h.collections.length}/13</span></div><p>已写完的六章保留在身后。沿图谱验证过的航路分段远航，每段可以换装、回收、调查或保障补给。离线可完成当前阶段；报告、下一段与最终回收始终等待你的确认。</p>
     ${a?`<article class="voyage-active"><h3>${def.name} · 阶段 ${Math.min(4,a.stage+1)}/4</h3><ol class="voyage-stages">${def.stages.map((name,i)=>`<li ${i===a.stage?'aria-current="step"':''}>${i<a.stage?'✓ ':''}${name}</li>`).join('')}</ol><p>随船封存 ${number(a.dust)} 星尘 / ${a.samples} 样本 · 补给 ${a.supplies}/8 · 调查 ${a.insight}/4</p><p>补给为0时下一段耗时增加12%，4份以上减少6%；调查每份缩时3%、减少1个百分点分流。本次远航结束后重新编排。</p>
-    ${a.leg?`<div class="harbor-active"><p data-deep-time></p><p>${D.VOYAGE_METHODS.find(m=>m.id===a.leg.choice).name} · 已锁定编成 ${a.leg.equipment.map(x=>D.MODULES.find(m=>m.id===x).name).join('、')||'空槽'} · 分流 ${Math.round(a.leg.diversion*100)}%</p><button class="primary" ${action('deep-claim',String(a.token))} data-stage="${a.stage}" ${state.clock>=a.leg.end?'':'disabled'}>领取阶段报告</button></div>`:a.stage===4?`<p>四段航程已全部完成。${h.completed[a.id]?'再次归航只结算本次回收与新达成的有限纪念。':'首次归航另有6份样本与航线纪念。'}</p><button class="primary" ${action('deep-finish',String(a.token))}>归航入库并封存记录</button>`:`<div class="deep-methods">${D.VOYAGE_METHODS.map(m=>{const p=E.voyagePreview(state,a.id,m.id);return `<article><h4>${m.name}</h4>${deepComparison(a.id,m.id)}<button class="outline" ${action('deep-dispatch',m.id)} data-token="${a.token}" data-stage="${a.stage}" ${p.available?'':'disabled'}>按此方案出发</button></article>`;}).join('')}</div>`}</article>`:`<div class="deep-routes">${D.VOYAGES.map(v=>{const p=E.voyagePreview(state,v.id);return `<article id="deep-route-${v.id}"><h3>${v.name}</h3><p>${v.detail}</p><p>四阶段 · 已归航 ${h.completed[v.id]||0} 次${h.best[v.id]?` · 个人最短航行 ${duration(h.best[v.id])}`:''}</p>${deepComparison(v.id,'secure')}<details data-details-key="deep-plans-${v.id}"><summary>比较三种出航方案与专用舰装</summary>${D.VOYAGE_METHODS.map(m=>`<article><h4>${m.name}</h4>${deepComparison(v.id,m.id)}</article>`).join('')}</details><button class="outline" ${action('deep-start',v.id)} ${p.available?'':'disabled'}>编排这条远航</button><button class="text-button" ${action('nav','explore')} data-goal-focus="sector-atlas">查看对应图谱</button></article>`;}).join('')}</div>`}
+    ${planControls()}${a.leg?`<div class="harbor-active"><p data-deep-time></p><p>${D.VOYAGE_METHODS.find(m=>m.id===a.leg.choice).name} · 已锁定编成 ${a.leg.equipment.map(x=>D.MODULES.find(m=>m.id===x).name).join('、')||'空槽'} · 分流 ${Math.round(a.leg.diversion*100)}%</p><button class="primary" ${action('deep-claim',String(a.token))} data-stage="${a.stage}" ${state.clock>=a.leg.end?'':'disabled'}>领取阶段报告</button></div>`:a.stage===4?`<p>四段航程已全部完成。${h.completed[a.id]?'再次归航只结算本次回收与新达成的有限纪念。':'首次归航另有6份样本与航线纪念。'}</p><button class="primary" ${action('deep-finish',String(a.token))}>归航入库并封存记录</button>`:`<div class="deep-methods">${D.VOYAGE_METHODS.map(m=>{const p=E.voyagePreview(state,a.id,m.id);return `<article><h4>${m.name}</h4>${deepComparison(a.id,m.id)}<button class="outline" ${action('deep-dispatch',m.id)} data-token="${a.token}" data-stage="${a.stage}" ${p.available?'':'disabled'}>按此方案出发</button></article>`;}).join('')}</div>`}</article>`:`<div class="deep-routes">${D.VOYAGES.map(v=>{const p=E.voyagePreview(state,v.id);return `<article id="deep-route-${v.id}"><h3>${v.name}</h3><p>${v.detail}</p><p>四阶段 · 已归航 ${h.completed[v.id]||0} 次${h.best[v.id]?` · 个人最短航行 ${duration(h.best[v.id])}`:''}</p>${deepComparison(v.id,'secure')}<details data-details-key="deep-plans-${v.id}"><summary>比较三种出航方案与专用舰装</summary>${D.VOYAGE_METHODS.map(m=>`<article><h4>${m.name}</h4>${deepComparison(v.id,m.id)}</article>`).join('')}</details><button class="outline" ${action('deep-start',v.id)} ${p.available?'':'disabled'}>编排这条远航</button>${planEditor(v.id)}<button class="text-button" ${action('nav','explore')} data-goal-focus="sector-atlas">查看对应图谱</button></article>`;}).join('')}</div>`}
     <details data-details-key="deep-collections"><summary>永久远航纪念与居民来信 · ${h.collections.length}/13</summary>${h.collections.map(id=>`<article><h4>${collectionName(id)}</h4><p>${escape(D.VOYAGE_COLLECTIONS.find(c=>c.id===id).text)}</p></article>`).join('')||'<p>每条航线首次归航，以及不同的回收、调查与补给安排，留下有限纪念。收集不叠永久倍率。</p>'}</details>
     <details data-details-key="deep-first-archives"><summary>永久首航档案 · ${Object.keys(h.archives).length}/3 条航线</summary>${Object.values(h.archives).map(r=>`<article><h4>${D.VOYAGES.find(v=>v.id===r.id).name}</h4><p>首航回收 ${number(r.dust)} 星尘 / ${r.samples} 样本；首航6份样本已领取。</p>${r.legs.map(l=>`<p>${D.VOYAGES.find(v=>v.id===r.id).stages[l.stage]} · ${D.VOYAGE_METHODS.find(m=>m.id===l.choice).name} · ${l.equipment.map(x=>D.MODULES.find(m=>m.id===x).name+' '+l.levels[x]+'级').join('、')||'空槽'} · ${duration(l.seconds)} · ${number(l.dust)} 星尘 / ${l.samples} 样本</p>`).join('')}</article>`).join('')||'<p>首次完成每条航线后，四阶段原始记录永久保存在这里，不参与近期列表轮换。</p>'}</details>
     <details data-details-key="deep-records"><summary>远航档案 · 最近 ${h.records.length}/12 次</summary><p>累计回收 ${number(h.dust)} 星尘 / ${number(h.samples)} 样本；三条航线完成次数、个人最短航行与纪念永久保留。</p>${h.records.map(r=>`<article><h4>${D.VOYAGES.find(v=>v.id===r.id).name} · 第${r.token}航行</h4><p>最终回收 ${number(r.dust)} 星尘 / ${r.samples} 样本${r.firstBonus?` + 首航${r.firstBonus}样本`:''}</p>${r.legs.map(l=>`<p>${D.VOYAGES.find(v=>v.id===r.id).stages[l.stage]}：${D.VOYAGE_METHODS.find(m=>m.id===l.choice).name} · ${l.equipment.map(x=>D.MODULES.find(m=>m.id===x).name+' '+l.levels[x]+'级').join('、')||'空槽'} · ${duration(l.seconds)} · ${number(l.dust)} 星尘 / ${l.samples} 样本</p>`).join('')}</article>`).join('')}</details></section>`;
@@ -826,6 +862,14 @@
     document.querySelectorAll("[data-beacon-seconds]").forEach((el) => {
       el.textContent = remaining;
     });
+    if(state.clock!==lastItineraryClock) {
+      lastItineraryClock=state.clock;
+      document.querySelectorAll('[data-itinerary-gap]').forEach(el=>{
+        if(!el.getClientRects().length) return;
+        const p=E.itineraryOffer(state,el.dataset.itineraryGap,planDraft(el.dataset.itineraryGap));
+        if(p) el.textContent=`全程保守缺口 ${number(p.dustGap)} 星尘 / ${p.sampleGap} 样本；实际每段分别扣费。`;
+      });
+    }
     const leg=state.expeditions.active?.leg;
     if(leg && $("[data-deep-time]")) $("[data-deep-time]").textContent=state.clock>=leg.end ? "本阶段已完成，等待手动领取报告" : `本阶段剩余 ${duration(leg.end-state.clock)}`;
     const survey=state.atlas.active;
@@ -937,6 +981,7 @@
       state.chapter,
       state.campaign,
       state.council,
+      state.continuation, itineraryDrafts,
       state.expeditions,
       Boolean(state.expeditions.active?.leg && state.clock>=state.expeditions.active.leg.end),
       D.VOYAGES.map(v=>D.VOYAGE_METHODS.map(m=>E.voyagePreview(state,v.id,m.id).available)),
@@ -1082,6 +1127,13 @@
   }
   document.addEventListener("change", async (event) => {
     const target = event.target;
+    if (target.dataset.planRoute && !rebuilding) {
+      const id=target.dataset.planRoute, stage=Number(target.dataset.planStage), steps=planDraft(id);
+      if(!D.VOYAGES.some(v=>v.id===id)||!Number.isInteger(stage)||stage<0||stage>3) return;
+      if(target.dataset.planField==='choice') steps[stage].choice=target.value;
+      else {steps[stage].equipment=[...(target.value==='current'?state.equipped:state.loadouts[target.value]||[])];steps[stage].preset=target.value;}
+      itineraryDrafts[id]=steps; signature=''; render(); return;
+    }
     if (target.id === "import-file" && target.files?.[0]) {
       const file = target.files[0];
       if (file.size > 4 * 1024 * 1024) {
@@ -1134,6 +1186,17 @@
       recentStory = null;
       render();
       return;
+    }
+    if(kind.startsWith('plan-')) {
+      let ok=false;
+      if(kind==='plan-save') ok=E.saveItinerary(state,id,planDraft(id));
+      if(kind==='plan-equip') ok=E.equipItinerary(state,id);
+      if(kind==='plan-start') ok=E.startItinerary(state,id);
+      if(kind==='plan-next') ok=E.advanceItinerary(state,id,button.dataset.stage);
+      if(kind==='plan-pause'||kind==='plan-resume') ok=E.pauseItinerary(state,id,kind==='plan-resume');
+      if(kind==='plan-restore') ok=E.restoreItineraryEquipment(state,id);
+      if(kind==='plan-stop') ok=E.stopItinerary(state,id);
+      save();render();toast(ok?'远航安排已更新，资源和阶段记录已保存。':E.itineraryStatus(state)?.reason||'条件已变化，请核对编成与费用。');return;
     }
     if(kind === 'deep-loadout') { if(E.applyLoadout(state,id)) {save();render();toast('已换装，已出发的阶段仍沿用原编成。');} return; }
     if(kind === 'deep-start') { if(E.startVoyage(state,id)) {save();render();toast('远航已编排，请选择第一段方案。');} return; }

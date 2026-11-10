@@ -85,6 +85,7 @@
       discoveries: 0,
       atlas: { priority:null, serial:0, claimed:0, active:null, nodes:[] },
       expeditions:{serial:0,settled:0,active:null,completed:{},collections:[],records:[],archives:{},best:{},dust:0,samples:0},
+      continuation: freshContinuation(),
       encounters: { serial: 0, settled: 0, nextAt: 0, rng: (Number(seed) ^ 0x3e72a1) >>> 0 || 1, pending: null, history: [], catalog: [] },
       starport: 0,
       chapter: [],
@@ -1040,6 +1041,126 @@
     );
     return true;
   }
+  function freshContinuation() { return { plans: {}, sequence: null }; }
+  function cleanPlanSteps(s, steps, capture = false) {
+    if (!Array.isArray(steps) || steps.length !== 4) return null;
+    const result = [];
+    for (const step of steps) {
+      if (!byId(D.VOYAGE_METHODS, step?.choice) || !Array.isArray(step.equipment) || JSON.stringify(cleanEquipment(step.equipment)) !== JSON.stringify(step.equipment) || step.equipment.some(id => !s.modules[id])) return null;
+      const levels = {};
+      for (const id of step.equipment) {
+        const level = capture || step.levels === undefined ? s.modules[id] : step.levels?.[id];
+        if (!Number.isInteger(level) || level < 1 || level > s.modules[id]) return null;
+        levels[id] = level;
+      }
+      result.push({ choice: step.choice, equipment: [...step.equipment], levels });
+    }
+    return result;
+  }
+  const sameEquipment = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+  function itineraryOffer(s, id, rawSteps) {
+    const def = byId(D.VOYAGES, id), steps = cleanPlanSteps(s, rawSteps);
+    if (!def || !steps) return null;
+    const local = clone(s), quotes = [];
+    const initial = voyagePreview(s, id);
+    local.expeditions.active = { id, stage: 0, leg: null, supplies: initial.suppliesBefore, insight: initial.insightBefore };
+    local.mission = local.result = local.atlas.active = null;
+    local.dust = D.MAX_NUMBER; local.samples = D.MAX_NUMBER;
+    let reason = !s.expeditions.completed[id] ? '完成本线首航后才能保存重访安排' : '';
+    for (let stage = 0; stage < 4; stage++) {
+      const step = steps[stage]; local.equipped = [...step.equipment];
+      const p = voyagePreview(local, id, step.choice);
+      if (!reason && p.reason) reason = p.reason;
+      if (!reason && step.equipment.some(key => s.modules[key] !== step.levels[key])) reason = '舰装等级已变化，请重新保存安排以确认预览';
+      quotes.push(p); local.expeditions.active.stage++;
+      local.expeditions.active.supplies = p.suppliesAfter; local.expeditions.active.insight = p.insightAfter;
+    }
+    const total = key => quotes.reduce((n, p) => n + p[key], 0);
+    return { id, steps, quotes, seconds: total('seconds'), dustCost: total('dustCost'), costSamples: total('costSamples'),
+      dust: total('dust'), samples: total('samples'), dustGap: Math.max(0, total('dustCost') - s.dust), sampleGap: Math.max(0, total('costSamples') - s.samples), reason, available: !reason };
+  }
+  function saveItinerary(s, id, rawSteps) {
+    const steps = cleanPlanSteps(s, rawSteps, true), offer = steps && itineraryOffer(s, id, steps);
+    if (!offer?.available) return false;
+    s.continuation.plans[id] = { steps };
+    log(s, '四段重访安排已保存；每次接续仍由你确认，离线不自动出发。'); return true;
+  }
+  function itineraryBlock(s, sequence, stage) {
+    if (!sequence || !s.expeditions.active || sequence.token !== s.expeditions.active.token) return '本次安排已结束';
+    if (s.encounters.pending || s.result?.story) return '先处理等待你的事件或剧情选择';
+    const step = sequence.steps[stage];
+    if (!step) return '';
+    if (step.equipment.some(id => s.modules[id] !== step.levels[id]) || !sameEquipment(s.equipped, step.equipment)) return '编成或等级已变化；恢复已确认编成，或暂停后手动安排';
+    return '';
+  }
+  function startItinerary(s, id) {
+    const saved = s.continuation.plans[id], offer = saved && itineraryOffer(s, id, saved.steps);
+    if (!offer?.available || s.expeditions.active || s.encounters.pending || !sameEquipment(s.equipped, offer.steps[0].equipment)) return false;
+    const candidate = clone(s);
+    if (!startVoyage(candidate, id) || !dispatchVoyageLeg(candidate, candidate.expeditions.active.token, 0, offer.steps[0].choice)) return false;
+    candidate.continuation.sequence = { id, token: candidate.expeditions.active.token, steps: clone(offer.steps), paused: false, stop: null };
+    Object.assign(s, candidate); return true;
+  }
+  function itineraryStatus(s) {
+    const a = s.expeditions.active, q = s.continuation.sequence;
+    if (!a || !q || q.token !== a.token) return null;
+    const stage = a.leg ? a.stage + 1 : a.stage;
+    let reason = itineraryBlock(s, q, stage);
+    if (!reason && a.leg && s.clock >= a.leg.end && stage < 4) {
+      const candidate = clone(s); claimVoyageLeg(candidate, a.token, a.stage);
+      reason = voyagePreview(candidate, a.id, q.steps[stage].choice).reason;
+    }
+    return { ...q, stage, reason: reason || (q.paused ? '安排已暂停，当前航段仍会正常归航' : ''), ready: Boolean(a.leg && s.clock >= a.leg.end) };
+  }
+  function pauseItinerary(s, token, resume = false) {
+    const q = s.continuation.sequence, a = s.expeditions.active;
+    if (!q || !a || q.token !== Number(token) || a.token !== q.token) return false;
+    if (resume && itineraryBlock(s, q, a.leg ? a.stage + 1 : a.stage)) return false;
+    q.paused = !resume; q.stop = resume ? null : 'manual'; return true;
+  }
+  function restoreItineraryEquipment(s, token) {
+    const q = s.continuation.sequence, a = s.expeditions.active;
+    if (!q || !a || q.token !== Number(token) || q.token !== a.token) return false;
+    const stage = a.leg ? a.stage + 1 : a.stage;
+    const step = q.steps[stage];
+    if (!step || step.equipment.some(id => !s.modules[id] || s.modules[id] !== step.levels[id])) return false;
+    s.equipped = [...step.equipment]; return true;
+  }
+  function equipItinerary(s, id) {
+    const plan = s.continuation.plans[id], offer = plan && itineraryOffer(s, id, plan.steps);
+    if (!offer?.available) return false;
+    s.equipped = [...offer.steps[0].equipment]; return true;
+  }
+  function stopItinerary(s, token) {
+    if (s.continuation.sequence?.token !== Number(token) || s.expeditions.active?.token !== Number(token)) return false;
+    s.continuation.sequence = null; return true;
+  }
+  function advanceItinerary(s, token, stage) {
+    const q = s.continuation.sequence, a = s.expeditions.active;
+    if (!q || q.paused || !a?.leg || a.token !== Number(token) || q.token !== a.token || a.stage !== Number(stage) || s.clock < a.leg.end) return false;
+    const candidate = clone(s);
+    if (!claimVoyageLeg(candidate, token, stage)) return false;
+    const next = candidate.expeditions.active.stage;
+    let reason = next < 4 ? itineraryBlock(candidate, q, next) : (s.encounters.pending ? '先处理等待你的事件或剧情选择' : '');
+    if (!reason && next < 4) reason = voyagePreview(candidate, a.id, q.steps[next].choice).reason;
+    if (reason) { q.paused = true; q.stop = reason.includes('编成') ? 'equipment' : s.encounters.pending ? 'decision' : 'resources'; return false; }
+    if (next === 4) { if (!finishVoyage(candidate, token)) return false; candidate.continuation.sequence = null; }
+    else if (!dispatchVoyageLeg(candidate, token, next, q.steps[next].choice)) return false;
+    Object.assign(s, candidate); return true;
+  }
+  function cleanContinuation(raw, s) {
+    const h = freshContinuation();
+    if (!raw || typeof raw !== 'object') return h;
+    for (const def of D.VOYAGES) if (Object.hasOwn(raw.plans || {}, def.id) && s.expeditions.completed[def.id]) {
+      const steps = cleanPlanSteps(s, raw.plans[def.id]?.steps); if (steps) h.plans[def.id] = { steps };
+    }
+    const q = raw.sequence, a = s.expeditions.active, steps = cleanPlanSteps(s, q?.steps);
+    if (a && q?.token === a.token && q.id === a.id && s.expeditions.completed[a.id] && steps &&
+      [...a.legs, ...(a.leg ? [a.leg] : [])].every(l => l.choice === steps[l.stage].choice && sameEquipment(l.equipment, steps[l.stage].equipment)))
+      h.sequence = { id: a.id, token: a.token, steps, paused: q.paused === true, stop: ['manual', 'equipment', 'decision', 'resources'].includes(q.stop) ? q.stop : null };
+    return h;
+  }
+
   function voyageReason(s,id) {
     const def=byId(D.VOYAGES,id);
     return !def ? '未知航线' : !s.epilogue.ending ? '确认任一正式结局后开放' : surveyCount(s,def.chain)<3 ? '先完成对应星区的三处调查' : '';
@@ -1108,6 +1229,7 @@
     const seconds=a.legs.reduce((n,l)=>n+l.seconds,0);h.best[a.id]=Math.min(h.best[a.id]||Infinity,seconds);
     h.dust=bounded(h.dust+a.dust);h.samples=bounded(h.samples+a.samples+(first?6:0));
     h.active=null;
+    if(s.continuation?.sequence?.token===a.token) s.continuation.sequence=null;
     log(s,`${byId(D.VOYAGES,a.id).name}归航，回收物已交给港务值班组，航行档案与${fresh.length}件新纪念已保存。`);return true;
   }
   function voyageGoal(s) {
@@ -2814,6 +2936,7 @@
       s.legacyArchive = clone(raw.legacyArchive);
     cleanAtlas(raw.atlas,s);
     cleanExpeditions(raw.expeditions,s);
+    s.continuation = cleanContinuation(raw.continuation, s);
     return s;
   }
   function migrateLegacy(raw, now = Date.now()) {
@@ -2934,6 +3057,7 @@
     onboarding,
     portFacilities,
     portActivity,
+    itineraryOffer, saveItinerary, startItinerary, itineraryStatus, pauseItinerary, restoreItineraryEquipment, equipItinerary, stopItinerary, advanceItinerary,
     voyagePreview, voyageReason, startVoyage, dispatchVoyageLeg, claimVoyageLeg, finishVoyage, voyageGoal,
     surveyCount, surveyPreview, setSurveyPriority, startSurvey, claimSurvey, surveyGoal,
     harborSchedule, packHarborNeed, reserveHarborNeed,

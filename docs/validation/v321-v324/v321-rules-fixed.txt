@@ -1,0 +1,16 @@
+{"label": "v321-rules-fixed", "command": ["node", "tests/v3-continuation.test.js"], "parent_sha": "eb1999b287281a75633677ed9541b73bb900e1e6", "node": "v22.23.4", "playwright": "1.55.0", "utc_start": "2026-11-10T10:38:58Z", "sources": {"v3/engine.js": "279b7bfe841665905e5e2356e7a297479e7e34b8fd5e5f531b9d34da86be1b6f", "v3/data.js": "b6c01929201f00c2d5bc51e535f0d1e32cdf726f45ab43bc2220be28443110a9", "v3/storage.js": "a039cb7db647d7eeea618e08e25695442d90217ee91740162f3d819b4867bdce", "v3/app.js": "7f0180f8657ecdcd8133fc298ead4014135ea31766ce435e32753b87142bf513", "v3/style.css": "40f2be2480e5a8a8b6096754ca57f3706351fb7912b5cc70497f0060c8313732", "v3/index.html": "0f564500a9a4b3635944c38c27979038684c7ce30288fb04e933f995eec55891", "tests/v3-continuation.test.js": "26d43a99220e88aa45d8754b23c4e1e9199330dc76fc54d7bdc18d68cabe4548", "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45", "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24", "tests/v3-browser.test.js": "2b41791c5f9cbcdfc4cbb5c0caafe5597d5da18ef14f4a87edbcb31e52236add", "tests/v3-compatibility.test.js": "70cb6a58db03f32aa693551e5fb886b58da38378eb0f2faf3d3f4f47ce8b48f8", "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393"}}
+ok 1 - v3.21 city/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 2 - v3.21 city/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 3 - v3.21 city/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 4 - v3.21 watch/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 5 - v3.21 watch/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 6 - v3.21 watch/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 7 - v3.21 voyage/freight: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 8 - v3.21 voyage/science: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 9 - v3.21 voyage/beacon: five real confirmations equal manual costs/rewards, locked archives and resumable plans
+ok 10 - v3.21 pending discoveries require the player before a saved itinerary can depart
+ok 11 - v3.21 missing fees pause atomically, preserve ready leg, then allow deliberate resume
+ok 12 - v3.21 changed equipment pauses without changing locked results and explicit restore resumes
+ok 13 - v3.21 eight-hour offline cap never chooses/claims; pausing and stopping retain paid voyage
+ok 14 - v3.21 malformed/first-run plans and stale tokens cannot acquire authorization or remove old progress
+v3 continuation ok: 14 behavioral checks

@@ -116,6 +116,7 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    await require("./helpers/continuation-browser.cjs")({scenario,read,E,D,S,TIME,openDetails,fs,path,screenshotDir});
     for(let routeIndex=0;routeIndex<D.VOYAGES.length;routeIndex++) {
       const def=D.VOYAGES[routeIndex],ending=D.ENDINGS[routeIndex];
       const fixture=E.sanitize(structuredClone(require('./fixtures/v316-earned.json')[ending.id]),TIME);

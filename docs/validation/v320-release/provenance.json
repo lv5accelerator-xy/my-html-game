@@ -59,7 +59,32 @@
     "webkit": "failed: test clicked tutorial underneath timed announcement",
     "chromium": "full flows in progress",
     "fix": "only test startup ordering; release runtime unchanged",
-    "final_result": "pending after image-completion fix",
+    "final_result": {
+      "run": 42744103954,
+      "audit_source_sha": "eb5287f23e92936c794043dc234e09950c775b99",
+      "runtime_source_sha": "a7bfea836a2285b22f1a1f1767defbdf832e62a2",
+      "conclusion": "success",
+      "chromium": {
+        "exit": 0,
+        "runtime_hashes": 14,
+        "extra_flows": 7,
+        "v3_flows": 94,
+        "v316_unique_snapshots": 30,
+        "failed": 0,
+        "skipped": 0,
+        "audio_navigation_cancellations": 2
+      },
+      "webkit": {
+        "exit": 0,
+        "runtime_hashes": 14,
+        "extra_flows": 7,
+        "v3_flows": 94,
+        "v316_unique_snapshots": 30,
+        "failed": 0,
+        "skipped": 0,
+        "audio_navigation_cancellations": 4
+      }
+    },
     "first_chromium": {
       "exit": 0,
       "runtime_hashes": 14,
@@ -95,5 +120,34 @@
     "public_screenshots_manually_viewed": false,
     "local_screenshots_manually_viewed": true,
     "git_upstream_query": "restricted main-only fetch refspec; use explicit remote refs/API head comparison"
+  },
+  "workflow_archived_after_success": "docs/validation/v320-release/public-acceptance-workflow.yml",
+  "superseded_maintenance_ci": [
+    {
+      "run": 42741301593,
+      "conclusion": "cancelled",
+      "reason": "original PR concurrency policy after corrective push"
+    },
+    {
+      "run": 42743083435,
+      "conclusion": "cancelled",
+      "reason": "original PR concurrency policy after corrective push"
+    }
+  ],
+  "audit_branch": "codex/v320-release-audit",
+  "audit_pr": 19,
+  "audit_pr_draft": true,
+  "docs_merged_to_main": false,
+  "audit_tested_source_ci": {
+    "run": 42744103650,
+    "source_sha": "eb5287f23e92936c794043dc234e09950c775b99",
+    "conclusion": "success",
+    "syntax": 9,
+    "scripts": 17,
+    "named_v3_rule_groups": 137,
+    "canonical_saves": 52,
+    "chromium_flows": 94,
+    "webkit_flows": 94,
+    "exit": 0
   }
 }

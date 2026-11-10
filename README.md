@@ -43,7 +43,7 @@
 
 ## 当前版本
 
-v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)，线上版本 **3.20.0-preview.1**。PR #18 已以保留历史的 merge 方式合并至 main（a7bfea8）；[Pages运行](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42739585599)的archive/test/build/deploy全部成功。独立公开站点浏览器验收及其真实限制见[发布记录](docs/v320-release-validation.md)。新增归航待办、三条各三节点的星区图谱、三方向实际资源调度，以及三条各四阶段长期远航、13件有限纪念与永久首航档案。保留六章、三个永久结局、双槽舰装和装备方案、12类动态事件、七类需求、五项三期工程及本机备份。沿用原生HTML/CSS/JavaScript和schema32，v2与v3存档独立，v3不连接旧版Firebase。另见[试玩说明](docs/v3-playable.md)、[开发验收](docs/v317-v320-validation.md)和[下一阶段建议](docs/v321-v324-plan.md)。版本仍保留preview命名，不另建GitHub Release。
+v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)，线上版本 **3.20.0-preview.1**。PR #18 已以保留历史的 merge 方式合并至 main（a7bfea8）；[Pages运行](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42739585599)的archive/test/build/deploy全部成功。[公开站点验收](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42744103954)的Chromium/WebKit各101流程通过，真实iPhone未执行，完整边界见[发布记录](docs/v320-release-validation.md)。新增归航待办、三条各三节点的星区图谱、三方向实际资源调度，以及三条各四阶段长期远航、13件有限纪念与永久首航档案。保留六章、三个永久结局、双槽舰装和装备方案、12类动态事件、七类需求、五项三期工程及本机备份。沿用原生HTML/CSS/JavaScript和schema32，v2与v3存档独立，v3不连接旧版Firebase。另见[试玩说明](docs/v3-playable.md)、[开发验收](docs/v317-v320-validation.md)和[下一阶段建议](docs/v321-v324-plan.md)。版本仍保留preview命名，不另建GitHub Release。
 
 旧版主入口保留 **v2.3.0「归航之约」**。
 

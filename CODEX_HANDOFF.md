@@ -4,7 +4,11 @@
 
 Pages运行42739585599的archive/test/build/deploy全部成功，artifact13730060260与pages_build_version均对应a7bfea8，2026-11-10T02:24:30Z部署明确成功。云公网CONNECT403、云WebKit未安装。发布前当前云Node22/PW1.55/Chromium151再次全量9语法/17脚本/137规则组/52旧档/94流程退出0；main的Actions完整入口与WebKit94流程再次通过。
 
-本轮隔离worktree `/workspace/starport-v320-release`、分支`codex/v320-release-audit`、维护PR #19；独立只读公开验收Actions与文档/计划不改玩法和原部署工作流。首次公开运行42741301733的WebKit误点被旧版公告遮住的新手引导，原始失败保留；仅验收脚本修正为按实际弹层顺序真实关闭，再全量验证。最新准确状态、命令/失败和未运行项以[发布验收](docs/v320-release-validation.md)及PR #19结果为准。下一轮仅有[v3.21～v3.24计划](docs/v321-v324-plan.md)，尚未施工。
+公开运行42744103954在精确验收源eb5287f23e92936c794043dc234e09950c775b99完整成功：Chromium/WebKit各14线上运行哈希、7额外新旧档流程、30份v3.16逐字段快照及全部94 v3流程，共各101流程，最终失败/跳过0。1280×900/375×900真实点击、焦点/DOM、三结局、事件、图谱/经营/远航、重复挑战/档案、刷新/离线/导入导出已验；真实iPhone未执行。媒体流在主动刷新时的正常中止单列，云不能下载线上截图人工查看；本地截图已查看。
+
+本轮隔离worktree `/workspace/starport-v320-release`、分支`codex/v320-release-audit`、维护草稿PR #19。一次性公开Actions定义完成后归档至docs/validation/v320-release，保留可重跑脚本；原两个工作流和所有运行文件保持相同。首次两轮公开WebKit失败（弹层顺序、测试主动刷新取消未下载完的背景）与四次本地脚本开发失败均保留，补强后全部双引擎通过；未删断言、强制点击或忽略背景失败。18份相关源码与实际公开被测提交逐字节相同。
+
+最新提交/推送与维护CI见PR #19，完整命令、计数、失败/取消和真实限制见[发布验收](docs/v320-release-validation.md)。README/维护整理在该草稿PR，未额外合并main。下一轮仅有[v3.21～v3.24计划](docs/v321-v324-plan.md)，尚未施工。
 
 ## 以下为开发时的历史交接（状态不代表当前发布）
 

@@ -18,6 +18,10 @@ jobs:
       github.event.workflow_run.head_branch == 'main' &&
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.0-noble@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -34,7 +38,13 @@ jobs:
       - name: Install isolated browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps ${{ matrix.engine }}
+          node <<'JS'
+          const assert = require('node:assert/strict'), fs = require('node:fs'), p = require('playwright');
+          assert.equal(Number(process.versions.node.split('.')[0]), 22);
+          assert.equal(require('playwright/package.json').version, '1.55.0');
+          for (const engine of ['chromium', 'webkit']) assert.ok(fs.existsSync(p[engine].executablePath()), engine + ' preinstalled browser');
+          console.log(JSON.stringify({ node: process.version, playwright: '1.55.0', browsers: ['chromium', 'webkit'] }));
+          JS
       - name: Check public assets, viewport flows and canonical migration
         env:
           CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright

@@ -89,3 +89,11 @@ v3.24里程碑788180d提交前冻结源码完整`node scripts/check.cjs`退出0�
 同一导航复核进一步确认温室补给在跃迁后导航研究缺失时，其航线卡不会渲染；旧v3.16通关档未完成任何调查时复查区也未出现。协作的补给入口改为复用既有missionPrerequisite真实研究入口，并优先定位待领报告/在途探索/已有调查或长航；荣誉的复查入口在缺少图谱前置时定位真实星区图谱。新增浏览器用原v3.16规范通关副本，真实完成港务前置、接协作、跃迁、重新扫描造机选向、解锁、点击研究前置及图谱入口，并核对合同/刷新，四条v3.24专项再次退出0。旧v324-guarded-full因补齐这些确定的导航缺陷而中止（-15/外层241，178.82秒），不计通过；以随后冻结源码的v324-release-final-full及新head Actions为最终结果。
 
 发布修复最终冻结源码`node scripts/check.cjs`退出0（441.51秒）：9语法/19脚本/200命名规则组（86+51+63）、2参数审计/114192报价、118规范旧档、107完整v3浏览器流程，最终失败/跳过0，28子命令均0。当前final-tested-sources.json已核对执行前后21份被测源码哈希一致；较早里程碑清单另存v324-milestone-tested-sources.json。源提交与正式merge/main及两轮CI/Pages/public实际结果仍以PR #20最终表和Actions为准。
+
+## 只读CI浏览器环境修复
+
+最终游戏源提交1f15971的原Game PR checks运行42816634394第1尝试，Azure Ubuntu源下载字体/GTK/GStreamer等系统依赖持续重试，20分钟安装阶段被取消，两个游戏检查步骤未执行。官方rerun API在同一游戏SHA申请第2runner，仍在相同安装阶段长时间重试。原始安装日志保留于隔离workspace，最终实际状态见PR #20发布表，不能冒充游戏测试通过。
+
+独立测试分支codex/v324-container-validation只新增诊断工作流，checkout固定游戏1f15971，官方Playwright1.55.0 Noble容器约一分钟完成准备。首轮运行42821292911因容器挂载目录的Git所有权检查失败，完整原日志保留；改为只对该工作区使用git -c safe.directory校验，仍保留固定SHA断言。运行42821652004已通过Node22/PW1.55及两个真实浏览器文件存在检查，并执行原完整入口与独立WebKit；不发布、不写存档。
+
+基于这个明确的环境故障，仅将只读pr-checks.yml与新public-acceptance.yml测试job改为固定官方镜像及已观察digest b27e719e…，保留Node22、PW1.55、全部原测试命令与断言、20分钟任务预算、触发/权限/并发规则，省去不稳定的apt下载并先校验实际浏览器。游戏/v3/tests/scripts自1f15971无任何改变，云完整200规则/118旧档/107流程/114192报价结果仍对应相同源码。原deploy-pages.yml（含archive/test/build/deploy）、正式发布与历史归档规则逐字节不变；它自身测试仍按原配置执行。新增ci-runtime-change.json区分云源码验证与只读CI环境变更，最新head必须重新通过完整双引擎，之后才能合并。

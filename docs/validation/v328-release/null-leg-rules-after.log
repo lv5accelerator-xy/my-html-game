@@ -1,0 +1,1699 @@
+ok 1 - v3.27 freight: six real successive conditions, all equipment/policies, fixed snapshot and finite repeat rewards
+ok 2 - v3.27 science: six real successive conditions, all equipment/policies, fixed snapshot and finite repeat rewards
+ok 3 - v3.27 beacon: six real successive conditions, all equipment/policies, fixed snapshot and finite repeat rewards
+ok 4 - v3.27 all schedules have measurable costs/benefits, accepted demand terms remain frozen
+ok 5 - v3.27 itinerary quote uses the same next condition and preserves old-rule active voyages
+ok 6 - v3.27 malformed conditions or dispatch policies are rejected without refund or first-award reset
+node:assert:150
+  throw new AssertionError(obj);
+  ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  {
+    afterword: {
+      active: null,
+      completed: [],
+      ready: false
+...
+        },
++       freight: {
++         clock: 10913,
++         collections: [
++           'voyage-freight',
++           'survey-freight',
++           'care-freight'
++         ],
++         dust: 1289600,
++         firstBonus: 6,
++         id: 'freight',
++         initialInsight: 2,
++         initialSupplies: 0,
++         legs: [
++           {
++             choice: 'secure',
++             costSamples: 0,
++             diversion: 0.06999999999999999,
++             dust: 322400,
++             dustCost: 6400,
++             end: 8237,
++             equipment: [
++               'nav',
++               'scanner'
++             ],
++             insightBefore: 2,
++             levels: {
++               nav: 2,
++               scanner: 3
++             },
++             samples: 2,
++             seconds: 626,
++             stage: 0,
++             start: 7611,
++             suppliesBefore: 0
++           },
++           {
++             choice: 'secure',
++             costSamples: 0,
++             diversion: 0.06999999999999999,
++             dust: 322400,
++             dustCost: 12000,
++             end: 9075,
++             equipment: [
++               'nav',
++               'scanner'
++             ],
++             insightBefore: 2,
++             levels: {
++               nav: 2,
++               scanner: 3
++             },
++             samples: 2,
++             seconds: 838,
++             stage: 1,
++             start: 8237,
++             suppliesBefore: 2
++           },
++           {
++             choice: 'secure',
++             costSamples: 0,
++             diversion: 0.06999999999999999,
++             dust: 322400,
++             dustCost: 17600,
++             end: 10125,
++             equipment: [
++               'nav',
++               'scanner'
++             ],
++             insightBefore: 2,
++             levels: {
++               nav: 2,
++               scanner: 3
++             },
++             samples: 2,
++             seconds: 1050,
++             stage: 2,
++             start: 9075,
++             suppliesBefore: 4
++           },
++           {
++             choice: 'secure',
++             costSamples: 0,
++             diversion: 0.06999999999999999,
++             dust: 322400,
++             dustCost: 23200,
++             end: 10913,
++             equipment: [
++               'nav',
++               'scanner'
++             ],
++             insightBefore: 2,
++             levels: {
++               nav: 2,
++               scanner: 3
++             },
++             samples: 2,
++             seconds: 788,
++             stage: 3,
++             start: 10125,
++             suppliesBefore: 6
++           }
++         ],
++         samples: 8,
++         token: 1
++       },
+        science: {
+          clock: 15332,
+          collections: [
+            'voyage-science',
+            'survey-science',
+
+    at /workspace/scratch/starport-release-fix/tests/v3-conditions.test.js:39:10
+    at test (/workspace/scratch/starport-release-fix/tests/v3-conditions.test.js:3:24)
+    at Object.<anonymous> (/workspace/scratch/starport-release-fix/tests/v3-conditions.test.js:26:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: {
+    schema: 'salvage-orbit',
+    version: 32,
+    createdAt: 6180000,
+    lastAt: 3206000,
+    carryMs: 0,
+    clock: 42118,
+    dust: 5978371051.195207,
+    lifetimeDust: 6472377500.212495,
+    cores: 3,
+    totalCores: 28,
+    rebirths: 7,
+    samples: 126,
+    buildings: { drone: 92, sail: 74, forge: 53, relay: 41 },
+    research: [ 'laser', 'panels', 'compact', 'navigation', 'network' ],
+    run: {
+      dust: 6240031044.19466,
+      startedClock: 4965,
+      route: 'explore',
+      routeChosen: true,
+      choices: 0
+    },
+    automation: {
+      enabled: false,
+      policy: 'balanced',
+      reserve: 0,
+      research: false,
+      dispatch: false
+    },
+    modules: { scanner: 3, medbay: 1, nav: 2 },
+    equipped: [ 'nav', 'scanner' ],
+    loadouts: { production: null, voyage: [ 'nav', 'scanner' ] },
+    mission: null,
+    result: null,
+    repeatId: 'supply-run',
+    lore: [
+      { story: 'hospital', choice: 'repair' },
+      { story: 'relay', choice: 'public' },
+      { story: 'garden', choice: 'scrap' },
+      { story: 'nursery', choice: 'seeds' },
+      { story: 'horizon', choice: 'welcome' },
+      { story: 'observations', choice: 'share' },
+      { story: 'beacon', choice: 'calibrate' },
+      { story: 'arrival', choice: 'watch' },
+      { story: 'council-log', choice: 'capacity' },
+      { story: 'tide-record', choice: 'crosscheck' },
+      { story: 'handoff-plan', choice: 'joint-watch' },
+      { story: 'relay-arrival', choice: 'watch' },
+      { story: 'berth-arrival', choice: 'address' },
+      { story: 'light-arrival', choice: 'water' }
+    ],
+    journal: [
+      { clock: 42118, text: '失落货运航道归航，回收物已交给港务值班组，航行档案与0件新纪念已保存。' },
+      { clock: 42118, text: '远航阶段已记录，回收物随船封存；下一段选择等待你的安排。' },
+      { clock: 41325, text: '归航物流交接已出发：保障补给与安全。' },
+      { clock: 41325, text: '远航阶段已记录，回收物随船封存；下一段选择等待你的安排。' },
+      { clock: 40268, text: '中转仓接力已出发：保障补给与安全。' },
+      { clock: 40268, text: '远航阶段已记录，回收物随船封存；下一段选择等待你的安排。' },
+      { clock: 39475, text: '残骸分区回收已出发：保障补给与安全。' },
+      { clock: 39475, text: '远航阶段已记录，回收物随船封存；下一段选择等待你的安排。' },
+      { clock: 38912, text: '验装旧货柜已出发：保障补给与安全。' },
+      { clock: 38912, text: '已编排失落货运航道，每段由你决定；离线等待没有失败倒计时。' },
+      { clock: 38912, text: '居民来信：两个地址的下一班。值班记录与纪念回信已归档，没有新增生产倍率。' },
+      { clock: 38527, text: '居民协作：两个地址的下一班。方向与筹备条件已记录，可以随时改选生产或补给路径。' }
+    ],
+    discoveries: 42,
+    atlas: {
+      priority: null,
+      serial: 9,
+      claimed: 9,
+      active: null,
+      nodes: [
+        {
+          chain: 'freight',
+          node: 0,
+          approach: 'safe',
+          token: 1,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 6276
+        },
+        {
+          chain: 'freight',
+          node: 1,
+          approach: 'safe',
+          token: 2,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 6435
+        },
+        {
+          chain: 'freight',
+          node: 2,
+          approach: 'safe',
+          token: 3,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 5,
+          clock: 6657
+        },
+        {
+          chain: 'science',
+          node: 0,
+          approach: 'safe',
+          token: 4,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 6753
+        },
+        {
+          chain: 'science',
+          node: 1,
+          approach: 'safe',
+          token: 5,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 6912
+        },
+        {
+          chain: 'science',
+          node: 2,
+          approach: 'safe',
+          token: 6,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 5,
+          clock: 7134
+        },
+        {
+          chain: 'quiet',
+          node: 0,
+          approach: 'safe',
+          token: 7,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 7230
+        },
+        {
+          chain: 'quiet',
+          node: 1,
+          approach: 'safe',
+          token: 8,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 7389
+        },
+        {
+          chain: 'quiet',
+          node: 2,
+          approach: 'safe',
+          token: 9,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 5,
+          clock: 7611
+        }
+      ]
+    },
+    expeditions: {
+      serial: 7,
+      settled: 7,
+      active: null,
+      completed: { freight: 3, science: 2, beacon: 2 },
+      collections: [
+        'voyage-freight',
+        'survey-freight',
+        'care-freight',
+        'voyage-science',
+        'survey-science',
+        'care-science',
+        'voyage-beacon',
+        'survey-beacon',
+        'care-beacon',
+        'three-addresses',
+        'cargo-freight',
+        'cargo-science',
+        'cargo-beacon'
+      ],
+      records: [
+        {
+          id: 'freight',
+          token: 7,
+          condition: 'debris',
+          clock: 42118,
+          initialSupplies: 3,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 1676480,
+          samples: 11,
+          firstBonus: 0,
+          collections: []
+        },
+        {
+          id: 'beacon',
+          token: 6,
+          clock: 33712,
+          initialSupplies: 3,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 1310400,
+          samples: 13,
+          firstBonus: 0,
+          collections: [ 'cargo-beacon' ]
+        },
+        {
+          id: 'science',
+          token: 5,
+          clock: 30285,
+          initialSupplies: 3,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 1092000,
+          samples: 17,
+          firstBonus: 0,
+          collections: [ 'cargo-science' ]
+        },
+        {
+          id: 'freight',
+          token: 4,
+          clock: 26251,
+          initialSupplies: 3,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 2095600,
+          samples: 9,
+          firstBonus: 0,
+          collections: [ 'cargo-freight' ]
+        },
+        {
+          id: 'beacon',
+          token: 3,
+          clock: 19084,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 892800,
+          samples: 12,
+          firstBonus: 6,
+          collections: [
+            'voyage-beacon',
+            'survey-beacon',
+            'care-beacon',
+            'three-addresses'
+          ]
+        },
+        {
+          id: 'science',
+          token: 2,
+          clock: 15332,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 744000,
+          samples: 16,
+          firstBonus: 6,
+          collections: [ 'voyage-science', 'survey-science', 'care-science' ]
+        },
+        {
+          id: 'freight',
+          token: 1,
+          clock: 10913,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 1289600,
+          samples: 8,
+          firstBonus: 6,
+          collections: [ 'voyage-freight', 'survey-freight', 'care-freight' ]
+        }
+      ],
+      archives: {
+        freight: {
+          id: 'freight',
+          token: 1,
+          clock: 10913,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 1289600,
+          samples: 8,
+          firstBonus: 6,
+          collections: [ 'voyage-freight', 'survey-freight', 'care-freight' ]
+        },
+        science: {
+          id: 'science',
+          token: 2,
+          clock: 15332,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 744000,
+          samples: 16,
+          firstBonus: 6,
+          collections: [ 'voyage-science', 'survey-science', 'care-science' ]
+        },
+        beacon: {
+          id: 'beacon',
+          token: 3,
+          clock: 19084,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 892800,
+          samples: 12,
+          firstBonus: 6,
+          collections: [
+            'voyage-beacon',
+            'survey-beacon',
+            'care-beacon',
+            'three-addresses'
+          ]
+        }
+      },
+      best: { freight: 3032, science: 4034, beacon: 3427 },
+      dust: 9100880,
+      samples: 104
+    },
+    continuation: {
+      plans: {},
+      sequence: null,
+      reviews: {
+        serial: 9,
+        settled: 9,
+        active: null,
+        records: [
+          {
+            id: 'freight-tags',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 195,
+            diversion: 0.08,
+            dustCost: 3000,
+            costSamples: 0,
+            dust: 1500,
+            samples: 2,
+            equipment: [Array],
+            levels: [Object],
+            token: 1,
+            start: 33712,
+            end: 33907,
+            claimedAt: 33907
+          },
+          {
+            id: 'freight-cabins',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 292,
+            diversion: 0.08,
+            dustCost: 5000,
+            costSamples: 0,
+            dust: 2500,
+            samples: 3,
+            equipment: [Array],
+            levels: [Object],
+            token: 2,
+            start: 33907,
+            end: 34199,
+            claimedAt: 34199
+          },
+          {
+            id: 'freight-dust',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 389,
+            diversion: 0.08,
+            dustCost: 7000,
+            costSamples: 0,
+            dust: 3500,
+            samples: 4,
+            equipment: [Array],
+            levels: [Object],
+            token: 3,
+            start: 34199,
+            end: 34588,
+            claimedAt: 34588
+          },
+          {
+            id: 'science-probe',
+            method: 'safe',
+            practice: false,
+            evidence: [Array],
+            seconds: 166,
+            diversion: 0.08,
+            dustCost: 3000,
+            costSamples: 0,
+            dust: 1500,
+            samples: 2,
+            equipment: [Array],
+            levels: [Object],
+            token: 4,
+            start: 34588,
+            end: 34754,
+            claimedAt: 34754
+          },
+          {
+            id: 'science-tools',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 292,
+            diversion: 0.08,
+            dustCost: 5000,
+            costSamples: 0,
+            dust: 2500,
+            samples: 3,
+            equipment: [Array],
+            levels: [Object],
+            token: 5,
+            start: 34754,
+            end: 35046,
+            claimedAt: 35046
+          },
+          {
+            id: 'science-record',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 389,
+            diversion: 0.08,
+            dustCost: 7000,
+            costSamples: 0,
+            dust: 3500,
+            samples: 4,
+            equipment: [Array],
+            levels: [Object],
+            token: 6,
+            start: 35046,
+            end: 35435,
+            claimedAt: 35435
+          },
+          {
+            id: 'quiet-beacon',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 195,
+            diversion: 0.08,
+            dustCost: 3000,
+            costSamples: 0,
+            dust: 1500,
+            samples: 2,
+            equipment: [Array],
+            levels: [Object],
+            token: 7,
+            start: 35435,
+            end: 35630,
+            claimedAt: 35630
+          },
+          {
+            id: 'quiet-signal',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 292,
+            diversion: 0.08,
+            dustCost: 5000,
+            costSamples: 0,
+            dust: 2500,
+            samples: 3,
+            equipment: [Array],
+            levels: [Object],
+            token: 8,
+            start: 35630,
+            end: 35922,
+            claimedAt: 35922
+          },
+          {
+            id: 'quiet-shelter',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 389,
+            diversion: 0.08,
+            dustCost: 7000,
+            costSamples: 0,
+            dust: 3500,
+            samples: 4,
+            equipment: [Array],
+            levels: [Object],
+            token: 9,
+            start: 35922,
+            end: 36311,
+            claimedAt: 36311
+          }
+        ],
+        earned: [
+          'freight-tags',
+          'freight-cabins',
+          'freight-dust',
+          'science-probe',
+          'science-tools',
+          'science-record',
+          'quiet-beacon',
+          'quiet-signal',
+          'quiet-shelter'
+        ],
+        used: [],
+        uses: [],
+        selected: null,
+        aid: null
+      },
+      community: {
+        serial: 9,
+        settled: 9,
+        active: null,
+        completed: [
+          'meals-1',    'meals-2',
+          'meals-3',    'workshop-1',
+          'workshop-2', 'workshop-3',
+          'signals-1',  'signals-2',
+          'signals-3'
+        ],
+        records: [
+          {
+            id: 'meals-1',
+            serial: 1,
+            clock: 36504,
+            mode: 'production',
+            path: 'production',
+            dustCost: 3200,
+            samplesCost: 2
+          },
+          {
+            id: 'meals-2',
+            serial: 2,
+            clock: 36793,
+            mode: 'production',
+            path: 'production',
+            dustCost: 6400,
+            samplesCost: 3
+          },
+          {
+            id: 'meals-3',
+            serial: 3,
+            clock: 37178,
+            mode: 'production',
+            path: 'production',
+            dustCost: 9600,
+            samplesCost: 4
+          },
+          {
+            id: 'workshop-1',
+            serial: 4,
+            clock: 37371,
+            mode: 'production',
+            path: 'production',
+            dustCost: 3200,
+            samplesCost: 2
+          },
+          {
+            id: 'workshop-2',
+            serial: 5,
+            clock: 37660,
+            mode: 'production',
+            path: 'production',
+            dustCost: 6400,
+            samplesCost: 3
+          },
+          {
+            id: 'workshop-3',
+            serial: 6,
+            clock: 38045,
+            mode: 'production',
+            path: 'production',
+            dustCost: 9600,
+            samplesCost: 4
+          },
+          {
+            id: 'signals-1',
+            serial: 7,
+            clock: 38238,
+            mode: 'production',
+            path: 'production',
+            dustCost: 3200,
+            samplesCost: 2
+          },
+          {
+            id: 'signals-2',
+            serial: 8,
+            clock: 38527,
+            mode: 'production',
+            path: 'production',
+            dustCost: 6400,
+            samplesCost: 3
+          },
+          {
+            id: 'signals-3',
+            serial: 9,
+            clock: 38912,
+            mode: 'production',
+            path: 'production',
+            dustCost: 9600,
+            samplesCost: 4
+          }
+        ]
+      },
+      honors: { claimed: [] }
+    },
+    encounters: {
+      serial: 1,
+      settled: 1,
+      nextAt: 1635,
+      rng: 946843048,
+      pending: null,
+      history: [ { token: 1, id: 'probe', choice: 'ore', clock: 19104 } ],
+      catalog: [ 'probe:ore' ]
+    },
+    starport: 3,
+    chapter: [ 'relay', 'nursery', 'lighthouse' ],
+    campaign: {
+      completed: [
+        { id: 'white-noise', plan: 'calibrate' },
+        { id: 'false-beacon', plan: 'calibrate' },
+        { id: 'first-convoy', plan: 'calibrate' }
+      ],
+      preparation: null
+    },
+    council: {
+      completed: [
+        { id: 'port-council', plan: 'calibrate' },
+        { id: 'old-observatory', plan: 'calibrate' },
+        { id: 'shared-watch', plan: 'calibrate' }
+      ],
+      priority: 'reception',
+      preparation: null
+    },
+    rescue: {
+      completed: [
+        { id: 'convoy-relay', plan: 'calibrate' },
+        { id: 'convoy-berth', plan: 'calibrate' },
+        { id: 'convoy-light', plan: 'calibrate' }
+      ],
+      energy: 'rotation',
+      berth: true,
+      checks: null,
+      preparation: null,
+      protocol: true
+    },
+    epilogue: { confirmed: [ 'ayao', 'qiyue', 'wei' ], ending: 'city' },
+    afterword: { active: null, ready: false, completed: [] },
+    management: {
+      focus: 'production',
+      cycle: 35,
+      active: null,
+      projects: {
+        'public-berths': 3,
+        'repair-dock': 2,
+        habitat: 3,
+        'route-station': 2
+      },
+      counts: {
+        food: 5,
+        repair: 5,
+        energy: 5,
+        routes: 5,
+        cargo: 5,
+        reception: 5,
+        comms: 5
+      },
+      stats: {
+        deliveries: 35,
+        voyages: 0,
+        dustSpent: 310640,
+        samplesSpent: 141
+      },
+      history: [
+        { serial: 35, id: 'comms', focus: 'production', clock: 23219 },
+        {
+          serial: 34,
+          id: 'reception',
+          focus: 'production',
+          clock: 23098
+        },
+        { serial: 33, id: 'cargo', focus: 'production', clock: 23001 },
+        { serial: 32, id: 'routes', focus: 'production', clock: 22880 },
+        { serial: 31, id: 'energy', focus: 'production', clock: 22759 },
+        { serial: 30, id: 'repair', focus: 'production', clock: 22614 },
+        { serial: 29, id: 'food', focus: 'production', clock: 22493 },
+        { serial: 28, id: 'comms', focus: 'production', clock: 22396 },
+        {
+          serial: 27,
+          id: 'reception',
+          focus: 'production',
+          clock: 22275
+        },
+        { serial: 26, id: 'cargo', focus: 'production', clock: 22178 },
+        { serial: 25, id: 'routes', focus: 'production', clock: 22057 },
+        { serial: 24, id: 'energy', focus: 'production', clock: 21936 },
+        { serial: 23, id: 'repair', focus: 'production', clock: 21791 },
+        { serial: 22, id: 'food', focus: 'production', clock: 21670 },
+        { serial: 21, id: 'comms', focus: 'production', clock: 21573 },
+        {
+          serial: 20,
+          id: 'reception',
+          focus: 'production',
+          clock: 21452
+        },
+        { serial: 19, id: 'cargo', focus: 'production', clock: 21355 },
+        { serial: 18, id: 'routes', focus: 'production', clock: 21234 },
+        { serial: 17, id: 'energy', focus: 'production', clock: 21113 },
+        { serial: 16, id: 'repair', focus: 'production', clock: 20968 },
+        { serial: 15, id: 'food', focus: 'production', clock: 20847 },
+        { serial: 14, id: 'comms', focus: 'production', clock: 20750 },
+        {
+          serial: 13,
+          id: 'reception',
+          focus: 'production',
+          clock: 20629
+        },
+        { serial: 12, id: 'cargo', focus: 'production', clock: 20532 }
+      ],
+      collections: [
+        'need-food',
+        'need-repair',
+        'need-energy',
+        'need-routes',
+        'need-cargo',
+        'need-reception',
+        'need-comms',
+        'project-public-berths',
+        'project-habitat'
+      ]
+    },
+    records: [
+      { route: 'explore', seconds: 585, gain: 4 },
+      { route: 'explore', seconds: 450, gain: 4 },
+      { route: 'explore', seconds: 750, gain: 4 },
+      { route: 'explore', seconds: 645, gain: 4 },
+      { route: 'explore', seconds: 645, gain: 4 }
+    ],
+    beacon: { nextAt: 42214, expiresAt: 0 },
+    burstUntil: 0,
+    lastScanClock: 2565,
+    rng: 363666994,
+    legacyArchive: null,
+    timing: {
+      sinceClock: 0,
+      late: false,
+      foregroundSeconds: 0,
+      offlineSeconds: 0,
+      events: {
+        drone: {
+          elapsedSeconds: 15,
+          foregroundSeconds: 0,
+          offlineSeconds: 0,
+          run: 1,
+          source: 'manual'
+        },
+        research: {
+          elapsedSeconds: 30,
+          foregroundSeconds: 0,
+          offlineSeconds: 0,
+          run: 1,
+          source: 'manual'
+        },
+        report: {
+          elapsedSeconds: 180,
+          foregroundSeconds: 0,
+          offlineSeconds: 0,
+          run: 1,
+          source: 'manual'
+        },
+        prestige: {
+          elapsedSeconds: 1125,
+          foregroundSeconds: 0,
+          offlineSeconds: 0,
+          run: 1,
+          source: 'manual'
+        }
+      }
+    }
+  },
+  expected: {
+    schema: 'salvage-orbit',
+    version: 32,
+    createdAt: 6180000,
+    lastAt: 3206000,
+    carryMs: 0,
+    clock: 42118,
+    dust: 5978371051.195207,
+    lifetimeDust: 6472377500.212495,
+    cores: 3,
+    totalCores: 28,
+    rebirths: 7,
+    samples: 126,
+    buildings: { drone: 92, sail: 74, forge: 53, relay: 41 },
+    research: [ 'laser', 'panels', 'compact', 'navigation', 'network' ],
+    run: {
+      dust: 6240031044.19466,
+      startedClock: 4965,
+      route: 'explore',
+      routeChosen: true,
+      choices: 0
+    },
+    automation: {
+      enabled: false,
+      policy: 'balanced',
+      reserve: 0,
+      research: false,
+      dispatch: false
+    },
+    modules: { scanner: 3, medbay: 1, nav: 2 },
+    equipped: [ 'nav', 'scanner' ],
+    loadouts: { production: null, voyage: [ 'nav', 'scanner' ] },
+    mission: null,
+    result: null,
+    repeatId: 'supply-run',
+    lore: [
+      { story: 'hospital', choice: 'repair' },
+      { story: 'relay', choice: 'public' },
+      { story: 'garden', choice: 'scrap' },
+      { story: 'nursery', choice: 'seeds' },
+      { story: 'horizon', choice: 'welcome' },
+      { story: 'observations', choice: 'share' },
+      { story: 'beacon', choice: 'calibrate' },
+      { story: 'arrival', choice: 'watch' },
+      { story: 'council-log', choice: 'capacity' },
+      { story: 'tide-record', choice: 'crosscheck' },
+      { story: 'handoff-plan', choice: 'joint-watch' },
+      { story: 'relay-arrival', choice: 'watch' },
+      { story: 'berth-arrival', choice: 'address' },
+      { story: 'light-arrival', choice: 'water' }
+    ],
+    journal: [
+      { clock: 42118, text: '失落货运航道归航，回收物已交给港务值班组，航行档案与0件新纪念已保存。' },
+      { clock: 42118, text: '远航阶段已记录，回收物随船封存；下一段选择等待你的安排。' },
+      { clock: 41325, text: '归航物流交接已出发：保障补给与安全。' },
+      { clock: 41325, text: '远航阶段已记录，回收物随船封存；下一段选择等待你的安排。' },
+      { clock: 40268, text: '中转仓接力已出发：保障补给与安全。' },
+      { clock: 40268, text: '远航阶段已记录，回收物随船封存；下一段选择等待你的安排。' },
+      { clock: 39475, text: '残骸分区回收已出发：保障补给与安全。' },
+      { clock: 39475, text: '远航阶段已记录，回收物随船封存；下一段选择等待你的安排。' },
+      { clock: 38912, text: '验装旧货柜已出发：保障补给与安全。' },
+      { clock: 38912, text: '已编排失落货运航道，每段由你决定；离线等待没有失败倒计时。' },
+      { clock: 38912, text: '居民来信：两个地址的下一班。值班记录与纪念回信已归档，没有新增生产倍率。' },
+      { clock: 38527, text: '居民协作：两个地址的下一班。方向与筹备条件已记录，可以随时改选生产或补给路径。' }
+    ],
+    discoveries: 42,
+    atlas: {
+      priority: null,
+      serial: 9,
+      claimed: 9,
+      active: null,
+      nodes: [
+        {
+          chain: 'freight',
+          node: 0,
+          approach: 'safe',
+          token: 1,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 6276
+        },
+        {
+          chain: 'freight',
+          node: 1,
+          approach: 'safe',
+          token: 2,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 6435
+        },
+        {
+          chain: 'freight',
+          node: 2,
+          approach: 'safe',
+          token: 3,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 5,
+          clock: 6657
+        },
+        {
+          chain: 'science',
+          node: 0,
+          approach: 'safe',
+          token: 4,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 6753
+        },
+        {
+          chain: 'science',
+          node: 1,
+          approach: 'safe',
+          token: 5,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 6912
+        },
+        {
+          chain: 'science',
+          node: 2,
+          approach: 'safe',
+          token: 6,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 5,
+          clock: 7134
+        },
+        {
+          chain: 'quiet',
+          node: 0,
+          approach: 'safe',
+          token: 7,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 7230
+        },
+        {
+          chain: 'quiet',
+          node: 1,
+          approach: 'safe',
+          token: 8,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 2,
+          clock: 7389
+        },
+        {
+          chain: 'quiet',
+          node: 2,
+          approach: 'safe',
+          token: 9,
+          equipment: [ 'nav', 'scanner' ],
+          dust: 250000,
+          samples: 5,
+          clock: 7611
+        }
+      ]
+    },
+    expeditions: {
+      serial: 7,
+      settled: 7,
+      active: null,
+      completed: { freight: 3, science: 2, beacon: 2 },
+      collections: [
+        'voyage-freight',
+        'survey-freight',
+        'care-freight',
+        'voyage-science',
+        'survey-science',
+        'care-science',
+        'voyage-beacon',
+        'survey-beacon',
+        'care-beacon',
+        'three-addresses',
+        'cargo-freight',
+        'cargo-science',
+        'cargo-beacon'
+      ],
+      records: [
+        {
+          id: 'freight',
+          token: 7,
+          condition: 'debris',
+          clock: 42118,
+          initialSupplies: 3,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 1676480,
+          samples: 11,
+          firstBonus: 0,
+          collections: []
+        },
+        {
+          id: 'beacon',
+          token: 6,
+          clock: 33712,
+          initialSupplies: 3,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 1310400,
+          samples: 13,
+          firstBonus: 0,
+          collections: [ 'cargo-beacon' ]
+        },
+        {
+          id: 'science',
+          token: 5,
+          clock: 30285,
+          initialSupplies: 3,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 1092000,
+          samples: 17,
+          firstBonus: 0,
+          collections: [ 'cargo-science' ]
+        },
+        {
+          id: 'freight',
+          token: 4,
+          clock: 26251,
+          initialSupplies: 3,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 2095600,
+          samples: 9,
+          firstBonus: 0,
+          collections: [ 'cargo-freight' ]
+        },
+        {
+          id: 'beacon',
+          token: 3,
+          clock: 19084,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 892800,
+          samples: 12,
+          firstBonus: 6,
+          collections: [
+            'voyage-beacon',
+            'survey-beacon',
+            'care-beacon',
+            'three-addresses'
+          ]
+        },
+        {
+          id: 'science',
+          token: 2,
+          clock: 15332,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 744000,
+          samples: 16,
+          firstBonus: 6,
+          collections: [ 'voyage-science', 'survey-science', 'care-science' ]
+        },
+        {
+          id: 'freight',
+          token: 1,
+          clock: 10913,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 1289600,
+          samples: 8,
+          firstBonus: 6,
+          collections: [ 'voyage-freight', 'survey-freight', 'care-freight' ]
+        }
+      ],
+      archives: {
+        science: {
+          id: 'science',
+          token: 2,
+          clock: 15332,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 744000,
+          samples: 16,
+          firstBonus: 6,
+          collections: [ 'voyage-science', 'survey-science', 'care-science' ]
+        },
+        beacon: {
+          id: 'beacon',
+          token: 3,
+          clock: 19084,
+          initialSupplies: 0,
+          initialInsight: 2,
+          legs: [ [Object], [Object], [Object], [Object] ],
+          dust: 892800,
+          samples: 12,
+          firstBonus: 6,
+          collections: [
+            'voyage-beacon',
+            'survey-beacon',
+            'care-beacon',
+            'three-addresses'
+          ]
+        }
+      },
+      best: { freight: 3032, science: 4034, beacon: 3427 },
+      dust: 9100880,
+      samples: 104
+    },
+    continuation: {
+      plans: {},
+      sequence: null,
+      reviews: {
+        serial: 9,
+        settled: 9,
+        active: null,
+        records: [
+          {
+            id: 'freight-tags',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 195,
+            diversion: 0.08,
+            dustCost: 3000,
+            costSamples: 0,
+            dust: 1500,
+            samples: 2,
+            equipment: [Array],
+            levels: [Object],
+            token: 1,
+            start: 33712,
+            end: 33907,
+            claimedAt: 33907
+          },
+          {
+            id: 'freight-cabins',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 292,
+            diversion: 0.08,
+            dustCost: 5000,
+            costSamples: 0,
+            dust: 2500,
+            samples: 3,
+            equipment: [Array],
+            levels: [Object],
+            token: 2,
+            start: 33907,
+            end: 34199,
+            claimedAt: 34199
+          },
+          {
+            id: 'freight-dust',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 389,
+            diversion: 0.08,
+            dustCost: 7000,
+            costSamples: 0,
+            dust: 3500,
+            samples: 4,
+            equipment: [Array],
+            levels: [Object],
+            token: 3,
+            start: 34199,
+            end: 34588,
+            claimedAt: 34588
+          },
+          {
+            id: 'science-probe',
+            method: 'safe',
+            practice: false,
+            evidence: [Array],
+            seconds: 166,
+            diversion: 0.08,
+            dustCost: 3000,
+            costSamples: 0,
+            dust: 1500,
+            samples: 2,
+            equipment: [Array],
+            levels: [Object],
+            token: 4,
+            start: 34588,
+            end: 34754,
+            claimedAt: 34754
+          },
+          {
+            id: 'science-tools',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 292,
+            diversion: 0.08,
+            dustCost: 5000,
+            costSamples: 0,
+            dust: 2500,
+            samples: 3,
+            equipment: [Array],
+            levels: [Object],
+            token: 5,
+            start: 34754,
+            end: 35046,
+            claimedAt: 35046
+          },
+          {
+            id: 'science-record',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 389,
+            diversion: 0.08,
+            dustCost: 7000,
+            costSamples: 0,
+            dust: 3500,
+            samples: 4,
+            equipment: [Array],
+            levels: [Object],
+            token: 6,
+            start: 35046,
+            end: 35435,
+            claimedAt: 35435
+          },
+          {
+            id: 'quiet-beacon',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 195,
+            diversion: 0.08,
+            dustCost: 3000,
+            costSamples: 0,
+            dust: 1500,
+            samples: 2,
+            equipment: [Array],
+            levels: [Object],
+            token: 7,
+            start: 35435,
+            end: 35630,
+            claimedAt: 35630
+          },
+          {
+            id: 'quiet-signal',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 292,
+            diversion: 0.08,
+            dustCost: 5000,
+            costSamples: 0,
+            dust: 2500,
+            samples: 3,
+            equipment: [Array],
+            levels: [Object],
+            token: 8,
+            start: 35630,
+            end: 35922,
+            claimedAt: 35922
+          },
+          {
+            id: 'quiet-shelter',
+            method: 'safe',
+            practice: false,
+            evidence: [],
+            seconds: 389,
+            diversion: 0.08,
+            dustCost: 7000,
+            costSamples: 0,
+            dust: 3500,
+            samples: 4,
+            equipment: [Array],
+            levels: [Object],
+            token: 9,
+            start: 35922,
+            end: 36311,
+            claimedAt: 36311
+          }
+        ],
+        earned: [
+          'freight-tags',
+          'freight-cabins',
+          'freight-dust',
+          'science-probe',
+          'science-tools',
+          'science-record',
+          'quiet-beacon',
+          'quiet-signal',
+          'quiet-shelter'
+        ],
+        used: [],
+        uses: [],
+        selected: null,
+        aid: null
+      },
+      community: {
+        serial: 9,
+        settled: 9,
+        active: null,
+        completed: [
+          'meals-1',    'meals-2',
+          'meals-3',    'workshop-1',
+          'workshop-2', 'workshop-3',
+          'signals-1',  'signals-2',
+          'signals-3'
+        ],
+        records: [
+          {
+            id: 'meals-1',
+            serial: 1,
+            clock: 36504,
+            mode: 'production',
+            path: 'production',
+            dustCost: 3200,
+            samplesCost: 2
+          },
+          {
+            id: 'meals-2',
+            serial: 2,
+            clock: 36793,
+            mode: 'production',
+            path: 'production',
+            dustCost: 6400,
+            samplesCost: 3
+          },
+          {
+            id: 'meals-3',
+            serial: 3,
+            clock: 37178,
+            mode: 'production',
+            path: 'production',
+            dustCost: 9600,
+            samplesCost: 4
+          },
+          {
+            id: 'workshop-1',
+            serial: 4,
+            clock: 37371,
+            mode: 'production',
+            path: 'production',
+            dustCost: 3200,
+            samplesCost: 2
+          },
+          {
+            id: 'workshop-2',
+            serial: 5,
+            clock: 37660,
+            mode: 'production',
+            path: 'production',
+            dustCost: 6400,
+            samplesCost: 3
+          },
+          {
+            id: 'workshop-3',
+            serial: 6,
+            clock: 38045,
+            mode: 'production',
+            path: 'production',
+            dustCost: 9600,
+            samplesCost: 4
+          },
+          {
+            id: 'signals-1',
+            serial: 7,
+            clock: 38238,
+            mode: 'production',
+            path: 'production',
+            dustCost: 3200,
+            samplesCost: 2
+          },
+          {
+            id: 'signals-2',
+            serial: 8,
+            clock: 38527,
+            mode: 'production',
+            path: 'production',
+            dustCost: 6400,
+            samplesCost: 3
+          },
+          {
+            id: 'signals-3',
+            serial: 9,
+            clock: 38912,
+            mode: 'production',
+            path: 'production',
+            dustCost: 9600,
+            samplesCost: 4
+          }
+        ]
+      },
+      honors: { claimed: [] }
+    },
+    encounters: {
+      serial: 1,
+      settled: 1,
+      nextAt: 1635,
+      rng: 946843048,
+      pending: null,
+      history: [ { token: 1, id: 'probe', choice: 'ore', clock: 19104 } ],
+      catalog: [ 'probe:ore' ]
+    },
+    starport: 3,
+    chapter: [ 'relay', 'nursery', 'lighthouse' ],
+    campaign: {
+      completed: [
+        { id: 'white-noise', plan: 'calibrate' },
+        { id: 'false-beacon', plan: 'calibrate' },
+        { id: 'first-convoy', plan: 'calibrate' }
+      ],
+      preparation: null
+    },
+    council: {
+      completed: [
+        { id: 'port-council', plan: 'calibrate' },
+        { id: 'old-observatory', plan: 'calibrate' },
+        { id: 'shared-watch', plan: 'calibrate' }
+      ],
+      priority: 'reception',
+      preparation: null
+    },
+    rescue: {
+      completed: [
+        { id: 'convoy-relay', plan: 'calibrate' },
+        { id: 'convoy-berth', plan: 'calibrate' },
+        { id: 'convoy-light', plan: 'calibrate' }
+      ],
+      energy: 'rotation',
+      berth: true,
+      checks: null,
+      preparation: null,
+      protocol: true
+    },
+    epilogue: { confirmed: [ 'ayao', 'qiyue', 'wei' ], ending: 'city' },
+    afterword: { active: null, ready: false, completed: [] },
+    management: {
+      focus: 'production',
+      cycle: 35,
+      active: null,
+      projects: {
+        'public-berths': 3,
+        'repair-dock': 2,
+        habitat: 3,
+        'route-station': 2
+      },
+      counts: {
+        food: 5,
+        repair: 5,
+        energy: 5,
+        routes: 5,
+        cargo: 5,
+        reception: 5,
+        comms: 5
+      },
+      stats: {
+        deliveries: 35,
+        voyages: 0,
+        dustSpent: 310640,
+        samplesSpent: 141
+      },
+      history: [
+        { serial: 35, id: 'comms', focus: 'production', clock: 23219 },
+        {
+          serial: 34,
+          id: 'reception',
+          focus: 'production',
+          clock: 23098
+        },
+        { serial: 33, id: 'cargo', focus: 'production', clock: 23001 },
+        { serial: 32, id: 'routes', focus: 'production', clock: 22880 },
+        { serial: 31, id: 'energy', focus: 'production', clock: 22759 },
+        { serial: 30, id: 'repair', focus: 'production', clock: 22614 },
+        { serial: 29, id: 'food', focus: 'production', clock: 22493 },
+        { serial: 28, id: 'comms', focus: 'production', clock: 22396 },
+        {
+          serial: 27,
+          id: 'reception',
+          focus: 'production',
+          clock: 22275
+        },
+        { serial: 26, id: 'cargo', focus: 'production', clock: 22178 },
+        { serial: 25, id: 'routes', focus: 'production', clock: 22057 },
+        { serial: 24, id: 'energy', focus: 'production', clock: 21936 },
+        { serial: 23, id: 'repair', focus: 'production', clock: 21791 },
+        { serial: 22, id: 'food', focus: 'production', clock: 21670 },
+        { serial: 21, id: 'comms', focus: 'production', clock: 21573 },
+        {
+          serial: 20,
+          id: 'reception',
+          focus: 'production',
+          clock: 21452
+        },
+        { serial: 19, id: 'cargo', focus: 'production', clock: 21355 },
+        { serial: 18, id: 'routes', focus: 'production', clock: 21234 },
+        { serial: 17, id: 'energy', focus: 'production', clock: 21113 },
+        { serial: 16, id: 'repair', focus: 'production', clock: 20968 },
+        { serial: 15, id: 'food', focus: 'production', clock: 20847 },
+        { serial: 14, id: 'comms', focus: 'production', clock: 20750 },
+        {
+          serial: 13,
+          id: 'reception',
+          focus: 'production',
+          clock: 20629
+        },
+        { serial: 12, id: 'cargo', focus: 'production', clock: 20532 }
+      ],
+      collections: [
+        'need-food',
+        'need-repair',
+        'need-energy',
+        'need-routes',
+        'need-cargo',
+        'need-reception',
+        'need-comms',
+        'project-public-berths',
+        'project-habitat'
+      ]
+    },
+    records: [
+      { route: 'explore', seconds: 585, gain: 4 },
+      { route: 'explore', seconds: 450, gain: 4 },
+      { route: 'explore', seconds: 750, gain: 4 },
+      { route: 'explore', seconds: 645, gain: 4 },
+      { route: 'explore', seconds: 645, gain: 4 }
+    ],
+    beacon: { nextAt: 42214, expiresAt: 0 },
+    burstUntil: 0,
+    lastScanClock: 2565,
+    rng: 363666994,
+    legacyArchive: null,
+    timing: {
+      sinceClock: 0,
+      late: false,
+      foregroundSeconds: 0,
+      offlineSeconds: 0,
+      events: {
+        drone: {
+          elapsedSeconds: 15,
+          foregroundSeconds: 0,
+          offlineSeconds: 0,
+          run: 1,
+          source: 'manual'
+        },
+        research: {
+          elapsedSeconds: 30,
+          foregroundSeconds: 0,
+          offlineSeconds: 0,
+          run: 1,
+          source: 'manual'
+        },
+        report: {
+          elapsedSeconds: 180,
+          foregroundSeconds: 0,
+          offlineSeconds: 0,
+          run: 1,
+          source: 'manual'
+        },
+        prestige: {
+          elapsedSeconds: 1125,
+          foregroundSeconds: 0,
+          offlineSeconds: 0,
+          run: 1,
+          source: 'manual'
+        }
+      }
+    }
+  },
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.4

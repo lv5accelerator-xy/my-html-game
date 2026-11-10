@@ -30,7 +30,7 @@ CODEX_CHROMIUM_PATH=/usr/bin/chromium \
 node scripts/check.cjs
 ```
 
-本次发布前再次无过滤执行，**退出0：9语法、17/17测试脚本、137命名规则组（86+51）、52规范旧档（v3.11二十二份＋v3.16三十份）、94条完整v3浏览器流程，0失败/0跳过**。统一入口逐项记录26个子命令且均退出0，原文 [preflight-full.log](validation/v320-release/preflight-full.log)。不把内部assert次数与命名规则组或独立玩法数混算。日志文件创建01:51:07Z、末写01:57:23Z，未另外测量完整进程耗时。
+本次发布前再次无过滤执行，**退出0：9语法、17/17测试脚本、137命名规则组（86+51）、52规范旧档（v3.11二十二份＋v3.16三十份）、94条完整v3浏览器流程，0失败/0跳过**。统一入口逐项记录26个子命令且均退出0，原文 [preflight-full.txt](validation/v320-release/preflight-full.txt)。不把内部assert次数与命名规则组或独立玩法数混算。日志文件创建01:51:07Z、末写01:57:23Z，未另外测量完整进程耗时。
 
 [开发head的CI 42699912273](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42699912273) 已回读日志：Node22 / Playwright1.55.0，Chromium完整入口9/17/137/52/94退出0；独立Linux WebKit94条完整流程退出0，失败/跳过均0。浏览器安装版本Chromium140.0.7339.16、WebKit26.0/PW build2203。此结果是开发head的GitHub Actions验证，不冒充本次云WebKit或公开站点结果。
 

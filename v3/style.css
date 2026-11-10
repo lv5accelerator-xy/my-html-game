@@ -1979,3 +1979,14 @@ html[data-paused="true"] * { animation-play-state:paused !important; }
 .review-chains { align-items:start; }
 
 .community-scene rect.is-built[width="15"] { fill:#a6ffe7;stroke:#dbfff4; }
+
+/* Finite honors and readable comparisons, including narrow mobile layouts. */
+.honor-showcase { display:flex;flex-wrap:wrap;gap:8px;margin-block:12px; }
+.honor-showcase span { padding:8px;border:1px solid #679f94;border-radius:8px;color:#b8eadc; }
+.honor-groups { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start; }
+.honor-groups details,.long-fit-comparison article,.voyage-ledger { padding:12px;border:1px solid #30434b;min-width:0; }
+.long-fit-comparison { display:grid;gap:8px; }
+.long-fit-comparison small,.voyage-ledger small { display:block;overflow-wrap:anywhere; }
+#long-term-honors details { margin-block:12px; }
+#long-term-honors button,.honors-home button { min-height:44px;white-space:normal; }
+@media(max-width:600px) { .honor-groups { grid-template-columns:1fr; } }

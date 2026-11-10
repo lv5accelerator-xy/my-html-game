@@ -195,7 +195,7 @@
   }
 ],
     VERSION: 32,
-    GAME_VERSION: "3.23.0-preview.1",
+    GAME_VERSION: "3.24.0-preview.1",
     PRESTIGE_DUST: 30000000,
     OFFLINE_SECONDS: 8 * 3600,
     MAX_NUMBER: 1e100,
@@ -703,33 +703,33 @@
         id: "battery",
         name: "储能矩阵",
         samples: 4,
-        detail: "每级全舰队产量 +12%；180秒以上基础航程每级少分流1.5个百分点。",
+        detail: "每级全舰队产量 +12%；180秒以上普通航程少分流1.5个百分点，长期远航少分流1.2个百分点。",
       },
       {
         id: "scanner",
         name: "残骸透镜",
         samples: 4,
-        detail: "每级扫描与信标收益 +25%；2级起测绘任务多1样本。",
+        detail: "每级扫描与信标收益 +25%；2级起测绘多1样本。长期货运每级回收+8%，其他长航+4%；2级起科研取样多1样本。",
       },
       {
         id: "medbay",
         name: "医疗舱电源",
         samples: 4,
         story: "hospital",
-        detail: "每级全舰队产量 +10%；2级起医疗与补给任务多1样本。来自废弃医院船。",
+        detail: "每级全舰队产量 +10%；2级起医疗与补给任务多1样本。来自废弃医院船。长期居民信标每级少分流0.6个百分点，2级起多1样本。",
       },
       {
         id: "nav",
         name: "惯性导航仪",
         samples: 6,
-        detail: "每级探索时间缩短 10%。",
+        detail: "每级普通探索时间缩短10%；长期远航时间缩短5%。",
       },
       {
         id: "solar",
         name: "温室集光阵",
         samples: 6,
         story: "garden",
-        detail: "每级光帆采集器产量 +30%；2级起生态与补给任务多1样本。来自失落温室。",
+        detail: "每级光帆采集器产量 +30%；2级起生态与补给任务多1样本。来自失落温室。长期远航每级减少3%星尘费用。",
       },
     ],
     MISSIONS: [
@@ -3473,5 +3473,116 @@
     "letter": "两个地址都收到了下一班的名单。通信仍有等待，但现在每个等待都有可以接续的人。"
   }
 ];
+  data.HONORS = [
+  {
+    "id": "thrift-first",
+    "name": "第一次完整交接",
+    "group": "budget",
+    "kind": "voyage",
+    "target": 1,
+    "focus": "long-voyages",
+    "detail": "完成任一四段远航并归航入库。"
+  },
+  {
+    "id": "thrift-cargo",
+    "name": "货箱里的余量",
+    "group": "budget",
+    "kind": "cargo",
+    "target": 1,
+    "focus": "long-voyages",
+    "detail": "任一路线至少两段选择回收，取得货运纪念。"
+  },
+  {
+    "id": "thrift-network",
+    "name": "三条货运账本",
+    "group": "budget",
+    "kind": "cargo",
+    "target": 3,
+    "focus": "long-voyages",
+    "detail": "三条路线均取得货运纪念；各路线保留真实安排。"
+  },
+  {
+    "id": "care-first",
+    "name": "带着余粮归来",
+    "group": "care",
+    "kind": "care",
+    "target": 1,
+    "focus": "long-voyages",
+    "detail": "任一路线带足补给归航，取得保障纪念。"
+  },
+  {
+    "id": "care-network",
+    "name": "三条安全接班线",
+    "group": "care",
+    "kind": "care",
+    "target": 3,
+    "focus": "long-voyages",
+    "detail": "三条路线均取得补给保障纪念。"
+  },
+  {
+    "id": "care-town",
+    "name": "生活有了固定地址",
+    "group": "care",
+    "kind": "town",
+    "target": 6,
+    "focus": "harbor-project-habitat",
+    "detail": "公共泊位与居民生活区均完成三期。"
+  },
+  {
+    "id": "proof-map",
+    "name": "九处原始座标",
+    "group": "proof",
+    "kind": "atlas",
+    "target": 9,
+    "focus": "sector-atlas",
+    "detail": "完成原星区图谱的九处调查。"
+  },
+  {
+    "id": "proof-review",
+    "name": "证据开始接续",
+    "group": "proof",
+    "kind": "reviews",
+    "target": 3,
+    "focus": "sector-reviews",
+    "detail": "首次归档三项证据复查。"
+  },
+  {
+    "id": "proof-all",
+    "name": "每一页都有来源",
+    "group": "proof",
+    "kind": "reviews",
+    "target": 9,
+    "focus": "sector-reviews",
+    "detail": "首次归档全部九项证据复查。"
+  },
+  {
+    "id": "life-first",
+    "name": "有人接下一班",
+    "group": "life",
+    "kind": "group",
+    "target": 3,
+    "focus": "community-life",
+    "detail": "任一居民值班组完成三封连续回信。"
+  },
+  {
+    "id": "life-teams",
+    "name": "三个频道都有人",
+    "group": "life",
+    "kind": "teams",
+    "target": 3,
+    "focus": "community-life",
+    "detail": "三个居民组均至少完成一次协作。"
+  },
+  {
+    "id": "life-all",
+    "name": "下一班的日常",
+    "group": "life",
+    "kind": "community",
+    "target": 9,
+    "focus": "community-life",
+    "detail": "收藏全部九封居民生活回信。"
+  }
+];
+  data.LONG_VOYAGE_FITS = { batteryDiversion:.012, solarCost:.03, medbayDiversion:.006, medbaySamplesLevel:2, scannerFreight:.08, scannerOther:.04, scannerScienceLevel:2 };
   return Object.freeze(data);
 });

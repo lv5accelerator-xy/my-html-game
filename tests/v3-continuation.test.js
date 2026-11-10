@@ -154,4 +154,45 @@ test('v3.23 interleaved resident groups retain chronological receipts across res
  assert.deepEqual(s.continuation.community.completed,['signals-1','meals-1','workshop-1']);const snapshot=structuredClone(s.continuation.community);assert.ok(E.prestige(s));assert.deepEqual(s.continuation.community,snapshot);
 });
 
+const honorReady=require('./helpers/honors-fixture.cjs');
+for(const ending of D.ENDINGS)test(`v3.24 ${ending.id}: all twelve honors earned through existing paid systems, explicit finite claims, archive proofs and save restoration`,()=>{
+ let s=honorReady(E,saves.states.find(x=>x.name===ending.id+'-three-archives').state),permanent=structuredClone(s.epilogue);
+ assert.equal(s.continuation.honors.claimed.length,0,'eligibility never auto-claims old progress');
+ for(const def of D.HONORS){const q=E.honorOffer(s,def.id);assert.ok(q.available,def.id);const dust=s.dust,samples=s.samples,rate=E.rawRate(s);assert.ok(E.claimHonor(s,def.id));assert.equal(E.claimHonor(s,def.id),false);assert.equal(s.dust,dust);assert.equal(s.samples,samples);assert.equal(E.rawRate(s),rate);s=S.inspect(JSON.stringify(s),s.lastAt).state;}
+ assert.equal(s.continuation.honors.claimed.length,12);assert.deepEqual(s.epilogue,permanent);const all=structuredClone(s.continuation.honors);assert.ok(E.prestige(s));assert.deepEqual(s.continuation.honors,all);assert.deepEqual(E.sanitize(s,s.lastAt),s);
+});
+test('v3.24 honors reject invented history, unknown IDs, premature rewards and unproved imported claims',()=>{
+ const s=E.createState(0);for(const d of D.HONORS)assert.equal(E.claimHonor(s,d.id),false);assert.equal(E.honorOffer(s,'constructor'),null);assert.equal(E.claimHonor(s,'constructor'),false);
+ const old=veteran();old.continuation.honors.claimed=D.HONORS.map(d=>d.id);const restored=E.sanitize(old,old.lastAt);assert.deepEqual(restored.continuation.honors.claimed,D.HONORS.filter(d=>E.honorProgress(old,d.id)>=d.target).map(d=>d.id));assert.equal(restored.continuation.honors.claimed.includes('life-all'),false);assert.equal(E.claimHonor(restored,'life-all'),false);
+});
+test('v3.24 completed voyage ledgers use actual locked costs, weighted diversion and one first reward',()=>{
+ const s=veteran(),record=s.expeditions.records[0],q=E.voyageLedger(record);assert.equal(q.dustCost,record.legs.reduce((n,l)=>n+l.dustCost,0));assert.equal(q.netDust,record.dust-q.dustCost);assert.equal(q.netSamples,record.samples+record.firstBonus-q.costSamples);assert.equal(q.seconds,record.legs.reduce((n,l)=>n+l.seconds,0));assert.ok(q.diversion>=.04&&q.diversion<=.4);
+ const old=structuredClone(q);for(const id of ['solar','battery'])if(!s.modules[id])assert.ok(E.buildModule(s,id));equip(s,['solar','battery']);assert.deepEqual(E.voyageLedger(record),old);assert.equal(E.voyageLedger({legs:[]}),null);
+ const notices=E.recentHarborChanges(s);assert.ok(notices.length<=5);assert.ok(notices.every(x=>Number.isFinite(x.clock)&&x.text));
+});
+test('v3.24 both stored fits compare without mutation and new long-voyage roles have actual tradeoffs',()=>{
+ const s=veteran();for(const id of D.MODULES.map(d=>d.id))while((s.modules[id]||0)<3)assert.ok(E.buildModule(s,id));
+ equip(s,['battery','solar']);E.saveLoadout(s,'production');equip(s,['nav','scanner']);E.saveLoadout(s,'voyage');const before=structuredClone(s),rows=E.longVoyageComparison(s,'freight','secure');assert.equal(rows.length,3);for(const row of rows){const q=E.voyagePreview(s,'freight','secure',row.equipment);assert.equal(row.seconds,q.seconds);assert.equal(row.netDust,q.dust-q.dustCost);}assert.deepEqual(s,before);
+ const plain=E.voyagePreview(s,'beacon','secure',[]),battery=E.voyagePreview(s,'beacon','secure',['battery']),solar=E.voyagePreview(s,'beacon','secure',['solar']),medbay=E.voyagePreview(s,'beacon','secure',['medbay']);assert.ok(battery.diversion<plain.diversion);assert.ok(solar.dustCost<plain.dustCost);assert.ok(medbay.samples>plain.samples);assert.ok(E.voyagePreview(s,'science','investigate',['scanner','nav']).samples>E.voyagePreview(s,'science','investigate',['nav']).samples);
+ assert.ok(E.startVoyage(s,'beacon'));assert.ok(E.dispatchVoyageLeg(s,s.expeditions.active.token,0,'secure'));const locked=structuredClone(s.expeditions.active.leg);E.applyLoadout(s,'production');assert.deepEqual(s.expeditions.active.leg,locked);assert.deepEqual(E.sanitize(s,s.lastAt),s);
+});
+test('v3.24 evidence and resident honors remain provable after recent voyage records rotate',()=>{
+ const s=honorReady(E,saves.states.find(x=>x.name==='city-three-archives').state);for(const d of D.HONORS)assert.ok(E.claimHonor(s,d.id));
+ for(let run=0;run<13;run++){assert.ok(E.startVoyage(s,'freight'));const token=s.expeditions.active.token;for(let stage=0;stage<4;stage++){assert.ok(E.dispatchVoyageLeg(s,token,stage,'secure'));E.advance(s,s.lastAt+s.expeditions.active.leg.seconds*1000);assert.ok(E.claimVoyageLeg(s,token,stage));}assert.ok(E.finishVoyage(s,token));}
+ assert.equal(s.expeditions.records.length,12);assert.equal(s.continuation.honors.claimed.length,12);assert.deepEqual(E.sanitize(s,s.lastAt),s);assert.equal(E.recentHarborChanges(s).length,5);assert.equal(s.continuation.community.records.length,9);assert.equal(s.continuation.reviews.records.length,9);
+ const summary=S.summarize(s);assert.equal(summary.honors,12);assert.equal(summary.communityLetters,9);assert.equal(summary.reviewArchives,9);
+});
+
+
+test('v3.24 old-rule paid medical/solar voyages retain old time, diversion, fees and rewards across new balance',()=>{
+ const rows=require('./fixtures/v323-saves.json').states.filter(x=>x.name.endsWith('old-balance-paid-medical-solar'));assert.equal(rows.length,3);
+ for(const {state:raw} of rows){const s=E.sanitize(structuredClone(raw),raw.lastAt),old=structuredClone(raw.expeditions.active.leg),next=E.voyagePreview(s,'beacon','secure');assert.deepEqual(s.expeditions.active.leg,old);assert.ok(next.diversion<old.diversion);assert.ok(next.dustCost<old.dustCost);assert.ok(next.samples>old.samples);E.advance(s,s.lastAt+old.seconds*1000);assert.ok(E.claimVoyageLeg(s,s.expeditions.active.token,0));assert.equal(s.expeditions.active.dust,old.dust);assert.equal(s.expeditions.active.samples,old.samples);assert.deepEqual(E.sanitize(s,s.lastAt),s);}
+});
+test('v3.24 partial community escrow remains finite and actual offline work is included in the return brief',()=>{
+ let s=structuredClone(prepared.city);E.setHarborFocus(s,'reception');E.acceptCommunity(s,'meals-1',1);E.advance(s,s.lastAt+3600000);E.deliverCommunity(s,1);const q=E.communityOffer(s,'meals-2');assert.ok(E.acceptCommunity(s,'meals-2',q.serial));
+ // Explicit zero/partial resource boundary, separate from earned economic fixtures.
+ s.dust=q.dustCost/2;s.samples=0;assert.ok(E.packCommunity(s,q.serial));const a=structuredClone(s.continuation.community.active);assert.equal(a.packedDust,q.dustCost/2);assert.equal(a.packedSamples,0);assert.equal(E.packCommunity(s,q.serial),false);s=S.inspect(JSON.stringify(s),s.lastAt).state;assert.deepEqual(s.continuation.community.active,a);assert.equal(E.deliverCommunity(s,q.serial),false);
+ const report=E.advance(s,s.lastAt+86400000,{offline:true,report:true});assert.equal(report.seconds,28800);assert.ok(report.continuationChanges.some(x=>x.includes('居民协作')));assert.equal(s.continuation.community.completed.includes('meals-2'),false);assert.equal(E.communityStatus(s).available,false,'zero samples still block payment');
+});
+
 console.log(`v3 continuation ok: ${checks} behavioral checks`);

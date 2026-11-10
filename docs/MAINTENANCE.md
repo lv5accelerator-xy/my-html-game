@@ -1,6 +1,6 @@
 # 《星港拾荒者》新电脑维护交接说明
 
-> 两个独立入口：根目录v2.3.0「归航之约」；`/v3/`为3.20.0-preview.1，PR #18已合并，本次部署与公网验收状态见[v3.20发布记录](v320-release-validation.md)。旧版说明见[RELEASE-v2.3.0](RELEASE-v2.3.0.md)。
+> 两个独立入口：根目录v2.3.0「归航之约」；`/v3/`代码版本为3.24.0-preview.1，沿用preview命名；本轮部署、精确main SHA与公网双引擎结果见[v3.21～v3.24验收](v321-v324-validation.md)及[PR #20最终记录](https://github.com/lv5accelerator-xy/my-html-game/pull/20)。旧版说明见[RELEASE-v2.3.0](RELEASE-v2.3.0.md)。
 > 更新日期：2026-11-10
 > 技术栈：原生HTML/CSS/JavaScript；GitHub Pages。仅根v2使用可选Firebase，v3不连接旧版云服务。
 

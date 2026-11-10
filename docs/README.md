@@ -15,6 +15,6 @@
 - [v3.12～v3.16 连续开发与验收](v312-v316-validation.md)
 - [v3.17～v3.20 连续开发与验收](v317-v320-validation.md)
 - [v3.20 正式发布与公开站点验收](v320-release-validation.md)
-- [v3.21～v3.24 只读审计与开发建议](v321-v324-plan.md)
+- [v3.21～v3.24 最初审计与已授权开发范围](v321-v324-plan.md)
 
 - [v3.21～v3.24 连续开发与发布验收](v321-v324-validation.md)

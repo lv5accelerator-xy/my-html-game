@@ -11,13 +11,15 @@
 - 合并前 `mergeable=true`，main 是 head 的祖先；reviews/未解决review threads为空。main 元数据 `protected=false`、required checks为空；全部实际 check-run 为成功的 test。详细保护端点403无管理权限，未改权限。
 - 根v2运行文件、Firebase配置/云代码/规则及原两个工作流逐字节未改。合并结果运行文件与开发head相同。未触碰真实玩家存档。
 
-## 发布任务（进行中）
+## 正式部署结果
 
-[Pages 42739585599](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42739585599) 由 push/main `a7bfea836a2285b22f1a1f1767defbdf832e62a2` 触发。当前archive成功、test进行中，build/deploy等待，**尚未确认本次部署成功**。
+[Pages 42739585599](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42739585599) 由 push/main `a7bfea836a2285b22f1a1f1767defbdf832e62a2` 触发，最终completed/success。四项任务均成功：archive129577073542、test129577073920、build129585799268、deploy129585958961。test再次完整执行9语法/17脚本/137规则组/52旧档/94 Chromium流程，独立WebKit94流程，均退出0。
+
+build checkout精确a7bfea8，上传artifact13730060260；deploy payload的`pages_build_version`为完整a7bfea836a2285b22f1a1f1767defbdf832e62a2。2026-11-10T02:24:30Z明确`Reported success!`，环境URL为正式根入口。原始日志摘录见[测试](validation/v320-release/pages-test-excerpt.txt)、[构建](validation/v320-release/pages-build-excerpt.txt)、[部署](validation/v320-release/pages-deploy-excerpt.txt)，完整日志保留在上述Actions运行。
 
 archive日志确认为已有归档而正常退出：`Archive already present or no release version found.`。原规则仍读取根v2元数据，缺包才创建非嵌套ZIP并推main；本次没有归档机器人提交。build仍只发布运行白名单与assets/v3，不公开docs/tests/历史ZIP；本次不修改此工作流。
 
-公开入口：旧版 <https://lv5accelerator-xy.github.io/my-html-game/>；新版 <https://lv5accelerator-xy.github.io/my-html-game/v3/>。地址存在不等于本版本已通过公开验收。
+公开入口：旧版 <https://lv5accelerator-xy.github.io/my-html-game/>；新版 <https://lv5accelerator-xy.github.io/my-html-game/v3/>。部署成功与下面的公开交互验收分别记录。
 
 ## 实际环境与完整回归
 
@@ -55,7 +57,9 @@ V3_BROWSER_ENGINE=chromium node tests/v3-browser.test.js
 
 第二条不设置过滤器，直接把现有全部94流程指向公开v3 URL。首轮扫描→无人机→航线→探索→报告/事件用全新档；后期复杂系统使用原引擎正常赚取的规范测试副本，真实UI操作图谱、三策略需求/调度、两套舰装比较、三路线四阶段首航/重复、十三纪念相关判定、永久首航、刷新与导出导入；不声称所有后期流程都从同一空档手工通关。每流程检查页面身份/版本/非空内容、资产响应、console/pageerror；保留八小时边界、焦点和DOM连续性断言。所有context临时隔离；仅测试响应清空Firebase配置且拦跨origin请求，不执行真实登录、云端写入或玩家存储清理。
 
-**公开流程尚待实际Actions完成，不以本地结果代替。** 本地仅验证新验收脚本可运行：`PUBLIC_GAME_URL=http://127.0.0.1:8763/ ... node scripts/verify-public-v320.cjs`最终退出0，14目标哈希/7流程/30唯一旧档。四次开发脚本失败保留：前三次是v2延迟启动的公告/引导遮挡，改为等待并真实关闭三项已有弹层；第四次是Playwright受控时钟不提供navigation timing，改为只在真实新档上下文测性能。未改游戏、未强制点击、未增加固定等待或删玩法断言；本地结果在[日志目录](validation/v320-release/)，不能算线上通过。
+**公开流程尚待修正后完整Actions完成，不以本地结果代替。** 首次[公开运行42741301733](https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42741301733)的WebKit在根v2引导按钮被公告覆盖时退出1，v3完整流程因前置失败未运行；[原始失败](validation/v320-release/public-webkit-first-failure.txt)保留。选择“任意可见弹层”会先选到z-index250的引导，公告z-index295仍在上方；仅验收脚本改为更新说明→公告→引导，均等待真实可见后实际点击并断言关闭。没有修改根v2运行文件、强制点击或增加固定等待；需要修正后两引擎全部重新完成。
+
+本地只验证新脚本可运行：`PUBLIC_GAME_URL=http://127.0.0.1:8763/ ... node scripts/verify-public-v320.cjs`退出0，14目标哈希/7流程/30唯一旧档。此前四次开发脚本失败亦保留：前三次是v2延迟启动弹层，第四次是Playwright受控时钟无navigation timing，改为仅真实新档上下文测性能。[日志目录](validation/v320-release/)中的本地结果不能算线上通过。
 
 ## 兼容与未执行项
 

@@ -2,9 +2,9 @@
 
 2026-11-10：用户本次明确授权检查后合并PR #18及正式Pages发布，覆盖下方旧开发任务“不合并/不发布”的历史限制；不授权改生产Firebase、玩家档、可见性或部署工作流。head精确为d2fc83cda98d0162ba585d9027d724ceae8458e1，先ready再按expected_head_sha用merge方式合并；实际main/merge为a7bfea836a2285b22f1a1f1767defbdf832e62a2。
 
-Pages运行42739585599的archive已成功，test运行中，尚未确认部署成功；云公网CONNECT403、云WebKit未安装。发布前在当前云Node22/PW1.55/Chromium151再次全量9语法/17脚本/137规则组/52旧档/94流程退出0。开发head的Actions Chromium完整入口与WebKit94流程均成功。
+Pages运行42739585599的archive/test/build/deploy全部成功，artifact13730060260与pages_build_version均对应a7bfea8，2026-11-10T02:24:30Z部署明确成功。云公网CONNECT403、云WebKit未安装。发布前当前云Node22/PW1.55/Chromium151再次全量9语法/17脚本/137规则组/52旧档/94流程退出0；main的Actions完整入口与WebKit94流程再次通过。
 
-本轮隔离worktree `/workspace/starport-v320-release`、分支`codex/v320-release-audit`；准备独立只读公开验收Actions与文档/只读计划，不改玩法和原部署工作流。最新状态、命令/原始失败和未运行项以[发布验收](docs/v320-release-validation.md)为准；下一轮仅有[v3.21～v3.24计划](docs/v321-v324-plan.md)，尚未施工。
+本轮隔离worktree `/workspace/starport-v320-release`、分支`codex/v320-release-audit`、维护PR #19；独立只读公开验收Actions与文档/计划不改玩法和原部署工作流。首次公开运行42741301733的WebKit误点被旧版公告遮住的新手引导，原始失败保留；仅验收脚本修正为按实际弹层顺序真实关闭，再全量验证。最新准确状态、命令/失败和未运行项以[发布验收](docs/v320-release-validation.md)及PR #19结果为准。下一轮仅有[v3.21～v3.24计划](docs/v321-v324-plan.md)，尚未施工。
 
 ## 以下为开发时的历史交接（状态不代表当前发布）
 

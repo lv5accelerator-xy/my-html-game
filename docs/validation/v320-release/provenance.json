@@ -28,7 +28,13 @@
     "v316_unique_snapshots": 30,
     "runtime_hashes": 14,
     "prior_failed_development_runs": 4,
-    "counts_as_public_verification": false
+    "counts_as_public_verification": false,
+    "overlay_fix_rerun": {
+      "exit": 0,
+      "flows": 7,
+      "runtime_hashes": 14,
+      "v316_unique_snapshots": 30
+    }
   },
   "cloud_webkit_probe": {
     "exit": 1,
@@ -48,8 +54,25 @@
     "webkit_complete_flows": 94
   },
   "pages_run": 42739585599,
-  "public_acceptance": "pending",
+  "public_acceptance": {
+    "first_run": 42741301733,
+    "webkit": "failed: test clicked tutorial underneath timed announcement",
+    "chromium": "full flows in progress",
+    "fix": "only test startup ordering; release runtime unchanged",
+    "final_result": "pending"
+  },
   "real_iphone_safari": "not run",
   "production_firebase": "untouched",
-  "real_player_saves": "untouched"
+  "real_player_saves": "untouched",
+  "pages_result": {
+    "status": "completed",
+    "conclusion": "success",
+    "source_sha": "a7bfea836a2285b22f1a1f1767defbdf832e62a2",
+    "artifact": 13730060260,
+    "archive": "success",
+    "test": "success",
+    "build": "success",
+    "deploy": "success",
+    "reported_success_utc": "2026-11-10T02:24:30Z"
+  }
 }

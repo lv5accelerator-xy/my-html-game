@@ -86,13 +86,14 @@ async function run() {
     for (const width of [1280, 375]) {
       await flow("v2-fresh-" + width, { width, height: 900 }, base.href, null, async page => {
         await page.waitForFunction(() => Boolean(window.StellarOutpostCloudBridge));
-        // Fresh v2 schedules release notes, the tutorial and an announcement.
-        // Handle each real modal when it appears; their timers may interleave.
-        const startup = ["tutorial-skip", "patch-notes-close", "communication-close"], closed = [];
-        for (let i = 0; i < startup.length; i++) {
-          await page.waitForFunction(ids => ids.some(id => document.getElementById(id)?.getClientRects().length), startup);
-          const id = await page.evaluate(ids => ids.find(id => document.getElementById(id)?.getClientRects().length), startup);
+        // Release notes appear first. The timed announcement is above the
+        // tutorial (z-index 295 vs 250), so handle it before that lower layer.
+        // Wait for actual UI state, with no fixed delay or forced click.
+        const startup = ["patch-notes-close", "communication-close", "tutorial-skip"], closed = [];
+        for (const id of startup) {
+          await page.locator("#" + id).waitFor({ state: "visible" });
           await page.locator("#" + id).click(); closed.push(id);
+          assert.equal(await page.locator("#" + id).isVisible(), false, id + " really closed");
         }
         assert.deepEqual([...closed].sort(), [...startup].sort(), "all fresh v2 startup modals closed through UI");
         assert.equal(await page.evaluate(() => StellarOutpostCloudBridge.gameVersion), "2.3.0");

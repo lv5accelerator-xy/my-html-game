@@ -1,0 +1,24 @@
+{"command": ["node", "tests/v3-browser.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "start": 1794257512.3605952, "env": {"PATH": "/workspace/scratch/starport-tools/node_modules/node/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback", "CODEX_PLAYWRIGHT_PATH": "/workspace/scratch/starport-tools/node_modules/playwright", "CODEX_CHROMIUM_PATH": "/usr/bin/chromium", "V3_BROWSER_ENGINE": null, "V3_TEST_FILTER": "v3.20", "V3_SCREENSHOT_DIR": "/workspace/scratch/starport-audit/screenshots"}}
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('#loadouts [data-action="loadout-apply"][data-id="voyage"]')[22m
+[2m    - locator resolved to <button disabled data-id="voyage" data-action="loadout-apply" data-focus="loadout-apply-voyage">使用远航准备</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    58 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+    at /workspace/starport-v320/tests/v3-browser.test.js:130:142
+    at async scenario (/workspace/starport-v320/tests/v3-browser.test.js:90:7)
+    at async run (/workspace/starport-v320/tests/v3-browser.test.js:124:7) {
+  name: 'TimeoutError'
+}

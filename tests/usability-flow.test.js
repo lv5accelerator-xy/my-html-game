@@ -87,6 +87,7 @@ async function verifyVisibleGoalAndReachableActions() {
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
     browser = await chromium.launch({ headless: true, executablePath: process.env.CODEX_CHROMIUM_PATH || undefined });
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    await require("./helpers/isolate-browser.cjs")(page.context(), `http://127.0.0.1:${server.address().port}`);
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(`http://127.0.0.1:${server.address().port}/`);

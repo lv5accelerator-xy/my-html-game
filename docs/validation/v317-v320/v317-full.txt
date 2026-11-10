@@ -1,0 +1,313 @@
+{"command": ["node", "scripts/check.cjs"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "start": 1794255739.600473, "env": {"PATH": "/workspace/scratch/starport-tools/node_modules/node/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback", "CODEX_PLAYWRIGHT_PATH": "/workspace/scratch/starport-tools/node_modules/playwright", "CODEX_CHROMIUM_PATH": "/usr/bin/chromium", "V3_BROWSER_ENGINE": null}}
+CHECK_RESULT: {"command":"node --check game.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check game-math.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check cloud-save.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v2-systems.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check legacy-systems.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/data.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/engine.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/storage.js","exit":0,"signal":null,"error":null}
+CHECK_RESULT: {"command":"node --check v3/app.js","exit":0,"signal":null,"error":null}
+browser smoke ok: dust=222M, rate=20.6488M / 秒, cores=33.9K
+CHECK_RESULT: {"command":"node tests/browser-smoke.test.js","exit":0,"signal":null,"error":null}
+companion story ok: 8 distinct three-stage memories, behavior gates, endings, safe migration and one-shot feedback
+CHECK_RESULT: {"command":"node tests/companion-story.test.js","exit":0,"signal":null,"error":null}
+daily route ok: three routes, one main, two optional, one reroll, daily reset
+CHECK_RESULT: {"command":"node tests/daily-route.test.js","exit":0,"signal":null,"error":null}
+doctrine build ok: deterministic offers, tradeoffs, run lock, report and migration
+CHECK_RESULT: {"command":"node tests/doctrine-build.test.js","exit":0,"signal":null,"error":null}
+linked browser ok: 390px, route click and keyboard order/plan/interpret/claim, reward deduction, reload persistence, zero pageerrors
+CHECK_RESULT: {"command":"node tests/linked-journey-browser.test.js","exit":0,"signal":null,"error":null}
+linked journey ok: 69 assertions; orders, eight collections, time gates, duplicate claims, migration
+CHECK_RESULT: {"command":"node tests/linked-journey.test.js","exit":0,"signal":null,"error":null}
+mobile performance ok: eco=24fps/250ms, quality=60fps/100ms
+CHECK_RESULT: {"command":"node tests/mobile-performance.test.js","exit":0,"signal":null,"error":null}
+numeric balance ok: stream=1.9M, legacyDust=189M, legacyCores=33.9K
+CHECK_RESULT: {"command":"node tests/numeric-balance.test.js","exit":0,"signal":null,"error":null}
+retention flow ok: opt-in, whitelist, anonymous payload, bounded migration
+CHECK_RESULT: {"command":"node tests/retention-flow.test.js","exit":0,"signal":null,"error":null}
+save migration v200 ok: v1.10 resources and progression preserved, v2 fields safely filled
+CHECK_RESULT: {"command":"node tests/save-migration-v200.test.js","exit":0,"signal":null,"error":null}
+season ok: injectable dates, 14+7 phases, catch-up points, cosmetics, recurring fallback and server contract
+CHECK_RESULT: {"command":"node tests/season.test.js","exit":0,"signal":null,"error":null}
+usability static checks ok: 3-step tutorial, 4 lazy illustrations, 11 primary pages
+usability browser ok: visible goal at 1280/375px; recommendations reachable
+CHECK_RESULT: {"command":"node tests/usability-flow.test.js","exit":0,"signal":null,"error":null}
+v3.16 earned management city: 42 deliveries, 15 construction stages in 5385s; zero resource injection
+v3.16 earned management watch: 42 deliveries, 15 construction stages in 5385s; zero resource injection
+v3.16 earned management voyage: 42 deliveries, 15 construction stages in 5385s; zero resource injection
+┌─────────┬────────────┬───────┬───────────┬───────┬───────────┬────────────┬─────────┐
+│ (index) │ route      │ drone │ milestone │ story │ firstJump │ secondJump │ samples │
+├─────────┼────────────┼───────┼───────────┼───────┼───────────┼────────────┼─────────┤
+│ 0       │ '工业航线' │ 15    │ 135       │ 210   │ 1133      │ 706        │ 1       │
+│ 1       │ '回收航线' │ 15    │ 90        │ 150   │ 1185      │ 810        │ 1       │
+│ 2       │ '探索航线' │ 15    │ 135       │ 180   │ 1125      │ 765        │ 50      │
+└─────────┴────────────┴───────┴───────────┴───────┴───────────┴────────────┴─────────┘
+v3 balance ok: three routes, first-run beats, 15–25 minute jumps and faster second runs; starport 3180s, chapter two +1815s, complete campaign 4995s
+┌─────────┬─────────────┬─────────────────────┬───────────────┐
+│ (index) │ preparation │ chapterThreeSeconds │ earnedSamples │
+├─────────┼─────────────┼─────────────────────┼───────────────┤
+│ 0       │ '校准优先'  │ 345                 │ 53            │
+│ 1       │ '补给优先'  │ 480                 │ 65            │
+│ 2       │ '分段接续'  │ 435                 │ 59            │
+└─────────┴─────────────┴─────────────────────┴───────────────┘
+┌─────────┬─────────────┬────────────┬────────────────────┬────────────┐
+│ (index) │ preparation │ port       │ chapterFourSeconds │ netSamples │
+├─────────┼─────────────┼────────────┼────────────────────┼────────────┤
+│ 0       │ '校准优先'  │ '接待扩容' │ 345                │ 43         │
+│ 1       │ '校准优先'  │ '生态补给' │ 345                │ 47         │
+│ 2       │ '校准优先'  │ '档案校准' │ 315                │ 43         │
+│ 3       │ '补给优先'  │ '接待扩容' │ 465                │ 55         │
+│ 4       │ '补给优先'  │ '生态补给' │ 465                │ 59         │
+│ 5       │ '补给优先'  │ '档案校准' │ 420                │ 55         │
+│ 6       │ '分段接续'  │ '接待扩容' │ 405                │ 49         │
+│ 7       │ '分段接续'  │ '生态补给' │ 405                │ 53         │
+│ 8       │ '分段接续'  │ '档案校准' │ 360                │ 49         │
+└─────────┴─────────────┴────────────┴────────────────────┴────────────┘
+┌─────────┬─────────────┬────────────┬──────────────────────┬────────────────────┬────────────┐
+│ (index) │ preparation │ port       │ energy               │ chapterFiveSeconds │ netSamples │
+├─────────┼─────────────┼────────────┼──────────────────────┼────────────────────┼────────────┤
+│ 0       │ '校准优先'  │ '接待扩容' │ '轮换照明与储能'     │ 495                │ 72         │
+│ 1       │ '校准优先'  │ '接待扩容' │ '转接空闲采集阵列'   │ 420                │ 66         │
+│ 2       │ '校准优先'  │ '接待扩容' │ '回收观测站备用设备' │ 450                │ 70         │
+│ 3       │ '校准优先'  │ '生态补给' │ '轮换照明与储能'     │ 495                │ 78         │
+│ 4       │ '校准优先'  │ '生态补给' │ '转接空闲采集阵列'   │ 420                │ 72         │
+│ 5       │ '校准优先'  │ '生态补给' │ '回收观测站备用设备' │ 450                │ 76         │
+│ 6       │ '校准优先'  │ '档案校准' │ '轮换照明与储能'     │ 450                │ 72         │
+│ 7       │ '校准优先'  │ '档案校准' │ '转接空闲采集阵列'   │ 360                │ 66         │
+│ 8       │ '校准优先'  │ '档案校准' │ '回收观测站备用设备' │ 420                │ 70         │
+│ 9       │ '补给优先'  │ '接待扩容' │ '轮换照明与储能'     │ 660                │ 84         │
+│ 10      │ '补给优先'  │ '接待扩容' │ '转接空闲采集阵列'   │ 540                │ 78         │
+│ 11      │ '补给优先'  │ '接待扩容' │ '回收观测站备用设备' │ 585                │ 82         │
+│ 12      │ '补给优先'  │ '生态补给' │ '轮换照明与储能'     │ 660                │ 90         │
+│ 13      │ '补给优先'  │ '生态补给' │ '转接空闲采集阵列'   │ 540                │ 84         │
+│ 14      │ '补给优先'  │ '生态补给' │ '回收观测站备用设备' │ 585                │ 88         │
+│ 15      │ '补给优先'  │ '档案校准' │ '轮换照明与储能'     │ 585                │ 84         │
+│ 16      │ '补给优先'  │ '档案校准' │ '转接空闲采集阵列'   │ 465                │ 78         │
+│ 17      │ '补给优先'  │ '档案校准' │ '回收观测站备用设备' │ 540                │ 82         │
+│ 18      │ '分段接续'  │ '接待扩容' │ '轮换照明与储能'     │ 585                │ 78         │
+│ 19      │ '分段接续'  │ '接待扩容' │ '转接空闲采集阵列'   │ 465                │ 72         │
+│ 20      │ '分段接续'  │ '接待扩容' │ '回收观测站备用设备' │ 540                │ 76         │
+│ 21      │ '分段接续'  │ '生态补给' │ '轮换照明与储能'     │ 585                │ 84         │
+│ 22      │ '分段接续'  │ '生态补给' │ '转接空闲采集阵列'   │ 465                │ 78         │
+│ 23      │ '分段接续'  │ '生态补给' │ '回收观测站备用设备' │ 540                │ 82         │
+│ 24      │ '分段接续'  │ '档案校准' │ '轮换照明与储能'     │ 540                │ 78         │
+│ 25      │ '分段接续'  │ '档案校准' │ '转接空闲采集阵列'   │ 420                │ 72         │
+│ 26      │ '分段接续'  │ '档案校准' │ '回收观测站备用设备' │ 465                │ 76         │
+└─────────┴─────────────┴────────────┴──────────────────────┴────────────────────┴────────────┘
+v3 ending balance ok: 81 earned-save branches, zero added resource costs or wait timers, free play retained
+CHECK_RESULT: {"command":"node tests/v3-balance.test.js","exit":0,"signal":null,"error":null}
+ok 1 - v3.17 arrival decisions, accurate next target, keyboard focus and quiet phone atlas
+ok 2 - v3.14 dispatch comparison and real quick loadout switch preserve the locked voyage
+ok 3 - v3.15 live SVG facilities, keyboard details, resident arrivals and reduced motion
+ok 4 - v3.16 归航之城: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+ok 5 - v3.16 守望之港: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+ok 6 - v3.16 携种远航: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+ok 7 - v3.16 fresh player completes the first scan, fleet, route, story and jump loop using only real controls
+ok 8 - v3.16 damaged identifier restore retains real equipment/story and renders exploration safely
+ok 9 - v3.13 无人货船: real choice, countdown, reload and immutable discovery record
+ok 10 - v3.13 损坏的运输舱: real choice, countdown, reload and immutable discovery record
+ok 11 - v3.13 古老导航信标: real choice, countdown, reload and immutable discovery record
+ok 12 - v3.13 失联采矿探针: real choice, countdown, reload and immutable discovery record
+ok 13 - v3.13 废弃科研设备: real choice, countdown, reload and immutable discovery record
+ok 14 - v3.13 漂流补给箱: real choice, countdown, reload and immutable discovery record
+ok 15 - v3.13 未知求救信号: real choice, countdown, reload and immutable discovery record
+ok 16 - v3.13 不稳定残骸区: real choice, countdown, reload and immutable discovery record
+ok 17 - v3.13 星尘富集带: real choice, countdown, reload and immutable discovery record
+ok 18 - v3.13 旧时代通信记录: real choice, countdown, reload and immutable discovery record
+ok 19 - v3.13 破损的航站组件: real choice, countdown, reload and immutable discovery record
+ok 20 - v3.13 未登记的小型避难舱: real choice, countdown, reload and immutable discovery record
+ok 21 - v3.12 automation retains live buttons, drafts and focus at desktop and phone widths
+ok 22 - native dialog close keeps the newer keyboard reading focus
+ok 23 - new save: readable goal, three initial controls, 1280/375 layout, scans and passive production
+ok 24 - safe exploration: report, story choice, permanent equipment, equipment slots and starport repair
+ok 25 - jump: preserved collection, first automation unlock and actual automatic purchases
+ok 26 - budget, auto research controls, starport repair and new exploration unlock
+ok 27 - old record: migration retains source, unrecognized research, active expedition and unclaimed rewards
+ok 28 - corrupt source: original survives autosave interval
+ok 29 - imported narrative is text; full keyboard access to settings
+ok 30 - large legacy-scale numbers remain readable without horizontal scroll
+ok 31 - v3.0 workshop: craft missing story gear, upgrade both to level three, preserve choices and replace full equipment slots
+ok 32 - fleet forecasts: selected batch updates gains and payback; actual purchase crosses a milestone with the predicted production
+ok 33 - report goal: outranks early construction and route choice; keyboard activation focuses the reachable report
+ok 34 - live ETA and local timing: income enables a purchase, research is recorded, and exported timing distinguishes offline from foreground
+ok 35 - automatic construction preserves an unfinished reserve input and its keyboard focus
+ok 36 - return briefing: actual automation summary, mobile layout, direct report link and immediate reload without duplicate rewards
+ok 37 - chapter two: three real voyages, old-choice follow-ups, prerequisite gear, long-voyage reload, permanent construction and jump preservation on desktop and phone
+ok 38 - automatic voyages can pause after the current return without cancelling it or losing its reward
+ok 39 - chapter three: actual preparation previews, saved plans, voyage reload, offline manual decisions, mobile convoy handoff, letters, archive rereading and persistent supply route
+ok 40 - mobile current star map leads directly to research, samples and actual equipped gear; completed sectors remain folded
+ok 41 - chapter four 接待扩容: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump
+ok 42 - chapter four 生态补给: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump
+ok 43 - chapter four 档案校准: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump
+ok 44 - saved equipment presets: real production/voyage comparison, one-click two-slot replacement, active snapshot preservation, reload, upgrades and export/import
+ok 45 - chapter five 接待扩容/轮换照明与储能: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump
+ok 46 - chapter five 生态补给/转接空闲采集阵列: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump
+ok 47 - chapter five 档案校准/回收观测站备用设备: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump
+ok 48 - rescue with no spare resources: paid options disabled, free rotation remains reachable, manual supply and safe waiting
+ok 49 - chapter six 接待扩容/归航之城: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 50 - chapter six 接待扩容/守望之港: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 51 - chapter six 接待扩容/携种远航: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 52 - chapter six 生态补给/归航之城: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 53 - chapter six 生态补给/守望之港: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 54 - chapter six 生态补给/携种远航: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 55 - chapter six 档案校准/归航之城: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 56 - chapter six 档案校准/守望之港: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 57 - chapter six 档案校准/携种远航: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+ok 58 - chapter six during automatic supply: active voyage survives handoff, eight-hour absence never selects ending, manual continuation still reachable
+ok 59 - first two chapters dialogue path 1: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards
+ok 60 - first two chapters dialogue path 2: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards
+ok 61 - first two chapters dialogue path 3: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards
+ok 62 - middle chapters reception: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation
+ok 63 - middle chapters ecology: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation
+ok 64 - middle chapters archive: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation
+ok 65 - rescue dialogue 接待扩容/轮换照明与储能: live replies, actual plans, safe waiting, chapter navigation and read-only reload
+ok 66 - finale dialogue 接待扩容: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending
+ok 67 - rescue dialogue 生态补给/转接空闲采集阵列: live replies, actual plans, safe waiting, chapter navigation and read-only reload
+ok 68 - finale dialogue 生态补给: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending
+ok 69 - rescue dialogue 档案校准/回收观测站备用设备: live replies, actual plans, safe waiting, chapter navigation and read-only reload
+ok 70 - finale dialogue 档案校准: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending
+ok 71 - v3.10 接待扩容: real starport, three fresh resident deliveries, choices, collections and reload
+ok 72 - v3.10 生态补给: real starport, three fresh resident deliveries, choices, collections and reload
+ok 73 - v3.10 档案校准: real starport, three fresh resident deliveries, choices, collections and reload
+ok 74 - v3.10 starport only lights actual construction and changes immediately after repair
+ok 75 - v3.10 reading: persisted sizes, archive anchor/offset, current chapter and independent save
+ok 76 - v3.10 page cache lifecycle: hidden/pagehide overlap, restored page, single offline settlement and saved voyage
+ok 77 - v3.10 report summary: full discovery is optional, choices visible and reading does not claim rewards
+ok 78 - v3.11 manual backups: escaped labels, independent rotation, reload and mobile settings
+ok 79 - v3.11 import preview: comparison and cancel are read-only; malformed and future files do not replace data
+ok 80 - v3.11 backup restore: confirmation tolerates own autosaves, preserves live progress and pending report without rewards
+ok 81 - v3.11 damaged save recovery: raw export, invalid backup export and confirmed recovery keep original bytes
+ok 82 - v3.11 quota failure: preview may open but unsuccessful backup never overwrites the current save
+ok 83 - v3.11 other-window update invalidates restore preview and pauses autosave without overwriting newer progress
+ok 84 - v3.11 historical single backup: restore requires preview and cancellation preserves the current primary
+ok 85 - v3.11 failed primary write preserves the selected historical recovery source for another attempt
+v3 browser ok: 85 complete flows; identity/content/assets/console checked in every flow
+CHECK_RESULT: {"command":"node tests/v3-browser.test.js","exit":0,"signal":null,"error":null}
+v3 compatibility ok: 22 canonical v3.11 snapshots; all original fields equal, no replay, idempotent migration
+CHECK_RESULT: {"command":"node tests/v3-compatibility.test.js","exit":0,"signal":null,"error":null}
+ok 1 - v3.13 无人货船: all choices have actual finite effects, recovery and one settlement
+ok 2 - v3.13 损坏的运输舱: all choices have actual finite effects, recovery and one settlement
+ok 3 - v3.13 古老导航信标: all choices have actual finite effects, recovery and one settlement
+ok 4 - v3.13 失联采矿探针: all choices have actual finite effects, recovery and one settlement
+ok 5 - v3.13 废弃科研设备: all choices have actual finite effects, recovery and one settlement
+ok 6 - v3.13 漂流补给箱: all choices have actual finite effects, recovery and one settlement
+ok 7 - v3.13 未知求救信号: all choices have actual finite effects, recovery and one settlement
+ok 8 - v3.13 不稳定残骸区: all choices have actual finite effects, recovery and one settlement
+ok 9 - v3.13 星尘富集带: all choices have actual finite effects, recovery and one settlement
+ok 10 - v3.13 旧时代通信记录: all choices have actual finite effects, recovery and one settlement
+ok 11 - v3.13 破损的航站组件: all choices have actual finite effects, recovery and one settlement
+ok 12 - v3.13 未登记的小型避难舱: all choices have actual finite effects, recovery and one settlement
+ok 13 - v3.13 active voyage snapshot and RNG survive reload/import and eight-hour recovery without redraw
+ok 14 - v3.13 event gates, cooldown, automation and invalid snapshots preserve safe base income
+ok 15 - v3.13 old schema32 archives add empty events without replaying stories or rewards
+ok 16 - v3.14 all legal two-slot combinations have bounded mission fits and locked preview/settlement
+ok 17 - v3.14 specific fits have genuine tradeoffs and existing production/module levels remain legal
+ok 18 - v3.14 saved loadout comparison uses the actual plan and switching never rewrites the active snapshot
+ok 19 - v3.15 all facilities and resident activity derive only from actual story/build progress
+ok 20 - v3.16 all seven needs and all three directions work after each permanent ending without replaying story rewards
+ok 21 - v3.16 only production after acceptance or a newly tagged matching voyage can prepare a request
+ok 22 - v3.16 eight-hour idle recovery and automation progress tasks but never deliver or choose a new request
+ok 23 - v3.16 all five projects have three finite stages, real task conveniences and exact atlas persistence
+ok 24 - v3.16 project capabilities change only future terms; focus directions have measurable costs
+ok 25 - v3.16 malformed management, stale serials, insufficient resources and non-ending archives are safe
+ok 26 - v3.16 restore/backups preserve active terms, collections and permanent endings without crediting old income
+ok 27 - v3.16 discovery catalog remains permanent while recent event history rotates
+ok 28 - v3.16 extreme resource previews remain bounded and damaged task quantities cannot create rewards
+ok 29 - v3.16 preparation is meaningful for saturated fleets and finite project stages need actual deliveries
+ok 30 - v3.16 window reply belongs to a living caretaker and retains all original ids and collections
+ok 31 - v3.16 first goal returns an underfunded player to the real scan control and only directs affordable construction
+ok 32 - v3.13 each event rejects corrupt in-flight terms and enforces its gates and cooldown without losing base rewards
+ok 33 - v3.16 restore rejects inherited object keys as equipment or story identifiers while retaining valid progress
+ok 34 - v3.17 pending decisions precede repeat management; live arrival list removes settled items
+v3 expansion ok: 34 behavioral checks
+CHECK_RESULT: {"command":"node tests/v3-expansion.test.js","exit":0,"signal":null,"error":null}
+ok 1 - fresh save has a reachable goal; scans throttle and first drone creates passive income
+ok 2 - bulk purchase respects funds and capacity; 10/25/50 change production
+ok 3 - route is a single committed choice each run; unreachable goals are never emitted
+ok 4 - automation gates prevent early unlocks, obey reserve and buy at most once per second
+ok 5 - fractional time, offline automation and mission completion are chunk invariant
+ok 6 - offline cap and reversed system clock never grant extra income
+ok 7 - mission result survives a save round trip; reward and story choice can only be claimed once
+ok 8 - risk outcomes are deterministic across reload and failures have no dust penalty
+ok 9 - golden beacon expires, cannot be claimed twice, and recovery route adds a finite burst
+ok 10 - jump preserves permanent progress and blocks pending exploration
+ok 11 - starport spends available cores without removing historical production bonus
+ok 12 - equipment has two slots and no duplicate stacking
+ok 13 - legacy migration preserves every field, original text and live v2 save
+ok 14 - corrupt and future records stay intact; failed backup aborts restore
+ok 15 - untrusted save text cannot become executable journal markup or unlock unknown systems
+ok 16 - every story choice permits later crafting and upgrading without changing the choice or repeating rewards
+ok 17 - workshop costs come from real safe exploration, all five modules reach level three, and full slots are preserved
+ok 18 - purchase previews match actual milestone, research, core, route and equipped effects without mutating state
+ok 19 - income ETA accounts for burst expiry and mission diversion ending and stays finite or unknown
+ok 20 - unclaimed reports outrank construction, routes and jumps, and every next goal remains reachable
+ok 21 - local milestone timings distinguish visible and offline seconds, record once and survive a jump and reload
+ok 22 - v3.0 saves retain inventory, pending missions and archives; missing timing data starts now without fabricated events
+ok 23 - return briefing is observational: actual purchases, research, income and net balance match the unchanged simulation
+ok 24 - return briefing leaves a story pending, counts failed voyages, and never claims a story reward
+ok 25 - background briefing aggregates several ticks and still respects the eight-hour cap
+ok 26 - chapter two gates each sector and construction in sequence, including actually equipped level-two gear
+ok 27 - all nine old-choice combinations continue through three new stories without overwriting choices or automatic decisions
+ok 28 - chapter goals always lead to a reachable prerequisite, gear, sample, report or construction target
+ok 29 - old saves gain only the optional empty chapter; invalid construction and repeat dispatch cannot unlock or replay chapter rewards
+ok 30 - auto dispatch pauses for a reachable new chapter story but still runs ordinary safe voyages when prerequisites are missing
+ok 31 - chapter three requires a deliberate preparation and previews real time, diversion and rewards without spending resources
+ok 32 - nine old-choice combinations and every preparation and new decision finish chapter three with one-time rewards and original records
+ok 33 - long supply voyages and high-diversion calibration survive reload; offline claims never duplicate campaign rewards
+ok 34 - v32 records gain only optional campaign data; invalid preparations, out-of-order records and fabricated reports cannot skip the story
+ok 35 - campaign goals expose reachable research, sample and gear prerequisites; archives reflect old decisions and rereading is observational
+ok 36 - automation waits for manual campaign and council preparations; the unlocked safe supply route remains playable
+ok 37 - v3.3 archives, prepared and active voyages gain only optional council/loadouts fields with no changes to resources or rewards
+ok 38 - fourth chapter requires the first convoy, a manual meeting and exactly one affordable permanent construction
+ok 39 - all nine original choices, every port direction, preparation and new choice reach the same fourth-chapter finish with one-time rewards
+ok 40 - port directions have distinct bounded effects on later voyages, never change old economy, and previews are observational
+ok 41 - saved loadouts switch both slots atomically, preview real effects, follow upgrades and survive prestige/export/import
+ok 42 - invalid or unavailable loadouts cannot partly change equipment; explicit empty loadouts remain valid
+ok 43 - long council supply voyages, high diversion and ecology samples survive gear changes/reloads/offline returns without altered snapshots
+ok 44 - council goals expose construction, samples, research, saved gear and pending reports while rejecting out-of-order records
+ok 45 - eight hours offline never choose port construction or council stories; completed chapter and presets survive further production and jumps
+ok 46 - rescue requires the completed drill and manual energy; the resource-free plan works without ships, samples or lost records
+ok 47 - every original choice, port direction, energy and preparation rescues three distinct teams with single rewards and unchanged prior chapters
+ok 48 - three independent confirmations survive refresh, cannot be reused, and backup waiting has no offline deadline
+ok 49 - long rescue snapshots and rewards survive all gear changes, reloads and eight-hour returns while remaining manual
+ok 50 - energy effects change rescue previews only; paid arrangements charge once and do not remove any buildings, modules or observations
+ok 51 - invalid rescue records, consent snapshots and premature signatures cannot skip teams, duplicate rewards or erase valid earlier choices
+ok 52 - completed rescue, consent protocol and energy survive prestige and export/import; auto safe supply resumes only after signing
+ok 53 - v3.4 ready, partially prepared, active and pending council saves acquire only optional rescue defaults
+ok 54 - chapter six requires the signed rescue protocol; no time, offline production or automation chooses handoffs or endings
+ok 55 - all original choices, port directions, energies and preparations reach every explicit ending at zero cost without hidden karma
+ok 56 - partial handoffs, permanent ending, old records and legacy archive survive restore and prestige; ordinary active voyages are unchanged
+ok 57 - malformed or premature final records cannot skip chapters, commit an ending early or inject archive text
+ok 58 - v3.5 prepared, active, pending, partial-consent and protocol saves acquire only optional epilogue defaults
+ok 59 - early dialogue unlocks only after the actual event, with no future scenes or premature choice responses
+ok 60 - all original choices and every second-chapter reply have distinct read-only responses, retained continuity and event-gated construction scenes
+ok 61 - historical dialogue is reconstructed from existing records across restores, endings and jumps, without a new saved field or mutable shared text
+ok 62 - middle dialogue waits for actual reports and port construction; preparation and rehearsal do not finish the later rescue
+ok 63 - all middle replies retain actual voyage plans, old decisions and the built port through reading, restoring and jumps
+ok 64 - older choice-only archives do not invent a voyage plan, and a duplicate pending result cannot replace recorded history
+ok 65 - late communications require actual power, waiting, rescue reports, protocol and resident records
+ok 66 - every rescue reply retains its actual supply, voyage plan, port and original memories without reading or claiming twice
+ok 67 - finale previews cannot commit a future, and the archive contains only confirmed residents and the chosen ending
+ok 68 - chapter archives partition known records and letters exactly once and keep future chapters out
+ok 69 - historical rescue dialogue does not guess a missing voyage plan or replace a completed choice with a duplicate report
+ok 70 - preview mode never bypasses early story or milestone gates, and pending rescue dialogue requires the matching successful report
+ok 71 - resident requests require a confirmed ending, an idle ship and a fresh delivery after accepting
+ok 72 - all endings and resident replies keep old rewards unchanged and award each collection only once
+ok 73 - resident progress sanitizes unknown and duplicate replies, and legacy v3.9 saves gain only the optional field
+ok 74 - reading preferences survive reload independently, reject malformed values, and never damage game records
+ok 75 - v3.11 restore inspection is read-only, bounded, and does not simulate offline rewards
+ok 76 - v3.11 manual and automatic slots rotate independently without touching primary, v2 or reading records
+ok 77 - v3.11 periodic backups keep the preceding primary snapshot and only rotate every five minutes
+ok 78 - v3.11 backup quota failures do not stop ordinary saving, but restore and reset require verified backups
+ok 79 - v3.11 damaged and future backups remain exportable and a successful recovery preserves the damaged source
+ok 80 - v3.11 expected-source guards reject a changed primary, including changes during backup writes
+ok 81 - v3.11 restoring keeps the latest in-memory snapshot as well as the exact primary original
+ok 82 - v3.11 restart preserves v2, original migration backup, preferences and the recoverable prior voyage
+ok 83 - v3.11 backup listing handles unavailable storage and keeps the historical single-backup entry without duplication
+ok 84 - v3.11 a failed recovery never rotates away its chosen oldest or historical single-backup source
+ok 85 - v3.12 progressive guide derives completion from existing progress and never restarts veterans
+ok 86 - v3.12 core-loop objectives point to route, voyage and report controls
+v3 gameplay ok: 86 behavioral checks
+CHECK_RESULT: {"command":"node tests/v3-gameplay.test.js","exit":0,"signal":null,"error":null}
+RESULT: 9 syntax checks, 17 test scripts, 0 failed checks.

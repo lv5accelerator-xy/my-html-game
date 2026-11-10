@@ -49,7 +49,7 @@ async function run() {
   const url = process.env.V3_TEST_URL || `http://127.0.0.1:${server.address().port}/v3/`;
   const browser = await (process.env.V3_BROWSER_ENGINE === "webkit" ? webkit : chromium).launch({
     headless: true,
-    executablePath: process.env.CODEX_CHROMIUM_PATH || undefined,
+    executablePath: process.env.V3_BROWSER_ENGINE === "webkit" ? undefined : process.env.CODEX_CHROMIUM_PATH || undefined,
   });
   const screenshotDir = process.env.V3_SCREENSHOT_DIR;
   if (screenshotDir) fs.mkdirSync(screenshotDir, { recursive: true });
@@ -60,6 +60,7 @@ async function run() {
       viewport: { width: 1280, height: 900 },
       acceptDownloads: true,
     });
+    await require("./helpers/isolate-browser.cjs")(context, url);
     const page = await context.newPage();
     const errors = [],
       badResponses = [],
@@ -115,6 +116,174 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    for(let routeIndex=0;routeIndex<D.VOYAGES.length;routeIndex++) {
+      const def=D.VOYAGES[routeIndex],ending=D.ENDINGS[routeIndex];
+      const fixture=E.sanitize(structuredClone(require('./fixtures/v316-earned.json')[ending.id]),TIME);
+      E.configure(fixture,{enabled:false,research:false,dispatch:false});
+      for(const c of D.SECTORS) while(E.surveyCount(fixture,c.id)<3) {E.startSurvey(fixture,c.id,'safe',E.surveyCount(fixture,c.id));E.advance(fixture,fixture.lastAt+fixture.atlas.active.seconds*1000);E.claimSurvey(fixture,fixture.atlas.active.token);}
+      for(const id of [...fixture.equipped]) E.equip(fixture,id);E.equip(fixture,'medbay');E.saveLoadout(fixture,'production');E.equip(fixture,'medbay');E.equip(fixture,'nav');E.equip(fixture,'scanner');E.saveLoadout(fixture,'voyage');fixture.lastAt=TIME;
+      await scenario(`v3.20 ${def.name}/${ending.title}: full earned voyage, formation switch, eight-hour absence, import and repeat`,{[S.KEY]:JSON.stringify(fixture)},async page=>{
+        const closeBrief=async()=>{if(await page.locator('#dialog[open]').count()) await page.locator('#dialog-close').click();};
+        const applyPreset=async id=>{
+          const target=page.locator(`#loadouts [data-action="loadout-apply"][data-id="${id}"]`);
+          if(await target.isDisabled()) {
+            const current=await read(page);assert.deepEqual([...current.equipped].sort(),[...current.loadouts[id]].sort(),'disabled preset is already active');
+            await page.locator(`#loadouts [data-action="loadout-apply"][data-id="${id==='production'?'voyage':'production'}"]`).click();
+          }
+          await target.click();const current=await read(page);assert.deepEqual(current.equipped,current.loadouts[id]);
+        };
+        await page.locator('#navigation [data-id="explore"]').click();
+        assert.match(await page.locator(`#deep-route-${def.id}`).innerText(),/对比/);
+        await page.locator(`[data-action="deep-start"][data-id="${def.id}"]`).click();
+        for(let stage=0;stage<4;stage++) {
+          await applyPreset(stage===2&&def.module==='medbay'?'production':'voyage');
+          const choice=['secure','recover','investigate','secure'][stage],before=await read(page),preview=E.voyagePreview(before,def.id,choice);
+          await page.locator(`[data-action="deep-dispatch"][data-id="${choice}"]`).click();
+          const snapshot=(await read(page)).expeditions.active.leg;assert.equal(snapshot.seconds,preview.seconds);assert.equal(snapshot.dust,preview.dust);
+          assert.equal((await read(page)).dust,before.dust-preview.dustCost);
+          await applyPreset('production');
+          assert.deepEqual((await read(page)).expeditions.active.leg,snapshot);
+          await page.clock.runFor(1000);await page.reload();
+          assert.deepEqual((await read(page)).expeditions.active.leg,snapshot);
+          await page.locator('#navigation [data-id="explore"]').click();
+          assert.ok(await page.locator('#mission-belt [data-action="mission"]').isDisabled());
+          if(stage===1) {
+            const beforeAbsence=await read(page);
+            await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new Event('pagehide'));});
+            await page.clock.fastForward(8*3600000);
+            await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));document.dispatchEvent(new Event('visibilitychange'));});
+            const after=await read(page),expected=E.sanitize(beforeAbsence,beforeAbsence.lastAt);E.advance(expected,expected.lastAt+8*3600000,{offline:true});
+            assert.equal(after.dust,expected.dust);assert.equal(after.clock-beforeAbsence.clock,28800);assert.equal(after.expeditions.active.stage,stage);assert.deepEqual(after.expeditions.active.leg,snapshot);
+            assert.match(await page.locator('#dialog-body .return-ready').innerText(),/远航阶段报告已到达/);
+          } else await page.clock.fastForward(snapshot.seconds*1000+1000);
+          await closeBrief();
+          await page.locator('[data-action="deep-claim"]').click();assert.equal((await read(page)).expeditions.active.stage,stage+1);
+          if(stage===0) {
+            const checkpoint=await read(page);await page.locator('#settings-button').click();
+            const [download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-action="export"]').click()]);const text=fs.readFileSync(await download.path(),'utf8');
+            await page.locator('#import-file').setInputFiles({name:'voyage.json',mimeType:'application/json',buffer:Buffer.from(text)});await page.locator('#confirm-import').click();
+            assert.deepEqual((await read(page)).expeditions,checkpoint.expeditions);assert.equal((await read(page)).epilogue.ending,ending.id);
+            await page.locator('#navigation [data-id="explore"]').click();
+          }
+        }
+        for(const width of [1280,375]) {
+          await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+          if(screenshotDir) await page.locator('#long-voyages').screenshot({path:path.join(screenshotDir,`v320-${def.id}-${width}.png`)});
+        }
+        const before=await read(page),reward=before.expeditions.active;
+        await page.locator('[data-action="deep-finish"]').click();const done=await read(page);
+        assert.equal(done.samples,before.samples+reward.samples+6);assert.equal(done.expeditions.completed[def.id],1);assert.equal(done.expeditions.records[0].legs.length,4);
+        await page.reload();assert.deepEqual((await read(page)).expeditions,done.expeditions);
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.locator(`[data-action="deep-start"][data-id="${def.id}"]`).click();
+        for(let stage=0;stage<4;stage++) {
+          await page.locator('[data-action="deep-dispatch"][data-id="recover"]').click();const leg=(await read(page)).expeditions.active.leg;
+          await page.clock.fastForward(leg.seconds*1000+1000);await closeBrief();await page.locator('[data-action="deep-claim"]').click();
+        }
+        const repeat=await read(page);await page.locator('[data-action="deep-finish"]').click();const twice=await read(page);
+        assert.equal(twice.samples,repeat.samples+repeat.expeditions.active.samples);assert.equal(twice.expeditions.completed[def.id],2);assert.equal(twice.expeditions.records[0].firstBonus,0);
+        assert.equal(twice.epilogue.ending,ending.id);assert.deepEqual(twice.lore,fixture.lore);assert.equal(new Set(twice.expeditions.collections).size,twice.expeditions.collections.length);
+      });
+    }
+    for(const ending of D.ENDINGS) {
+      const fixture=E.sanitize(structuredClone(require('./fixtures/v316-earned.json')[ending.id]),TIME);
+      E.configure(fixture,{enabled:false,dispatch:false});fixture.lastAt=TIME;
+      await scenario(`v3.19 ${ending.title}: live scheduling, real escrow, construction credit, alternate voyage and locked terms`,{[S.KEY]:JSON.stringify(fixture)},async page=>{
+        await page.locator('#navigation [data-id="explore"]').click();
+        for(const focus of D.HARBOR_FOCUSES) {
+          await page.locator(`[data-action="harbor-focus"][data-id="${focus.id}"]`).click();
+          await page.locator('[data-action="harbor-accept"]').first().click();
+          const t=(await read(page)).management.active;
+          await page.locator(`[data-action="harbor-focus"][data-id="${focus.id==='production'?'reception':'production'}"]`).click();
+          assert.deepEqual((await read(page)).management.active,t);
+          if(focus.id==='production') {
+            await page.locator('[data-action="harbor-reserve"]').click();
+            assert.ok((await read(page)).automation.reserve>=t.dustCost);
+            await page.locator('#navigation [data-id="fleet"]').click();
+            const s=await read(page),cost=E.buildingCost(s,'drone');
+            if(cost>s.dust) await page.clock.runFor((E.incomeEta(s,cost-s.dust)+1)*1000);
+            await page.locator('[data-buy-id="drone"]').click();
+            assert.ok((await read(page)).management.active.plan.credit>0);
+            await page.locator('#navigation [data-id="explore"]').click();
+          } else if(focus.id==='reception') {
+            await page.locator('[data-action="harbor-pack"]').click();
+            const packed=(await read(page)).management.active;assert.equal(packed.plan.packedDust,t.dustCost);assert.equal(packed.plan.packedSamples,t.samplesCost);
+            await page.reload();await page.locator('#navigation [data-id="explore"]').click();
+            assert.deepEqual((await read(page)).management.active.plan,packed.plan);
+          } else {
+            await page.locator('#mission-belt [data-action="mission"]').click();
+            const m=(await read(page)).mission;assert.equal(m.harborOrder,t.serial);
+            await page.clock.runFor(m.seconds*1000+1000);
+            await page.locator('#report [data-action="claim"]').click();
+            assert.equal((await read(page)).management.active.trips,1);
+          }
+          await page.clock.runFor((t.workSeconds+1)*1000);
+          assert.match(await page.locator('#harbor-schedule').innerText(),/当前可用生产/);
+          await page.locator('[data-action="harbor-deliver"]').click();
+          assert.equal((await read(page)).management.active,null);
+        }
+        for(const width of [1280,375]) {
+          await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+          if(screenshotDir && ending.id==='city') await page.locator('#harbor-management').screenshot({path:path.join(screenshotDir,`v319-schedule-${width}.png`)});
+        }
+        const done=await read(page);assert.equal(done.management.stats.deliveries,3);assert.equal(done.epilogue.ending,ending.id);assert.deepEqual(done.lore,fixture.lore);
+      });
+    }
+    for(const chain of D.SECTORS) {
+      const fixture=structuredClone(require('./fixtures/v316-earned.json').city);
+      E.configure(fixture,{enabled:false,dispatch:false}); fixture.lastAt=TIME;
+      await scenario(`v3.18 ${chain.name}: three real investigations, phone map keyboard, in-transit refresh and export`,{[S.KEY]:JSON.stringify(fixture)},async page=>{
+        await page.locator('#navigation [data-id="explore"]').click();
+        await page.setViewportSize({width:375,height:900});
+        const node=page.locator(`g[data-action="sector-select"][data-id="${chain.id}"]`).first();
+        await node.focus();await page.keyboard.press('Enter');
+        assert.equal((await read(page)).atlas.priority,chain.id);
+        for(let i=0;i<3;i++) {
+          await page.locator('[data-action="survey-start"][data-id="safe"]').click();
+          const lock=(await read(page)).atlas.active;
+          assert.equal(lock.node,i);
+          await page.clock.runFor(1000);await page.reload();
+          assert.deepEqual((await read(page)).atlas.active,lock);
+          await page.locator('#navigation [data-id="explore"]').click();
+          await page.clock.runFor(lock.seconds*1000);
+          await page.locator('[data-action="survey-claim"]').click();
+          assert.equal((await read(page)).atlas.nodes.filter(n=>n.chain===chain.id).length,i+1);
+          assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+        }
+        assert.match(await page.locator('#sector-atlas').innerText(),new RegExp(chain.collection));
+        const before=await read(page);await page.reload();assert.deepEqual((await read(page)).atlas,before.atlas);
+        assert.equal((await read(page)).epilogue.ending,'city');
+        await page.locator('#settings-button').click();
+        const [download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-action="export"]').click()]);
+        const exported=JSON.parse(fs.readFileSync(await download.path(),'utf8'));
+        assert.deepEqual(exported.atlas,before.atlas);
+        await page.locator('#dialog-close').click();
+        await page.locator('#navigation [data-id="explore"]').click();
+        if(screenshotDir && chain.id==='quiet') await page.locator('#sector-atlas').screenshot({path:path.join(screenshotDir,'v318-atlas-phone.png')});
+      });
+    }
+    {
+      const fixture = require('./helpers/v3-fixtures.cjs').completed('city', TIME);
+      const event = require('./helpers/v3-fixtures.cjs').encounterReady('crate', TIME);
+      fixture.encounters = event.encounters; fixture.lastAt = TIME - 3600000;
+      await scenario('v3.17 arrival decisions, accurate next target, keyboard focus and quiet phone atlas', {[S.KEY]: JSON.stringify(fixture)}, async page => {
+        assert.match(await page.locator('#dialog-body .return-ready').innerText(), /等待手动决定/);
+        await page.locator('[data-action="return-next"]').click();
+        assert.ok(await page.locator('#encounter-panel').isVisible());
+        assert.equal(await page.evaluate(() => document.activeElement.id), 'encounter-panel');
+        await page.locator('#encounter-panel [data-action="encounter"]').first().click();
+        await page.clock.runFor(60000);
+        assert.equal((await read(page)).encounters.pending, null);
+        await page.locator('#navigation [data-id="home"]').click();
+        await page.setViewportSize({width:375,height:900});
+        assert.equal(await page.locator('.atlas-node.is-built circle').first().evaluate(n=>getComputedStyle(n).animationName), 'none');
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+        if(screenshotDir) await page.screenshot({path:path.join(screenshotDir,'v317-arrival-phone.png')});
+        await page.reload();
+        assert.equal((await read(page)).encounters.pending,null);
+      });
+    }
+
     {
       const fixture = require("./helpers/v3-fixtures.cjs").completed("city", TIME);
       fixture.equipped = ["battery", "solar"]; E.saveLoadout(fixture, "production");
@@ -3147,6 +3316,7 @@ async function run() {
       const entries=await page.evaluate(()=>SalvageStorage.backups(localStorage).entries);
       assert.ok(entries.some(entry=>entry.valid&&entry.text===target),"the recovery source is still recoverable");
     });
+    assert.ok(checks > 0, "At least one browser flow must execute; unmatched filters are errors");
     console.log(
       `v3 browser ok: ${checks} complete flows; identity/content/assets/console checked in every flow`,
     );

@@ -1,0 +1,32 @@
+{"name": "webkit-install", "command": ["/workspace/scratch/starport-tools/node_modules/.bin/playwright", "install", "webkit"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "exit": 1, "seconds": 0.94}
+{"name": "capture-main-earned", "command": ["node", "/workspace/scratch/starport-audit/capture-earned.cjs"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "exit": 0, "seconds": 0.32}
+{"name": "baseline", "command": ["node", "scripts/check.cjs"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "exit": 0, "seconds": 282.9}
+{"name": "v317-rules", "command": ["node", "tests/v3-expansion.test.js"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "exit": 0, "seconds": 0.92}
+{"name": "v317-browser", "command": ["node", "tests/v3-browser.test.js"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "exit": 0, "seconds": 3.24}
+{"name": "v317-full", "command": ["node", "scripts/check.cjs"], "head": "7034b5c7f75f52eb65acce58c00c373d8e312bfd", "exit": 0, "seconds": 290.39}
+{"name": "v318-rules", "command": ["node", "tests/v3-expansion.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.99}
+{"name": "v318-compatibility", "command": ["node", "tests/v3-compatibility.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.04}
+{"name": "v318-browser", "command": ["node", "tests/v3-browser.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.68}
+{"name": "v318-capture-compat", "command": ["node", "/workspace/scratch/starport-audit/capture-v316-compat.cjs"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.05}
+{"name": "v318-compatibility-expanded", "command": ["node", "tests/v3-compatibility.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 0.05}
+{"name": "v318-browser-fixed", "command": ["node", "tests/v3-browser.test.js"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 33.33}
+{"name": "v318-full", "command": ["node", "scripts/check.cjs"], "head": "a3f2abedad29e333f3b37ec1c1750dc0b855a27f", "exit": 0, "seconds": 343.66}
+{"name": "v319-rules", "command": ["node", "tests/v3-expansion.test.js"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 0, "seconds": 1.04}
+{"name": "v319-compatibility", "command": ["node", "tests/v3-compatibility.test.js"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 0, "seconds": 0.05}
+{"name": "v319-browser", "command": ["node", "tests/v3-browser.test.js"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 0, "seconds": 41.27}
+{"name": "v319-rules-final", "command": ["node", "tests/v3-expansion.test.js"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 0, "seconds": 1.14}
+{"name": "v319-full", "command": ["node", "scripts/check.cjs"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 1, "seconds": 361.84}
+{"name": "v319-diff", "command": ["git", "diff", "--check"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 0, "seconds": 0.02}
+{"name": "v319-full-resumed", "command": ["node", "scripts/check.cjs"], "head": "25d844c2d9ff73d8869a80622cea879de7386740", "exit": 0, "seconds": 369.25}
+{"name": "v320-rules", "command": ["node", "tests/v3-expansion.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 2.53}
+{"name": "v320-compatibility", "command": ["node", "tests/v3-compatibility.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 0.06}
+{"name": "v320-browser", "command": ["node", "tests/v3-browser.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 1, "seconds": 31.59}
+{"name": "v320-browser-fixed", "command": ["node", "tests/v3-browser.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 15.29}
+{"name": "v320-diff", "command": ["git", "diff", "--check"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 0.01}
+{"name": "v320-browser-syntax", "command": ["node", "--check", "tests/v3-browser.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 0.05}
+{"name": "v320-diff-isolated", "command": ["git", "diff", "--check"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 0.02}
+{"name": "v320-full", "command": ["node", "scripts/check.cjs"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 1, "seconds": 154.15}
+{"name": "v320-network-isolation", "command": ["node", "/workspace/scratch/starport-audit/network-isolation-check.cjs"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 1.86}
+{"name": "v320-rules-final", "command": ["node", "tests/v3-expansion.test.js"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 3.05}
+{"name": "v320-full-isolated", "command": ["node", "scripts/check.cjs"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 1, "seconds": 333.22}
+{"name": "v320-final", "command": ["node", "scripts/check.cjs"], "head": "8fa3c9714144133891b2f66cfad998cb9158443c", "exit": 0, "seconds": 390.12}

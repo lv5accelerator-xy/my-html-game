@@ -1,0 +1,11 @@
+const fs=require('node:fs'),E=require('./main-v316/v3/engine.js');const states=[];
+for(const id of ['city','watch','voyage']) {
+ const s=JSON.parse(fs.readFileSync(__dirname+'/earned-'+id+'.json','utf8'));states.push({name:id+'-ending',state:E.sanitize(s,s.lastAt)});
+ for(const focus of ['production','reception','exploration']) {
+  let c=structuredClone(s);E.setHarborFocus(c,focus);const offer=E.harborOffers(c)[0];E.acceptHarborNeed(c,offer.id,offer.terms.serial);
+  states.push({name:id+'-'+focus+'-accepted',state:E.sanitize(c,c.lastAt)});
+  E.startMission(c,offer.terms.mission);states.push({name:id+'-'+focus+'-transit',state:E.sanitize(c,c.lastAt)});
+  E.advance(c,c.lastAt+c.mission.seconds*1000);states.push({name:id+'-'+focus+'-report',state:E.sanitize(c,c.lastAt)});
+ }
+}
+fs.writeFileSync('/workspace/starport-v320/tests/fixtures/v316-saves.json',JSON.stringify({source:'7034b5c7f75f52eb65acce58c00c373d8e312bfd',states},null,2)+'\n');console.log('captured '+states.length+' canonical main v3.16 snapshots with actual earned resources');

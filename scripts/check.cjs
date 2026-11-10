@@ -16,7 +16,7 @@ const tests = fs.readdirSync(path.join(root,'tests')).filter(file => file.endsWi
 if (!tests.length) throw new Error('No test scripts discovered');
 let failed = 0;
 function run(args) {
-  const result = spawnSync(process.execPath, args, { cwd: root, stdio: 'inherit', windowsHide: true, timeout: 300000 });
+  const result = spawnSync(process.execPath, args, { cwd: root, stdio: 'inherit', windowsHide: true, timeout: args[0] === 'tests/v3-browser.test.js' ? 600000 : 300000 });
   console.log(`CHECK_RESULT: ${JSON.stringify({ command: ['node', ...args].join(' '), exit: result.status, signal: result.signal, error: result.error?.message || null })}`);
   if (result.error || result.status !== 0) {
     failed++; console.error(`FAILED: node ${args.join(' ')}`, result.error?.message || `exit ${result.status}`);

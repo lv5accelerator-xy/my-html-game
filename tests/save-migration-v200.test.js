@@ -27,6 +27,7 @@ const server = http.createServer((request, response) => {
     localStorage.setItem("stellarOutpostIdlePatchNotesSeen", "2.3.0");
     localStorage.setItem("stellarOutpostAnnouncementAutoShown_v1", JSON.stringify(["v0200-starfall-launch"]));
   });
+  await require("./helpers/isolate-browser.cjs")(context, `http://127.0.0.1:${server.address().port}`);
   const page = await context.newPage();
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));

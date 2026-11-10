@@ -1,0 +1,1085 @@
+{
+  "city": {
+    "schema": "salvage-orbit",
+    "version": 32,
+    "createdAt": 0,
+    "lastAt": 6180000,
+    "carryMs": 0,
+    "clock": 6180,
+    "dust": 3806311.607879884,
+    "lifetimeDust": 496638280.62645733,
+    "cores": 3,
+    "totalCores": 28,
+    "rebirths": 7,
+    "samples": 215,
+    "buildings": {
+      "drone": 92,
+      "sail": 74,
+      "forge": 53,
+      "relay": 41
+    },
+    "research": [
+      "laser",
+      "panels",
+      "compact",
+      "navigation",
+      "network"
+    ],
+    "run": {
+      "startedClock": 4965,
+      "dust": 264291824.60788003,
+      "route": "explore",
+      "routeChosen": true,
+      "choices": 0
+    },
+    "automation": {
+      "enabled": true,
+      "policy": "balanced",
+      "reserve": 0,
+      "research": true,
+      "dispatch": false
+    },
+    "modules": {
+      "medbay": 1,
+      "nav": 2,
+      "scanner": 3
+    },
+    "equipped": [
+      "nav",
+      "scanner"
+    ],
+    "loadouts": {
+      "production": null,
+      "voyage": [
+        "nav",
+        "scanner"
+      ]
+    },
+    "mission": null,
+    "result": null,
+    "repeatId": "supply-run",
+    "lore": [
+      {
+        "story": "hospital",
+        "choice": "repair"
+      },
+      {
+        "story": "relay",
+        "choice": "public"
+      },
+      {
+        "story": "garden",
+        "choice": "scrap"
+      },
+      {
+        "story": "nursery",
+        "choice": "seeds"
+      },
+      {
+        "story": "horizon",
+        "choice": "welcome"
+      },
+      {
+        "story": "observations",
+        "choice": "share"
+      },
+      {
+        "story": "beacon",
+        "choice": "calibrate"
+      },
+      {
+        "story": "arrival",
+        "choice": "watch"
+      },
+      {
+        "story": "council-log",
+        "choice": "capacity"
+      },
+      {
+        "story": "tide-record",
+        "choice": "crosscheck"
+      },
+      {
+        "story": "handoff-plan",
+        "choice": "joint-watch"
+      },
+      {
+        "story": "relay-arrival",
+        "choice": "watch"
+      },
+      {
+        "story": "berth-arrival",
+        "choice": "address"
+      },
+      {
+        "story": "light-arrival",
+        "choice": "water"
+      }
+    ],
+    "journal": [
+      {
+        "clock": 6180,
+        "text": "第六章完成 · 归航之城。结局永久归档，生产、补给与下一航次继续开放。"
+      },
+      {
+        "clock": 6180,
+        "text": "苇 · 两个地址的春天：交接记录已永久保存。"
+      },
+      {
+        "clock": 6180,
+        "text": "祁岳 · 可以交出去的班表：交接记录已永久保存。"
+      },
+      {
+        "clock": 6180,
+        "text": "阿遥 · 从等待到回应：交接记录已永久保存。"
+      },
+      {
+        "clock": 6165,
+        "text": "两港居民与抵达船长共同确认新守灯协议。三队全部抵达，等待名单清空；轮班人员能够继续维护航路。"
+      },
+      {
+        "clock": 6165,
+        "text": "等待名单上的三队全部抵达。请共同核对守灯协议，中央与现场各自承担可确认的责任。"
+      },
+      {
+        "clock": 6165,
+        "text": "先来坐一会儿：先把水和座位准备好。这段记忆会陪你进入下一航次。"
+      },
+      {
+        "clock": 6158,
+        "text": "第三队 · 三次灯光归航，发现已送达，等待你的安排。"
+      },
+      {
+        "clock": 6015,
+        "text": "派遣探索：第三队 · 三次灯光，预计 143 秒归航。"
+      },
+      {
+        "clock": 6001,
+        "text": "轨道熔铸站达到 50 艘，本设施产量翻倍。"
+      },
+      {
+        "clock": 6000,
+        "text": "等待也有一个地址：公开备用泊位地址。这段记忆会陪你进入下一航次。"
+      },
+      {
+        "clock": 5995,
+        "text": "第二队 · 备用泊位归航，发现已送达，等待你的安排。"
+      }
+    ],
+    "discoveries": 42,
+    "encounters": {
+      "serial": 1,
+      "settled": 0,
+      "nextAt": 1635,
+      "rng": 946843048,
+      "pending": {
+        "token": 1,
+        "id": "probe",
+        "mission": "belt",
+        "choice": null,
+        "readyAt": 0,
+        "choices": [
+          {
+            "id": "ore",
+            "dust": 250000,
+            "samples": 0,
+            "seconds": 20,
+            "costSamples": 0
+          },
+          {
+            "id": "data",
+            "dust": 0,
+            "samples": 2,
+            "seconds": 30,
+            "costSamples": 0
+          }
+        ]
+      },
+      "history": [],
+      "catalog": []
+    },
+    "starport": 3,
+    "chapter": [
+      "relay",
+      "nursery",
+      "lighthouse"
+    ],
+    "campaign": {
+      "completed": [
+        {
+          "id": "white-noise",
+          "plan": "calibrate"
+        },
+        {
+          "id": "false-beacon",
+          "plan": "calibrate"
+        },
+        {
+          "id": "first-convoy",
+          "plan": "calibrate"
+        }
+      ],
+      "preparation": null
+    },
+    "council": {
+      "completed": [
+        {
+          "id": "port-council",
+          "plan": "calibrate"
+        },
+        {
+          "id": "old-observatory",
+          "plan": "calibrate"
+        },
+        {
+          "id": "shared-watch",
+          "plan": "calibrate"
+        }
+      ],
+      "priority": "reception",
+      "preparation": null
+    },
+    "rescue": {
+      "completed": [
+        {
+          "id": "convoy-relay",
+          "plan": "calibrate"
+        },
+        {
+          "id": "convoy-berth",
+          "plan": "calibrate"
+        },
+        {
+          "id": "convoy-light",
+          "plan": "calibrate"
+        }
+      ],
+      "energy": "rotation",
+      "berth": true,
+      "checks": null,
+      "preparation": null,
+      "protocol": true
+    },
+    "epilogue": {
+      "confirmed": [
+        "ayao",
+        "qiyue",
+        "wei"
+      ],
+      "ending": "city"
+    },
+    "afterword": {
+      "active": null,
+      "ready": false,
+      "completed": []
+    },
+    "management": {
+      "focus": "production",
+      "cycle": 0,
+      "active": null,
+      "projects": {},
+      "counts": {},
+      "stats": {
+        "deliveries": 0,
+        "voyages": 0,
+        "dustSpent": 0,
+        "samplesSpent": 0
+      },
+      "history": [],
+      "collections": []
+    },
+    "records": [
+      {
+        "seconds": 585,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 450,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 750,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 645,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 645,
+        "route": "explore",
+        "gain": 4
+      }
+    ],
+    "beacon": {
+      "nextAt": 6283,
+      "expiresAt": 0
+    },
+    "burstUntil": 0,
+    "lastScanClock": 2565,
+    "rng": 169825953,
+    "legacyArchive": null,
+    "timing": {
+      "sinceClock": 0,
+      "late": false,
+      "foregroundSeconds": 0,
+      "offlineSeconds": 0,
+      "events": {
+        "drone": {
+          "elapsedSeconds": 15,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        },
+        "research": {
+          "elapsedSeconds": 30,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        },
+        "report": {
+          "elapsedSeconds": 180,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        },
+        "prestige": {
+          "elapsedSeconds": 1125,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        }
+      }
+    }
+  },
+  "watch": {
+    "schema": "salvage-orbit",
+    "version": 32,
+    "createdAt": 0,
+    "lastAt": 6180000,
+    "carryMs": 0,
+    "clock": 6180,
+    "dust": 3806311.607879884,
+    "lifetimeDust": 496638280.62645733,
+    "cores": 3,
+    "totalCores": 28,
+    "rebirths": 7,
+    "samples": 215,
+    "buildings": {
+      "drone": 92,
+      "sail": 74,
+      "forge": 53,
+      "relay": 41
+    },
+    "research": [
+      "laser",
+      "panels",
+      "compact",
+      "navigation",
+      "network"
+    ],
+    "run": {
+      "startedClock": 4965,
+      "dust": 264291824.60788003,
+      "route": "explore",
+      "routeChosen": true,
+      "choices": 0
+    },
+    "automation": {
+      "enabled": true,
+      "policy": "balanced",
+      "reserve": 0,
+      "research": true,
+      "dispatch": false
+    },
+    "modules": {
+      "medbay": 1,
+      "nav": 2,
+      "scanner": 3
+    },
+    "equipped": [
+      "nav",
+      "scanner"
+    ],
+    "loadouts": {
+      "production": null,
+      "voyage": [
+        "nav",
+        "scanner"
+      ]
+    },
+    "mission": null,
+    "result": null,
+    "repeatId": "supply-run",
+    "lore": [
+      {
+        "story": "hospital",
+        "choice": "repair"
+      },
+      {
+        "story": "relay",
+        "choice": "public"
+      },
+      {
+        "story": "garden",
+        "choice": "scrap"
+      },
+      {
+        "story": "nursery",
+        "choice": "seeds"
+      },
+      {
+        "story": "horizon",
+        "choice": "welcome"
+      },
+      {
+        "story": "observations",
+        "choice": "share"
+      },
+      {
+        "story": "beacon",
+        "choice": "calibrate"
+      },
+      {
+        "story": "arrival",
+        "choice": "watch"
+      },
+      {
+        "story": "council-log",
+        "choice": "capacity"
+      },
+      {
+        "story": "tide-record",
+        "choice": "crosscheck"
+      },
+      {
+        "story": "handoff-plan",
+        "choice": "joint-watch"
+      },
+      {
+        "story": "relay-arrival",
+        "choice": "watch"
+      },
+      {
+        "story": "berth-arrival",
+        "choice": "address"
+      },
+      {
+        "story": "light-arrival",
+        "choice": "water"
+      }
+    ],
+    "journal": [
+      {
+        "clock": 6180,
+        "text": "第六章完成 · 守望之港。结局永久归档，生产、补给与下一航次继续开放。"
+      },
+      {
+        "clock": 6180,
+        "text": "苇 · 两个地址的春天：交接记录已永久保存。"
+      },
+      {
+        "clock": 6180,
+        "text": "祁岳 · 可以交出去的班表：交接记录已永久保存。"
+      },
+      {
+        "clock": 6180,
+        "text": "阿遥 · 从等待到回应：交接记录已永久保存。"
+      },
+      {
+        "clock": 6165,
+        "text": "两港居民与抵达船长共同确认新守灯协议。三队全部抵达，等待名单清空；轮班人员能够继续维护航路。"
+      },
+      {
+        "clock": 6165,
+        "text": "等待名单上的三队全部抵达。请共同核对守灯协议，中央与现场各自承担可确认的责任。"
+      },
+      {
+        "clock": 6165,
+        "text": "先来坐一会儿：先把水和座位准备好。这段记忆会陪你进入下一航次。"
+      },
+      {
+        "clock": 6158,
+        "text": "第三队 · 三次灯光归航，发现已送达，等待你的安排。"
+      },
+      {
+        "clock": 6015,
+        "text": "派遣探索：第三队 · 三次灯光，预计 143 秒归航。"
+      },
+      {
+        "clock": 6001,
+        "text": "轨道熔铸站达到 50 艘，本设施产量翻倍。"
+      },
+      {
+        "clock": 6000,
+        "text": "等待也有一个地址：公开备用泊位地址。这段记忆会陪你进入下一航次。"
+      },
+      {
+        "clock": 5995,
+        "text": "第二队 · 备用泊位归航，发现已送达，等待你的安排。"
+      }
+    ],
+    "discoveries": 42,
+    "encounters": {
+      "serial": 1,
+      "settled": 0,
+      "nextAt": 1635,
+      "rng": 946843048,
+      "pending": {
+        "token": 1,
+        "id": "probe",
+        "mission": "belt",
+        "choice": null,
+        "readyAt": 0,
+        "choices": [
+          {
+            "id": "ore",
+            "dust": 250000,
+            "samples": 0,
+            "seconds": 20,
+            "costSamples": 0
+          },
+          {
+            "id": "data",
+            "dust": 0,
+            "samples": 2,
+            "seconds": 30,
+            "costSamples": 0
+          }
+        ]
+      },
+      "history": [],
+      "catalog": []
+    },
+    "starport": 3,
+    "chapter": [
+      "relay",
+      "nursery",
+      "lighthouse"
+    ],
+    "campaign": {
+      "completed": [
+        {
+          "id": "white-noise",
+          "plan": "calibrate"
+        },
+        {
+          "id": "false-beacon",
+          "plan": "calibrate"
+        },
+        {
+          "id": "first-convoy",
+          "plan": "calibrate"
+        }
+      ],
+      "preparation": null
+    },
+    "council": {
+      "completed": [
+        {
+          "id": "port-council",
+          "plan": "calibrate"
+        },
+        {
+          "id": "old-observatory",
+          "plan": "calibrate"
+        },
+        {
+          "id": "shared-watch",
+          "plan": "calibrate"
+        }
+      ],
+      "priority": "reception",
+      "preparation": null
+    },
+    "rescue": {
+      "completed": [
+        {
+          "id": "convoy-relay",
+          "plan": "calibrate"
+        },
+        {
+          "id": "convoy-berth",
+          "plan": "calibrate"
+        },
+        {
+          "id": "convoy-light",
+          "plan": "calibrate"
+        }
+      ],
+      "energy": "rotation",
+      "berth": true,
+      "checks": null,
+      "preparation": null,
+      "protocol": true
+    },
+    "epilogue": {
+      "confirmed": [
+        "ayao",
+        "qiyue",
+        "wei"
+      ],
+      "ending": "watch"
+    },
+    "afterword": {
+      "active": null,
+      "ready": false,
+      "completed": []
+    },
+    "management": {
+      "focus": "production",
+      "cycle": 0,
+      "active": null,
+      "projects": {},
+      "counts": {},
+      "stats": {
+        "deliveries": 0,
+        "voyages": 0,
+        "dustSpent": 0,
+        "samplesSpent": 0
+      },
+      "history": [],
+      "collections": []
+    },
+    "records": [
+      {
+        "seconds": 585,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 450,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 750,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 645,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 645,
+        "route": "explore",
+        "gain": 4
+      }
+    ],
+    "beacon": {
+      "nextAt": 6283,
+      "expiresAt": 0
+    },
+    "burstUntil": 0,
+    "lastScanClock": 2565,
+    "rng": 169825953,
+    "legacyArchive": null,
+    "timing": {
+      "sinceClock": 0,
+      "late": false,
+      "foregroundSeconds": 0,
+      "offlineSeconds": 0,
+      "events": {
+        "drone": {
+          "elapsedSeconds": 15,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        },
+        "research": {
+          "elapsedSeconds": 30,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        },
+        "report": {
+          "elapsedSeconds": 180,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        },
+        "prestige": {
+          "elapsedSeconds": 1125,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        }
+      }
+    }
+  },
+  "voyage": {
+    "schema": "salvage-orbit",
+    "version": 32,
+    "createdAt": 0,
+    "lastAt": 6180000,
+    "carryMs": 0,
+    "clock": 6180,
+    "dust": 3806311.607879884,
+    "lifetimeDust": 496638280.62645733,
+    "cores": 3,
+    "totalCores": 28,
+    "rebirths": 7,
+    "samples": 215,
+    "buildings": {
+      "drone": 92,
+      "sail": 74,
+      "forge": 53,
+      "relay": 41
+    },
+    "research": [
+      "laser",
+      "panels",
+      "compact",
+      "navigation",
+      "network"
+    ],
+    "run": {
+      "startedClock": 4965,
+      "dust": 264291824.60788003,
+      "route": "explore",
+      "routeChosen": true,
+      "choices": 0
+    },
+    "automation": {
+      "enabled": true,
+      "policy": "balanced",
+      "reserve": 0,
+      "research": true,
+      "dispatch": false
+    },
+    "modules": {
+      "medbay": 1,
+      "nav": 2,
+      "scanner": 3
+    },
+    "equipped": [
+      "nav",
+      "scanner"
+    ],
+    "loadouts": {
+      "production": null,
+      "voyage": [
+        "nav",
+        "scanner"
+      ]
+    },
+    "mission": null,
+    "result": null,
+    "repeatId": "supply-run",
+    "lore": [
+      {
+        "story": "hospital",
+        "choice": "repair"
+      },
+      {
+        "story": "relay",
+        "choice": "public"
+      },
+      {
+        "story": "garden",
+        "choice": "scrap"
+      },
+      {
+        "story": "nursery",
+        "choice": "seeds"
+      },
+      {
+        "story": "horizon",
+        "choice": "welcome"
+      },
+      {
+        "story": "observations",
+        "choice": "share"
+      },
+      {
+        "story": "beacon",
+        "choice": "calibrate"
+      },
+      {
+        "story": "arrival",
+        "choice": "watch"
+      },
+      {
+        "story": "council-log",
+        "choice": "capacity"
+      },
+      {
+        "story": "tide-record",
+        "choice": "crosscheck"
+      },
+      {
+        "story": "handoff-plan",
+        "choice": "joint-watch"
+      },
+      {
+        "story": "relay-arrival",
+        "choice": "watch"
+      },
+      {
+        "story": "berth-arrival",
+        "choice": "address"
+      },
+      {
+        "story": "light-arrival",
+        "choice": "water"
+      }
+    ],
+    "journal": [
+      {
+        "clock": 6180,
+        "text": "第六章完成 · 携种远航。结局永久归档，生产、补给与下一航次继续开放。"
+      },
+      {
+        "clock": 6180,
+        "text": "苇 · 两个地址的春天：交接记录已永久保存。"
+      },
+      {
+        "clock": 6180,
+        "text": "祁岳 · 可以交出去的班表：交接记录已永久保存。"
+      },
+      {
+        "clock": 6180,
+        "text": "阿遥 · 从等待到回应：交接记录已永久保存。"
+      },
+      {
+        "clock": 6165,
+        "text": "两港居民与抵达船长共同确认新守灯协议。三队全部抵达，等待名单清空；轮班人员能够继续维护航路。"
+      },
+      {
+        "clock": 6165,
+        "text": "等待名单上的三队全部抵达。请共同核对守灯协议，中央与现场各自承担可确认的责任。"
+      },
+      {
+        "clock": 6165,
+        "text": "先来坐一会儿：先把水和座位准备好。这段记忆会陪你进入下一航次。"
+      },
+      {
+        "clock": 6158,
+        "text": "第三队 · 三次灯光归航，发现已送达，等待你的安排。"
+      },
+      {
+        "clock": 6015,
+        "text": "派遣探索：第三队 · 三次灯光，预计 143 秒归航。"
+      },
+      {
+        "clock": 6001,
+        "text": "轨道熔铸站达到 50 艘，本设施产量翻倍。"
+      },
+      {
+        "clock": 6000,
+        "text": "等待也有一个地址：公开备用泊位地址。这段记忆会陪你进入下一航次。"
+      },
+      {
+        "clock": 5995,
+        "text": "第二队 · 备用泊位归航，发现已送达，等待你的安排。"
+      }
+    ],
+    "discoveries": 42,
+    "encounters": {
+      "serial": 1,
+      "settled": 0,
+      "nextAt": 1635,
+      "rng": 946843048,
+      "pending": {
+        "token": 1,
+        "id": "probe",
+        "mission": "belt",
+        "choice": null,
+        "readyAt": 0,
+        "choices": [
+          {
+            "id": "ore",
+            "dust": 250000,
+            "samples": 0,
+            "seconds": 20,
+            "costSamples": 0
+          },
+          {
+            "id": "data",
+            "dust": 0,
+            "samples": 2,
+            "seconds": 30,
+            "costSamples": 0
+          }
+        ]
+      },
+      "history": [],
+      "catalog": []
+    },
+    "starport": 3,
+    "chapter": [
+      "relay",
+      "nursery",
+      "lighthouse"
+    ],
+    "campaign": {
+      "completed": [
+        {
+          "id": "white-noise",
+          "plan": "calibrate"
+        },
+        {
+          "id": "false-beacon",
+          "plan": "calibrate"
+        },
+        {
+          "id": "first-convoy",
+          "plan": "calibrate"
+        }
+      ],
+      "preparation": null
+    },
+    "council": {
+      "completed": [
+        {
+          "id": "port-council",
+          "plan": "calibrate"
+        },
+        {
+          "id": "old-observatory",
+          "plan": "calibrate"
+        },
+        {
+          "id": "shared-watch",
+          "plan": "calibrate"
+        }
+      ],
+      "priority": "reception",
+      "preparation": null
+    },
+    "rescue": {
+      "completed": [
+        {
+          "id": "convoy-relay",
+          "plan": "calibrate"
+        },
+        {
+          "id": "convoy-berth",
+          "plan": "calibrate"
+        },
+        {
+          "id": "convoy-light",
+          "plan": "calibrate"
+        }
+      ],
+      "energy": "rotation",
+      "berth": true,
+      "checks": null,
+      "preparation": null,
+      "protocol": true
+    },
+    "epilogue": {
+      "confirmed": [
+        "ayao",
+        "qiyue",
+        "wei"
+      ],
+      "ending": "voyage"
+    },
+    "afterword": {
+      "active": null,
+      "ready": false,
+      "completed": []
+    },
+    "management": {
+      "focus": "production",
+      "cycle": 0,
+      "active": null,
+      "projects": {},
+      "counts": {},
+      "stats": {
+        "deliveries": 0,
+        "voyages": 0,
+        "dustSpent": 0,
+        "samplesSpent": 0
+      },
+      "history": [],
+      "collections": []
+    },
+    "records": [
+      {
+        "seconds": 585,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 450,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 750,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 645,
+        "route": "explore",
+        "gain": 4
+      },
+      {
+        "seconds": 645,
+        "route": "explore",
+        "gain": 4
+      }
+    ],
+    "beacon": {
+      "nextAt": 6283,
+      "expiresAt": 0
+    },
+    "burstUntil": 0,
+    "lastScanClock": 2565,
+    "rng": 169825953,
+    "legacyArchive": null,
+    "timing": {
+      "sinceClock": 0,
+      "late": false,
+      "foregroundSeconds": 0,
+      "offlineSeconds": 0,
+      "events": {
+        "drone": {
+          "elapsedSeconds": 15,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        },
+        "research": {
+          "elapsedSeconds": 30,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        },
+        "report": {
+          "elapsedSeconds": 180,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        },
+        "prestige": {
+          "elapsedSeconds": 1125,
+          "foregroundSeconds": 0,
+          "offlineSeconds": 0,
+          "run": 1,
+          "source": "manual"
+        }
+      }
+    }
+  }
+}

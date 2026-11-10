@@ -1,0 +1,28 @@
+{
+  "version": "3.24.0-preview.1",
+  "model": "earned full-history save; same375px browser,60s virtual foreground and hidden, instrumentation overhead included",
+  "rows": [
+    {
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "wallMs": 1.6559380000001056,
+      "calls": {},
+      "mutations": 0,
+      "writes": 0,
+      "nodes": 265,
+      "heap": null,
+      "overflow": false
+    },
+    {
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "wallMs": 4.217881000000034,
+      "calls": {},
+      "mutations": 5,
+      "writes": 0,
+      "nodes": 265,
+      "heap": null,
+      "overflow": false
+    }
+  ]
+}

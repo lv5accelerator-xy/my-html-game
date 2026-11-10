@@ -1990,3 +1990,10 @@ html[data-paused="true"] * { animation-play-state:paused !important; }
 #long-term-honors details { margin-block:12px; }
 #long-term-honors button,.honors-home button { min-height:44px;white-space:normal; }
 @media(max-width:600px) { .honor-groups { grid-template-columns:1fr; } }
+
+/* Action center retains the native panel vocabulary and stable keyed controls. */
+.action-center article { padding: 12px 0; border-bottom: 1px solid var(--line, #293749); }
+.action-center article p { margin: 6px 0 10px; }
+.action-center [data-center-ready] { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr)); gap:12px; }
+.action-center [data-center-ready]>h3 { grid-column:1/-1; }
+.action-center button { min-height:44px; }

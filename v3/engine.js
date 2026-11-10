@@ -1946,6 +1946,36 @@
     return gain;
   }
   // Read from current state, so a reopened brief never advertises an already claimed item.
+  // Derived view only: never accepts, chooses, spends or claims on the player's behalf.
+  function actionCenter(s) {
+    const groups={ready:[],prepare:[],ongoing:[],later:[]},seen=new Set();
+    const add=(group,key,title,detail,focus,command='nav',id='explore',extra={})=>{
+      if(seen.has(key)||!reachable(s,'explore'))return;
+      seen.add(key);groups[group].push({key,title,detail,focus,command,id,...extra});
+    };
+    if(s.result)add('ready','report',s.result.story?'归航故事等待决定':'领取普通探索报告','报告和奖励尚未结算。','report',s.result.story?'nav':'claim',s.result.story?'explore':'');
+    const review=reviewBusy(s),survey=s.atlas.active,a=s.expeditions.active,q=itineraryStatus(s),need=harborStatus(s),community=communityStatus(s);
+    if(review)add(s.clock>=review.end?'ready':'ongoing','review','证据复查',s.clock>=review.end?'等待手动归档':'当前复查已锁定，归档后再安排下一航程。','sector-reviews',s.clock>=review.end?'review-claim':'nav',s.clock>=review.end?String(review.token):'explore');
+    if(survey)add(s.clock>=survey.end?'ready':'ongoing','survey','星区调查',s.clock>=survey.end?'调查已完成，可归档。':'调查进行中，舰队仍在生产。','sector-atlas',s.clock>=survey.end?'survey-claim':'nav',s.clock>=survey.end?String(survey.token):'explore');
+    if(s.mission)add('ongoing','report','探索正在进行','已锁定派遣结果，归航后手动处理。','active-mission');
+    if(a){const ready=a.stage===4||a.leg&&s.clock>=a.leg.end;add(ready?'ready':a.leg?'ongoing':'prepare','voyage',a.stage===4?'归航入库':ready?'远航阶段已归航':'长期远航',q?.reason||'每次接续由你确认，离线只完成当前段。','long-voyages',a.stage===4?'deep-finish':ready?(q&&!q.paused?'plan-next':'deep-claim'):'nav',ready?String(a.token):'explore',{stage:a.stage});}
+    if(community)add(community.available?'ready':community.workReady?'prepare':'ongoing','community','居民协作',community.reason||'已备齐，可交接并阅读回信。','community-life',community.available?'community-deliver':'nav',community.available?String(community.serial):'explore');
+    if(need)add(need.available?'ready':need.workReady?'prepare':'ongoing','need',need.name,need.reason||'已备齐，可完成交付。','harbor-management',need.available?'harbor-deliver':'nav',need.available?String(need.serial):'explore');
+    const event=encounterOffer(s);if(event)add(event.choice?'ongoing':'ready','encounter',event.name,event.choice?'正在按已选方法处理。':'等待你的决定，没有期限。','encounter-panel');
+    const goal=nextGoal(s),represented=[...seen].some(key=>({report:['report','active-mission'],review:['sector-reviews'],survey:['sector-atlas'],voyage:['long-voyages'],community:['community-life'],need:['harbor-management'],encounter:['encounter-panel']}[key]||[]).includes(goal.focus));
+    // The primary rail already presents this goal, so secondary suggestions exclude it.
+    if(s.epilogue.ending){
+      const project=D.HARBOR_PROJECTS.find(p=>harborProjectOffer(s,p.id).available&&goal.focus!==`harbor-project-${p.id}`);
+      if(project)add('ready','project',`推进${project.name}`,'查看实际费用，再亲手确认建设。',`harbor-project-${project.id}`);
+      if(!need&&goal.focus!=='harbor-management')add('prepare','next-need','下一班居民需求','比较三种方向与实际条款，再选择接单。','harbor-management');
+      if(!community&&D.COMMUNITY_STORIES.some(d=>communityOffer(s,d.id)?.available)&&goal.focus!=='community-life')add('prepare','next-community','下一份居民协作','按工程与已交付记录开放。','community-life');
+
+      add('later','archive','重读人物与六章档案','已确认的故事和结局永久保存。','route-archive');
+    }
+    for(const key of Object.keys(groups)) groups[key]=groups[key].filter(row=>row.command!=='nav'||row.focus!==goal.focus);
+    return {...groups,primaryRepresented:represented&&groups.ready.some(row=>row.command!=='nav'&&row.focus===goal.focus)};
+  }
+
   function arrivalTasks(s) {
     const tasks = [];
     if (s.result) tasks.push(s.result.story ? "归航故事等待手动选择" : "归航报告可以立即领取");
@@ -3230,7 +3260,7 @@
     addDust,
     rawRate,
     productionRate,
-    arrivalTasks,
+    arrivalTasks, actionCenter,
     progressSnapshot,
     returnReport,
     purchaseImpact,

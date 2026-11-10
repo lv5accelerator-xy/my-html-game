@@ -349,9 +349,9 @@
     return `${lastReturnReport ? `<section class="return-banner"><div><strong>上次归航简报</strong><p>${duration(lastReturnReport.seconds)} · 探索归航 ${lastReturnReport.missionsCompleted} 次</p></div><button class="outline" ${action("return-report")}>查看简报</button></section>` : ""}<div class="home-layout"><section class="scene" aria-label="归航航站"><div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
       <button class="beacon-button" ${action("beacon")} ${state.beacon.expiresAt ? "" : "hidden"}>捕获金色信标<small>剩余 <span data-beacon-seconds>15</span> 秒</small></button>
       <div class="scan-area"><button id="scan-control" class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
-      <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p data-goal-detail>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${goal.label} →</button>
+      <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p data-goal-detail>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${E.actionCenter(state).primaryRepresented?"查看完整条款与进度":goal.label} →</button>
       <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
-      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${readyActions()}${starportOverview()}${communityScene()}${honorsHome()}${harborHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
+      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${readyActions()}${starportOverview()}${communityScene()}${honorsHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
   }
   function routePanel() {
     const route = D.ROUTES.find((r) => r.id === state.run.route);
@@ -677,6 +677,7 @@
     const first=saved?.steps[0], firstOffer=first&&E.voyagePreview(state,id,first.choice);
     const canStart=current?.available && firstOffer.available && !state.expeditions.active && !state.encounters.pending && same(state.equipped,first.equipment);
     return `<details class="itinerary-editor" data-details-key="itinerary-${id}"><summary>四段重访安排${saved?' · 已保存':' · 首航后开放'}</summary><p>先比较四段，再保存。每次领取可按安排接续一次；离线不派遣下一段，不自动选择剧情。资源缺口按全程费用保守计算，未假设未来生产。</p>
+      <button class="outline" ${action("plan-copy-first",id)}>把首段处置与编成填入其余三段草稿</button>
       ${draft.map((p,i)=>{const key=p.preset||D.LOADOUTS.find(x=>state.loadouts[x.id]&&same(state.loadouts[x.id],p.equipment))?.id || 'current';return `<fieldset><legend>${i+1} · ${def.stages[i]}</legend><label>处置<select data-plan-route="${id}" data-plan-stage="${i}" data-plan-field="choice" data-focus="plan-${id}-${i}-choice">${D.VOYAGE_METHODS.map(m=>`<option value="${m.id}" ${m.id===p.choice?'selected':''}>${m.name}</option>`).join('')}</select></label><label>编成<select data-plan-route="${id}" data-plan-stage="${i}" data-plan-field="equipment" data-focus="plan-${id}-${i}-equipment"><option value="current" ${key==='current'?'selected':''}>编辑时的当前编成</option>${D.LOADOUTS.map(l=>`<option value="${l.id}" ${key===l.id?'selected':''} ${state.loadouts[l.id]?'':'disabled'}>${l.name}</option>`).join('')}</select></label><small>${p.equipment.map(x=>D.MODULES.find(m=>m.id===x)?.name).join('、')||'空槽'} · ${offer?duration(offer.quotes[i].seconds):'请重新选择合法编成'}</small></fieldset>`;}).join('')}
       ${offer?`<p>四段合计 ${duration(offer.seconds)} · 星尘费用 ${number(offer.dustCost)} / 随船回收 ${number(offer.dust)} · 样本费用 ${offer.costSamples} / 回收 ${offer.samples}</p><p data-itinerary-gap="${id}">全程保守缺口 ${number(offer.dustGap)} 星尘 / ${offer.sampleGap} 样本；实际每段分别扣费。</p><p>${escape(offer.reason)}</p>`:''}
       <button class="outline" ${action('plan-save',id)} ${offer?.available?'':'disabled'}>保存四段安排</button>
@@ -690,16 +691,10 @@
       <button class="outline" ${action(q.paused?'plan-resume':'plan-pause',String(a.token))}>${q.paused?'恢复本次安排':'本次归航后暂停接续'}</button>${q.stage<4?`<button class="text-button" ${action('plan-restore',String(a.token))}>恢复已确认的下一段编成</button>`:''}<button class="text-button" ${action('plan-stop',String(a.token))}>改为逐段手动安排</button></div>`;
   }
   function readyActions() {
-    const a=state.expeditions.active,q=E.itineraryStatus(state),need=E.harborStatus(state),buttons=[];
-    const community=E.communityStatus(state);if(community?.available) buttons.push(`<button class="outline" ${action('community-deliver',String(community.serial))}>交接已备齐居民协作</button>`);
-    const review=state.continuation.reviews.active;
-    if(review&&state.clock>=review.end) buttons.push(`<button class="outline" ${action('review-claim',String(review.token))}>归档证据复查</button>`);
-    if(state.result&&!state.result.story) buttons.push(`<button class="primary" ${action('claim')}>领取普通探索报告</button>`);
-    if(state.atlas.active&&state.clock>=state.atlas.active.end) buttons.push(`<button class="outline" ${action('survey-claim',String(state.atlas.active.token))}>归档已完成调查</button>`);
-    if(need?.available) buttons.push(`<button class="outline" ${action('harbor-deliver',String(need.serial))}>交付已备齐居民需求</button>`);
-    if(a?.leg&&state.clock>=a.leg.end) buttons.push(q&&!q.paused?`<button class="primary" ${action('plan-next',String(a.token))} data-stage="${a.stage}">${a.stage===3?'领取末段并归航入库':'领取并按安排接续'}</button>`:`<button class="outline" ${action('deep-claim',String(a.token))} data-stage="${a.stage}">领取远航阶段报告</button>`);
-    if(a?.stage===4) buttons.push(`<button class="primary" ${action('deep-finish',String(a.token))}>归航入库</button>`);
-    return buttons.length?`<section id="arrival-actions" class="arrival-actions" aria-label="归航就绪操作"><h2>归航待办 · 就地处理</h2>${buttons.join('')}</section>`:'';
+    if(!E.reachable(state,'explore'))return '';
+    const groups=E.actionCenter(state);
+    const row=item=>`<article data-center-key="${item.key}"><strong>${escape(item.title)}</strong><p>${escape(item.detail)}</p><button class="outline" ${action(item.command,item.id)} data-goal-focus="${item.focus}" ${item.stage!==undefined?`data-stage="${item.stage}"`:''}>${item.command==='nav'?'查看操作位置':'确认'+escape(item.title)} →</button></article>`;
+    return `<section id="arrival-actions" class="arrival-actions action-center" aria-label="智能行动中心"><h2>行动中心</h2><div data-center-ready><h3>现在可以完成</h3>${groups.ready.slice(0,3).map(row).join('')||'<p>当前没有需要领取的报告，按上方目标继续即可。</p>'}</div><details data-details-key="action-center-more"><summary>其他安排 · 准备 ${groups.prepare.length} / 进行 ${groups.ongoing.length} / 稍后 ${groups.later.length}${groups.ready.length>3?` / 其他就绪 ${groups.ready.length-3}`:''}</summary>${groups.ready.length>3?groups.ready.slice(3).map(row).join(''):''}${[['prepare','需要准备'],['ongoing','正在进行'],['later','暂时不重要']].map(([key,title])=>`<h3>${title}</h3>${groups[key].map(row).join('')||'<p>暂无其他安排。</p>'}`).join('')}</details></section>`;
   }
 
   function longVoyages() {
@@ -1273,6 +1268,10 @@
     if(kind==='community-accept'){if(E.acceptCommunity(state,id,button.dataset.serial)){save();render();toast('居民协作已接下，条件已锁定，无交付期限。');}return;}
     if(kind==='community-path'){if(E.setCommunityPath(state,button.dataset.serial,id)){save();render();}return;}
     if(kind==='community-pack'){if(E.packCommunity(state,id)){save();render();toast('可用资源已预装，不会被自动购买花掉。');}return;}
+    if(kind==='plan-copy-first') {
+      const draft=planDraft(id);itineraryDrafts[id]=draft.map(()=>({...draft[0],equipment:[...draft[0].equipment]}));
+      signature='';render();toast('四段草稿已填好。请检查每段预览，再保存；尚未派遣或花费资源。');return;
+    }
     if(kind==='community-deliver'){const task=E.communityStatus(state);if(E.deliverCommunity(state,id)){save();render();const story=D.COMMUNITY_STORIES.find(d=>d.id===task.id);openDialog('居民来信',`<h3>${story.name}</h3><p>${story.letter}</p><p>交接完成，回信与星港工作牌已经保存。</p><button class="primary" ${action('community-read-close')}>收好这封回信</button>`);}return;}
     if(kind==='community-read-close'){closeDialog();return;}
     if(kind==='review-start') {if(E.startReview(state,button.dataset.reviewId,id,button.dataset.serial)) {save();render();toast('复查已出发，证据来源和结果已锁定。');}return;}

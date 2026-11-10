@@ -1,0 +1,49 @@
+{
+  "command": [
+    "node",
+    "scripts/check.cjs"
+  ],
+  "env": {
+    "PATH": "/workspace/scratch/starport-tools/node_modules/node/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+    "CODEX_PLAYWRIGHT_PATH": "/workspace/scratch/starport-tools/node_modules/playwright",
+    "CODEX_CHROMIUM_PATH": "/usr/bin/chromium"
+  },
+  "parentHead": "9e14610a197580d2b377dc8e2f1f8684f2c57e63",
+  "sources": {
+    "v3/engine.js": "93fb78ad2b67d64bc6d98b47b5aa4a25ba53fce19ccfa13524abb05d3f2b3bf3",
+    "v3/app.js": "c9c6fbb1a960d61de5fd3af98b739b27d69c7230ab5f54db7407f43733666a02",
+    "v3/index.html": "0c0e693258669be6d868739c7cd4e7331e523bccc0e8024b14824eb0f898b423",
+    "v3/style.css": "55bd83afa727998a8fcd944b68336ab683ba4bb97ca240f9999991f2cecf74f5",
+    "v3/data.js": "0975abb782ba91663cda6c6c340068d6432e69c0d4aaf500f39e75618f3212f4",
+    "v3/storage.js": "c5ecc2cefb05f299f8637453d7ba3d76f40746ab3b1f5175bd5249b8080aaec9",
+    "tests/v3-browser.test.js": "5073ef62aaa785eac6cd3a8a4703e5391b1f96de6ca161f631e661c1295f253f",
+    "tests/v3-balance.test.js": "b501a7d3574dac8cd1e0bf0396cfbe9e9016b3a8a79daa41fed84584a4c14e45",
+    "tests/companion-story.test.js": "042f65a3aa7f254645f5c449eb1fd7e800ee5673b5973deddce1a33f57ad130d",
+    "tests/season.test.js": "737d411bdf511a7fdfc4ded451aa4ff6f5d4a4d6f76d179d68487d015aee8c83",
+    "tests/retention-flow.test.js": "0e1f6a2f67e17b11a0940677b476e5fb919b7d3661266c986c86279ed5e53cf0",
+    "tests/browser-smoke.test.js": "315ed5829ab65913fdaf9690633193438651af3fe295f321b2840cfb5621f053",
+    "tests/numeric-balance.test.js": "aaed3dc9fbfd737b3e1c62a4f22f4112b0d77b492f441f8b0ae3210165015421",
+    "tests/v3-quality.test.js": "7e729325fa32bac077fd9c90e1208b23087f09b419f9c81011214a8cde0f068f",
+    "tests/daily-route.test.js": "6948cfb2589ca4d4b17376e97e963230b1f6ede7edb0d6fe8f095238b4b4eecc",
+    "tests/save-migration-v200.test.js": "491092a6e9df0127a156c8500aa58db35d53805ae72cfd95c5e5976ba92f6fed",
+    "tests/linked-journey-browser.test.js": "11d53226ea1e279bd6af2506e1501325edfa252661f1268b6c3475a6aab889c2",
+    "tests/usability-flow.test.js": "e46a816388aa2abe30388bb47d15af1440523e68216e371bbaec095cdd39f738",
+    "tests/v3-compatibility.test.js": "3e1070cc7b6176ccda3d694894ac36b6bef7340df5587356a2646b1b3f479725",
+    "tests/v3-strategy.test.js": "01033bfe00687c05f67f1609c386f52afcc97ba60664791be10ffdb2bcc120dd",
+    "tests/linked-journey.test.js": "f6d3533c9854d41d18cf962ced891973f0ef241b15252c646db6cc8d7da84c96",
+    "tests/v3-expansion.test.js": "e0e40244ab004b55ce5f8fd7555254539fb34bb4195c27055f2bd2e3500b8d24",
+    "tests/v3-gameplay.test.js": "5a5187bb750794195ce21fd5dd673580a3ff607fe8bd96340b8bad187db1b393",
+    "tests/v3-continuation.test.js": "5bb88787f4bcd2b63b4a3be3cd1c73a6efe93e0e7271c3915b3eea3488a11c34",
+    "tests/mobile-performance.test.js": "09a9cd942ffdfc18ff12caa951fc5a4746331039e9b7d1587b85a43c0db1db76",
+    "tests/doctrine-build.test.js": "38fef74336d3ac76e2770bb140557027946265b2d7397b8a069e949cddf40bca",
+    "tests/helpers/continuation-browser.cjs": "c5246c1277de022713dc169e4c922988c4d34dd869f32a6c18c0c83504102898",
+    "tests/helpers/quality-browser.cjs": "293b835dfa5a934fda926b1fe1b8a6e0dd336daa4d5600b866aacda9346db0a6",
+    "tests/helpers/v3-fixtures.cjs": "dc93cdd461b08d038470ef5610c29664c22af3912792a34ef680b55a9e1ba6a4",
+    "tests/helpers/isolate-browser.cjs": "027b21b83819602a970e2fa18163c9a7a9ae3e0f2358e31c5c7cdf604d241112",
+    "tests/helpers/honors-fixture.cjs": "e4cb4fbdee6482235cf50b7f18888bfb65210e0a1a9aad87c75c30c09a8b4a40",
+    "tests/helpers/community-fixture.cjs": "ebe7143ff8b4422323fd1b8407a787469aa982bfb36a5139289e79094a73d777"
+  },
+  "start": 1794335152.1159134,
+  "exit": 1,
+  "seconds": 147.45
+}

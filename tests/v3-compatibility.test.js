@@ -50,3 +50,7 @@ console.log(`v3.22 compatibility ok: ${v322.states.length} canonical snapshots; 
 const v323=require('./fixtures/v323-saves.json');
 for(const {name,state} of v323.states){const current=E.sanitize(state,state.lastAt),{honors,...prior}=current.continuation;assert.deepEqual({...current,continuation:prior},state,name+': every v3.23 letter, escrow and fixed contract preserved');assert.deepEqual(honors,{claimed:[]});assert.deepEqual(E.sanitize(current,current.lastAt),current);}
 console.log(`v3.23 compatibility ok: ${v323.states.length} canonical snapshots; accepted/work/ready/escrow, letters and earned permanent proofs preserved; no auto honors`);
+
+const v324=require('./fixtures/v324-saves.json');
+for(const {name,state} of v324.states){const current=E.sanitize(state,state.lastAt);assert.deepEqual(current,state,name+': every v3.24 original field, paid contract and snapshot preserved');assert.deepEqual(E.sanitize(current,current.lastAt),current);}
+console.log(`v3.24 compatibility ok: ${v324.states.length} canonical earned snapshots; every original field preserved`);

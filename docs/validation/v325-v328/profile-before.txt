@@ -1,0 +1,2 @@
+TypeError: page.clock.uninstall is not a function
+    at /workspace/starport-v328/scripts/v328-profile.cjs:5:2033

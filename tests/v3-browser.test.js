@@ -116,6 +116,7 @@ async function run() {
       await page.locator(`${selector} > summary`).click();
   };
   try {
+    await require("./helpers/quality-browser.cjs")({scenario,read,E,D,S,TIME,openDetails,fs,path,screenshotDir});
     await require("./helpers/continuation-browser.cjs")({scenario,read,E,D,S,TIME,openDetails,fs,path,screenshotDir});
     for(let routeIndex=0;routeIndex<D.VOYAGES.length;routeIndex++) {
       const def=D.VOYAGES[routeIndex],ending=D.ENDINGS[routeIndex];

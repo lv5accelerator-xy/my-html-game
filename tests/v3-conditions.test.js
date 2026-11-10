@@ -23,4 +23,21 @@ test('v3.27 itinerary quote uses the same next condition and preserves old-rule 
  for(const {state} of F.states.filter(x=>x.name.endsWith('-paid'))){let old=E.sanitize(structuredClone(state),state.lastAt);assert.deepEqual(old,state);assert.equal(E.voyageCondition(old,'freight'),undefined);const leg=structuredClone(old.expeditions.active.leg);E.setHarborFocus(old,'reception');E.advance(old,old.lastAt+86400000,{offline:true});assert.deepEqual(old.expeditions.active.leg,leg);assert.ok(E.claimVoyageLeg(old,old.expeditions.active.token,0));}
 });
 test('v3.27 malformed conditions or dispatch policies are rejected without refund or first-award reset',()=>{const s=base();assert.ok(E.startVoyage(s,'freight'));assert.ok(E.dispatchVoyageLeg(s,s.expeditions.active.token,0,'secure'));for(const patch of [{condition:'constructor'},{schedule:'constructor'}]){const bad=structuredClone(s);Object.assign(bad.expeditions.active.leg,patch);const clean=E.sanitize(bad,bad.lastAt);assert.equal(clean.expeditions.active,null);assert.equal(clean.dust,bad.dust);assert.deepEqual(clean.expeditions.completed,bad.expeditions.completed);assert.deepEqual(clean.epilogue,bad.epilogue);}});
+test('v3.28 null voyage legs are discarded without blocking recovery, refunding costs or replaying permanent awards',()=>{
+ const fixtures=require('./fixtures/v327-saves.json');
+ for(const ending of D.ENDINGS)for(const location of ['active','record','archive']){
+  const s=structuredClone(fixtures.states.find(x=>x.name===ending.id+'-v327-'+(location==='active'?'paid':'complete')).state);
+  const originalArchive=structuredClone(s.expeditions.archives.freight);
+  const run=location==='active'?s.expeditions.active:location==='record'?s.expeditions.records[0]:s.expeditions.archives.freight;
+  run.legs=[null];if(location==='active'){run.leg=null;run.stage=1;}
+  const clean=S.inspect(JSON.stringify(s),s.lastAt).state;
+  assert.equal(clean.dust,s.dust,'already paid costs are not refunded');assert.equal(clean.samples,s.samples);
+  for(const key of ['epilogue','lore','modules','loadouts','management','continuation'])assert.deepEqual(clean[key],s[key],key+' survives damaged voyage');
+  for(const key of ['serial','settled','completed','collections'])assert.deepEqual(clean.expeditions[key],s.expeditions[key],key+' once-only proof survives');
+  if(location==='active')assert.equal(clean.expeditions.active,null);
+  if(location==='record')assert.equal(clean.expeditions.records.some(r=>r.token===run.token),false);
+  if(location==='archive')assert.deepEqual(clean.expeditions.archives.freight,originalArchive,'valid first-voyage receipt repairs the damaged archive immediately');
+  assert.deepEqual(E.sanitize(clean,clean.lastAt),clean);
+ }
+});
 console.log(`v3 conditions ok: ${checks} behavioral checks; ${quotes} bounded condition/fit/schedule quotes; minimum ${frontier} non-dominated alternatives`);

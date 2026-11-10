@@ -3,6 +3,24 @@ const assert=require('node:assert/strict');
 module.exports=async function({scenario,read,E,D,S,TIME,openDetails,screenshotDir,path}){
  const F=require('../fixtures/v324-saves.json');
  const nav=async(page,id)=>{const b=page.locator(`#navigation [data-id="${id}"]`);if(!await b.isDisabled())await b.click();};
+ {
+  const s=structuredClone(require('../fixtures/v327-saves.json').states.find(x=>x.name==='city-v327-paid').state);s.lastAt=TIME;
+  s.expeditions.active.legs=[null];s.expeditions.active.leg=null;s.expeditions.active.stage=1;
+  await scenario('v3.28 damaged null voyage leg: recover paid save, export/import and reload without replaying awards',{[S.KEY]:JSON.stringify(s)},async page=>{
+   assert.equal(await page.locator('#dialog[open]').count(),0,'damaged voyage must not block the entire save');
+   await page.locator('#settings-button').click();
+   const [download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-action="export"]').click()]);
+   const text=require('node:fs').readFileSync(await download.path(),'utf8'),clean=JSON.parse(text);
+   assert.equal(clean.expeditions.active,null);assert.equal(clean.dust,s.dust);assert.equal(clean.samples,s.samples);
+   for(const key of ['epilogue','lore','modules','loadouts','management','continuation'])assert.deepEqual(clean[key],s[key]);
+   for(const key of ['serial','settled','completed','collections'])assert.deepEqual(clean.expeditions[key],s.expeditions[key]);
+   await page.locator('#import-file').setInputFiles({name:'recovered-voyage.json',mimeType:'application/json',buffer:Buffer.from(text)});
+   await page.locator('#confirm-import').waitFor();await page.locator('#confirm-import').click();
+   assert.deepEqual((await read(page)).expeditions,clean.expeditions);await page.reload();
+   const again=await read(page);assert.deepEqual(again.expeditions,clean.expeditions);assert.equal(again.dust,clean.dust);assert.equal(again.samples,clean.samples);
+   assert.deepEqual(again.epilogue,s.epilogue);assert.equal(await page.locator('#save-label').innerText(),'自动保存');
+  });
+ }
  const s=E.sanitize(structuredClone(F.states.find(x=>x.name==='city-v324-contract').state),TIME);E.advance(s,s.lastAt+3600000);s.lastAt=TIME;
  await scenario('v3.25 action center: direct paid delivery, four categories, draft-only four-leg copy and stable controls',{[S.KEY]:JSON.stringify(s)},async page=>{
   const before=await read(page);assert.ok(await page.locator('#arrival-actions').isVisible());assert.ok(await page.locator('#arrival-actions [data-center-ready]').isVisible());

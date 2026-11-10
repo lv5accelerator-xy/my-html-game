@@ -1548,7 +1548,7 @@
     for(const def of D.VOYAGES) if(Number.isInteger(raw.best?.[def.id]) && raw.best[def.id]>=480 && raw.best[def.id]<=16000) h.best[def.id]=raw.best[def.id];
     function cleanLeg(l,stage,id,supplies,insight) {
       const m=byId(D.VOYAGE_METHODS,l?.choice),def=byId(D.VOYAGES,id);
-      if((l.condition!==undefined&&(!byId(D.VOYAGE_CONDITIONS,l.condition)||!byId(D.VOYAGE_SCHEDULES,l.schedule)))||!m || l.stage!==stage || !Array.isArray(l.equipment) || JSON.stringify(cleanEquipment(l.equipment))!==JSON.stringify(l.equipment) || l.equipment.some(x=>!Number.isInteger(l.levels?.[x])||l.levels[x]<1||l.levels[x]>3) ||
+      if(!l || (l.condition!==undefined&&(!byId(D.VOYAGE_CONDITIONS,l.condition)||!byId(D.VOYAGE_SCHEDULES,l.schedule)))||!m || l.stage!==stage || !Array.isArray(l.equipment) || JSON.stringify(cleanEquipment(l.equipment))!==JSON.stringify(l.equipment) || l.equipment.some(x=>!Number.isInteger(l.levels?.[x])||l.levels[x]<1||l.levels[x]>3) ||
         (l.choice==='investigate'&&!l.equipment.includes(def.module)) || l.suppliesBefore!==supplies || l.insightBefore!==insight ||
         !Number.isInteger(l.seconds)||l.seconds<120||l.seconds>4000||!Number.isFinite(l.diversion)||l.diversion<.04||l.diversion>.4||
         !Number.isFinite(l.dustCost)||l.dustCost<1000||l.dustCost>100000||l.costSamples!==m.costSamples||!Number.isFinite(l.dust)||l.dust<0||l.dust>1000000||!Number.isInteger(l.samples)||l.samples<1||l.samples>20||
@@ -1574,8 +1574,8 @@
       h.records.push({id:r.id,token:r.token,...(a.condition?{condition:a.condition}:{}),clock:Math.min(s.clock,bounded(r.clock)),initialSupplies:r.initialSupplies,initialInsight:r.initialInsight,legs:a.legs,dust:a.dust,samples:a.samples,firstBonus:r.firstBonus===6?6:0,collections:[...new Set(Array.isArray(r.collections)?r.collections:[])].filter(x=>h.collections.includes(x))});
     }
     for(const def of D.VOYAGES) {
-      const r=raw.archives?.[def.id] || h.records.find(r=>r.id===def.id && r.firstBonus===6);
-      const a=cleanRun(r);
+      let r=raw.archives?.[def.id],a=cleanRun(r);
+      if(!a){r=h.records.find(r=>r.id===def.id && r.firstBonus===6);a=cleanRun(r);}
       if(a && a.id===def.id && a.stage===4) {
         h.completed[def.id]=Math.max(1,h.completed[def.id]||0);
         if(!h.collections.includes(`voyage-${def.id}`)) h.collections.push(`voyage-${def.id}`);

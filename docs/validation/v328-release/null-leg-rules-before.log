@@ -1,0 +1,23 @@
+ok 1 - v3.27 freight: six real successive conditions, all equipment/policies, fixed snapshot and finite repeat rewards
+ok 2 - v3.27 science: six real successive conditions, all equipment/policies, fixed snapshot and finite repeat rewards
+ok 3 - v3.27 beacon: six real successive conditions, all equipment/policies, fixed snapshot and finite repeat rewards
+ok 4 - v3.27 all schedules have measurable costs/benefits, accepted demand terms remain frozen
+ok 5 - v3.27 itinerary quote uses the same next condition and preserves old-rule active voyages
+ok 6 - v3.27 malformed conditions or dispatch policies are rejected without refund or first-award reset
+/workspace/scratch/starport-release-fix/v3/engine.js:1551
+      if((l.condition!==undefined&&(!byId(D.VOYAGE_CONDITIONS,l.condition)||!byId(D.VOYAGE_SCHEDULES,l.schedule)))||!m || l.stage!==stage || !Array.isArray(l.equipment) || JSON.stringify(cleanEquipment(l.equipment))!==JSON.stringify(l.equipment) || l.equipment.some(x=>!Number.isInteger(l.levels?.[x])||l.levels[x]<1||l.levels[x]>3) ||
+            ^
+
+TypeError: Cannot read properties of null (reading 'condition')
+    at cleanLeg (/workspace/scratch/starport-release-fix/v3/engine.js:1551:13)
+    at cleanRun (/workspace/scratch/starport-release-fix/v3/engine.js:1564:17)
+    at cleanExpeditions (/workspace/scratch/starport-release-fix/v3/engine.js:1585:61)
+    at Object.sanitize (/workspace/scratch/starport-release-fix/v3/engine.js:3283:5)
+    at Object.inspect (/workspace/scratch/starport-release-fix/v3/storage.js:25:58)
+    at /workspace/scratch/starport-release-fix/tests/v3-conditions.test.js:32:17
+    at test (/workspace/scratch/starport-release-fix/tests/v3-conditions.test.js:3:24)
+    at Object.<anonymous> (/workspace/scratch/starport-release-fix/tests/v3-conditions.test.js:26:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+
+Node.js v22.23.4

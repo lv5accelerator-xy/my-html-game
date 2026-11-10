@@ -1,6 +1,6 @@
 # v3「拾荒航线」试玩与验证
 
-当前代码版本 `3.24.0-preview.1`。v3 是独立的原生 HTML/CSS/JavaScript 游戏，入口 `/v3/`；根目录 v2 与云端存档继续独立保留。沿用 schema32、两个装备槽与最多八小时离线。v3.21～v3.24 新增重访安排、证据复查、居民接班与有限荣誉，说明见下方对应章节。实际部署提交和公开站点验收见[本轮记录](v321-v324-validation.md)及[PR #20最终验收](https://github.com/lv5accelerator-xy/my-html-game/pull/20)，v3.20历史见[原发布记录](v320-release-validation.md)。
+当前代码版本 `3.28.0-preview.1`。v3 是独立的原生 HTML/CSS/JavaScript 游戏，入口 `/v3/`；根目录 v2 与云端存档继续独立保留。沿用 schema32、两个装备槽与最多八小时离线。v3.21～v3.24 新增重访安排、证据复查、居民接班与有限荣誉，说明见下方对应章节。3.28实际部署提交和公开站点验收见[发布记录](v328-release-validation.md)；3.24历史见[原记录](v321-v324-validation.md)及[PR #20最终验收](https://github.com/lv5accelerator-xy/my-html-game/pull/20)，v3.20历史见[原发布记录](v320-release-validation.md)。
 
 ## 已实现的循环
 

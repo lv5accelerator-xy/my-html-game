@@ -1,0 +1,264 @@
+{
+  "engine": "webkit",
+  "expectedVersion": "3.28.0-preview.1",
+  "referenceSha": "4d87e7fcd835c300815b0609e0ad4bb65e13fa2d",
+  "publicUrl": "https://lv5accelerator-xy.github.io/my-html-game/",
+  "assets": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "bytes": 125785,
+      "sha256": "3c223c934e023d2495433008e7d8363ea5983e9d42ecb4b8033b4b9c29de6a83"
+    },
+    {
+      "file": "styles.css",
+      "status": 200,
+      "bytes": 312981,
+      "sha256": "b81fc3362e99eeb861ae48cdcb300a0a3c922aed0996770b9fbd22ab3b07f3e6"
+    },
+    {
+      "file": "game.js",
+      "status": 200,
+      "bytes": 698660,
+      "sha256": "d2dacbb2e25bc4c056da5a76bce83eea477a169905ef99c4731a1e86a9c5ecb2"
+    },
+    {
+      "file": "game-math.js",
+      "status": 200,
+      "bytes": 10446,
+      "sha256": "518b0621e307ca638d2f2566c90785a3e3d9c38bd361ff272a025756ba22b673"
+    },
+    {
+      "file": "v2-systems.js",
+      "status": 200,
+      "bytes": 82581,
+      "sha256": "3cdc0590c84c2743a5684c38e84cbc8dfe2300cb1f1f291281656db6c41718c5"
+    },
+    {
+      "file": "legacy-systems.js",
+      "status": 200,
+      "bytes": 44339,
+      "sha256": "e8ec704c1a2458d7e697ffa5cf9d5cd3b44708901e5f7657f7e1d345eca51ead"
+    },
+    {
+      "file": "firebase-config.js",
+      "status": 200,
+      "bytes": 454,
+      "sha256": "5288e2e0d233603a81c8fa97584bf781f2ce2cc38efe4c7ce222ab14736ca341"
+    },
+    {
+      "file": "cloud-save.js",
+      "status": 200,
+      "bytes": 73048,
+      "sha256": "7dc97474b83d393b0f3f1f9da3a9831ca61379b85a0ebcb16276dd61dee59d8f"
+    },
+    {
+      "file": "v3/index.html",
+      "status": 200,
+      "bytes": 2833,
+      "sha256": "280cbe693270b2f1db981f372029f398e2ebd757efb589567118a2d745fcda69"
+    },
+    {
+      "file": "v3/style.css",
+      "status": 200,
+      "bytes": 49279,
+      "sha256": "0e3120f9c61a4b2109efad1a7963a4e58a73d3730e028582b8751dda7a347e14"
+    },
+    {
+      "file": "v3/data.js",
+      "status": 200,
+      "bytes": 149348,
+      "sha256": "040e7aac92c00edf69253e676757f6a722c48aecc5e6b62d7f1a1c2825c38a99"
+    },
+    {
+      "file": "v3/engine.js",
+      "status": 200,
+      "bytes": 173734,
+      "sha256": "7f2b87c70ea57b97c2d6e85c300a50ca85a5a8afbb69adc2820582809b1fb081"
+    },
+    {
+      "file": "v3/storage.js",
+      "status": 200,
+      "bytes": 11284,
+      "sha256": "44f22e45a3699a253697faf630b661d5dc44cd89a12300b7a7dc2faf71ea65d4"
+    },
+    {
+      "file": "v3/app.js",
+      "status": 200,
+      "bytes": 156939,
+      "sha256": "4678dc7fa7dd2e5d7c69db89488bae34444c32767734e28e787ec123e0a7b2f0"
+    }
+  ],
+  "flows": [
+    {
+      "name": "v2-fresh-1280",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "navigation": {
+        "measured": true,
+        "domContentLoadedMs": 1057,
+        "loadMs": 1274,
+        "transferBytes": 27796,
+        "resources": 10
+      },
+      "layout": {
+        "width": 1280,
+        "document": 1280,
+        "body": 1280
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v3-fresh-1280",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "navigation": {
+        "measured": true,
+        "domContentLoadedMs": 258,
+        "loadMs": 480,
+        "transferBytes": 1594,
+        "resources": 6
+      },
+      "layout": {
+        "width": 1280,
+        "document": 1280,
+        "body": 1280
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v2-fresh-375",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": true,
+        "domContentLoadedMs": 191,
+        "loadMs": 825.0000000000001,
+        "transferBytes": 27796,
+        "resources": 10
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v3-fresh-375",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": true,
+        "domContentLoadedMs": 194,
+        "loadMs": 199,
+        "transferBytes": 1594,
+        "resources": 6
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v316-restore-city-ending",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": false,
+        "reason": "Migration fixtures use a controlled clock; loading timings are measured in fresh contexts."
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v316-restore-watch-ending",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": false,
+        "reason": "Migration fixtures use a controlled clock; loading timings are measured in fresh contexts."
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    },
+    {
+      "name": "v316-restore-voyage-ending",
+      "viewport": {
+        "width": 375,
+        "height": 900
+      },
+      "navigation": {
+        "measured": false,
+        "reason": "Migration fixtures use a controlled clock; loading timings are measured in fresh contexts."
+      },
+      "layout": {
+        "width": 375,
+        "document": 375,
+        "body": 375
+      },
+      "pageerrors": 0,
+      "consoleErrors": 0,
+      "warnings": 0,
+      "badResponses": 0,
+      "failedRequests": 0
+    }
+  ],
+  "canonicalSnapshots": 118,
+  "notes": [
+    {
+      "url": "https://lv5accelerator-xy.github.io/my-html-game/assets/outpost-beyond-orion.mp3?v=2.3.0",
+      "error": "Load request cancelled"
+    },
+    {
+      "url": "https://lv5accelerator-xy.github.io/my-html-game/assets/outpost-beyond-orion.mp3?v=2.3.0",
+      "error": "Load request cancelled"
+    }
+  ]
+}

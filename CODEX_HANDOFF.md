@@ -1,3 +1,15 @@
+# 当前交接：3.28.0-preview.1 已正式上线并完成公网验收
+
+2026-11-10本轮用户明确授权最终验收后自动Ready、merge commit合并和GitHub Pages上线，覆盖下方历史开发交接中的不发布限制。PR #21已合并，最终main/merge `4d87e7fcd835c300815b0609e0ad4bb65e13fa2d`；修复head `358de6d8e215e64e86ea2980cbf7a0fdf381be35`，五提交保留。修复损坏远航空航段和首航档案恢复幂等，不退款、不重奖。
+
+本轮真实Codex云Node22.23.4/PW1.55/Chromium151无过滤完整入口退出0（606.16秒）：9语法/21脚本/227规则/145规范旧档/116完整v3浏览器，30子命令全0、51源哈希前后一致。最新PR CI42890795845的完整入口和WebKit116全部成功。Pages42917506852四job成功，artifact13809858879/pages_build_version=4d87e7f；公开运行42919605777两引擎各14精确哈希/7额外流程/118较早规范档/116完整流程成功。
+
+仍为preview，不建Release，不改生产Firebase、真实玩家档、权限或部署规则；根v2保持2.3.0及独立存储。云WebKit下载403、云直接公网CONNECT403；使用GitHub独立WebKit及公开URL验收，不冒充云执行或真机。真实iPhone Safari、实际软键盘和真实低端机长挂机未执行。没有已知阻塞缺陷，不自动开始v3.29。
+
+[完整发布记录、失败日志、准确SHA、命令、截图与限制](docs/v328-release-validation.md)。文档更新经独立codex/v328-release-record分支/PR，实际提交/推送状态见该PR；原work/5084568干净保留。
+
+## 以下为历史交接（当时的状态与授权）
+
 # 当前交接：3.28.0-preview.1 开发完成，草稿PR待审批
 
 本轮起始最新main9e14610a197580d2b377dc8e2f1f8684f2c57e63；隔离/workspace/starport-v328，分支codex/v325-v328-quality-and-depth。已依次完成并全量验证v3.25行动中心/草稿效率（7cbdb03）、v3.26六段居民回响（0f2339c）、v3.27六环境与三调度（ef30e4c）、v3.28触摸/性能/保存品质（本交接所属提交）。schema32与永久历史、根v2、8h上限保留。

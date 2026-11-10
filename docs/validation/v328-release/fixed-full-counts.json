@@ -1,0 +1,17 @@
+{
+  "rule_groups": 227,
+  "rules": {
+    "conditions": 7,
+    "continuation": 63,
+    "expansion": 51,
+    "gameplay": 86,
+    "quality": 20
+  },
+  "canonical_snapshots": 145,
+  "browser_flows": [
+    "116"
+  ],
+  "subcommands": 30,
+  "failures": [],
+  "footer": "RESULT: 9 syntax checks, 21 test scripts, 0 failed checks."
+}

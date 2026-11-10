@@ -1,0 +1,464 @@
+﻿2026-11-10T23:00:25.9803562Z Current runner version: '2.338.2'
+2026-11-10T23:00:25.9822260Z ##[group]Runner Image Provisioner
+2026-11-10T23:00:25.9823084Z Hosted Compute Agent
+2026-11-10T23:00:25.9823567Z Version: 20261028.624
+2026-11-10T23:00:25.9824101Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-10T23:00:25.9824741Z Build Date: 2026-10-28T21:51:42Z
+2026-11-10T23:00:25.9825799Z Worker ID: {db0b366a-6dd4-4f45-99b1-80bf53e92051}
+2026-11-10T23:00:25.9826418Z Region: centralus
+2026-11-10T23:00:25.9826878Z Cloud: Azure
+2026-11-10T23:00:25.9827351Z ##[endgroup]
+2026-11-10T23:00:25.9828541Z ##[group]Operating System
+2026-11-10T23:00:25.9829047Z Ubuntu
+2026-11-10T23:00:25.9829595Z 24.04.5
+2026-11-10T23:00:25.9830025Z LTS
+2026-11-10T23:00:25.9830509Z ##[endgroup]
+2026-11-10T23:00:25.9831013Z ##[group]Runner Image
+2026-11-10T23:00:25.9831506Z Image: ubuntu-24.04
+2026-11-10T23:00:25.9831970Z Version: 20261101.360.1
+2026-11-10T23:00:25.9833037Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-10T23:00:25.9834306Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+2026-11-10T23:00:25.9835331Z ##[endgroup]
+2026-11-10T23:00:25.9836448Z ##[group]GITHUB_TOKEN Permissions
+2026-11-10T23:00:25.9838179Z Contents: read
+2026-11-10T23:00:25.9838727Z Metadata: read
+2026-11-10T23:00:25.9839183Z ##[endgroup]
+2026-11-10T23:00:25.9840750Z Secret source: Actions
+2026-11-10T23:00:25.9841501Z Cache mode: write
+2026-11-10T23:00:25.9842060Z Prepare workflow directory
+2026-11-10T23:00:26.0188430Z Prepare all required actions
+2026-11-10T23:00:26.0229188Z Getting action download info
+2026-11-10T23:00:26.2732848Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+2026-11-10T23:00:26.4225237Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+2026-11-10T23:00:26.5688925Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-10T23:00:26.8338956Z Complete job name: public-site (chromium)
+2026-11-10T23:00:26.8817374Z ##[group]Checking docker version
+2026-11-10T23:00:26.8828520Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-11-10T23:00:26.9788352Z '1.48'
+2026-11-10T23:00:26.9800180Z Docker daemon API version: '1.48'
+2026-11-10T23:00:26.9801110Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-11-10T23:00:26.9959837Z '1.48'
+2026-11-10T23:00:26.9969293Z Docker client API version: '1.48'
+2026-11-10T23:00:26.9975137Z ##[endgroup]
+2026-11-10T23:00:26.9979143Z ##[group]Clean up resources from previous jobs
+2026-11-10T23:00:26.9984135Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=c34cf2"
+2026-11-10T23:00:27.0131689Z ##[command]/usr/bin/docker network prune --force --filter "label=c34cf2"
+2026-11-10T23:00:27.0284125Z ##[endgroup]
+2026-11-10T23:00:27.0284874Z ##[group]Create local container network
+2026-11-10T23:00:27.0296478Z ##[command]/usr/bin/docker network create --label c34cf2 github_network_bf7abed8417b48cdbefb5e2e2dd4d3f3
+2026-11-10T23:00:27.0740247Z 7360b39fb25905c2f8bcfc10ef1fcdcda611456cbd1ee1ed5e92a1350bd90fd8
+2026-11-10T23:00:27.0754624Z ##[endgroup]
+2026-11-10T23:00:27.0776781Z ##[group]Starting job container
+2026-11-10T23:00:27.0794567Z ##[command]/usr/bin/docker pull mcr.microsoft.com/playwright:v1.55.0-noble@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29
+2026-11-10T23:00:27.1746815Z mcr.microsoft.com/playwright@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29: Pulling from playwright
+2026-11-10T23:00:27.2286926Z baa9e71a063a: Pulling fs layer
+2026-11-10T23:00:27.2288082Z 4df6c7922c65: Pulling fs layer
+2026-11-10T23:00:27.2288904Z 157d08cc08a2: Pulling fs layer
+2026-11-10T23:00:27.2289677Z 8e5806a1ca0c: Pulling fs layer
+2026-11-10T23:00:27.2290438Z 8e5806a1ca0c: Waiting
+2026-11-10T23:00:27.3485086Z 157d08cc08a2: Verifying Checksum
+2026-11-10T23:00:27.3486336Z 157d08cc08a2: Download complete
+2026-11-10T23:00:27.5219482Z baa9e71a063a: Verifying Checksum
+2026-11-10T23:00:27.5220986Z baa9e71a063a: Download complete
+2026-11-10T23:00:27.7617474Z 4df6c7922c65: Verifying Checksum
+2026-11-10T23:00:27.7620085Z 4df6c7922c65: Download complete
+2026-11-10T23:00:28.3099548Z baa9e71a063a: Pull complete
+2026-11-10T23:00:31.2669952Z 8e5806a1ca0c: Verifying Checksum
+2026-11-10T23:00:31.2670824Z 8e5806a1ca0c: Download complete
+2026-11-10T23:00:39.1604671Z 4df6c7922c65: Pull complete
+2026-11-10T23:00:39.1982843Z 157d08cc08a2: Pull complete
+2026-11-10T23:00:58.3527117Z 8e5806a1ca0c: Pull complete
+2026-11-10T23:00:58.3568260Z Digest: sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29
+2026-11-10T23:00:58.3579379Z Status: Downloaded newer image for mcr.microsoft.com/playwright@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29
+2026-11-10T23:00:58.3591935Z mcr.microsoft.com/playwright:v1.55.0-noble@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29
+2026-11-10T23:00:58.3666505Z ##[command]/usr/bin/docker create --name 628816ae6338432b815b76b43ca8c13b_mcrmicrosoftcomplaywrightv1550noblesha256b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29_f0aff5 --label c34cf2 --workdir /__w/my-html-game/my-html-game --network github_network_bf7abed8417b48cdbefb5e2e2dd4d3f3  -e "HOME=/github/home" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work":"/__w" -v "/home/runner/actions-runner/cached/2.338.2/externals":"/__e":ro -v "/home/runner/work/_temp":"/__w/_temp" -v "/home/runner/work/_actions":"/__w/_actions" -v "/opt/hostedtoolcache":"/__t" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" --entrypoint "tail" mcr.microsoft.com/playwright:v1.55.0-noble@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29 "-f" "/dev/null"
+2026-11-10T23:00:58.4001511Z b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1
+2026-11-10T23:00:58.4019151Z ##[command]/usr/bin/docker start b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1
+2026-11-10T23:00:58.6153528Z b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1
+2026-11-10T23:00:58.6181295Z ##[command]/usr/bin/docker ps --all --filter id=b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-11-10T23:00:58.6303435Z b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1 Up Less than a second
+2026-11-10T23:00:58.6318019Z ##[command]/usr/bin/docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1
+2026-11-10T23:00:58.6438775Z CI=true
+2026-11-10T23:00:58.6439338Z HOME=/github/home
+2026-11-10T23:00:58.6439811Z GITHUB_ACTIONS=true
+2026-11-10T23:00:58.6440506Z PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+2026-11-10T23:00:58.6441217Z LANG=C.UTF-8
+2026-11-10T23:00:58.6441512Z LC_ALL=C.UTF-8
+2026-11-10T23:00:58.6441920Z PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+2026-11-10T23:00:58.6456689Z ##[endgroup]
+2026-11-10T23:00:58.6464124Z ##[group]Waiting for all services to be ready
+2026-11-10T23:00:58.6466124Z ##[endgroup]
+2026-11-10T23:00:58.6714373Z ##[group]Run actions/checkout@v6
+2026-11-10T23:00:58.6714831Z with:
+2026-11-10T23:00:58.6715334Z   ref: 4d87e7fcd835c300815b0609e0ad4bb65e13fa2d
+2026-11-10T23:00:58.6715691Z   persist-credentials: false
+2026-11-10T23:00:58.6716037Z   repository: lv5accelerator-xy/my-html-game
+2026-11-10T23:00:58.6718097Z   token: ***
+2026-11-10T23:00:58.6718357Z   ssh-strict: true
+2026-11-10T23:00:58.6718625Z   ssh-user: git
+2026-11-10T23:00:58.6718887Z   clean: true
+2026-11-10T23:00:58.6719159Z   sparse-checkout-cone-mode: true
+2026-11-10T23:00:58.6719500Z   fetch-depth: 1
+2026-11-10T23:00:58.6719756Z   fetch-tags: false
+2026-11-10T23:00:58.6720057Z   show-progress: true
+2026-11-10T23:00:58.6720328Z   lfs: false
+2026-11-10T23:00:58.6720590Z   submodules: false
+2026-11-10T23:00:58.6721034Z   set-safe-directory: true
+2026-11-10T23:00:58.6721334Z   allow-unsafe-pr-checkout: false
+2026-11-10T23:00:58.6721775Z env:
+2026-11-10T23:00:58.6722077Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-11-10T23:00:58.6722544Z ##[endgroup]
+2026-11-10T23:00:58.6775417Z ##[command]/usr/bin/docker exec  b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1 sh -c "cat /etc/*release | grep ^ID"
+2026-11-10T23:00:58.9998036Z Syncing repository: lv5accelerator-xy/my-html-game
+2026-11-10T23:00:59.0000152Z ##[group]Getting Git version info
+2026-11-10T23:00:59.0000725Z Working directory is '/__w/my-html-game/my-html-game'
+2026-11-10T23:00:59.0001500Z [command]/usr/bin/git version
+2026-11-10T23:00:59.0002050Z git version 2.43.0
+2026-11-10T23:00:59.0006625Z ##[endgroup]
+2026-11-10T23:00:59.0023118Z Temporarily overriding HOME='/__w/_temp/3b4f0fe0-6869-4a10-bb6a-62d948ac0302' before making global git config changes
+2026-11-10T23:00:59.0024546Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T23:00:59.0026998Z [command]/usr/bin/git config --global --add safe.directory /__w/my-html-game/my-html-game
+2026-11-10T23:00:59.0064710Z Deleting the contents of '/__w/my-html-game/my-html-game'
+2026-11-10T23:00:59.0073091Z ##[group]Determining repository object format
+2026-11-10T23:00:59.0074076Z ##[endgroup]
+2026-11-10T23:00:59.0074796Z ##[group]Initializing the repository
+2026-11-10T23:00:59.0075701Z [command]/usr/bin/git init /__w/my-html-game/my-html-game
+2026-11-10T23:00:59.0100894Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-10T23:00:59.0101722Z hint: is subject to change. To configure the initial branch name to use in all
+2026-11-10T23:00:59.0102319Z hint: of your new repositories, which will suppress this warning, call:
+2026-11-10T23:00:59.0102731Z hint: 
+2026-11-10T23:00:59.0103098Z hint: 	git config --global init.defaultBranch <name>
+2026-11-10T23:00:59.0103492Z hint: 
+2026-11-10T23:00:59.0103949Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-10T23:00:59.0104667Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-10T23:00:59.0105274Z hint: 
+2026-11-10T23:00:59.0105643Z hint: 	git branch -m <name>
+2026-11-10T23:00:59.0109741Z Initialized empty Git repository in /__w/my-html-game/my-html-game/.git/
+2026-11-10T23:00:59.0120375Z [command]/usr/bin/git remote add origin https://github.com/lv5accelerator-xy/my-html-game
+2026-11-10T23:00:59.0148034Z ##[endgroup]
+2026-11-10T23:00:59.0148489Z ##[group]Disabling automatic garbage collection
+2026-11-10T23:00:59.0152982Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-10T23:00:59.0178857Z ##[endgroup]
+2026-11-10T23:00:59.0179702Z ##[group]Setting up auth
+2026-11-10T23:00:59.0181537Z Removing SSH command configuration
+2026-11-10T23:00:59.0183243Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T23:00:59.0209303Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T23:00:59.0390776Z Removing HTTP extra header
+2026-11-10T23:00:59.0394527Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T23:00:59.0418522Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T23:00:59.0615355Z Removing includeIf entries pointing to credentials config files
+2026-11-10T23:00:59.0619603Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T23:00:59.0646631Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T23:00:59.0830721Z [command]/usr/bin/git config --file /__w/_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-10T23:00:59.0862616Z [command]/usr/bin/git config --local includeIf.gitdir:/__w/my-html-game/my-html-game/.git.path /__w/_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:00:59.0887710Z [command]/usr/bin/git config --local includeIf.gitdir:/__w/my-html-game/my-html-game/.git/worktrees/*.path /__w/_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:00:59.0913574Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:00:59.0946746Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:00:59.0969916Z ##[endgroup]
+2026-11-10T23:00:59.0970399Z ##[group]Fetching the repository
+2026-11-10T23:00:59.0976055Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 4d87e7fcd835c300815b0609e0ad4bb65e13fa2d
+2026-11-10T23:01:03.5839717Z From https://github.com/lv5accelerator-xy/my-html-game
+2026-11-10T23:01:03.5840649Z  * branch            4d87e7fcd835c300815b0609e0ad4bb65e13fa2d -> FETCH_HEAD
+2026-11-10T23:01:03.5862529Z [command]/usr/bin/git rev-parse --verify --quiet 4d87e7fcd835c300815b0609e0ad4bb65e13fa2d^{object}
+2026-11-10T23:01:03.5885771Z 4d87e7fcd835c300815b0609e0ad4bb65e13fa2d
+2026-11-10T23:01:03.5889531Z ##[endgroup]
+2026-11-10T23:01:03.5890283Z ##[group]Determining the checkout info
+2026-11-10T23:01:03.5896533Z ##[endgroup]
+2026-11-10T23:01:03.5897516Z [command]/usr/bin/git sparse-checkout disable
+2026-11-10T23:01:03.5933573Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-10T23:01:03.5960811Z ##[group]Checking out the ref
+2026-11-10T23:01:03.5963908Z [command]/usr/bin/git checkout --progress --force 4d87e7fcd835c300815b0609e0ad4bb65e13fa2d
+2026-11-10T23:01:04.3726082Z Note: switching to '4d87e7fcd835c300815b0609e0ad4bb65e13fa2d'.
+2026-11-10T23:01:04.3726557Z 
+2026-11-10T23:01:04.3726951Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-10T23:01:04.3727922Z changes and commit them, and you can discard any commits you make in this
+2026-11-10T23:01:04.3728728Z state without impacting any branches by switching back to a branch.
+2026-11-10T23:01:04.3729151Z 
+2026-11-10T23:01:04.3729432Z If you want to create a new branch to retain commits you create, you may
+2026-11-10T23:01:04.3730165Z do so (now or later) by using -c with the switch command. Example:
+2026-11-10T23:01:04.3730557Z 
+2026-11-10T23:01:04.3730764Z   git switch -c <new-branch-name>
+2026-11-10T23:01:04.3731020Z 
+2026-11-10T23:01:04.3731311Z Or undo this operation with:
+2026-11-10T23:01:04.3731590Z 
+2026-11-10T23:01:04.3731770Z   git switch -
+2026-11-10T23:01:04.3731998Z 
+2026-11-10T23:01:04.3732307Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-10T23:01:04.3732765Z 
+2026-11-10T23:01:04.3733075Z HEAD is now at 4d87e7f Merge pull request #21: Starport Scavenger v3.28 preview
+2026-11-10T23:01:04.3806758Z ##[endgroup]
+2026-11-10T23:01:04.3839996Z [command]/usr/bin/git log -1 --format=%H
+2026-11-10T23:01:04.3863412Z 4d87e7fcd835c300815b0609e0ad4bb65e13fa2d
+2026-11-10T23:01:04.3871003Z ##[group]Removing auth
+2026-11-10T23:01:04.3871393Z Removing SSH command configuration
+2026-11-10T23:01:04.3874774Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T23:01:04.3906638Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T23:01:04.4081599Z Removing HTTP extra header
+2026-11-10T23:01:04.4084759Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T23:01:04.4110562Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T23:01:04.4279334Z Removing includeIf entries pointing to credentials config files
+2026-11-10T23:01:04.4281702Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T23:01:04.4301629Z includeif.gitdir:/__w/my-html-game/my-html-game/.git.path
+2026-11-10T23:01:04.4302277Z includeif.gitdir:/__w/my-html-game/my-html-game/.git/worktrees/*.path
+2026-11-10T23:01:04.4303016Z includeif.gitdir:/github/workspace/.git.path
+2026-11-10T23:01:04.4303624Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-10T23:01:04.4309724Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/__w/my-html-game/my-html-game/.git.path
+2026-11-10T23:01:04.4336656Z /__w/_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:01:04.4339712Z [command]/usr/bin/git config --local --unset includeif.gitdir:/__w/my-html-game/my-html-game/.git.path /__w/_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:01:04.4369500Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/__w/my-html-game/my-html-game/.git/worktrees/*.path
+2026-11-10T23:01:04.4387570Z /__w/_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:01:04.4393445Z [command]/usr/bin/git config --local --unset includeif.gitdir:/__w/my-html-game/my-html-game/.git/worktrees/*.path /__w/_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:01:04.4421130Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-11-10T23:01:04.4438549Z /github/runner_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:01:04.4443763Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:01:04.4469994Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-10T23:01:04.4488039Z /github/runner_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:01:04.4492605Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config
+2026-11-10T23:01:04.4520562Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T23:01:04.4689052Z Removing credentials config '/__w/_temp/git-credentials-157cab7a-8bca-4864-be1b-cbe9424c90ad.config'
+2026-11-10T23:01:04.4697645Z ##[endgroup]
+2026-11-10T23:01:04.4954137Z ##[group]Run actions/setup-node@v6
+2026-11-10T23:01:04.4954449Z with:
+2026-11-10T23:01:04.4954722Z   node-version: 22
+2026-11-10T23:01:04.4955175Z   check-latest: false
+2026-11-10T23:01:04.4957009Z   token: ***
+2026-11-10T23:01:04.4957370Z   package-manager-cache: true
+2026-11-10T23:01:04.4957652Z env:
+2026-11-10T23:01:04.4957932Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-11-10T23:01:04.4958243Z ##[endgroup]
+2026-11-10T23:01:04.4964944Z ##[command]/usr/bin/docker exec  b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1 sh -c "cat /etc/*release | grep ^ID"
+2026-11-10T23:01:04.6968087Z Found in cache @ /__t/node/22.23.4/x64
+2026-11-10T23:01:04.6971874Z ##[group]Environment details
+2026-11-10T23:01:09.6132604Z node: v22.23.4
+2026-11-10T23:01:09.6133228Z npm: 10.9.9
+2026-11-10T23:01:09.6133884Z yarn: 1.22.22
+2026-11-10T23:01:09.6135458Z ##[endgroup]
+2026-11-10T23:01:09.6275672Z ##[group]Run npm install --no-save playwright@1.55.0
+2026-11-10T23:01:09.6276226Z [36;1mnpm install --no-save playwright@1.55.0[0m
+2026-11-10T23:01:09.6276610Z [36;1mnode <<'JS'[0m
+2026-11-10T23:01:09.6277119Z [36;1mconst assert = require('node:assert/strict'), fs = require('node:fs'), p = require('playwright');[0m
+2026-11-10T23:01:09.6277803Z [36;1massert.equal(Number(process.versions.node.split('.')[0]), 22);[0m
+2026-11-10T23:01:09.6278286Z [36;1massert.equal(require('playwright/package.json').version, '1.55.0');[0m
+2026-11-10T23:01:09.6278899Z [36;1mfor (const engine of ['chromium', 'webkit']) assert.ok(fs.existsSync(p[engine].executablePath()), engine + ' preinstalled browser');[0m
+2026-11-10T23:01:09.6279644Z [36;1mconsole.log(JSON.stringify({ node: process.version, playwright: '1.55.0', browsers: ['chromium', 'webkit'] }));[0m
+2026-11-10T23:01:09.6280157Z [36;1mJS[0m
+2026-11-10T23:01:09.6283324Z shell: sh -e {0}
+2026-11-10T23:01:09.6283598Z env:
+2026-11-10T23:01:09.6284009Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-11-10T23:01:09.6284335Z ##[endgroup]
+2026-11-10T23:01:12.8410937Z 
+2026-11-10T23:01:12.8419221Z added 2 packages in 3s
+2026-11-10T23:01:13.0820261Z {"node":"v22.23.4","playwright":"1.55.0","browsers":["chromium","webkit"]}
+2026-11-10T23:01:13.1041231Z ##[group]Run node scripts/verify-public-v324.cjs
+2026-11-10T23:01:13.1041682Z [36;1mnode scripts/verify-public-v324.cjs[0m
+2026-11-10T23:01:13.1042148Z shell: sh -e {0}
+2026-11-10T23:01:13.1042408Z env:
+2026-11-10T23:01:13.1042672Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-11-10T23:01:13.1043104Z   CODEX_PLAYWRIGHT_PATH: /home/runner/work/my-html-game/my-html-game/node_modules/playwright
+2026-11-10T23:01:13.1043565Z   V3_BROWSER_ENGINE: chromium
+2026-11-10T23:01:13.1043923Z   RELEASE_SOURCE_SHA: 4d87e7fcd835c300815b0609e0ad4bb65e13fa2d
+2026-11-10T23:01:13.1044287Z   PUBLIC_AUDIT_DIR: public-audit/chromium
+2026-11-10T23:01:13.1044595Z ##[endgroup]
+2026-11-10T23:01:13.3683517Z AUDIT_TARGET https://lv5accelerator-xy.github.io/my-html-game/ engine=chromium
+2026-11-10T23:01:28.8263329Z PUBLIC_FLOW_OK v2-fresh-1280
+2026-11-10T23:01:35.4577525Z PUBLIC_FLOW_OK v3-fresh-1280
+2026-11-10T23:01:48.2179982Z PUBLIC_FLOW_OK v2-fresh-375
+2026-11-10T23:01:54.8173689Z PUBLIC_FLOW_OK v3-fresh-375
+2026-11-10T23:01:55.2512884Z PUBLIC_FLOW_OK v316-restore-city-ending
+2026-11-10T23:01:55.6672702Z PUBLIC_FLOW_OK v316-restore-watch-ending
+2026-11-10T23:01:56.0341156Z PUBLIC_FLOW_OK v316-restore-voyage-ending
+2026-11-10T23:01:56.0377671Z PUBLIC_RESULT: 14 exact target runtime hashes, 7 browser flows, 118 unique canonical v3.11–v3.23 snapshots, 0 failed/0 skipped; chromium
+2026-11-10T23:01:56.0918199Z ##[group]Run node <<'JS'
+2026-11-10T23:01:56.0918563Z [36;1mnode <<'JS'[0m
+2026-11-10T23:01:56.0918859Z [36;1mconst fs = require('node:fs');[0m
+2026-11-10T23:01:56.0919410Z [36;1mconst result = JSON.parse(fs.readFileSync(process.env.PUBLIC_AUDIT_DIR + '/result.json', 'utf8'));[0m
+2026-11-10T23:01:56.0919935Z [36;1mconsole.log('PUBLIC_EVIDENCE ' + JSON.stringify(result));[0m
+2026-11-10T23:01:56.0920322Z [36;1mJS[0m
+2026-11-10T23:01:56.0920678Z shell: sh -e {0}
+2026-11-10T23:01:56.0920935Z env:
+2026-11-10T23:01:56.0921238Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-11-10T23:01:56.0921610Z   PUBLIC_AUDIT_DIR: public-audit/chromium
+2026-11-10T23:01:56.0922182Z ##[endgroup]
+2026-11-10T23:01:56.1573645Z PUBLIC_EVIDENCE {"engine":"chromium","expectedVersion":"3.28.0-preview.1","referenceSha":"4d87e7fcd835c300815b0609e0ad4bb65e13fa2d","publicUrl":"https://lv5accelerator-xy.github.io/my-html-game/","assets":[{"file":"index.html","status":200,"bytes":125785,"sha256":"3c223c934e023d2495433008e7d8363ea5983e9d42ecb4b8033b4b9c29de6a83"},{"file":"styles.css","status":200,"bytes":312981,"sha256":"b81fc3362e99eeb861ae48cdcb300a0a3c922aed0996770b9fbd22ab3b07f3e6"},{"file":"game.js","status":200,"bytes":698660,"sha256":"d2dacbb2e25bc4c056da5a76bce83eea477a169905ef99c4731a1e86a9c5ecb2"},{"file":"game-math.js","status":200,"bytes":10446,"sha256":"518b0621e307ca638d2f2566c90785a3e3d9c38bd361ff272a025756ba22b673"},{"file":"v2-systems.js","status":200,"bytes":82581,"sha256":"3cdc0590c84c2743a5684c38e84cbc8dfe2300cb1f1f291281656db6c41718c5"},{"file":"legacy-systems.js","status":200,"bytes":44339,"sha256":"e8ec704c1a2458d7e697ffa5cf9d5cd3b44708901e5f7657f7e1d345eca51ead"},{"file":"firebase-config.js","status":200,"bytes":454,"sha256":"5288e2e0d233603a81c8fa97584bf781f2ce2cc38efe4c7ce222ab14736ca341"},{"file":"cloud-save.js","status":200,"bytes":73048,"sha256":"7dc97474b83d393b0f3f1f9da3a9831ca61379b85a0ebcb16276dd61dee59d8f"},{"file":"v3/index.html","status":200,"bytes":2833,"sha256":"280cbe693270b2f1db981f372029f398e2ebd757efb589567118a2d745fcda69"},{"file":"v3/style.css","status":200,"bytes":49279,"sha256":"0e3120f9c61a4b2109efad1a7963a4e58a73d3730e028582b8751dda7a347e14"},{"file":"v3/data.js","status":200,"bytes":149348,"sha256":"040e7aac92c00edf69253e676757f6a722c48aecc5e6b62d7f1a1c2825c38a99"},{"file":"v3/engine.js","status":200,"bytes":173734,"sha256":"7f2b87c70ea57b97c2d6e85c300a50ca85a5a8afbb69adc2820582809b1fb081"},{"file":"v3/storage.js","status":200,"bytes":11284,"sha256":"44f22e45a3699a253697faf630b661d5dc44cd89a12300b7a7dc2faf71ea65d4"},{"file":"v3/app.js","status":200,"bytes":156939,"sha256":"4678dc7fa7dd2e5d7c69db89488bae34444c32767734e28e787ec123e0a7b2f0"}],"flows":[{"name":"v2-fresh-1280","viewport":{"width":1280,"height":900},"navigation":{"measured":true,"domContentLoadedMs":642.5999999999985,"loadMs":717.5999999999985,"transferBytes":27778,"resources":9},"layout":{"width":1280,"document":1280,"body":1280},"pageerrors":0,"consoleErrors":0,"warnings":0,"badResponses":0,"failedRequests":0},{"name":"v3-fresh-1280","viewport":{"width":1280,"height":900},"navigation":{"measured":true,"domContentLoadedMs":133.3000000000029,"loadMs":219.39999999999418,"transferBytes":1585,"resources":6},"layout":{"width":1280,"document":1280,"body":1280},"pageerrors":0,"consoleErrors":0,"warnings":0,"badResponses":0,"failedRequests":0},{"name":"v2-fresh-375","viewport":{"width":375,"height":900},"navigation":{"measured":true,"domContentLoadedMs":245.09999999999127,"loadMs":246.5,"transferBytes":27778,"resources":9},"layout":{"width":375,"document":375,"body":375},"pageerrors":0,"consoleErrors":0,"warnings":0,"badResponses":0,"failedRequests":0},{"name":"v3-fresh-375","viewport":{"width":375,"height":900},"navigation":{"measured":true,"domContentLoadedMs":312.70000000001164,"loadMs":427.3000000000029,"transferBytes":1585,"resources":6},"layout":{"width":375,"document":375,"body":375},"pageerrors":0,"consoleErrors":0,"warnings":0,"badResponses":0,"failedRequests":0},{"name":"v316-restore-city-ending","viewport":{"width":375,"height":900},"navigation":{"measured":false,"reason":"Migration fixtures use a controlled clock; loading timings are measured in fresh contexts."},"layout":{"width":375,"document":375,"body":375},"pageerrors":0,"consoleErrors":0,"warnings":0,"badResponses":0,"failedRequests":0},{"name":"v316-restore-watch-ending","viewport":{"width":375,"height":900},"navigation":{"measured":false,"reason":"Migration fixtures use a controlled clock; loading timings are measured in fresh contexts."},"layout":{"width":375,"document":375,"body":375},"pageerrors":0,"consoleErrors":0,"warnings":0,"badResponses":0,"failedRequests":0},{"name":"v316-restore-voyage-ending","viewport":{"width":375,"height":900},"navigation":{"measured":false,"reason":"Migration fixtures use a controlled clock; loading timings are measured in fresh contexts."},"layout":{"width":375,"document":375,"body":375},"pageerrors":0,"consoleErrors":0,"warnings":0,"badResponses":0,"failedRequests":0}],"canonicalSnapshots":118,"notes":[{"url":"https://lv5accelerator-xy.github.io/my-html-game/assets/outpost-beyond-orion.mp3?v=2.3.0","error":"net::ERR_ABORTED"},{"url":"https://lv5accelerator-xy.github.io/my-html-game/assets/outpost-beyond-orion.mp3?v=2.3.0","error":"net::ERR_ABORTED"}]}
+2026-11-10T23:01:56.1644767Z ##[group]Run node tests/v3-browser.test.js
+2026-11-10T23:01:56.1645351Z [36;1mnode tests/v3-browser.test.js[0m
+2026-11-10T23:01:56.1645743Z shell: sh -e {0}
+2026-11-10T23:01:56.1645986Z env:
+2026-11-10T23:01:56.1646266Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-11-10T23:01:56.1646716Z   CODEX_PLAYWRIGHT_PATH: /home/runner/work/my-html-game/my-html-game/node_modules/playwright
+2026-11-10T23:01:56.1647259Z   V3_BROWSER_ENGINE: chromium
+2026-11-10T23:01:56.1647639Z   V3_TEST_URL: https://lv5accelerator-xy.github.io/my-html-game/v3/
+2026-11-10T23:01:56.1648017Z   V3_SCREENSHOT_DIR: public-audit/chromium/full-suite
+2026-11-10T23:01:56.1648347Z ##[endgroup]
+2026-11-10T23:01:57.1065914Z ok 1 - v3.28 damaged null voyage leg: recover paid save, export/import and reload without replaying awards
+2026-11-10T23:01:58.1537219Z ok 2 - v3.25 action center: direct paid delivery, four categories, draft-only four-leg copy and stable controls
+2026-11-10T23:02:02.3456555Z ok 3 - v3.26 city: six cross-system interactions, real deliveries, choice replies, refresh/import and permanent ending
+2026-11-10T23:02:06.4128239Z ok 4 - v3.26 watch: six cross-system interactions, real deliveries, choice replies, refresh/import and permanent ending
+2026-11-10T23:02:10.5446432Z ok 5 - v3.26 voyage: six cross-system interactions, real deliveries, choice replies, refresh/import and permanent ending
+2026-11-10T23:02:18.7567318Z ok 6 - v3.27 city: six deterministic environment rotations, actual fit tradeoff, locked policy, offline and ledger
+2026-11-10T23:02:27.1231835Z ok 7 - v3.27 watch: six deterministic environment rotations, actual fit tradeoff, locked policy, offline and ledger
+2026-11-10T23:02:35.5393935Z ok 8 - v3.27 voyage: six deterministic environment rotations, actual fit tradeoff, locked policy, offline and ledger
+2026-11-10T23:02:37.5926004Z ok 9 - v3.28 quality: 320px navigation, keyboard dialog/input, reduced motion, hidden quiescence and eight-hour return
+2026-11-10T23:02:40.1867896Z ok 10 - v3.21 freight/city: saved four-leg plan, manual discovery, five confirmations, home handoff, focus, reload and import
+2026-11-10T23:02:42.8710780Z ok 11 - v3.21 science/watch: saved four-leg plan, manual discovery, five confirmations, home handoff, focus, reload and import
+2026-11-10T23:02:45.3256388Z ok 12 - v3.21 beacon/voyage: saved four-leg plan, manual discovery, five confirmations, home handoff, focus, reload and import
+2026-11-10T23:02:47.7143226Z ok 13 - v3.22 freight/city: three evidence reviews, actual choices, locked reload/offline, one-use first-leg support and free practice
+2026-11-10T23:02:50.1966777Z ok 14 - v3.22 science/watch: three evidence reviews, actual choices, locked reload/offline, one-use first-leg support and free practice
+2026-11-10T23:02:52.5801393Z ok 15 - v3.22 quiet/voyage: three evidence reviews, actual choices, locked reload/offline, one-use first-leg support and free practice
+2026-11-10T23:02:58.7217823Z ok 16 - v3.23 city/production: nine resident letters, real work/supply, frozen focus, SVG, mobile focus and export continuity
+2026-11-10T23:03:05.2369001Z ok 17 - v3.23 watch/reception: nine resident letters, real work/supply, frozen focus, SVG, mobile focus and export continuity
+2026-11-10T23:03:10.5212313Z ok 18 - v3.23 voyage/exploration: nine resident letters, real work/supply, frozen focus, SVG, mobile focus and export continuity
+2026-11-10T23:03:12.9002185Z ok 19 - v3.24 city: twelve manual honors, exact voyage ledgers, real two-fit comparison, refresh/import and finite postgame
+2026-11-10T23:03:15.3005509Z ok 20 - v3.24 watch: twelve manual honors, exact voyage ledgers, real two-fit comparison, refresh/import and finite postgame
+2026-11-10T23:03:18.1167224Z ok 21 - v3.24 voyage: twelve manual honors, exact voyage ledgers, real two-fit comparison, refresh/import and finite postgame
+2026-11-10T23:03:19.3404229Z ok 22 - v3.24 carried resident work: real post-jump scan, drone, route, reachable goal, unlock and preserved contract
+2026-11-10T23:03:23.5389891Z ok 23 - v3.20 失落货运航道/归航之城: full earned voyage, formation switch, eight-hour absence, import and repeat
+2026-11-10T23:03:27.6045975Z ok 24 - v3.20 静潮观测深域/守望之港: full earned voyage, formation switch, eight-hour absence, import and repeat
+2026-11-10T23:03:31.8539662Z ok 25 - v3.20 遥远居民信标/携种远航: full earned voyage, formation switch, eight-hour absence, import and repeat
+2026-11-10T23:03:43.5251411Z ok 26 - v3.19 归航之城: live scheduling, real escrow, construction credit, alternate voyage and locked terms
+2026-11-10T23:03:54.7997044Z ok 27 - v3.19 守望之港: live scheduling, real escrow, construction credit, alternate voyage and locked terms
+2026-11-10T23:04:06.2816031Z ok 28 - v3.19 携种远航: live scheduling, real escrow, construction credit, alternate voyage and locked terms
+2026-11-10T23:04:16.3775533Z ok 29 - v3.18 失联货运网络: three real investigations, phone map keyboard, in-transit refresh and export
+2026-11-10T23:04:26.7251857Z ok 30 - v3.18 旧时代科研遗迹: three real investigations, phone map keyboard, in-transit refresh and export
+2026-11-10T23:04:37.0517654Z ok 31 - v3.18 静潮后的未登记航路: three real investigations, phone map keyboard, in-transit refresh and export
+2026-11-10T23:04:38.7472726Z ok 32 - v3.17 arrival decisions, accurate next target, keyboard focus and quiet phone atlas
+2026-11-10T23:04:39.3351094Z ok 33 - v3.14 dispatch comparison and real quick loadout switch preserve the locked voyage
+2026-11-10T23:04:40.0002537Z ok 34 - v3.15 live SVG facilities, keyboard details, resident arrivals and reduced motion
+2026-11-10T23:04:51.4637131Z ok 35 - v3.16 归航之城: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+2026-11-10T23:05:02.5974116Z ok 36 - v3.16 守望之港: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+2026-11-10T23:05:13.6629792Z ok 37 - v3.16 携种远航: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump
+2026-11-10T23:05:47.2863421Z ok 38 - v3.16 fresh player completes the first scan, fleet, route, story and jump loop using only real controls
+2026-11-10T23:05:47.7881335Z ok 39 - v3.16 damaged identifier restore retains real equipment/story and renders exploration safely
+2026-11-10T23:05:48.2324178Z ok 40 - v3.13 无人货船: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:48.7557290Z ok 41 - v3.13 损坏的运输舱: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:49.1616341Z ok 42 - v3.13 古老导航信标: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:49.8767753Z ok 43 - v3.13 失联采矿探针: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:50.7200296Z ok 44 - v3.13 废弃科研设备: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:51.1713616Z ok 45 - v3.13 漂流补给箱: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:52.3608402Z ok 46 - v3.13 未知求救信号: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:52.7615189Z ok 47 - v3.13 不稳定残骸区: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:53.7725413Z ok 48 - v3.13 星尘富集带: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:54.6054384Z ok 49 - v3.13 旧时代通信记录: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:55.3050741Z ok 50 - v3.13 破损的航站组件: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:56.1125253Z ok 51 - v3.13 未登记的小型避难舱: real choice, countdown, reload and immutable discovery record
+2026-11-10T23:05:56.4617406Z ok 52 - v3.12 automation retains live buttons, drafts and focus at desktop and phone widths
+2026-11-10T23:05:56.7201807Z ok 53 - native dialog close keeps the newer keyboard reading focus
+2026-11-10T23:05:57.7792849Z ok 54 - new save: readable goal, three initial controls, 1280/375 layout, scans and passive production
+2026-11-10T23:05:58.9127065Z ok 55 - safe exploration: report, story choice, permanent equipment, equipment slots and starport repair
+2026-11-10T23:05:59.2714115Z ok 56 - jump: preserved collection, first automation unlock and actual automatic purchases
+2026-11-10T23:05:59.6872074Z ok 57 - budget, auto research controls, starport repair and new exploration unlock
+2026-11-10T23:06:00.1084338Z ok 58 - old record: migration retains source, unrecognized research, active expedition and unclaimed rewards
+2026-11-10T23:06:00.3583177Z ok 59 - corrupt source: original survives autosave interval
+2026-11-10T23:06:00.6213797Z ok 60 - imported narrative is text; full keyboard access to settings
+2026-11-10T23:06:00.8365722Z ok 61 - large legacy-scale numbers remain readable without horizontal scroll
+2026-11-10T23:06:01.8024677Z ok 62 - v3.0 workshop: craft missing story gear, upgrade both to level three, preserve choices and replace full equipment slots
+2026-11-10T23:06:02.3120351Z ok 63 - fleet forecasts: selected batch updates gains and payback; actual purchase crosses a milestone with the predicted production
+2026-11-10T23:06:02.6121071Z ok 64 - report goal: outranks early construction and route choice; keyboard activation focuses the reachable report
+2026-11-10T23:06:03.3052589Z ok 65 - live ETA and local timing: income enables a purchase, research is recorded, and exported timing distinguishes offline from foreground
+2026-11-10T23:06:03.6167709Z ok 66 - automatic construction preserves an unfinished reserve input and its keyboard focus
+2026-11-10T23:06:04.1616272Z ok 67 - return briefing: actual automation summary, mobile layout, direct report link and immediate reload without duplicate rewards
+2026-11-10T23:06:06.0759886Z ok 68 - chapter two: three real voyages, old-choice follow-ups, prerequisite gear, long-voyage reload, permanent construction and jump preservation on desktop and phone
+2026-11-10T23:06:06.5196362Z ok 69 - automatic voyages can pause after the current return without cancelling it or losing its reward
+2026-11-10T23:06:09.1341023Z ok 70 - chapter three: actual preparation previews, saved plans, voyage reload, offline manual decisions, mobile convoy handoff, letters, archive rereading and persistent supply route
+2026-11-10T23:06:10.1589244Z ok 71 - mobile current star map leads directly to research, samples and actual equipped gear; completed sectors remain folded
+2026-11-10T23:06:12.6530885Z ok 72 - chapter four 接待扩容: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump
+2026-11-10T23:06:14.7864512Z ok 73 - chapter four 生态补给: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump
+2026-11-10T23:06:16.8662426Z ok 74 - chapter four 档案校准: old v3.3 save, meeting, deliberate construction, real voyage metrics, mid-voyage gear/reload, safe offline report, archives and jump
+2026-11-10T23:06:18.1596391Z ok 75 - saved equipment presets: real production/voyage comparison, one-click two-slot replacement, active snapshot preservation, reload, upgrades and export/import
+2026-11-10T23:06:22.6078734Z ok 76 - chapter five 接待扩容/轮换照明与储能: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump
+2026-11-10T23:06:26.1424883Z ok 77 - chapter five 生态补给/转接空闲采集阵列: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump
+2026-11-10T23:06:29.7680885Z ok 78 - chapter five 档案校准/回收观测站备用设备: consent, backup waiting, gear snapshot, offline reports, protocol, archives, import and jump
+2026-11-10T23:06:30.2987646Z ok 79 - rescue with no spare resources: paid options disabled, free rotation remains reachable, manual supply and safe waiting
+2026-11-10T23:06:32.6207878Z ok 80 - chapter six 接待扩容/归航之城: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+2026-11-10T23:06:34.6542079Z ok 81 - chapter six 接待扩容/守望之港: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+2026-11-10T23:06:36.6254726Z ok 82 - chapter six 接待扩容/携种远航: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+2026-11-10T23:06:38.6846893Z ok 83 - chapter six 生态补给/归航之城: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+2026-11-10T23:06:40.6230723Z ok 84 - chapter six 生态补给/守望之港: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+2026-11-10T23:06:42.5545554Z ok 85 - chapter six 生态补给/携种远航: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+2026-11-10T23:06:44.4548389Z ok 86 - chapter six 档案校准/归航之城: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+2026-11-10T23:06:46.4550336Z ok 87 - chapter six 档案校准/守望之港: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+2026-11-10T23:06:48.4135982Z ok 88 - chapter six 档案校准/携种远航: old save, zero cost, partial reload, preview/cancel, permanent ending, archives and free play
+2026-11-10T23:06:49.3489813Z ok 89 - chapter six during automatic supply: active voyage survives handoff, eight-hour absence never selects ending, manual continuation still reachable
+2026-11-10T23:06:52.2893730Z ok 90 - first two chapters dialogue path 1: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards
+2026-11-10T23:06:55.4227772Z ok 91 - first two chapters dialogue path 2: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards
+2026-11-10T23:06:58.3055057Z ok 92 - first two chapters dialogue path 3: keyboard reading, distinct responses, direct archive focus, construction records, reload and unchanged rewards
+2026-11-10T23:07:02.5545422Z ok 93 - middle chapters reception: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation
+2026-11-10T23:07:06.5465292Z ok 94 - middle chapters ecology: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation
+2026-11-10T23:07:10.4803793Z ok 95 - middle chapters archive: actual plan echoes, six manual choices, keyboard dialogue, saved archive, permanent construction and rescue continuation
+2026-11-10T23:07:13.1707556Z ok 96 - rescue dialogue 接待扩容/轮换照明与储能: live replies, actual plans, safe waiting, chapter navigation and read-only reload
+2026-11-10T23:07:15.3410113Z ok 97 - finale dialogue 接待扩容: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending
+2026-11-10T23:07:18.0365382Z ok 98 - rescue dialogue 生态补给/转接空闲采集阵列: live replies, actual plans, safe waiting, chapter navigation and read-only reload
+2026-11-10T23:07:19.8074800Z ok 99 - finale dialogue 生态补给: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending
+2026-11-10T23:07:22.2864480Z ok 100 - rescue dialogue 档案校准/回收观测站备用设备: live replies, actual plans, safe waiting, chapter navigation and read-only reload
+2026-11-10T23:07:24.1236181Z ok 101 - finale dialogue 档案校准: all public previews, confirmed handoffs, six chapter archive and preserved permanent ending
+2026-11-10T23:07:25.9195417Z ok 102 - v3.10 接待扩容: real starport, three fresh resident deliveries, choices, collections and reload
+2026-11-10T23:07:27.9377331Z ok 103 - v3.10 生态补给: real starport, three fresh resident deliveries, choices, collections and reload
+2026-11-10T23:07:29.7032843Z ok 104 - v3.10 档案校准: real starport, three fresh resident deliveries, choices, collections and reload
+2026-11-10T23:07:30.0944562Z ok 105 - v3.10 starport only lights actual construction and changes immediately after repair
+2026-11-10T23:07:30.9467877Z ok 106 - v3.10 reading: persisted sizes, archive anchor/offset, current chapter and independent save
+2026-11-10T23:07:31.2726078Z ok 107 - v3.10 page cache lifecycle: hidden/pagehide overlap, restored page, single offline settlement and saved voyage
+2026-11-10T23:07:31.7048862Z ok 108 - v3.10 report summary: full discovery is optional, choices visible and reading does not claim rewards
+2026-11-10T23:07:32.5692373Z ok 109 - v3.11 manual backups: escaped labels, independent rotation, reload and mobile settings
+2026-11-10T23:07:33.2686400Z ok 110 - v3.11 import preview: comparison and cancel are read-only; malformed and future files do not replace data
+2026-11-10T23:07:33.7884465Z ok 111 - v3.11 backup restore: confirmation tolerates own autosaves, preserves live progress and pending report without rewards
+2026-11-10T23:07:34.3188974Z ok 112 - v3.11 damaged save recovery: raw export, invalid backup export and confirmed recovery keep original bytes
+2026-11-10T23:07:34.6787092Z ok 113 - v3.11 quota failure: preview may open but unsuccessful backup never overwrites the current save
+2026-11-10T23:07:35.1616194Z ok 114 - v3.11 other-window update invalidates restore preview and pauses autosave without overwriting newer progress
+2026-11-10T23:07:35.5198860Z ok 115 - v3.11 historical single backup: restore requires preview and cancellation preserves the current primary
+2026-11-10T23:07:35.9021185Z ok 116 - v3.11 failed primary write preserves the selected historical recovery source for another attempt
+2026-11-10T23:07:35.9061168Z v3 browser ok: 116 complete flows; identity/content/assets/console checked in every flow
+2026-11-10T23:07:35.9448967Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T23:07:35.9449325Z with:
+2026-11-10T23:07:35.9449714Z   name: public-game-chromium-4d87e7fcd835c300815b0609e0ad4bb65e13fa2d
+2026-11-10T23:07:35.9450155Z   path: public-audit/
+2026-11-10T23:07:35.9450475Z   retention-days: 14
+2026-11-10T23:07:35.9450753Z   if-no-files-found: warn
+2026-11-10T23:07:35.9451044Z   compression-level: 6
+2026-11-10T23:07:35.9451309Z   overwrite: false
+2026-11-10T23:07:35.9451596Z   include-hidden-files: false
+2026-11-10T23:07:35.9451886Z env:
+2026-11-10T23:07:35.9452137Z   PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+2026-11-10T23:07:35.9452499Z ##[endgroup]
+2026-11-10T23:07:35.9457443Z ##[command]/usr/bin/docker exec  b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1 sh -c "cat /etc/*release | grep ^ID"
+2026-11-10T23:07:36.1673481Z (node:1809) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T23:07:36.1674507Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T23:07:36.1891077Z With the provided path, there will be 113 files uploaded
+2026-11-10T23:07:36.1891730Z Artifact name is valid!
+2026-11-10T23:07:36.1892090Z Root directory input is valid!
+2026-11-10T23:07:36.4939985Z Beginning upload of artifact content to blob storage
+2026-11-10T23:07:36.7786992Z (node:1809) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T23:07:37.3063457Z Uploaded bytes 8388608
+2026-11-10T23:07:37.5791149Z Uploaded bytes 16777216
+2026-11-10T23:07:37.7404406Z Uploaded bytes 21865896
+2026-11-10T23:07:37.8184504Z Finished uploading artifact content to blob storage!
+2026-11-10T23:07:37.8185772Z SHA256 digest of uploaded artifact zip is 22821f8e445765bbe3c0715a525ee740734318cf6494cedb14d576e377bc49b2
+2026-11-10T23:07:37.8186831Z Finalizing artifact upload
+2026-11-10T23:07:38.2091790Z Artifact public-game-chromium-4d87e7fcd835c300815b0609e0ad4bb65e13fa2d.zip successfully finalized. Artifact ID 13812525011
+2026-11-10T23:07:38.2093516Z Artifact public-game-chromium-4d87e7fcd835c300815b0609e0ad4bb65e13fa2d has been successfully uploaded! Final size is 21865896 bytes. Artifact ID is 13812525011
+2026-11-10T23:07:38.2095436Z Artifact download URL: https://github.com/lv5accelerator-xy/my-html-game/actions/runs/42919605777/artifacts/13812525011
+2026-11-10T23:07:38.2325852Z Post job cleanup.
+2026-11-10T23:07:38.2332266Z ##[command]/usr/bin/docker exec  b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1 sh -c "cat /etc/*release | grep ^ID"
+2026-11-10T23:07:38.4323009Z Post job cleanup.
+2026-11-10T23:07:38.4334941Z ##[command]/usr/bin/docker exec  b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1 sh -c "cat /etc/*release | grep ^ID"
+2026-11-10T23:07:38.6009612Z [command]/usr/bin/git version
+2026-11-10T23:07:38.6040828Z git version 2.43.0
+2026-11-10T23:07:38.6081372Z Temporarily overriding HOME='/__w/_temp/a18b56a5-4e1d-4f0e-baec-385e49318a8b' before making global git config changes
+2026-11-10T23:07:38.6082477Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T23:07:38.6085245Z [command]/usr/bin/git config --global --add safe.directory /__w/my-html-game/my-html-game
+2026-11-10T23:07:38.6111473Z Removing SSH command configuration
+2026-11-10T23:07:38.6117388Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T23:07:38.6146919Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T23:07:38.6337665Z Removing HTTP extra header
+2026-11-10T23:07:38.6342008Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T23:07:38.6368941Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T23:07:38.6572412Z Removing includeIf entries pointing to credentials config files
+2026-11-10T23:07:38.6576554Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T23:07:38.6601929Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T23:07:38.6928885Z Stop and remove container: 628816ae6338432b815b76b43ca8c13b_mcrmicrosoftcomplaywrightv1550noblesha256b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29_f0aff5
+2026-11-10T23:07:38.6933922Z ##[command]/usr/bin/docker rm --force b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1
+2026-11-10T23:07:38.8624158Z b61acd3fbeadc9e968101125c052b4e0d8d3d4a1720b9d40fc5929bc846290d1
+2026-11-10T23:07:38.8648987Z Remove container network: github_network_bf7abed8417b48cdbefb5e2e2dd4d3f3
+2026-11-10T23:07:38.8652527Z ##[command]/usr/bin/docker network rm github_network_bf7abed8417b48cdbefb5e2e2dd4d3f3
+2026-11-10T23:07:38.9423043Z github_network_bf7abed8417b48cdbefb5e2e2dd4d3f3
+2026-11-10T23:07:38.9489624Z Cleaning up orphan processes
+2026-11-10T23:07:38.9867148Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

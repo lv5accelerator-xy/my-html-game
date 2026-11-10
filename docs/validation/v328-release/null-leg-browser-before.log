@@ -1,0 +1,15 @@
+AssertionError [ERR_ASSERTION]: damaged voyage must not block the entire save
+
+1 !== 0
+
+    at /workspace/scratch/starport-release-fix/tests/helpers/quality-browser.cjs:10:11
+    at async scenario (/workspace/scratch/starport-release-fix/tests/v3-browser.test.js:92:7)
+    at async module.exports (/workspace/scratch/starport-release-fix/tests/helpers/quality-browser.cjs:9:3)
+    at async run (/workspace/scratch/starport-release-fix/tests/v3-browser.test.js:120:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}

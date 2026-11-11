@@ -14231,7 +14231,6 @@
     state.longVoyage.currentDecision.choiceId = choice.id;
     state.longVoyage.baseline = createLongVoyageBaseline();
     state.longVoyage.lastReport = `${choice.label}方案已确认；阶段计数从现在开始。`;
-    playClickSound();
     renderLongVoyage();
     saveGame();
   }
@@ -14332,7 +14331,6 @@
     prepareLongVoyageDecision(route);
     const nextStage = route.stages[state.longVoyage.stageIndex];
     state.longVoyage.lastReport = `已消耗 ${suppliesCost} 补给与 ${fragmentsCost} 残片快速结算；本航段没有奖励。下一阶段：${nextStage.title}。`;
-    playPurchaseTone();
     renderLongVoyage();
     updateUi();
     saveGame();

@@ -2,7 +2,8 @@
   "use strict";
   const D = globalThis.SalvageData,
     E = globalThis.SalvageEngine,
-    S = globalThis.SalvageStorage;
+    S = globalThis.SalvageStorage,
+    V = globalThis.SalvageVisuals;
   const $ = (selector) => document.querySelector(selector);
   const escape = (text) =>
     String(text).replace(
@@ -45,6 +46,9 @@
       fleet: '<path d="m12 2 8 19-8-5-8 5zM12 2v14"/>',
       explore: '<circle cx="12" cy="12" r="9"/><path d="m16 8-3 5-5 3 3-5z"/>',
       jump: '<path d="M20 9a8 8 0 0 0-14-3M4 15a8 8 0 0 0 14 3M6 2v4H2m20 12h-4v4"/><circle cx="12" cy="12" r="3"/>',
+      voyage: '<path d="M3 18h18M4 14l4-8h8l4 8zM12 6V2"/>',
+      residents: '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M2 22v-5a6 6 0 0 1 12 0v5M16 14a5 5 0 0 1 6 5v3"/>',
+      archive: '<path d="M4 3h16v18H4zM8 7h8M8 11h8M8 15h5"/>',
       scan: '<path d="M8 8a6 6 0 0 0 0 8m8-8a6 6 0 0 1 0 8M5 4a11 11 0 0 0 0 16M19 4a11 11 0 0 1 0 16"/><circle cx="12" cy="12" r="2"/>',
     };
     return `<svg aria-hidden="true" viewBox="0 0 24 24">${shapes[name] || shapes.home}</svg>`;
@@ -242,7 +246,7 @@
   }
   $("#settings-button").addEventListener("click", settings);
   function navigate(target, focusId) {
-    if (!E.reachable(state, target)) return;
+    if (!V.reachable(state, target)) return;
     page = target;
     signature = "";
     render();
@@ -370,7 +374,7 @@
       ${E.capability(state, "autoDispatch") ? `<div class="control-row"><label><input type="checkbox" data-config="dispatch" data-focus="config-dispatch" ${state.automation.dispatch ? "checked" : ""}>重复派遣${D.MISSIONS.find((m) => m.id === state.repeatId).name} · 新故事出现时暂停</label></div>` : ""}</section>`;
   }
   function fleet() {
-    return `<div class="page"><div class="page-header"><div><h1>把残骸，变成舰队。</h1><p>每种设施在 10、25、50 艘时产量翻倍。研究与路线会改变它们如何协同。</p></div><div class="buy-modes" aria-label="每次购买上限">${[
+    return `<div class="page fleet-page"><div class="page-header"><div><h1>把残骸，变成舰队。</h1><p>每种设施在 10、25、50 艘时产量翻倍。研究与路线会改变它们如何协同。</p></div><div class="buy-modes" aria-label="每次购买上限">${[
       ["1", "1 艘"],
       ["10", "最多 10"],
       ["max", "最大"],
@@ -380,7 +384,7 @@
           `<button ${action("mode", value)} aria-pressed="${buyMode === value}" class="${buyMode === value ? "selected" : ""}">${label}</button>`,
       )
       .join("")}</div></div>
-      ${routePanel()}<section aria-label="生产设施">${D.BUILDINGS.filter(
+      <div class="dock-layout">${V.media("dock",state)}<aside class="dock-console"><h2>生产控制台</h2>${routePanel()}<p>设施、研究与预算均采用当前航次的实际配置。</p></aside></div><section class="manufacturing-floor" aria-label="生产设施">${D.BUILDINGS.filter(
         (b) => state.run.dust >= b.unlock || state.buildings[b.id],
       )
         .map(
@@ -820,8 +824,8 @@
   }
   function explore() {
     const port = D.PORT[state.starport];
-    return `<div class="page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${encounterPanel()}${residentLinks()}${communityPanel()}${honorsPanel()}${longVoyages()}${sectorAtlas()}${reviewsPanel()}${harborPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
+    return `<div class="page exploration-page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
+      ${missionReport()}${sectorAtlas()}${encounterPanel()}${reviewsPanel()}${residentLinks()}${communityPanel()}${honorsPanel()}${longVoyages()}${harborPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
         .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
@@ -853,9 +857,18 @@
       '<p class="empty">所有舰装均已装配。可以继续升级已有舰装。</p>'
     }</details>`;
   }
+  function voyage() {
+    return `<div class="page bridge-page"><header class="page-header"><div><h1>把灯火，带向更远处。</h1><p>每一段都由你确认，已出发的航程保留原编成。</p></div></header>${V.media("bridge", state)}${longVoyages()}${loadoutPanel()}</div>`;
+  }
+  function residents() {
+    return `<div class="page residents-page"><header class="page-header"><div><h1>这里，开始有人生活。</h1><p>来信、餐桌与下一班值守，来自真正抵达的居民。</p></div></header><div class="habitat-layout">${V.media("habitat",state)}<div class="resident-reading">${residentPanel() || '<h2>第一支船队已安全抵达</h2><p>继续两港交接，居民的下一封信会在主线终章后开放。</p>'}${residentLinks()}</div></div>${communityPanel()}${harborPanel()}</div>`;
+  }
+  function archive() {
+    return `<div class="page archive-page"><header class="page-header"><div><h1>每一束信号，都有来处。</h1><p>已确认的故事与收藏，在这里保留原貌。重读不会重复结算。</p></div></header><div class="exhibit-intro">${V.media("wreck",state)}<div><h2>航行记忆陈列馆</h2><p>已归档 ${state.lore.length} 段决定 · 永久荣誉 ${state.continuation.honors.claimed.length}/12</p><button class="outline" ${action("archive-open")}>打开航线与人物档案</button></div></div>${routeArchive()}${honorsPanel()}${encounterPanel()}</div>`;
+  }
   function jump() {
     const gain = E.prestigeGain(state);
-    return `<div class="page"><div class="page-header"><div><h1>下一次启航，会有所不同。</h1><p>用这一航次的积累换取星核和永久能力。舰装、故事、样本、修复的星港与远航建设会与你同行。</p></div></div><div class="jump-layout"><div><div class="jump-number">${gain || 4} <small>星核${gain ? "可获得" : "起"}</small></div><p>本航次收集 <strong data-run-dust>${number(state.run.dust)}</strong> / ${number(D.PRESTIGE_DUST)} 星尘</p><div class="progress" role="progressbar" aria-label="跃迁进度" aria-valuemin="0" aria-valuemax="100" data-jump-progress><span></span></div><p>星核带来的全舰队产量：×${number(1 + Math.sqrt(state.totalCores) * 0.25)}。消费星核修复航站也不会减少这项历史加成。</p><p><small>新航次从 1 艘无人机与 12 星尘开始。临时设施与研究需要重新建设。</small></p>${state.mission || state.result || state.atlas.active || state.expeditions.active || state.continuation.reviews.active ? '<p class="save-warning">请先等待探索或调查归航，并处理报告。</p>' : ""}<button class="primary" ${action("jump")} ${gain && !state.mission && !state.result && !state.atlas.active && !state.expeditions.active ? "" : "disabled"}>${gain ? "开启下一航次" : "尚在积累能量"}</button></div><div><h2>每次都能解锁新工作</h2>${D.CAPABILITIES.map((c) => `<div class="capability-row ${E.capability(state, c.id) ? "unlocked" : ""}"><span>${E.capability(state, c.id) ? "已解锁" : `第 ${c.run} 次跃迁`}</span><div><h3>${c.name}</h3><p>${c.detail}</p></div></div>`).join("")}</div></div><section><h2>最近的航次</h2>${state.records.map((r, i) => `<div class="history-row"><span>${D.ROUTES.find((route) => route.id === r.route).name}</span><span>${duration(r.seconds)}</span><span>+${number(r.gain)} 星核</span></div>`).join("") || '<p class="empty">第一条航线正在由你写下。</p>'}</section></div>`;
+    return `<div class="page jump-page"><div class="page-header"><div><h1>下一次启航，会有所不同。</h1><p>用这一航次的积累换取星核和永久能力。舰装、故事、样本、修复的星港与远航建设会与你同行。</p></div></div>${V.media("jump",state)}<div class="jump-layout"><div><div class="jump-number">${gain || 4} <small>星核${gain ? "可获得" : "起"}</small></div><p>本航次收集 <strong data-run-dust>${number(state.run.dust)}</strong> / ${number(D.PRESTIGE_DUST)} 星尘</p><div class="progress" role="progressbar" aria-label="跃迁进度" aria-valuemin="0" aria-valuemax="100" data-jump-progress><span></span></div><p>星核带来的全舰队产量：×${number(1 + Math.sqrt(state.totalCores) * 0.25)}。消费星核修复航站也不会减少这项历史加成。</p><p><small>新航次从 1 艘无人机与 12 星尘开始。临时设施与研究需要重新建设。</small></p>${state.mission || state.result || state.atlas.active || state.expeditions.active || state.continuation.reviews.active ? '<p class="save-warning">请先等待探索或调查归航，并处理报告。</p>' : ""}<button class="primary" ${action("jump")} ${gain && !state.mission && !state.result && !state.atlas.active && !state.expeditions.active ? "" : "disabled"}>${gain ? "开启下一航次" : "尚在积累能量"}</button></div><div><h2>每次都能解锁新工作</h2>${D.CAPABILITIES.map((c) => `<div class="capability-row ${E.capability(state, c.id) ? "unlocked" : ""}"><span>${E.capability(state, c.id) ? "已解锁" : `第 ${c.run} 次跃迁`}</span><div><h3>${c.name}</h3><p>${c.detail}</p></div></div>`).join("")}</div></div><section><h2>最近的航次</h2>${state.records.map((r, i) => `<div class="history-row"><span>${D.ROUTES.find((route) => route.id === r.route).name}</span><span>${duration(r.seconds)}</span><span>+${number(r.gain)} 星核</span></div>`).join("") || '<p class="empty">第一条航线正在由你写下。</p>'}</section></div>`;
   }
   function updateNumbers() {
     $("#dust-value").textContent = number(state.dust);
@@ -1039,7 +1052,8 @@
   }
   function render() {
     if (rebuilding) return;
-    if (!E.reachable(state, page)) page = "home";
+    if (!V.reachable(state, page)) page = "home";
+    document.documentElement.dataset.surface = page;
     const goal = E.nextGoal(state);
     const tiers = [40, 120, 150, 600, 1500, 2400, 15000].map(
       (n) => state.run.dust >= n,
@@ -1115,15 +1129,16 @@
           ["home", "航站"],
           ["fleet", "舰队"],
           ["explore", "探索"],
+          ["voyage", "远航"], ["residents", "居民"], ["archive", "档案"],
           ["jump", "跃迁"],
         ]
-          .filter(([id]) => E.reachable(state, id))
+          .filter(([id]) => V.reachable(state, id))
           .map(
             ([id, label]) =>
               `<button ${action("nav", id)} class="${page === id ? "active" : ""}" ${page === id ? 'disabled aria-current="page"' : id === "fleet" && !state.buildings.drone && page === "home" ? 'disabled title="从下一个目标启动舰队"' : ""}>${icon(id)}${label}</button>`,
           )
           .join(""));
-        patchContent($("#main"), (page === "home" ? "" : currentGoal()) + { home, fleet, explore, jump }[page]());
+        patchContent($("#main"), (page === "home" ? "" : currentGoal()) + { home, fleet, explore, voyage, residents, archive, jump }[page]());
         Array.from(
           $("#main").querySelectorAll("details[data-details-key]"),
         ).forEach((el) => {
@@ -1250,6 +1265,9 @@
     const button = event.target.closest("[data-action]");
     if (!button || button.disabled) return;
     const { action: kind, id } = button.dataset;
+    if (kind === "archive-open") {
+      const archive = $("#route-archive"); archive.open = true; archive.querySelector("summary").focus(); archive.scrollIntoView({block:"start"}); return;
+    }
     if (kind === "settings") { settings(); return; }
     if (kind === "reading-size") {
       if (!["normal", "large", "larger"].includes(id)) return;

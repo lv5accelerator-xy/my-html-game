@@ -1,3 +1,7 @@
+# 当前施工：v3.29～v3.32 视觉重制
+
+隔离 `/workspace/starport-visual`，分支 `codex/v329-v332-visual-overhaul`，起始实际 main `4d87e7fcd835c300815b0609e0ad4bb65e13fa2d` / v3.28。原 work/5084568 不动。开放 #8/#12/#22 未混入。用户授权连续四版本测试、提交、推送及草稿 PR；不合并、不发布、不动 Firebase 或玩家档。进度和准确验证见 [本轮验收](docs/v329-v332-validation.md)；历史交接下文保留，不作为本次结果。
+
 # 当前交接：3.28.0-preview.1 开发完成，草稿PR待审批
 
 本轮起始最新main9e14610a197580d2b377dc8e2f1f8684f2c57e63；隔离/workspace/starport-v328，分支codex/v325-v328-quality-and-depth。已依次完成并全量验证v3.25行动中心/草稿效率（7cbdb03）、v3.26六段居民回响（0f2339c）、v3.27六环境与三调度（ef30e4c）、v3.28触摸/性能/保存品质（本交接所属提交）。schema32与永久历史、根v2、8h上限保留。

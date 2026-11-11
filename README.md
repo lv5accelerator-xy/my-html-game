@@ -43,9 +43,7 @@
 
 ## 当前版本
 
-v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)，当前开发分支代码版本 **3.28.0-preview.1**（草稿PR #21，尚未合并/部署）。增加行动中心、六段居民与发现互动、六种远航环境与三调度、手机触摸与后台性能优化。[开发验收](docs/v325-v328-validation.md)和[新玩家/稳定候选说明](docs/v328-stability-checklist.md)列出准确测试与限制。公开main的3.24历史内容：新增四段重访安排、九项星区证据复查、三组九段居民接班生活、十二项有限长期荣誉、真实远航收支和双槽编成取舍。保留六章、三个永久结局、旧装备与方案、12类动态事件、图谱与长期远航、港务需求/工程和本机备份；原生HTML/CSS/JavaScript、schema32、v2/v3独立存储与8h离线上限继续保留。v3不连接旧版Firebase。
-
-v3.24上一轮的实际合并提交、Pages部署、公开Chromium/WebKit验收和精确计数见[连续开发与发布记录](docs/v321-v324-validation.md)及[PR #20最终验收](https://github.com/lv5accelerator-xy/my-html-game/pull/20)。版本保留preview命名，不另建GitHub Release。另见[试玩说明](docs/v3-playable.md)、[四阶段更新记录](patch-notes/README.md#v3-后续可玩性)；[3.20历史发布](docs/v320-release-validation.md)仍可查阅。
+v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)。本开发分支正在连续施工 **3.29～3.32 视觉重制**，当前阶段 **3.29.0-preview.1**。七种页面构图复用真实游戏规则，探索聚合入口与所有旧目标定位保留。最新 main 基线为已合并的 v3.28（`4d87e7f`）；本分支不合并、不部署。完整实测、素材和截图见[视觉重制验收](docs/v329-v332-validation.md)。原六章、三个结局、经营、远航、备份、schema32 与 v2/v3 存储隔离保留。
 
 旧版主入口保留 **v2.3.0「归航之约」**。
 

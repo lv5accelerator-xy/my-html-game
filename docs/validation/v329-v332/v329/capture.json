@@ -1,0 +1,371 @@
+{
+  "source": "4d87e7fcd835c300815b0609e0ad4bb65e13fa2d",
+  "version": "3.29.0-preview.1",
+  "browser": "151.0.7922.173",
+  "date": "2026-11-11T15:26:06.508Z",
+  "rows": [
+    {
+      "page": "home",
+      "width": 1280,
+      "screenshot": "home-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 6.691492999999809,
+      "nodes": 309,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": []
+    },
+    {
+      "page": "fleet",
+      "width": 1280,
+      "screenshot": "fleet-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 106.1506589999999,
+      "nodes": 239,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": []
+    },
+    {
+      "page": "explore",
+      "width": 1280,
+      "screenshot": "explore-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 146.5380729999997,
+      "nodes": 2703,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": []
+    },
+    {
+      "page": "voyage",
+      "width": 1280,
+      "screenshot": "voyage-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 113.66267400000015,
+      "nodes": 815,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": []
+    },
+    {
+      "page": "residents",
+      "width": 1280,
+      "screenshot": "residents-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 80.18926900000042,
+      "nodes": 400,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": []
+    },
+    {
+      "page": "archive",
+      "width": 1280,
+      "screenshot": "archive-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 96.81941700000061,
+      "nodes": 1169,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": []
+    },
+    {
+      "page": "jump",
+      "width": 1280,
+      "screenshot": "jump-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 40.464898999999605,
+      "nodes": 156,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": []
+    },
+    {
+      "width": 1280,
+      "first": {
+        "nodes": 309,
+        "resources": [
+          {
+            "name": "style.css?v=3.29.0-preview.1",
+            "bytes": 49279,
+            "duration": 141.69999999995343
+          },
+          {
+            "name": "data.js?v=3.29.0-preview.1",
+            "bytes": 149348,
+            "duration": 152.60000000009313
+          },
+          {
+            "name": "engine.js?v=3.29.0-preview.1",
+            "bytes": 173734,
+            "duration": 157.40000000002328
+          },
+          {
+            "name": "storage.js?v=3.29.0-preview.1",
+            "bytes": 11284,
+            "duration": 155.89999999990687
+          },
+          {
+            "name": "visual.css?v=3.29.0-preview.1",
+            "bytes": 8592,
+            "duration": 152.19999999995343
+          },
+          {
+            "name": "visuals.js?v=3.29.0-preview.1",
+            "bytes": 2576,
+            "duration": 152.69999999995343
+          },
+          {
+            "name": "app.js?v=3.29.0-preview.1",
+            "bytes": 159303,
+            "duration": 157.09999999997672
+          },
+          {
+            "name": "assets/salvage-orbit.webp",
+            "bytes": 298024,
+            "duration": 26
+          }
+        ],
+        "navigation": 1094.1999999999534
+      },
+      "errors": [],
+      "bad": []
+    },
+    {
+      "page": "home",
+      "width": 375,
+      "screenshot": "home-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 4.360622999999578,
+      "nodes": 309,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": []
+    },
+    {
+      "page": "fleet",
+      "width": 375,
+      "screenshot": "fleet-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 63.98830300000009,
+      "nodes": 239,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": []
+    },
+    {
+      "page": "explore",
+      "width": 375,
+      "screenshot": "explore-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 119.65203999999994,
+      "nodes": 2703,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": []
+    },
+    {
+      "page": "voyage",
+      "width": 375,
+      "screenshot": "voyage-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 68.54582300000038,
+      "nodes": 815,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": []
+    },
+    {
+      "page": "residents",
+      "width": 375,
+      "screenshot": "residents-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 42.34195600000021,
+      "nodes": 400,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": []
+    },
+    {
+      "page": "archive",
+      "width": 375,
+      "screenshot": "archive-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 35.950401999999485,
+      "nodes": 1169,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": []
+    },
+    {
+      "page": "jump",
+      "width": 375,
+      "screenshot": "jump-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 40.47895499999959,
+      "nodes": 156,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": []
+    },
+    {
+      "width": 375,
+      "first": {
+        "nodes": 309,
+        "resources": [
+          {
+            "name": "style.css?v=3.29.0-preview.1",
+            "bytes": 49279,
+            "duration": 51.90000000002328
+          },
+          {
+            "name": "data.js?v=3.29.0-preview.1",
+            "bytes": 149348,
+            "duration": 68.79999999993015
+          },
+          {
+            "name": "engine.js?v=3.29.0-preview.1",
+            "bytes": 173734,
+            "duration": 68.79999999993015
+          },
+          {
+            "name": "visual.css?v=3.29.0-preview.1",
+            "bytes": 8592,
+            "duration": 68.09999999997672
+          },
+          {
+            "name": "storage.js?v=3.29.0-preview.1",
+            "bytes": 11284,
+            "duration": 68.5
+          },
+          {
+            "name": "visuals.js?v=3.29.0-preview.1",
+            "bytes": 2576,
+            "duration": 73.80000000004657
+          },
+          {
+            "name": "app.js?v=3.29.0-preview.1",
+            "bytes": 159303,
+            "duration": 80.29999999993015
+          },
+          {
+            "name": "assets/salvage-orbit.webp",
+            "bytes": 298024,
+            "duration": 25.199999999953434
+          }
+        ],
+        "navigation": 348.9000000000233
+      },
+      "errors": [],
+      "bad": []
+    },
+    {
+      "page": "home",
+      "width": 320,
+      "screenshot": "home-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 14.296795000000202,
+      "nodes": 309,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": []
+    },
+    {
+      "page": "fleet",
+      "width": 320,
+      "screenshot": "fleet-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 77.25038700000005,
+      "nodes": 239,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": []
+    },
+    {
+      "page": "explore",
+      "width": 320,
+      "screenshot": "explore-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 132.80830700000115,
+      "nodes": 2703,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": []
+    },
+    {
+      "page": "voyage",
+      "width": 320,
+      "screenshot": "voyage-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 81.27357900000061,
+      "nodes": 815,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": []
+    },
+    {
+      "page": "residents",
+      "width": 320,
+      "screenshot": "residents-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 50.7401890000001,
+      "nodes": 400,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": []
+    },
+    {
+      "page": "archive",
+      "width": 320,
+      "screenshot": "archive-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 52.51702699999987,
+      "nodes": 1169,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": []
+    },
+    {
+      "page": "jump",
+      "width": 320,
+      "screenshot": "jump-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 50.905925000000934,
+      "nodes": 156,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": []
+    },
+    {
+      "width": 320,
+      "first": {
+        "nodes": 309,
+        "resources": [
+          {
+            "name": "style.css?v=3.29.0-preview.1",
+            "bytes": 49279,
+            "duration": 35.199999999953434
+          },
+          {
+            "name": "data.js?v=3.29.0-preview.1",
+            "bytes": 149348,
+            "duration": 40.40000000002328
+          },
+          {
+            "name": "visual.css?v=3.29.0-preview.1",
+            "bytes": 8592,
+            "duration": 37.29999999993015
+          },
+          {
+            "name": "engine.js?v=3.29.0-preview.1",
+            "bytes": 173734,
+            "duration": 40.39999999990687
+          },
+          {
+            "name": "storage.js?v=3.29.0-preview.1",
+            "bytes": 11284,
+            "duration": 53.39999999990687
+          },
+          {
+            "name": "visuals.js?v=3.29.0-preview.1",
+            "bytes": 2576,
+            "duration": 53
+          },
+          {
+            "name": "app.js?v=3.29.0-preview.1",
+            "bytes": 159303,
+            "duration": 53.59999999997672
+          },
+          {
+            "name": "assets/salvage-orbit.webp",
+            "bytes": 298024,
+            "duration": 8.70000000006985
+          }
+        ],
+        "navigation": 380.0999999999767
+      },
+      "errors": [],
+      "bad": []
+    }
+  ]
+}

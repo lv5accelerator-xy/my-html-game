@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),http=require('node:http'),path=require('node:path');
+const root='/workspace/starport-visual',E=require(root+'/v3/engine.js'),S=require(root+'/v3/storage.js'),D=require(root+'/v3/data.js');
+const {chromium}=require(process.env.CODEX_PLAYWRIGHT_PATH);
+const server=http.createServer((req,res)=>{let f=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);if(fs.existsSync(f)&&fs.statSync(f).isDirectory())f+='/index.html';if(!f.startsWith(root+'/')||!fs.existsSync(f)){res.writeHead(404).end();return;}res.setHeader('Content-Type',({'.js':'text/javascript','.css':'text/css','.webp':'image/webp','.html':'text/html'})[path.extname(f)]||'application/octet-stream');res.end(fs.readFileSync(f));});
+let browser;
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${server.address().port}/v3/`;browser=await chromium.launch({executablePath:process.env.CODEX_CHROMIUM_PATH});let selections=0;
+for(const width of [320,375]){const context=await browser.newContext({viewport:{width,height:900},hasTouch:true,isMobile:true});await require(root+'/tests/helpers/isolate-browser.cjs')(context,url);const now=Date.now(),s=E.sanitize(structuredClone(require(root+'/tests/fixtures/v324-saves.json').states[0].state),now);s.lastAt=now;
+await context.addInitScript(({key,s})=>localStorage.setItem(key,JSON.stringify(s)),{key:S.KEY,s});const p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.clock.install({time:now-60000});await p.clock.pauseAt(now);await p.goto(url);await p.locator('#navigation [data-id="explore"]').tap();assert.equal(await p.locator('html').getAttribute('data-surface'),'explore');
+const read=()=>p.evaluate(()=>JSON.parse(localStorage.getItem(SalvageStorage.KEY))),before=await read();
+for(const chain of D.SECTORS){const node=p.locator(`g[data-action="sector-select"][data-id="${chain.id}"]`).first();await node.evaluate(el=>window.__touchNode=el);await node.tap();const after=await read();assert.equal(after.atlas.priority,chain.id);assert.equal(after.dust,before.dust);assert.equal(after.samples,before.samples);assert.deepEqual(after.atlas.nodes,before.atlas.nodes);assert.ok(await node.evaluate(el=>el===window.__touchNode&&el.isConnected));assert.equal(await p.locator(`.sector-chains [data-id="${chain.id}"]`).getAttribute('aria-pressed'),'true');selections++;}
+assert.deepEqual(errors,[]);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);console.log(`ok real touch ${width}px: three chains, persisted priority, retained SVG target, unchanged rewards`);await context.close();}
+await browser.close();server.close();console.log(`TOUCH_RESULT: 2 mobile viewports, ${selections} actual touchscreen selections, 0 failures`);
+})().catch(async e=>{console.error(e);await browser?.close();server.close();process.exitCode=1;});

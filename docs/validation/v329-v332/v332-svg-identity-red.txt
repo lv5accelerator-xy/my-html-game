@@ -1,0 +1,22 @@
+ok 1 - visual model observes city-v324-mature
+ok 2 - visual model observes city-v324-contract
+ok 3 - visual model observes city-v324-paid
+ok 4 - visual model observes watch-v324-mature
+ok 5 - visual model observes watch-v324-contract
+ok 6 - visual model observes watch-v324-paid
+ok 7 - visual model observes voyage-v324-mature
+ok 8 - visual model observes voyage-v324-contract
+ok 9 - visual model observes voyage-v324-paid
+ok 10 - new saves never invent residents, ships, repairs or collections
+ok 11 - repair and construction visual layers follow the real engine
+AssertionError [ERR_ASSERTION]: navigation icons and labels keep their identity through input blur
+    at /workspace/starport-visual/tests/v3-visual.test.js:16:351
+    at async scenario (/workspace/starport-visual/tests/v3-visual.test.js:12:816)
+    at async /workspace/starport-visual/tests/v3-visual.test.js:13:35 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}

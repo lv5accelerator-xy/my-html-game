@@ -1033,7 +1033,10 @@
       let cursor = host.firstChild;
       for (const next of [...fresh.childNodes]) {
         const id = key(next);
-        const node = previous.find(n => !used.has(n) && compatible(n, next) && (id || n.nodeType !== 1 || n.className === next.className));
+        // SVG className is an SVGAnimatedString object, unlike HTML's string.
+        // Compare attribute values so input blur cannot replace a pressed icon
+        // and move its label between pointerdown and WebKit's click dispatch.
+        const node = previous.find(n => !used.has(n) && compatible(n, next) && (id || n.nodeType !== 1 || (n.getAttribute("class") || "") === (next.getAttribute("class") || "")));
         if (!node) {
           host.insertBefore(next, cursor);
           continue;

@@ -1,0 +1,8 @@
+2026-11-11, after official browser-download domains returned policy 403:
+Managed cloud environment status: current, ready; network policy enforced.
+Docker local socket health check succeeded: 28.4.0.
+Official allowed-host alternative attempted with original proxy/configuration:
+docker --host=unix:///var/run/docker.sock pull mcr.microsoft.com/playwright:v1.55.0-noble@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29
+Exit 1: error pulling image configuration: download failed after attempts=6: Forbidden
+No proxy bypass or environment policy change. Local WebKit remains unavailable;
+exact-head GitHub Actions uses the same official pinned container successfully.

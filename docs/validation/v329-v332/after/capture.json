@@ -1,7 +1,7 @@
 {
-  "parentCommit": "648ba8b81c399c04e5ff6e2b335b8203260350da",
+  "parentCommit": "858271db7bfe86d5aba4a0d4f68b75b378de2c60",
   "sourceSHA256": {
-    "v3/app.js": "5620f0ca2d5b108868a3accb5a6943d5af12eaccbd93882c1c84c807f9569c82",
+    "v3/app.js": "501f821ddf0e63e6a9dae39334b99452f85ba1d825a2fc1acb8c8bfbe530eb8b",
     "v3/visuals.js": "5f5fe3902a1593795b5e0a9a29f927228412e23bae966f3d50d5eb46e3ea0aaa",
     "v3/motion.js": "03459df93ee7e35c92029b5966dd74bdf86d8cb1f632425c43573165d782bab2",
     "v3/style.css": "0e3120f9c61a4b2109efad1a7963a4e58a73d3730e028582b8751dda7a347e14",
@@ -12,13 +12,13 @@
   },
   "version": "3.32.0-preview.1",
   "browser": "151.0.7922.173",
-  "date": "2026-11-11T16:38:09.479Z",
+  "date": "2026-11-11T20:03:48.978Z",
   "rows": [
     {
       "page": "home",
       "width": 1280,
       "screenshot": "home-1280.webp",
-      "switchIncludingPWAndImageDecodeMs": 19.289238999999725,
+      "switchIncludingPWAndImageDecodeMs": 12.385817999999745,
       "nodes": 366,
       "scrollWidth": 1280,
       "viewport": 1280,
@@ -53,7 +53,7 @@
       "page": "fleet",
       "width": 1280,
       "screenshot": "fleet-1280.webp",
-      "switchIncludingPWAndImageDecodeMs": 89.89459699999998,
+      "switchIncludingPWAndImageDecodeMs": 84.966496,
       "nodes": 277,
       "scrollWidth": 1280,
       "viewport": 1280,
@@ -88,7 +88,7 @@
       "page": "explore",
       "width": 1280,
       "screenshot": "explore-1280.webp",
-      "switchIncludingPWAndImageDecodeMs": 151.15020300000015,
+      "switchIncludingPWAndImageDecodeMs": 191.80855800000018,
       "nodes": 2726,
       "scrollWidth": 1280,
       "viewport": 1280,
@@ -103,7 +103,7 @@
       "page": "voyage",
       "width": 1280,
       "screenshot": "voyage-1280.webp",
-      "switchIncludingPWAndImageDecodeMs": 103.51230299999997,
+      "switchIncludingPWAndImageDecodeMs": 95.943401,
       "nodes": 814,
       "scrollWidth": 1280,
       "viewport": 1280,
@@ -118,7 +118,7 @@
       "page": "residents",
       "width": 1280,
       "screenshot": "residents-1280.webp",
-      "switchIncludingPWAndImageDecodeMs": 72.58564099999967,
+      "switchIncludingPWAndImageDecodeMs": 67.8647390000001,
       "nodes": 414,
       "scrollWidth": 1280,
       "viewport": 1280,
@@ -133,7 +133,7 @@
       "page": "archive",
       "width": 1280,
       "screenshot": "archive-1280.webp",
-      "switchIncludingPWAndImageDecodeMs": 84.83241099999941,
+      "switchIncludingPWAndImageDecodeMs": 52.17791900000066,
       "nodes": 1184,
       "scrollWidth": 1280,
       "viewport": 1280,
@@ -148,7 +148,7 @@
       "page": "jump",
       "width": 1280,
       "screenshot": "jump-1280.webp",
-      "switchIncludingPWAndImageDecodeMs": 73.08421099999941,
+      "switchIncludingPWAndImageDecodeMs": 47.0702680000004,
       "nodes": 156,
       "scrollWidth": 1280,
       "viewport": 1280,
@@ -167,55 +167,55 @@
           {
             "name": "style.css?v=3.32.0-preview.1",
             "bytes": 49279,
-            "duration": 33.799999999813735
+            "duration": 57.80000000074506
           },
           {
             "name": "data.js?v=3.32.0-preview.1",
             "bytes": 149348,
-            "duration": 97.6000000005588
+            "duration": 72.19999999925494
           },
           {
             "name": "engine.js?v=3.32.0-preview.1",
             "bytes": 173734,
-            "duration": 131.6000000005588
+            "duration": 109.89999999850988
           },
           {
             "name": "storage.js?v=3.32.0-preview.1",
             "bytes": 11284,
-            "duration": 124.59999999962747
+            "duration": 107
           },
           {
             "name": "visual.css?v=3.32.0-preview.1",
             "bytes": 28163,
-            "duration": 110.20000000018626
+            "duration": 63.5
           },
           {
             "name": "visuals.js?v=3.32.0-preview.1",
             "bytes": 5074,
-            "duration": 113.5
+            "duration": 109.30000000074506
           },
           {
             "name": "motion.js?v=3.32.0-preview.1",
             "bytes": 3605,
-            "duration": 135.70000000018626
+            "duration": 103.5
           },
           {
             "name": "app.js?v=3.32.0-preview.1",
-            "bytes": 163560,
-            "duration": 176.19999999925494
+            "bytes": 163838,
+            "duration": 110.5
           },
           {
             "name": "assets/orbital-dock.webp",
             "bytes": 195144,
-            "duration": 16
+            "duration": 12.899999998509884
           },
           {
             "name": "assets/salvage-tug.webp",
             "bytes": 21710,
-            "duration": 183.5
+            "duration": 38.899999998509884
           }
         ],
-        "navigation": 883.5
+        "navigation": 611.3999999985099
       },
       "errors": [],
       "bad": []
@@ -224,7 +224,7 @@
       "page": "home",
       "width": 375,
       "screenshot": "home-375.webp",
-      "switchIncludingPWAndImageDecodeMs": 4.56765600000017,
+      "switchIncludingPWAndImageDecodeMs": 5.185449000000517,
       "nodes": 366,
       "scrollWidth": 375,
       "viewport": 375,
@@ -259,7 +259,7 @@
       "page": "fleet",
       "width": 375,
       "screenshot": "fleet-375.webp",
-      "switchIncludingPWAndImageDecodeMs": 71.7005709999994,
+      "switchIncludingPWAndImageDecodeMs": 70.08991500000047,
       "nodes": 277,
       "scrollWidth": 375,
       "viewport": 375,
@@ -294,7 +294,7 @@
       "page": "explore",
       "width": 375,
       "screenshot": "explore-375.webp",
-      "switchIncludingPWAndImageDecodeMs": 144.9404139999997,
+      "switchIncludingPWAndImageDecodeMs": 124.1139720000001,
       "nodes": 2726,
       "scrollWidth": 375,
       "viewport": 375,
@@ -309,7 +309,7 @@
       "page": "voyage",
       "width": 375,
       "screenshot": "voyage-375.webp",
-      "switchIncludingPWAndImageDecodeMs": 99.81030100000044,
+      "switchIncludingPWAndImageDecodeMs": 74.23469899999964,
       "nodes": 814,
       "scrollWidth": 375,
       "viewport": 375,
@@ -324,7 +324,7 @@
       "page": "residents",
       "width": 375,
       "screenshot": "residents-375.webp",
-      "switchIncludingPWAndImageDecodeMs": 90.9999969999999,
+      "switchIncludingPWAndImageDecodeMs": 82.89741499999946,
       "nodes": 414,
       "scrollWidth": 375,
       "viewport": 375,
@@ -339,7 +339,7 @@
       "page": "archive",
       "width": 375,
       "screenshot": "archive-375.webp",
-      "switchIncludingPWAndImageDecodeMs": 54.120020000000295,
+      "switchIncludingPWAndImageDecodeMs": 50.2824329999994,
       "nodes": 1184,
       "scrollWidth": 375,
       "viewport": 375,
@@ -362,7 +362,7 @@
       "page": "jump",
       "width": 375,
       "screenshot": "jump-375.webp",
-      "switchIncludingPWAndImageDecodeMs": 48.524521999999706,
+      "switchIncludingPWAndImageDecodeMs": 64.21604900000057,
       "nodes": 156,
       "scrollWidth": 375,
       "viewport": 375,
@@ -381,55 +381,55 @@
           {
             "name": "style.css?v=3.32.0-preview.1",
             "bytes": 49279,
-            "duration": 59.40000000037253
-          },
-          {
-            "name": "engine.js?v=3.32.0-preview.1",
-            "bytes": 173734,
-            "duration": 66.80000000074506
+            "duration": 32.80000000074506
           },
           {
             "name": "data.js?v=3.32.0-preview.1",
             "bytes": 149348,
-            "duration": 66.90000000037253
+            "duration": 32.29999999701977
+          },
+          {
+            "name": "engine.js?v=3.32.0-preview.1",
+            "bytes": 173734,
+            "duration": 32.19999999925494
           },
           {
             "name": "visual.css?v=3.32.0-preview.1",
             "bytes": 28163,
-            "duration": 63.90000000037253
+            "duration": 31.5
           },
           {
             "name": "storage.js?v=3.32.0-preview.1",
             "bytes": 11284,
-            "duration": 66.5
+            "duration": 35.19999999925494
           },
           {
             "name": "visuals.js?v=3.32.0-preview.1",
             "bytes": 5074,
-            "duration": 66.3999999994412
+            "duration": 34.400000002235174
           },
           {
             "name": "motion.js?v=3.32.0-preview.1",
             "bytes": 3605,
-            "duration": 71.5
+            "duration": 43.400000002235174
           },
           {
             "name": "app.js?v=3.32.0-preview.1",
-            "bytes": 163560,
-            "duration": 73.8999999994412
+            "bytes": 163838,
+            "duration": 43.599999997764826
           },
           {
             "name": "assets/orbital-dock-mobile.webp",
             "bytes": 60486,
-            "duration": 8.899999999441206
+            "duration": 9.300000000745058
           },
           {
             "name": "assets/salvage-tug.webp",
             "bytes": 21710,
-            "duration": 78.6000000005588
+            "duration": 30.300000000745058
           }
         ],
-        "navigation": 302.79999999981374
+        "navigation": 267.6000000014901
       },
       "errors": [],
       "bad": []
@@ -438,7 +438,7 @@
       "page": "home",
       "width": 320,
       "screenshot": "home-320.webp",
-      "switchIncludingPWAndImageDecodeMs": 6.387609999999768,
+      "switchIncludingPWAndImageDecodeMs": 4.469681999999921,
       "nodes": 366,
       "scrollWidth": 320,
       "viewport": 320,
@@ -473,7 +473,7 @@
       "page": "fleet",
       "width": 320,
       "screenshot": "fleet-320.webp",
-      "switchIncludingPWAndImageDecodeMs": 72.57453499999974,
+      "switchIncludingPWAndImageDecodeMs": 72.77948800000013,
       "nodes": 277,
       "scrollWidth": 320,
       "viewport": 320,
@@ -508,7 +508,7 @@
       "page": "explore",
       "width": 320,
       "screenshot": "explore-320.webp",
-      "switchIncludingPWAndImageDecodeMs": 179.55213999999978,
+      "switchIncludingPWAndImageDecodeMs": 108.92114200000105,
       "nodes": 2726,
       "scrollWidth": 320,
       "viewport": 320,
@@ -523,7 +523,7 @@
       "page": "voyage",
       "width": 320,
       "screenshot": "voyage-320.webp",
-      "switchIncludingPWAndImageDecodeMs": 94.30641900000046,
+      "switchIncludingPWAndImageDecodeMs": 62.18076099999962,
       "nodes": 814,
       "scrollWidth": 320,
       "viewport": 320,
@@ -538,7 +538,7 @@
       "page": "residents",
       "width": 320,
       "screenshot": "residents-320.webp",
-      "switchIncludingPWAndImageDecodeMs": 57.72509199999877,
+      "switchIncludingPWAndImageDecodeMs": 51.24212599999919,
       "nodes": 414,
       "scrollWidth": 320,
       "viewport": 320,
@@ -553,7 +553,7 @@
       "page": "archive",
       "width": 320,
       "screenshot": "archive-320.webp",
-      "switchIncludingPWAndImageDecodeMs": 56.38793199999964,
+      "switchIncludingPWAndImageDecodeMs": 43.830856999999014,
       "nodes": 1184,
       "scrollWidth": 320,
       "viewport": 320,
@@ -576,7 +576,7 @@
       "page": "jump",
       "width": 320,
       "screenshot": "jump-320.webp",
-      "switchIncludingPWAndImageDecodeMs": 57.178585999999996,
+      "switchIncludingPWAndImageDecodeMs": 78.15815500000099,
       "nodes": 156,
       "scrollWidth": 320,
       "viewport": 320,
@@ -595,55 +595,55 @@
           {
             "name": "style.css?v=3.32.0-preview.1",
             "bytes": 49279,
-            "duration": 36.89999999944121
+            "duration": 58.5
           },
           {
             "name": "data.js?v=3.32.0-preview.1",
             "bytes": 149348,
-            "duration": 38.5
+            "duration": 76.39999999850988
           },
           {
             "name": "engine.js?v=3.32.0-preview.1",
             "bytes": 173734,
-            "duration": 47.89999999944121
-          },
-          {
-            "name": "visual.css?v=3.32.0-preview.1",
-            "bytes": 28163,
-            "duration": 37.40000000037253
-          },
-          {
-            "name": "motion.js?v=3.32.0-preview.1",
-            "bytes": 3605,
-            "duration": 49.10000000055879
+            "duration": 81.19999999925494
           },
           {
             "name": "storage.js?v=3.32.0-preview.1",
             "bytes": 11284,
-            "duration": 47.60000000055879
+            "duration": 80.19999999925494
           },
           {
-            "name": "app.js?v=3.32.0-preview.1",
-            "bytes": 163560,
-            "duration": 50.10000000055879
+            "name": "visual.css?v=3.32.0-preview.1",
+            "bytes": 28163,
+            "duration": 66.5
           },
           {
             "name": "visuals.js?v=3.32.0-preview.1",
             "bytes": 5074,
-            "duration": 47.60000000055879
+            "duration": 79.59999999776483
+          },
+          {
+            "name": "motion.js?v=3.32.0-preview.1",
+            "bytes": 3605,
+            "duration": 79.39999999850988
+          },
+          {
+            "name": "app.js?v=3.32.0-preview.1",
+            "bytes": 163838,
+            "duration": 84.79999999701977
           },
           {
             "name": "assets/orbital-dock-mobile.webp",
             "bytes": 60486,
-            "duration": 11.599999999627471
+            "duration": 33.899999998509884
           },
           {
             "name": "assets/salvage-tug.webp",
             "bytes": 21710,
-            "duration": 38.69999999925494
+            "duration": 39.30000000074506
           }
         ],
-        "navigation": 362.09999999962747
+        "navigation": 298.5
       },
       "errors": [],
       "bad": []

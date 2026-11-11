@@ -40,9 +40,8 @@ if (V.ART) {
 }
 if(fs.existsSync(path.join(root,'v3/motion.js'))) {
  await scenario('motion: real clicks, native focus, skipping, off, reduced and hidden work',F.states[0].state,375,async(p)=>{
-  await p.waitForFunction(()=>document.querySelector('.world-scene')?.dataset.inView==='true');
   await p.locator('#settings-button').click();const storedBefore=await p.evaluate(()=>localStorage.getItem(SalvageStorage.KEY));
-  await p.locator('[data-action="motion-mode"][data-id="full"]').click();assert.equal(await p.evaluate(()=>localStorage.getItem(SalvageStorage.KEY)),storedBefore,'visual settings do not save progress');await p.keyboard.press('Escape');
+  await p.locator('[data-action="motion-mode"][data-id="full"]').click();assert.equal(await p.evaluate(()=>localStorage.getItem(SalvageStorage.KEY)),storedBefore,'visual settings do not save progress');await p.keyboard.press('Escape');await p.waitForFunction(()=>document.querySelector('.world-scene')?.dataset.inView==='true');
   const scan=p.locator('#scan-control');await scan.click();assert.equal(await p.locator('#scene-feedback').getAttribute('data-effect'),'scan');await p.clock.runFor(1000);await scan.focus();await p.clock.runFor(1000);assert.ok(await scan.evaluate(el=>el===document.activeElement));
   await p.locator('#navigation [data-id="explore"]').click();assert.equal(await p.locator('.atlas-route.is-charted').first().evaluate(el=>getComputedStyle(el).animationIterationCount),'1','confirmed route lights finish instead of repainting forever');assert.equal(await p.locator('.atlas-route.is-charted').first().evaluate(el=>getComputedStyle(el).animationName),'route-trace');await p.locator('[data-action="mission"][data-id="belt"]').click();assert.equal(await p.locator('#scene-feedback').getAttribute('data-effect'),'departure');if(process.env.V3_VISUAL_SCREENSHOTS){fs.mkdirSync(process.env.V3_VISUAL_SCREENSHOTS,{recursive:true});await p.screenshot({path:path.join(process.env.V3_VISUAL_SCREENSHOTS,'departure-375.png')});}assert.equal(await p.locator('[data-cue="departure"] .performing-ship').evaluate(el=>getComputedStyle(el).animationName),'cinematic-depart','departure has a scene-contained ship performance');
   await p.evaluate(()=>window.__cueOrigin=document.activeElement);await p.locator('#scene-feedback button').focus();await p.keyboard.press('Enter');assert.equal(await p.locator('#scene-feedback').isVisible(),false);assert.ok(await p.evaluate(()=>{const el=window.__cueOrigin;return document.activeElement===(el?.isConnected&&!el.disabled&&el!==document.body?el:document.getElementById('main'));}),'skip restores a valid origin or main');
@@ -54,6 +53,7 @@ if(fs.existsSync(path.join(root,'v3/motion.js'))) {
  });
  await scenario('low-performance auto mode disables ambient motion',F.states[0].state,320,async(p)=>{assert.equal(await p.locator('html').getAttribute('data-motion'),'off');await p.locator('#scan-control').click();assert.equal(await p.locator('#scene-feedback').isVisible(),false);});
  await scenario('motion ambient pauses outside visible scenes',F.states[0].state,1280,async(p)=>{
+  await p.locator('#settings-button').click();await p.locator('[data-action="motion-mode"][data-id="full"]').click();await p.keyboard.press('Escape');
   await p.locator('#navigation [data-id="fleet"]').click();await p.waitForFunction(()=>document.querySelector('[data-scene="dock"]')?.dataset.inView==='true');
   await p.locator('[data-scene="production"]').scrollIntoViewIfNeeded();await p.waitForFunction(()=>document.querySelector('[data-scene="production"]')?.dataset.inView==='true');
   assert.equal(await p.locator('.machine-rotor').evaluate(el=>getComputedStyle(el).animationPlayState),'running');

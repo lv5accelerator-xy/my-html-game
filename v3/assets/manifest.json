@@ -129,11 +129,11 @@
   },
   {
     "file": "salvage-tug.webp",
-    "width": 240,
-    "height": 139,
-    "bytes": 15340,
+    "width": 280,
+    "height": 157,
+    "bytes": 21710,
     "tool": "OpenAI Image Gen; original isolated prop sprite",
-    "source": "exec-a3f0b7b9-8d28-4872-be97-a221a9d9d147.png"
+    "source": "exec-df482db1-48b8-4756-8c5e-5b353475c2b4.png; sprite isolated from original props via Image Gen"
   },
   {
     "file": "power-module.webp",

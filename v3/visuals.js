@@ -28,7 +28,7 @@
   }
   function overlay(m, kind) {
     if (!['home','dock'].includes(kind)) return '';
-    return `<div class="living-overlay" aria-hidden="true"><svg class="port-light-layer" viewBox="0 0 720 280">${[0,1,2].map(i=>`<g class="port-light ${i<m.repair?'is-lit':''}" transform="translate(${70+i*290} 120)"><path d="M0 0v75m-7-67h14M-4 76h8"/><circle cy="8" r="5"/></g>`).join('')}</svg><div class="docked-ships" data-scene-ships="${m.ships}">${Array.from({length:m.ships},()=>prop('salvage-tug')).join('')}</div></div>`;
+    return `<div class="living-overlay" aria-hidden="true"><svg class="port-light-layer" viewBox="0 0 720 280">${[0,1,2].map(i=>`<g style="--light:${i}" class="port-light ${i<m.repair?'is-lit':''}" transform="translate(${70+i*290} 120)"><path d="M0 0v75m-7-67h14M-4 76h8"/><circle cy="8" r="5"/></g>`).join('')}</svg><div class="docked-ships" data-scene-ships="${m.ships}">${Array.from({length:m.ships},()=>prop('salvage-tug')).join('')}</div></div>`;
   }
   function districts(s) {
     const facilities=E.portFacilities(s).filter(f=>f.kind==='longterm'&&f.live);
@@ -37,7 +37,7 @@
   }
   function media(kind, s, options = {}) {
     const m = model(s), title = labels[kind], id = kind==='home'?(m.repair===3?'orbital-dock':'unrepaired-orbit'):ART[kind];
-    return `<figure class="world-scene world-scene--${kind}" data-scene="${kind}" data-repair="${m.repair}" data-residents="${m.residents}"><div class="art-stage">${picture(id,Boolean(options.eager),title)}${overlay(m,kind)}</div><figcaption><strong>${title}</strong><span>${kind==='home'||kind==='dock'||kind==='production'?`舰队 ${m.fleet.toLocaleString('zh-CN')} 艘 · 修复 ${m.repair}/3${m.fleet?' · 停泊标记为示意':''}`:kind==='sector'?`已归档 ${m.nodes}/9 处坐标`:kind==='habitat'?m.residents?'居民已抵达':'等待船队抵达':kind==='bridge'?m.stage===null?'港内整备':`阶段 ${Math.min(4,m.stage+1)}/4`:kind==='jump'?'永久记录将随你启航':'已确认的航行记录'}</span></figcaption></figure>`;
+    return `<figure class="world-scene world-scene--${kind}" data-scene="${kind}" data-repair="${m.repair}" data-residents="${m.residents}"><div class="art-stage">${picture(id,Boolean(options.eager),title)}${overlay(m,kind)}<div class="scene-performance" aria-hidden="true">${prop("salvage-tug","performing-ship")}<span class="energy-release"></span></div>${kind==="production"?'<svg class="machine-rotor" aria-hidden="true" viewBox="0 0 100 100"><circle cx="50" cy="50" r="30"/><path d="M50 10v80M10 50h80M22 22l56 56M22 78l56-56"/></svg>':kind==="sector"?'<span class="scan-ripple" aria-hidden="true"></span>':kind==="jump"?'<span class="jump-field" aria-hidden="true"></span>':""}</div><figcaption><strong>${title}</strong><span>${kind==='home'||kind==='dock'||kind==='production'?`舰队 ${m.fleet.toLocaleString('zh-CN')} 艘 · 修复 ${m.repair}/3${m.fleet?' · 停泊标记为示意':''}`:kind==='sector'?`已归档 ${m.nodes}/9 处坐标`:kind==='habitat'?m.residents?'居民已抵达':'等待船队抵达':kind==='bridge'?m.stage===null?'港内整备':`阶段 ${Math.min(4,m.stage+1)}/4`:kind==='jump'?'永久记录将随你启航':'已确认的航行记录'}</span></figcaption></figure>`;
   }
   return { model, reachable, media, picture, prop, ART, districts };
 });

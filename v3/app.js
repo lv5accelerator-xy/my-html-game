@@ -3,7 +3,8 @@
   const D = globalThis.SalvageData,
     E = globalThis.SalvageEngine,
     S = globalThis.SalvageStorage,
-    V = globalThis.SalvageVisuals;
+    V = globalThis.SalvageVisuals,
+    M = globalThis.SalvageMotion;
   const $ = (selector) => document.querySelector(selector);
   const escape = (text) =>
     String(text).replace(
@@ -141,9 +142,11 @@
   }
   function openDialog(title, body) {
     if (!dialog.open) dialogOrigin = document.activeElement;
+    dialog.dataset.presentation = /回信|居民来信/.test(title)?"letter":/启航/.test(title)?"jump":title==="归航简报"?"return":"standard";
     $("#dialog-title").textContent = title;
-    $("#dialog-body").innerHTML = (/回信|居民来信/.test(title)?V.prop("resident-letter","letter-prop"):"") + body;
+    $("#dialog-body").innerHTML = (/回信|居民来信/.test(title)?V.prop("resident-letter","letter-prop"): /启航/.test(title)?V.picture("starcore-jump",false,"星核跃迁核心","confirmation-core"):"") + body;
     if (!dialog.open) dialog.showModal();
+    if(title==="归航简报")M.notice("return","归航简报已送达",true);
   }
   function closeDialog() {
     dialog.close();
@@ -224,6 +227,7 @@
     openDialog(
       "航站设置",
       `<p>进度保存在这台设备。跃迁不会清除舰装、故事、航站修复和永久能力。</p>${blocked ? '<p class="save-warning">自动保存已暂停。请先导出记录，再恢复备份或重新启航。</p>' : ""}
+      <fieldset class="reading-settings"><legend>场景动态</legend><div>${[["auto","跟随设备"],["off","关闭动态"],["full","完整动态"]].map(([id,label])=>`<button class="outline" ${action("motion-mode",id)} aria-pressed="${M.mode()===id}">${label}</button>`).join("")}</div><p>减少动态偏好始终优先；省流或低性能设备自动降级，不改变生产与航时。</p></fieldset>
       <fieldset class="reading-settings"><legend>阅读字号</legend><div>${[["normal", "标准"], ["large", "大字"], ["larger", "特大"]].map(([id, label]) => `<button class="outline" ${action("reading-size", id)} aria-pressed="${reading.size === id}">${label}</button>`).join("")}</div><p>仅改变这台设备的显示，航线进度独立保存。</p></fieldset>
       <div class="settings-links"><button ${action("export")}>导出当前航线</button><button ${action("raw-export")}>导出本机原始记录</button><button ${action("import")} ${conflicted ? "disabled" : ""}>导入记录</button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
       ${backupPanel()}
@@ -401,7 +405,7 @@
             )
               .map(
                 (r) =>
-                  `<div class="research-row" id="research-${r.id}" tabindex="-1"><div><h3>${r.name}</h3><p>${r.detail}</p></div><small>${number(r.cost)} 星尘</small><div class="row-action"><button ${action("research", r.id)} ${state.research.includes(r.id) ? "disabled" : `data-min-dust="${r.cost}"`}>${state.research.includes(r.id) ? "已完成" : "研究"}</button></div></div>`,
+                  `<div class="research-row ${state.research.includes(r.id)?"is-researched":""}" id="research-${r.id}" tabindex="-1"><div><h3>${r.name}</h3><p>${r.detail}</p></div><small>${number(r.cost)} 星尘</small><div class="row-action"><button ${action("research", r.id)} ${state.research.includes(r.id) ? "disabled" : `data-min-dust="${r.cost}"`}>${state.research.includes(r.id) ? "已完成" : "研究"}</button></div></div>`,
               )
               .join("")}</section>`
           : ""
@@ -788,7 +792,7 @@
     if(state.discoveries < 3) return '';
     const a=state.atlas, active=a.active;
     return `<section id="sector-atlas" class="sector-atlas" tabindex="-1" aria-label="星区探索图谱"><div class="section-title"><h2>星区探索图谱</h2><span>已调查 ${a.nodes.length} / 9 处</span></div><p>三份归航报告确认了调查入口。选择优先线索，再沿安全短线逐处核验。动态发现可缩短相关调查；所有路径都能安全完成。</p>
-    <div class="atlas-space">${V.media("sector",state,{eager:page==="explore"})}<svg viewBox="0 0 600 400" role="group" aria-label="三条连续调查航线">${D.SECTORS.map((c,i)=>{const n=E.surveyCount(state,c.id);return `<path d="M100 ${75+i*125}H500" stroke="#354750"/>${c.nodes.map((name,j)=>`<g class="sector-node ${j<n?'is-complete':''}" role="button" tabindex="0" ${action('sector-select',c.id)} transform="translate(${100+j*200} ${75+i*125})" aria-label="${c.name} · ${name} · ${j<n?'已完成':j===n?'待调查':'待前序线索'}"><rect class="map-hit-area" x="-50" y="-50" width="100" height="100" rx="50" style="fill:transparent;stroke:none"/><circle r="18"/><text text-anchor="middle" y="5">${j<n?'✓':j+1}</text></g>`).join('')}`;}).join('')}</svg></div>
+    <div class="atlas-space">${V.media("sector",state,{eager:page==="explore"})}<svg viewBox="0 0 600 400" role="group" aria-label="三条连续调查航线">${D.SECTORS.map((c,i)=>{const n=E.surveyCount(state,c.id);return `${[0,1].map(j=>`<path class="atlas-route ${j+1<n?"is-charted":""}" style="--segment:${i*2+j}" d="M${100+j*200} ${75+i*125}h200"/>`).join("")}${c.nodes.map((name,j)=>`<g class="sector-node ${j<n?'is-complete':''}" role="button" tabindex="0" ${action('sector-select',c.id)} transform="translate(${100+j*200} ${75+i*125})" aria-label="${c.name} · ${name} · ${j<n?'已完成':j===n?'待调查':'待前序线索'}"><rect class="map-hit-area" x="-50" y="-50" width="100" height="100" rx="50" style="fill:transparent;stroke:none"/><circle r="18"/><text text-anchor="middle" y="5">${j<n?'✓':j+1}</text></g>`).join('')}`;}).join('')}</svg></div>
     <div class="sector-chains">${D.SECTORS.map(c=>{const count=E.surveyCount(state,c.id);return `<article><h3>${c.name} · ${count}/3</h3><p>${count===3?`已发现：${c.discovery} · 纪念品「${c.collection}」 · ${c.route}`:`下一项：${c.nodes[count]}`}</p><button class="outline" ${action('sector-select',c.id)} aria-pressed="${a.priority===c.id}">${count===3?'重读发现档案':'优先调查此线'}</button></article>`;}).join('')}</div>
     ${active?`<article class="harbor-active"><h3>${D.SECTORS.find(c=>c.id===active.chain).nodes[active.node]}</h3><p data-survey-time></p><p>锁定收益 ${number(active.dust)} 星尘 + ${active.samples} 样本 · 分流 ${Math.round(active.diversion*100)}%</p><button class="primary" ${action('survey-claim',String(active.token))} ${state.clock>=active.end?'':'disabled'}>归档本次调查</button></article>`:a.priority && E.surveyCount(state,a.priority)<3?`<div class="survey-methods">${D.SURVEY_METHODS.map(m=>{const p=E.surveyPreview(state,a.priority,m.id);return `<article><h3>${m.name}</h3><p>${duration(p.seconds)} · 分流 ${Math.round(p.diversion*100)}% · 支出 ${p.costSamples} 样本</p><p>回收 ${number(p.dust)} 星尘 + ${p.samples} 样本 · 事件证据 ${p.evidence} 份</p><button class="outline" ${action('survey-start',m.id)} data-node="${p.node}" ${p.available?'':'disabled'}>安排调查</button><small>${p.reason}</small></article>`;}).join('')}</div>`:''}
     <details data-details-key="sector-records"><summary>已完成节点与发现档案</summary>${a.nodes.map(n=>`<p>${D.SECTORS.find(c=>c.id===n.chain).nodes[n.node]} · ${D.SURVEY_METHODS.find(m=>m.id===n.approach).name} · ${number(n.dust)} 星尘 / ${n.samples} 样本</p>`).join('')||'<p>首份调查归档后，后续坐标将点亮。</p>'}</details></section>`;
@@ -1036,7 +1040,7 @@
           if (node.nodeValue !== next.nodeValue) node.nodeValue = next.nodeValue;
         } else {
           const editing = node === document.activeElement && node.matches("input,textarea,select");
-          const keep = name => (node.tagName === "DETAILS" && name === "open") || (editing && ["value", "checked", "selected"].includes(name));
+          const keep = name => (["data-in-view","data-cue"].includes(name) && node.matches(".world-scene,.atlas-space")) || (node.tagName === "DETAILS" && name === "open") || (editing && ["value", "checked", "selected"].includes(name));
           for (const attr of [...node.attributes]) if (!keep(attr.name) && !next.hasAttribute(attr.name)) node.removeAttribute(attr.name);
           for (const attr of [...next.attributes]) if (!keep(attr.name) && node.getAttribute(attr.name) !== attr.value) node.setAttribute(attr.name, attr.value);
           if (!editing && node.matches('input[type="checkbox"]')) node.checked = next.checked;
@@ -1163,6 +1167,7 @@
         rebuilding = false;
       }
       signature = next;
+      M.observe();
     }
     updateNumbers();
     lastPaintClock=state.clock;
@@ -1265,6 +1270,9 @@
     const button = event.target.closest("[data-action]");
     if (!button || button.disabled) return;
     const { action: kind, id } = button.dataset;
+    if (kind === "motion-mode") {
+      M.set(id);dialog.querySelectorAll('[data-action="motion-mode"]').forEach(el=>el.setAttribute("aria-pressed",String(el.dataset.id===id)));return;
+    }
     if (kind === "archive-open") {
       const archive = $("#route-archive"); archive.open = true; archive.querySelector("summary").focus(); archive.scrollIntoView({block:"start"}); return;
     }
@@ -1294,7 +1302,7 @@
       render();
       return;
     }
-    if(kind==='honor-claim'){if(E.claimHonor(state,id)){save();render();toast('有限荣誉已陈列，永久保留。');}return;}
+    if(kind==='honor-claim'){if(E.claimHonor(state,id)){save();render();toast('有限荣誉已陈列，永久保留。');M.notice('honor','新的荣誉已陈列',true);}return;}
     if(kind==='community-focus'){if(E.setHarborFocus(state,id)){save();render();toast('下一份居民协作将按新方向准备。');}return;}
     if(kind==='community-accept'){if(E.acceptCommunity(state,id,button.dataset.serial)){save();render();toast('居民协作已接下，条件已锁定，无交付期限。');}return;}
     if(kind==='community-path'){if(E.setCommunityPath(state,button.dataset.serial,id)){save();render();}return;}
@@ -1320,13 +1328,13 @@
       if(kind==='plan-pause'||kind==='plan-resume') ok=E.pauseItinerary(state,id,kind==='plan-resume');
       if(kind==='plan-restore') ok=E.restoreItineraryEquipment(state,id);
       if(kind==='plan-stop') ok=E.stopItinerary(state,id);
-      save();render();toast(ok?'远航安排已更新，资源和阶段记录已保存。':E.itineraryStatus(state)?.reason||'条件已变化，请核对编成与费用。');return;
+      save();render();if(ok&&["plan-start","plan-next"].includes(kind))M.notice("departure","远航安排已接续",true);toast(ok?'远航安排已更新，资源和阶段记录已保存。':E.itineraryStatus(state)?.reason||'条件已变化，请核对编成与费用。');return;
     }
     if(kind === 'deep-loadout') { if(E.applyLoadout(state,id)) {save();render();toast('已换装，已出发的阶段仍沿用原编成。');} return; }
     if(kind === 'deep-start') { if(E.startVoyage(state,id)) {save();render();toast('远航已编排，请选择第一段方案。');} return; }
-    if(kind === 'deep-dispatch') { if(E.dispatchVoyageLeg(state,button.dataset.token,button.dataset.stage,id)) {save();render();toast('本阶段已出发，收益与编成已锁定。');} return; }
+    if(kind === 'deep-dispatch') { if(E.dispatchVoyageLeg(state,button.dataset.token,button.dataset.stage,id)) {save();render();toast('本阶段已出发，收益与编成已锁定。');M.notice('departure','远航舰队正在离港',true);} return; }
     if(kind === 'deep-claim') { if(E.claimVoyageLeg(state,id,button.dataset.stage)) {save();render();toast('阶段报告已记录，回收物仍随船封存。');} return; }
-    if(kind === 'deep-finish') { if(E.finishVoyage(state,id)) {save();render();toast('远航已归航入库，永久档案已保存。');} return; }
+    if(kind === 'deep-finish') { if(E.finishVoyage(state,id)) {save();render();toast('远航已归航入库，永久档案已保存。');M.notice('arrival','远航归来，回收物已入库',true);} return; }
     if (kind === "sector-select") {
       if(E.setSurveyPriority(state,id)) { save(); render(); }
       return;
@@ -1354,7 +1362,7 @@
       render(); save(); return;
     }
     if (kind === "harbor-build") {
-      if (E.buildHarborProject(state, id, button.dataset.level)) toast("星港工程已建成一期，总览与后续任务能力已更新。");
+      if (E.buildHarborProject(state, id, button.dataset.level)) {toast("星港工程已建成一期，总览与后续任务能力已更新。");M.notice("build","永久工程已建成一期",true);}
       render(); save(); return;
     }
     if (kind === "port-region") { showPortRegion(id); return; }
@@ -1393,6 +1401,7 @@
         button.classList.remove("flash");
         void button.offsetWidth;
         button.classList.add("flash");
+        M.notice("scan", `星尘 +${number(gain)}`);
       }
     } else if (kind === "buy") {
       const count = E.buy(
@@ -1400,11 +1409,13 @@
         id,
         buyMode === "max" ? "max" : Number(buyMode),
       );
-      if (count)
+      if (count) {
         toast(`建造 ${count} 艘${D.BUILDINGS.find((b) => b.id === id).name}。`);
+        M.notice("build","设备已激活");
+      }
     } else if (kind === "mode") buyMode = id;
     else if (kind === "route") { if (E.chooseRoute(state, id)) toast("航线已确认，当前目标已更新。"); }
-    else if (kind === "research") { if (E.research(state, id)) toast(`研究完成：${D.RESEARCH.find(r => r.id === id).name}。`); }
+    else if (kind === "research") { if (E.research(state, id)) toast(`研究完成：${D.RESEARCH.find(r => r.id === id).name}。`); M.notice("research","研究节点已点亮"); }
     else if (kind === "beacon") { const gain = E.claimBeacon(state); if (gain) toast(`信标补给 +${number(gain)} 星尘。`); }
     else if (kind === "prepare")
       E.prepareMission(state, button.dataset.mission, id);
@@ -1418,9 +1429,9 @@
         );
         return;
       }
-      if (E.startMission(state, id)) { recentStory = null; toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
+      if (E.startMission(state, id)) { recentStory = null; M.notice("departure","探索船正在离港",true); toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
     } else if (kind === "risk") {
-      if (E.startMission(state, id)) { recentStory = null; toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
+      if (E.startMission(state, id)) { recentStory = null; M.notice("departure","探索船正在离港",true); toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
       closeDialog();
     } else if (kind === "claim") {
       const story = state.result?.story;
@@ -1429,6 +1440,7 @@
           ? story
           : null;
         toast(story ? "重要发现已永久归档，故事奖励已入库。" : "探索回收物已入库，当前目标已更新。");
+        M.notice(story?"discovery":"arrival",story?"重要发现已永久归档":"回收物已送达",Boolean(story));
       }
     } else if (kind === "encounter") {
       if (E.chooseEncounter(state, button.dataset.token, id)) toast("发现处理方案已确认，结果与航行记录会自动保存。");
@@ -1502,12 +1514,12 @@
           `${D.MODULES.find((m) => m.id === id).name}已升至 ${state.modules[id]} 级。${state.equipped.includes(id) ? "舰装效果已生效。" : "可在随舰装备中替换装备。"}`,
         );
     } else if (kind === "port") {
-      if (E.repairPort(state)) toast("航站的一盏灯，重新亮起了。");
+      if (E.repairPort(state)) {toast("航站的一盏灯，重新亮起了。");M.notice("lights","星港供电已接通",true);}
     } else if (kind === "project") {
-      if (E.buildProject(state, id))
-        toast(
-          `${D.PROJECTS.find((p) => p.id === id).name}已建成，永久效果已生效。`,
-        );
+      if (E.buildProject(state, id)) {
+        toast(`${D.PROJECTS.find((p) => p.id === id).name}已建成，永久效果已生效。`);
+        M.notice("build","永久工程已经接通",true);
+      }
     } else if (kind === "dispatch-stop") {
       E.configure(state, { dispatch: false });
       toast("本次探索继续。归航后将等待你的下一次安排。");
@@ -1523,6 +1535,7 @@
         closeDialog();
         page = "fleet";
         toast("新的航次已开始，自动购买已启动。");
+        M.notice("jump","能量释放，下一条航线已开启",true);
       }
     } else if (kind === "export") {
       exportSave();

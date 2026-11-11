@@ -1,0 +1,9 @@
+/workspace/scratch/visual-tools/node_modules/sharp/dist/output.cjs:90
+    const stack = Error();
+                  ^
+
+Error: extract_area: bad extract area
+    at Sharp.toFile (/workspace/scratch/visual-tools/node_modules/sharp/dist/output.cjs:90:19)
+    at /workspace/scratch/process-props.cjs:3:207
+
+Node.js v24.19.0

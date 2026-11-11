@@ -1,5 +1,4 @@
 {
-  "source": "4d87e7fcd835c300815b0609e0ad4bb65e13fa2d",
   "version": "3.29.0-preview.1",
   "browser": "151.0.7922.173",
   "date": "2026-11-11T15:26:06.508Z",
@@ -367,5 +366,7 @@
       "errors": [],
       "bad": []
     }
-  ]
+  ],
+  "parentCommit": "4d87e7fcd835c300815b0609e0ad4bb65e13fa2d",
+  "sourceNote": "Screenshot source is the uncommitted milestone working tree, not the parent commit; exact tested hashes are recorded in v329-full.json."
 }

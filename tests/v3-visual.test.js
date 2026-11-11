@@ -15,4 +15,26 @@ const input=p.locator('[data-config="reserve"]');await input.fill('4321');await 
 await p.locator('#navigation [data-id="archive"]').click();await p.locator('[data-action="archive-open"]').click();assert.equal(await p.locator('#route-archive').getAttribute('open'),'');await p.locator('#settings-button').click();await p.keyboard.press('Escape');assert.ok(await p.locator('#settings-button').evaluate(el=>el===document.activeElement));});
 for(const row of F.states.filter(x=>x.name.endsWith('mature')))await scenario('real ending old archive '+row.name,row.state,375,async(p)=>{await p.locator('#navigation [data-id="residents"]').click();assert.ok((await p.locator('#main').innerText()).includes('回信'));await p.locator('#navigation [data-id="voyage"]').click();await p.locator('[data-action="deep-start"][data-id="freight"]').click();assert.ok(await p.locator('.voyage-stages [aria-current="step"]').count());await p.locator('[data-action="deep-dispatch"][data-id="secure"]').click();assert.ok(await p.locator('[data-deep-time]').count());});
 await scenario('fresh progressive entry still scans and opens fleet',E.createState(Date.now()),320,async(p)=>{assert.equal(await p.locator('#navigation button').count(),2);await p.locator('#scan-control').click();assert.ok(parseFloat((await p.locator('#dust-value').innerText()).replace(/,/g,''))>0);});
+if (V.ART) {
+ const manifest=JSON.parse(fs.readFileSync(path.join(root,'v3/assets/manifest.json')));
+ test('eight original responsive scenes and four props exist and are bounded local WebP files',()=>{
+  assert.equal(Object.keys(V.ART).length,8);
+  for(const row of manifest){const b=fs.readFileSync(path.join(root,'v3/assets',row.file));assert.equal(b.length,row.bytes);assert.equal(b.toString('ascii',0,4),'RIFF');assert.equal(b.toString('ascii',8,12),'WEBP');assert.ok(b.length<250000);}
+  for(const id of Object.values(V.ART))for(const suffix of ['', '-mobile'])assert.ok(manifest.some(x=>x.file===id+suffix+'.webp'));
+ });
+ for(const width of [1280,375])await scenario('responsive original artwork decodes on every page '+width,F.states[0].state,width,async(p)=>{
+  const used=new Set();
+  for(const page of ['home','fleet','explore','voyage','residents','archive','jump']){
+   const nav=p.locator(`#navigation [data-id="${page}"]`);if(!await nav.isDisabled())await nav.click();
+   const pictures=p.locator('#main picture img');
+   await pictures.evaluateAll(imgs=>imgs.forEach(i=>i.loading='eager'));
+   for(const img of await pictures.all())await img.evaluate(i=>i.decode());
+   for(const row of await pictures.evaluateAll(imgs=>imgs.map(i=>({src:i.currentSrc,loaded:i.complete&&i.naturalWidth>0})))){assert.ok(row.loaded);assert.ok(row.src.endsWith(width<600?'-mobile.webp':'.webp'));used.add(row.src.split('/').at(-1).replace('-mobile',''));}
+  }
+  for(const id of Object.values(V.ART))assert.ok(used.has(id+'.webp'),id+' actually appears in game');
+ });
+ await scenario('unavailable artwork keeps real scan and build usable',E.createState(Date.now()),320,async(p)=>{
+  await p.route('**/assets/*.webp',route=>route.abort());await p.reload();await p.locator('#scan-control').click();assert.ok(parseFloat(await p.locator('#dust-value').innerText())>0);await p.locator('#next-goal-title').waitFor();assert.equal(await p.locator('#dialog[open]').count(),0);
+ });
+}
 console.log(`v3 visual ok: ${rules} observational checks, ${flows} browser flows`);await browser.close();server.close();})().catch(e=>{console.error(e);process.exitCode=1;server.close();});

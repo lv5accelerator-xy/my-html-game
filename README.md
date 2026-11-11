@@ -43,7 +43,7 @@
 
 ## 当前版本
 
-v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)。本开发分支正在连续施工 **3.29～3.32 视觉重制**，当前阶段 **3.31.0-preview.1**。七种页面构图复用真实游戏规则，探索聚合入口与所有旧目标定位保留。最新 main 基线为已合并的 v3.28（`4d87e7f`）；本分支不合并、不部署。完整实测、素材和截图见[视觉重制验收](docs/v329-v332-validation.md)。原六章、三个结局、经营、远航、备份、schema32 与 v2/v3 存储隔离保留。
+v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)。本开发分支已完成 **3.29～3.32 视觉重制**，当前版本 **3.32.0-preview.1**。七种页面构图复用真实游戏规则，探索聚合入口与所有旧目标定位保留。最新 main 基线为已合并的 v3.28（`4d87e7f`）；本分支不合并、不部署。完整实测、素材和截图见[视觉重制验收](docs/v329-v332-validation.md)。原六章、三个结局、经营、远航、备份、schema32 与 v2/v3 存储隔离保留。
 
 旧版主入口保留 **v2.3.0「归航之约」**。
 
@@ -123,7 +123,7 @@ my-html-game/
 
 ## 测试
 
-统一完整入口为 `node scripts/check.cjs`，需设置 `CODEX_PLAYWRIGHT_PATH`，可通过 `CODEX_CHROMIUM_PATH` 指定浏览器。执行 9 项运行脚本语法检查与 tests/ 中全部 21 个测试脚本。
+统一完整入口为 `node scripts/check.cjs`，需设置 `CODEX_PLAYWRIGHT_PATH`，可通过 `CODEX_CHROMIUM_PATH` 指定浏览器。执行 11 项运行脚本语法检查与 tests/ 中全部 22 个测试脚本。新增 `node tests/v3-visual.test.js` 检查真实插画、七页、手机、动画和焦点；独立 WebKit 由原生浏览器流程及视觉流程共同检查。
 
 基础语法与数值测试只需要 Node.js：
 

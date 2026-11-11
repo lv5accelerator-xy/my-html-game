@@ -32,8 +32,8 @@
   }
   function districts(s) {
     const facilities=E.portFacilities(s).filter(f=>f.kind==='longterm'&&f.live);
-    const scenes={'habitat':'resident-habitat','repair-dock':'production-line','route-station':'voyage-bridge','public-berths':'orbital-dock'};
-    return facilities.length?`<section class="finished-districts" aria-label="已建成的星港街区"><h2>灯光延伸的地方</h2><div>${facilities.map(f=>`<figure data-scene-facility="${f.id}" data-level="${f.level}">${picture(scenes[f.id]||'ecology-greenhouse')}<figcaption><strong>${f.name}</strong><span>已建成 ${f.level}/3 期</span></figcaption></figure>`).join('')}</div></section>`:'';
+    const scenes={'habitat':'resident-habitat','repair-dock':'production-line','route-station':'voyage-bridge','public-berths':'orbital-dock','supply-network':'orbital-dock'};
+    return facilities.length?`<section class="finished-districts" aria-label="已建成的星港街区"><h2>灯光延伸的地方</h2><div>${facilities.map(f=>`<figure data-scene-facility="${f.id}" data-level="${f.level}"><picture class="scene-picture district-picture"><img data-game-art src="assets/${scenes[f.id]||'resident-habitat'}-thumb.webp" width="320" height="180" alt="" loading="lazy" decoding="async"></picture><figcaption><strong>${f.name}</strong><span>已建成 ${f.level}/3 期</span></figcaption></figure>`).join('')}</div></section>`:'';
   }
   function media(kind, s, options = {}) {
     const m = model(s), title = labels[kind], id = kind==='home'?(m.repair===3?'orbital-dock':'unrepaired-orbit'):ART[kind];

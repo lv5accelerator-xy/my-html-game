@@ -218,7 +218,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible,[role="button"]:focus
 .scan-ripple { position:absolute; width:140px; height:140px; left:calc(50% - 70px); top:calc(50% - 70px); border:1px solid #a0eced; border-radius:50%; opacity:0; animation:scan-wave 8s ease-out infinite; animation-play-state:paused; }
 .world-scene[data-in-view="true"] .scan-ripple { animation-play-state:running; }
 .atlas-space .atlas-route { stroke:#517783; stroke-width:1.5; stroke-dasharray:4 8; }
-.atlas-space .atlas-route.is-charted { stroke:#b6eff0; animation:route-trace 12s linear infinite; animation-delay:calc(var(--segment) * -.8s); animation-play-state:paused; }
+.atlas-space .atlas-route.is-charted { stroke:#b6eff0; animation:route-trace 1.1s steps(3,end) 1 both; animation-delay:calc(var(--segment) * .12s); animation-play-state:paused; }
 .atlas-space[data-in-view="true"] .atlas-route { animation-play-state:running; }
 .jump-field { position:absolute; width:40%; aspect-ratio:1; left:30%; top:6%; border:1px solid #c4b4ff88; border-radius:50%; box-shadow:0 0 45px #8792e655,inset 0 0 40px #adc9ff44; opacity:0; animation:jump-gather 9s ease-in-out infinite; animation-play-state:paused; }
 .world-scene[data-in-view="true"] .jump-field { animation-play-state:running; }
@@ -244,7 +244,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible,[role="button"]:focus
 @keyframes port-light { 0%,100% {opacity:.65;} 45%,70% {opacity:1;} }
 @keyframes machine-turn { to {transform:rotate(360deg);} }
 @keyframes scan-wave { 0% {transform:scale(.3);opacity:0;} 18% {opacity:.5;} 65%,100% {transform:scale(3);opacity:0;} }
-@keyframes route-trace { to {stroke-dashoffset:-96;} }
+@keyframes route-trace { from {opacity:.25;} to {opacity:1;} }
 @keyframes jump-gather { 0%,100% {transform:scale(.8) rotate(-8deg);opacity:.08;} 60% {transform:scale(1.15) rotate(8deg);opacity:.65;} }
 @keyframes lights-on { from {opacity:0;transform:scale(.6);} to {opacity:1;transform:scale(1);} }
 @keyframes ship-depart { to {transform:translate(200px,-80px) scale(.25);opacity:0;} }
@@ -278,3 +278,83 @@ button:focus-visible,summary:focus-visible,a:focus-visible,[role="button"]:focus
 .finished-districts figcaption { display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 0;color:var(--amber); }
 .finished-districts figcaption strong { font-size:14px; }.finished-districts figcaption span { font-size:12px;color:var(--muted); }
 @media(max-width:600px){.finished-districts {padding:24px 16px;}.finished-districts>div{grid-template-columns:1fr 1fr;gap:12px;}.finished-districts .scene-picture{height:100px;}}
+
+/* v3.32 phone compositions: compact objective strip, touch chart and reading surfaces. */
+@media(max-width:600px) {
+ .current-goal { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;padding:10px 14px;min-height:72px; }
+ .current-goal > div > small:first-child { display:none; }
+ .current-goal p { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.6;margin-block:4px; }
+ .current-goal strong { font-size:13px;line-height:1.6; }
+ .current-goal [data-goal-eta] { display:block;font-size:11px; }
+ .current-goal > button { width:auto;max-width:132px;font-size:12px;margin:0; }
+ .page-header { margin-bottom:18px;gap:14px; }
+ .page-header h1 { font-size:27px;line-height:1.5; }
+ .page-header p { font-size:13px;line-height:1.8;margin-top:8px; }
+ .fleet-page .page-header { display:block; }
+ .fleet-page .buy-modes { display:flex;position:sticky;top:8px;z-index:2;width:100%;margin-top:16px;background:#0e1923ed; }
+ .fleet-page .buy-modes button { flex:1;padding:10px 5px; }
+ .fleet-page .dock-layout { margin-block:18px; }
+ .fleet-page .dock-console { padding:14px 16px; }
+ .fleet-page .dock-console > p { display:none; }
+ .fleet-page .route-active { padding-block:10px; }
+ .fleet-page .manufacturing-floor { margin-top:24px; }
+ .fleet-page .row-action button { min-height:48px;width:100%; }
+ .fleet-page .building-row .milestone-track { gap:4px; }
+ .fleet-page .building-row .milestone-track span { font-size:10px; }
+ .home-layout .scene { min-height:480px; }
+ .home-layout .scan-area { margin-top:250px; }
+ .home-layout .goal-rail .journal { display:none; }
+ .scene .scan-button { min-height:58px; }
+ .scene .world-scene--home figcaption { bottom:122px; }
+ .exploration-page > .page-header { margin-bottom:16px; }
+ .exploration-page .sector-atlas { padding-top:16px; }
+ .exploration-page .sector-atlas > p { font-size:13px;line-height:1.8; }
+ .atlas-space { margin-top:16px; }
+ .sector-chains { display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px; }
+ .sector-chains > article { flex:0 0 84%;scroll-snap-align:start;min-width:0; }
+ .sector-chains > article button { width:100%; }
+ .sector-node .map-hit-area { stroke:transparent!important;stroke-width:12px!important; }
+ .bridge-page .world-scene--bridge .art-stage { aspect-ratio:1.8; }
+ .bridge-page .long-voyages > p { font-size:13px;line-height:1.8; }
+ .bridge-page .voyage-stages { position:sticky;top:0;z-index:2;background:#0d1b26f5; }
+ .bridge-page .voyage-active { padding:12px 8px; }
+ .bridge-page .voyage-active h3 { font-size:18px; }
+ .bridge-page .deep-methods { grid-template-columns:minmax(0,1fr); }
+ .bridge-page .deep-methods article { display:grid;grid-template-columns:minmax(0,1fr); }
+ .residents-page .habitat-layout > .world-scene .art-stage { aspect-ratio:1.45; }
+ .residents-page .resident-reading { padding:4px 4px 24px; }
+ .residents-page .resident-request { border-left:1px solid #a78d57;padding-left:14px; }
+ .residents-page .resident-request p,.residents-page .resident-links p { font-size:15px;line-height:2; }
+ .residents-page .resident-request-actions { align-items:stretch; }
+ .residents-page .resident-request-actions button { min-height:48px; }
+ .archive-page .exhibit-intro .art-stage { aspect-ratio:1.65; }
+ .archive-page .exhibit-intro > div h2 { font-size:21px; }
+ .archive-page .exhibit-intro > div p { font-size:13px;margin-block:12px; }
+ .archive-page .archive-chapter { padding-inline:8px 0; }
+ .archive-page .scene-line { display:block; }
+ .archive-page .scene-line strong { display:block;margin-bottom:4px; }
+ .archive-page .scene-line p { font-size:15px;line-height:2; }
+ .jump-page > .world-scene .art-stage { aspect-ratio:1.4; }
+ .jump-page .jump-number { font-size:58px; }
+ .jump-page .jump-layout .primary { min-height:54px; }
+ #dialog input:not([type=checkbox]),#dialog textarea,#dialog select { font-size:16px;scroll-margin-bottom:24px; }
+ #dialog { max-height:calc(100dvh - 28px);overscroll-behavior:contain; }
+ #main { overflow-wrap:anywhere; }
+}
+@media(min-width:601px) {
+ .archive-page .scene-line p { font-family:Georgia,"Noto Serif CJK SC",serif;line-height:1.95; }
+ .residents-page .resident-reading { max-width:48em; }
+ .bridge-page .long-voyages > .section-title { padding-top:16px; }
+}
+@media(max-width:600px){#navigation{padding-inline:4px;}}
+
+.archive-wall { display:grid;grid-template-columns:1.1fr 1fr .9fr;gap:28px;align-items:end;padding:28px 0;border-bottom:1px solid #6d5b44; }
+.archive-wall figure { margin:0;padding:18px 12px;background:#ba996307;border-bottom:2px solid #8c7551; }
+.archive-wall figure img { width:100%;height:140px;filter:drop-shadow(0 8px 10px #0008); }
+.archive-wall figure:nth-child(2) img { height:110px; }
+.archive-wall figcaption { display:grid;gap:8px;margin-top:18px; }
+.archive-wall figcaption strong { font-size:15px;color:#dbc6a3; }.archive-wall figcaption small {font-size:12px;}
+.museum-vacancy { padding:24px 0; }.museum-vacancy p {line-height:1.9;margin-top:12px;}
+@media(max-width:600px){.archive-wall{grid-template-columns:1fr 1fr;gap:14px;}.archive-wall figure{padding:10px 8px;}.archive-wall figure img{height:112px;}.museum-vacancy{grid-column:1/-1;padding-block:8px;}.archive-wall figcaption strong{font-size:13px;}}
+
+@media(max-width:600px){.fleet-page .dock-console:not(:has(.route-choices)){padding:8px 16px;}.fleet-page .dock-console:not(:has(.route-choices)) h2{display:none;}.fleet-page .dock-console .route-active{padding:0;border-top:0;}.fleet-page .page-header p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}}

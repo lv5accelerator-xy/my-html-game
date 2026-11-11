@@ -250,6 +250,10 @@
   }
   $("#settings-button").addEventListener("click", settings);
   function navigate(target, focusId) {
+    // Keep a dedicated scene when it already owns the requested real control.
+    // Older explore callers retain the original aggregate route and focus IDs.
+    if (target === "explore" && ["voyage", "residents", "archive"].includes(page) &&
+      focusId && $("#main").contains(document.getElementById(focusId))) target = page;
     if (!V.reachable(state, target)) return;
     page = target;
     signature = "";
@@ -365,7 +369,7 @@
   function routePanel() {
     const route = D.ROUTES.find((r) => r.id === state.run.route);
     if (state.run.routeChosen)
-      return `<div class="route-active"><h3>${route.name} · ${route.subtitle}</h3><p>${route.detail} 跃迁后可以重选。</p></div>`;
+      return `<details class="route-active" data-details-key="active-route"><summary>${route.name} · ${route.subtitle}</summary><p>${route.detail} 跃迁后可以重选。</p></details>`;
     if (!state.buildings.drone) return "";
     return `<div class="section-title"><h2>这一航次，向哪里去？</h2><small>只选一次</small></div><div class="route-choices" id="route-choices" tabindex="-1">${D.ROUTES.map((r) => `<div class="route-option"><h3>${r.name}</h3><p>${r.detail}</p><button class="outline" ${action("route", r.id)}>选择</button></div>`).join("")}</div>`;
   }
@@ -868,7 +872,7 @@
     return `<div class="page residents-page"><header class="page-header"><div><h1>这里，开始有人生活。</h1><p>来信、餐桌与下一班值守，来自真正抵达的居民。</p></div></header><div class="habitat-layout">${V.media("habitat",state,{eager:true})}<div class="resident-reading">${residentPanel() || '<h2>第一支船队已安全抵达</h2><p>继续两港交接，居民的下一封信会在主线终章后开放。</p>'}${residentLinks()}</div></div>${state.chapter.includes("nursery")?`<section class="greenhouse-wing">${V.media("greenhouse",state)}<div><h2>一座温室，留住新的日出。</h2><p>永久育种舱已建成，旧光照记录由新的种植者接续。</p></div></section>`:""}${communityPanel()}${harborPanel()}</div>`;
   }
   function archive() {
-    return `<div class="page archive-page"><header class="page-header"><div><h1>每一束信号，都有来处。</h1><p>已确认的故事与收藏，在这里保留原貌。重读不会重复结算。</p></div></header><div class="exhibit-intro">${V.media("wreck",state,{eager:true})}<div><h2>航行记忆陈列馆</h2><p>已归档 ${state.lore.length} 段决定 · 永久荣誉 ${state.continuation.honors.claimed.length}/12</p><button class="outline" ${action("archive-open")}>打开航线与人物档案</button></div></div>${routeArchive()}${honorsPanel()}${encounterPanel()}</div>`;
+    return `<div class="page archive-page"><header class="page-header"><div><h1>每一束信号，都有来处。</h1><p>已确认的故事与收藏，在这里保留原貌。重读不会重复结算。</p></div></header><div class="exhibit-intro">${V.media("wreck",state,{eager:true})}<div><h2>航行记忆陈列馆</h2><p>已归档 ${state.lore.length} 段决定 · 永久荣誉 ${state.continuation.honors.claimed.length}/12</p><button class="outline" ${action("archive-open")}>打开航线与人物档案</button></div></div><div class="archive-wall" aria-label="航行收藏陈列"><figure>${V.prop("resident-letter")}<figcaption><strong>留存的通信</strong><small>${state.lore.length} 段原始决定</small></figcaption></figure>${Object.values(state.modules).some(Boolean)?`<figure>${V.prop("power-module")}<figcaption><strong>随舰的旧设备</strong><small>${Object.values(state.modules).filter(Boolean).length} 种已获得舰装</small></figcaption></figure>`:""}${state.continuation.honors.claimed.length?`<figure>${V.prop("orbit-honor")}<figcaption><strong>星港的纪念</strong><small>${state.continuation.honors.claimed.length}/12 份永久荣誉</small></figcaption></figure>`:'<div class="museum-vacancy"><h3>留给下一段航程</h3><p>达成荣誉后，可在下方亲手陈列。</p></div>'}</div>${routeArchive()}${honorsPanel()}${encounterPanel()}</div>`;
   }
   function jump() {
     const gain = E.prestigeGain(state);

@@ -1,0 +1,29 @@
+ok 1 - visual model observes city-v324-mature
+ok 2 - visual model observes city-v324-contract
+ok 3 - visual model observes city-v324-paid
+ok 4 - visual model observes watch-v324-mature
+ok 5 - visual model observes watch-v324-contract
+ok 6 - visual model observes watch-v324-paid
+ok 7 - visual model observes voyage-v324-mature
+ok 8 - visual model observes voyage-v324-contract
+ok 9 - visual model observes voyage-v324-paid
+ok 10 - new saves never invent residents, ships, repairs or collections
+ok 11 - repair and construction visual layers follow the real engine
+ok visual browser 1 - seven distinct interactive pages at 1280
+ok visual browser 2 - seven distinct interactive pages at 375
+ok visual browser 3 - seven distinct interactive pages at 320
+ok visual browser 4 - real ending old archive city-v324-mature
+ok visual browser 5 - real ending old archive watch-v324-mature
+ok visual browser 6 - real ending old archive voyage-v324-mature
+ok visual browser 7 - fresh progressive entry still scans and opens fleet
+ok 12 - eight original responsive scenes and four props exist and are bounded local WebP files
+ok visual browser 8 - responsive original artwork decodes on every page 1280
+ok visual browser 9 - responsive original artwork decodes on every page 375
+ok visual browser 10 - unavailable artwork keeps real scan and build usable
+ok visual browser 11 - motion: real clicks, native focus, skipping, off, reduced and hidden work
+ok visual browser 12 - low-performance auto mode disables ambient motion
+ok visual browser 13 - motion ambient pauses outside visible scenes
+ok visual browser 14 - v3.32 real permanent construction adds the corresponding district photograph
+ok visual browser 15 - v3.32 compact phone, large reading and keyboard-height dialog
+ok visual browser 16 - v3.32 old first-chapter report illustrates discovery without revealing later residents
+v3 visual ok: 12 observational checks, 16 browser flows

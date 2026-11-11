@@ -172,5 +172,33 @@
     "height": 427,
     "bytes": 43738,
     "source": "salvage-orbit.webp (existing repository original, responsive derivative)"
+  },
+  {
+    "file": "resident-habitat-thumb.webp",
+    "width": 320,
+    "height": 180,
+    "bytes": 16282,
+    "source": "resident-habitat.webp; small completed-district thumbnail"
+  },
+  {
+    "file": "production-line-thumb.webp",
+    "width": 320,
+    "height": 180,
+    "bytes": 17088,
+    "source": "production-line.webp; small completed-district thumbnail"
+  },
+  {
+    "file": "voyage-bridge-thumb.webp",
+    "width": 320,
+    "height": 180,
+    "bytes": 10656,
+    "source": "voyage-bridge.webp; small completed-district thumbnail"
+  },
+  {
+    "file": "orbital-dock-thumb.webp",
+    "width": 320,
+    "height": 180,
+    "bytes": 15080,
+    "source": "orbital-dock.webp; small completed-district thumbnail"
   }
 ]

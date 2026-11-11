@@ -1,0 +1,48 @@
+ok 1 - visual model observes city-v324-mature
+ok 2 - visual model observes city-v324-contract
+ok 3 - visual model observes city-v324-paid
+ok 4 - visual model observes watch-v324-mature
+ok 5 - visual model observes watch-v324-contract
+ok 6 - visual model observes watch-v324-paid
+ok 7 - visual model observes voyage-v324-mature
+ok 8 - visual model observes voyage-v324-contract
+ok 9 - visual model observes voyage-v324-paid
+ok 10 - new saves never invent residents, ships, repairs or collections
+ok 11 - repair and construction visual layers follow the real engine
+ok visual browser 1 - seven distinct interactive pages at 1280
+ok visual browser 2 - seven distinct interactive pages at 375
+ok visual browser 3 - seven distinct interactive pages at 320
+ok visual browser 4 - real ending old archive city-v324-mature
+ok visual browser 5 - real ending old archive watch-v324-mature
+ok visual browser 6 - real ending old archive voyage-v324-mature
+ok visual browser 7 - fresh progressive entry still scans and opens fleet
+ok 12 - eight original responsive scenes and four props exist and are bounded local WebP files
+ok visual browser 8 - responsive original artwork decodes on every page 1280
+ok visual browser 9 - responsive original artwork decodes on every page 375
+ok visual browser 10 - unavailable artwork keeps real scan and build usable
+ok visual browser 11 - motion: real clicks, native focus, skipping, off, reduced and hidden work
+ok visual browser 12 - low-performance auto mode disables ambient motion
+ok visual browser 13 - motion ambient pauses outside visible scenes
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('#harbor-project-repair-dock [data-action="harbor-build"]')[22m
+[2m    - locator resolved to <button data-level="2" class="outline" data-id="repair-dock" data-action="harbor-build" data-focus="harbor-build-repair-dock">建设第3期</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not visible[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not visible[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    56 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not visible[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+    at /workspace/starport-visual/tests/v3-visual.test.js:65:137
+    at async scenario (/workspace/starport-visual/tests/v3-visual.test.js:12:816)
+    at async /workspace/starport-visual/tests/v3-visual.test.js:63:1 {
+  name: 'TimeoutError'
+}

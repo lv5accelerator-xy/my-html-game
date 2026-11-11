@@ -1,6 +1,16 @@
-# 当前施工：v3.29～v3.32 视觉重制
+# 当前交接：3.32.0-preview.1 视觉重制完成，保留草稿交付
 
-隔离 `/workspace/starport-visual`，分支 `codex/v329-v332-visual-overhaul`，起始实际 main `4d87e7fcd835c300815b0609e0ad4bb65e13fa2d` / v3.28。原 work/5084568 不动。开放 #8/#12/#22 未混入。用户授权连续四版本测试、提交、推送及草稿 PR；不合并、不发布、不动 Firebase 或玩家档。进度和准确验证见 [本轮验收](docs/v329-v332-validation.md)；历史交接下文保留，不作为本次结果。
+规范仓库lv5accelerator-xy/my-html-game。起始实际main `4d87e7fcd835c300815b0609e0ad4bb65e13fa2d` / v3.28，原work/5084568保留。隔离 `/workspace/starport-visual`，分支 `codex/v329-v332-visual-overhaul`。v3.29 `40f990d90c40cf65c3dfa66edabf732015e67bed`（七页语言/布局）、v3.30 `6669b7e95f9540d2fb5a42bb3e1701270564adba`（八场景/四道具/真实状态）、v3.31 `648ba8b81c399c04e5ff6e2b335b8203260350da`（可跳过反馈/可见动画/降级）均逐版全量后推送；v3.32手机、档案就地续读及有限航线点亮属于本文件所属里程碑，准确SHA与草稿PR见git log和最终交付。
+
+最终Node22.23.4/PW1.55.0/Chromium151，无过滤 `node scripts/check.cjs` 551.01秒退出0：11语法/22脚本/33子命令；227原命名规则+12视觉观察、145规范旧档、116原浏览器+16视觉/动态流程=132。所有被测源前后散列一致。8原创主体×1280/640、4道具、2原场景派生、4街区缩略，共26WebP/2168290B；before/after/阶段截图、动画触发、实际性能、失败与修复全部在[本轮验收](docs/v329-v332-validation.md)和validation/v329-v332。
+
+本轮原始未准备检查退出1、素材裁切失败、截图工具等待/复制失败、工程区测试未展开、专属续读红绿回归、为补修主动中止的完整候选（-15）、SVG持续重绘的高开销采样均保留。最后将虚线无限动画改为已完成路线的有限点亮，独立真实5秒探索TaskDuration 386→108ms（原78ms）；最终完整回归及30分钟虚拟负载又实际通过。桌面/手机首屏响应体841441→804008/669350B，0横向溢出；5分钟真实会话与虚拟负载分开记录。
+
+规则引擎、存档模块、根v2、Firebase、deploy-pages/public-acceptance逐字节不变，玩法配置除GAME_VERSION全等；schema32、六章、三个结局、装备/方案及旧档保留。仅只读PR工作流补独立WebKit视觉步骤。Browser控制工具未暴露，使用任务授权的Playwright隔离context，网络隔离不访问生产数据。
+
+当前授权只包含开发、测试、提交、推送和草稿PR。不合并main、不发布、不建Release、不改权限或生产数据。云WebKit官方安装403；GitHub官方容器中的独立WebKit以本次准确head的实际checks为准。真实iPhone Safari、实际软键盘/低端机长期会话及玩家私有旧档未操作。旧交接中的合并/发布授权不适用于本轮。
+
+## 以下为历史交接
 
 # 当前交接：3.28.0-preview.1 开发完成，草稿PR待审批
 

@@ -52,30 +52,34 @@ async function main() {
     await page.goto(`${origin}/`);
     await page.waitForFunction(() => window.StellarOutpostCloudBridge?.createSnapshot);
 
-    // Active, already-archived industrial route at stage 0 with an open decision.
+    // Archived industrial route, not yet active. applySnapshot persists the save;
+    // reload so startup sees tutorialSeen/playerName and opens no overlay.
     await page.evaluate(() => {
       const bridge = window.StellarOutpostCloudBridge;
       const save = bridge.createSnapshot();
       save.activePage = "expedition";
+      save.playerName = "回归测试";
+      save.tutorialSeen = true;
+      save.guidance.showAllSystems = true;
       save.dust = 500000000;
       save.runDust = 500000000;
       save.lifetimeDust = 500000000;
       save.expedition.supplies = 5;
       save.expedition.fragments = 20;
-      save.expedition.activeRun = null;
       save.expedition.completedRuns = 1; // archived route implies prior expedition progress
-      save.guidance.showAllSystems = true;
-      save.tutorialSeen = true;
+      save.expedition.activeRun = null;
       save.longVoyage = {
         activeRouteId: "", stageIndex: 0, baseline: {}, completedRoutes: ["industrial"],
         totalCompleted: 1, currentDecision: null, souvenirs: [], quickSettles: 0, lastReport: "",
       };
       bridge.applySnapshot(save);
-      document.querySelector("[data-long-voyage-start='industrial']")
-        .dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
+    await page.reload();
+    await page.waitForFunction(() => window.StellarOutpostCloudBridge?.createSnapshot);
+    assert.equal(await page.locator("#tutorial-backdrop").isHidden(), true);
     await page.click("#expedition-page-tab");
     await page.locator("#expedition-page").waitFor({ state: "visible" });
+    await page.click("[data-long-voyage-start='industrial']");
     const started = await page.evaluate(() => window.StellarOutpostCloudBridge.getLongVoyageDiagnostics());
     assert.equal(started.active.id, "industrial");
     assert.ok(started.state.currentDecision, "stage 0 should open a decision");

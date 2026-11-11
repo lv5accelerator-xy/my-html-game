@@ -2,7 +2,9 @@
   "use strict";
   const D = globalThis.SalvageData,
     E = globalThis.SalvageEngine,
-    S = globalThis.SalvageStorage;
+    S = globalThis.SalvageStorage,
+    V = globalThis.SalvageVisuals,
+    M = globalThis.SalvageMotion;
   const $ = (selector) => document.querySelector(selector);
   const escape = (text) =>
     String(text).replace(
@@ -45,6 +47,9 @@
       fleet: '<path d="m12 2 8 19-8-5-8 5zM12 2v14"/>',
       explore: '<circle cx="12" cy="12" r="9"/><path d="m16 8-3 5-5 3 3-5z"/>',
       jump: '<path d="M20 9a8 8 0 0 0-14-3M4 15a8 8 0 0 0 14 3M6 2v4H2m20 12h-4v4"/><circle cx="12" cy="12" r="3"/>',
+      voyage: '<path d="M3 18h18M4 14l4-8h8l4 8zM12 6V2"/>',
+      residents: '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M2 22v-5a6 6 0 0 1 12 0v5M16 14a5 5 0 0 1 6 5v3"/>',
+      archive: '<path d="M4 3h16v18H4zM8 7h8M8 11h8M8 15h5"/>',
       scan: '<path d="M8 8a6 6 0 0 0 0 8m8-8a6 6 0 0 1 0 8M5 4a11 11 0 0 0 0 16M19 4a11 11 0 0 1 0 16"/><circle cx="12" cy="12" r="2"/>',
     };
     return `<svg aria-hidden="true" viewBox="0 0 24 24">${shapes[name] || shapes.home}</svg>`;
@@ -137,9 +142,11 @@
   }
   function openDialog(title, body) {
     if (!dialog.open) dialogOrigin = document.activeElement;
+    dialog.dataset.presentation = /回信|居民来信/.test(title)?"letter":/启航/.test(title)?"jump":title==="归航简报"?"return":"standard";
     $("#dialog-title").textContent = title;
-    $("#dialog-body").innerHTML = body;
+    $("#dialog-body").innerHTML = (/回信|居民来信/.test(title)?V.prop("resident-letter","letter-prop"): /启航/.test(title)?V.picture("starcore-jump",false,"星核跃迁核心","confirmation-core"):"") + body;
     if (!dialog.open) dialog.showModal();
+    if(title==="归航简报")M.notice("return","归航简报已送达",true);
   }
   function closeDialog() {
     dialog.close();
@@ -220,6 +227,7 @@
     openDialog(
       "航站设置",
       `<p>进度保存在这台设备。跃迁不会清除舰装、故事、航站修复和永久能力。</p>${blocked ? '<p class="save-warning">自动保存已暂停。请先导出记录，再恢复备份或重新启航。</p>' : ""}
+      <fieldset class="reading-settings"><legend>场景动态</legend><div>${[["auto","跟随设备"],["off","关闭动态"],["full","完整动态"]].map(([id,label])=>`<button class="outline" ${action("motion-mode",id)} aria-pressed="${M.mode()===id}">${label}</button>`).join("")}</div><p>减少动态偏好始终优先；省流或低性能设备自动降级，不改变生产与航时。</p></fieldset>
       <fieldset class="reading-settings"><legend>阅读字号</legend><div>${[["normal", "标准"], ["large", "大字"], ["larger", "特大"]].map(([id, label]) => `<button class="outline" ${action("reading-size", id)} aria-pressed="${reading.size === id}">${label}</button>`).join("")}</div><p>仅改变这台设备的显示，航线进度独立保存。</p></fieldset>
       <div class="settings-links"><button ${action("export")}>导出当前航线</button><button ${action("raw-export")}>导出本机原始记录</button><button ${action("import")} ${conflicted ? "disabled" : ""}>导入记录</button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
       ${backupPanel()}
@@ -242,7 +250,11 @@
   }
   $("#settings-button").addEventListener("click", settings);
   function navigate(target, focusId) {
-    if (!E.reachable(state, target)) return;
+    // Keep a dedicated scene when it already owns the requested real control.
+    // Older explore callers retain the original aggregate route and focus IDs.
+    if (target === "explore" && ["voyage", "residents", "archive"].includes(page) &&
+      focusId && $("#main").contains(document.getElementById(focusId))) target = page;
+    if (!V.reachable(state, target)) return;
     page = target;
     signature = "";
     render();
@@ -347,17 +359,17 @@
   function home() {
     const goal = E.nextGoal(state),
       recent = state.journal.slice(0, 3);
-    return `${lastReturnReport ? `<section class="return-banner"><div><strong>上次归航简报</strong><p>${duration(lastReturnReport.seconds)} · 探索归航 ${lastReturnReport.missionsCompleted} 次</p></div><button class="outline" ${action("return-report")}>查看简报</button></section>` : ""}<div class="home-layout"><section class="scene" aria-label="归航航站"><div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
+    return `${lastReturnReport ? `<section class="return-banner"><div><strong>上次归航简报</strong><p>${duration(lastReturnReport.seconds)} · 探索归航 ${lastReturnReport.missionsCompleted} 次</p></div><button class="outline" ${action("return-report")}>查看简报</button></section>` : ""}<div class="home-layout"><section class="scene" aria-label="归航航站">${V.media("home",state,{eager:true})}<div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
       <button class="beacon-button" ${action("beacon")} ${state.beacon.expiresAt ? "" : "hidden"}>捕获金色信标<small>剩余 <span data-beacon-seconds>15</span> 秒</small></button>
       <div class="scan-area"><button id="scan-control" class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
       <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p data-goal-detail>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${E.actionCenter(state).primaryRepresented?"查看完整条款与进度":goal.label} →</button>
       <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
-      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${readyActions()}${starportOverview()}${communityScene()}${honorsHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
+      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${readyActions()}${starportOverview()}${V.districts(state)}${communityScene()}${honorsHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
   }
   function routePanel() {
     const route = D.ROUTES.find((r) => r.id === state.run.route);
     if (state.run.routeChosen)
-      return `<div class="route-active"><h3>${route.name} · ${route.subtitle}</h3><p>${route.detail} 跃迁后可以重选。</p></div>`;
+      return `<details class="route-active" data-details-key="active-route"><summary>${route.name} · ${route.subtitle}</summary><p>${route.detail} 跃迁后可以重选。</p></details>`;
     if (!state.buildings.drone) return "";
     return `<div class="section-title"><h2>这一航次，向哪里去？</h2><small>只选一次</small></div><div class="route-choices" id="route-choices" tabindex="-1">${D.ROUTES.map((r) => `<div class="route-option"><h3>${r.name}</h3><p>${r.detail}</p><button class="outline" ${action("route", r.id)}>选择</button></div>`).join("")}</div>`;
   }
@@ -370,7 +382,7 @@
       ${E.capability(state, "autoDispatch") ? `<div class="control-row"><label><input type="checkbox" data-config="dispatch" data-focus="config-dispatch" ${state.automation.dispatch ? "checked" : ""}>重复派遣${D.MISSIONS.find((m) => m.id === state.repeatId).name} · 新故事出现时暂停</label></div>` : ""}</section>`;
   }
   function fleet() {
-    return `<div class="page"><div class="page-header"><div><h1>把残骸，变成舰队。</h1><p>每种设施在 10、25、50 艘时产量翻倍。研究与路线会改变它们如何协同。</p></div><div class="buy-modes" aria-label="每次购买上限">${[
+    return `<div class="page fleet-page"><div class="page-header"><div><h1>把残骸，变成舰队。</h1><p>每种设施在 10、25、50 艘时产量翻倍。研究与路线会改变它们如何协同。</p></div><div class="buy-modes" aria-label="每次购买上限">${[
       ["1", "1 艘"],
       ["10", "最多 10"],
       ["max", "最大"],
@@ -380,12 +392,12 @@
           `<button ${action("mode", value)} aria-pressed="${buyMode === value}" class="${buyMode === value ? "selected" : ""}">${label}</button>`,
       )
       .join("")}</div></div>
-      ${routePanel()}<section aria-label="生产设施">${D.BUILDINGS.filter(
+      <div class="dock-layout">${V.media("dock",state,{eager:true})}<aside class="dock-console"><h2>生产控制台</h2>${routePanel()}<p>设施、研究与预算均采用当前航次的实际配置。</p></aside></div><section class="manufacturing-floor" aria-label="生产设施">${D.BUILDINGS.filter(
         (b) => state.run.dust >= b.unlock || state.buildings[b.id],
       )
         .map(
           (b) =>
-            `<div class="building-row" id="building-${b.id}" tabindex="-1"><div><h3>${b.name}</h3><p>${b.detail}</p><div class="milestone-track">${D.MILESTONES.map((n) => `<span class="${state.buildings[b.id] >= n ? "achieved" : ""}">${n} 艘 ×2</span>`).join("")}</div></div><div class="building-stats"><strong>${state.buildings[b.id]} 艘</strong><small>本设施基础 ${number(b.rate * state.buildings[b.id] * E.milestone(state.buildings[b.id]))} / 秒</small></div><div class="row-action"><button class="outline" ${action("buy", b.id)} data-buy-id="${b.id}"></button><small class="purchase-gain" data-buy-effect="${b.id}"></small><small data-buy-payback="${b.id}"></small><small data-buy-wait="${b.id}"></small><small>下个里程碑 ${D.MILESTONES.find((n) => n > state.buildings[b.id]) || "已完成"}</small></div></div>`,
+            `<div class="building-row" id="building-${b.id}" tabindex="-1">${V.prop("power-module","equipment-thumb")}<div><h3>${b.name}</h3><p>${b.detail}</p><div class="milestone-track">${D.MILESTONES.map((n) => `<span class="${state.buildings[b.id] >= n ? "achieved" : ""}">${n} 艘 ×2</span>`).join("")}</div></div><div class="building-stats"><strong>${state.buildings[b.id]} 艘</strong><small>本设施基础 ${number(b.rate * state.buildings[b.id] * E.milestone(state.buildings[b.id]))} / 秒</small></div><div class="row-action"><button class="outline" ${action("buy", b.id)} data-buy-id="${b.id}"></button><small class="purchase-gain" data-buy-effect="${b.id}"></small><small data-buy-payback="${b.id}"></small><small data-buy-wait="${b.id}"></small><small>下个里程碑 ${D.MILESTONES.find((n) => n > state.buildings[b.id]) || "已完成"}</small></div></div>`,
         )
         .join(
           "",
@@ -397,12 +409,12 @@
             )
               .map(
                 (r) =>
-                  `<div class="research-row" id="research-${r.id}" tabindex="-1"><div><h3>${r.name}</h3><p>${r.detail}</p></div><small>${number(r.cost)} 星尘</small><div class="row-action"><button ${action("research", r.id)} ${state.research.includes(r.id) ? "disabled" : `data-min-dust="${r.cost}"`}>${state.research.includes(r.id) ? "已完成" : "研究"}</button></div></div>`,
+                  `<div class="research-row ${state.research.includes(r.id)?"is-researched":""}" id="research-${r.id}" tabindex="-1"><div><h3>${r.name}</h3><p>${r.detail}</p></div><small>${number(r.cost)} 星尘</small><div class="row-action"><button ${action("research", r.id)} ${state.research.includes(r.id) ? "disabled" : `data-min-dust="${r.cost}"`}>${state.research.includes(r.id) ? "已完成" : "研究"}</button></div></div>`,
               )
               .join("")}</section>`
           : ""
       }
-      ${automation()}</div>`;
+      <div class="production-band">${V.media("production",state)}<div><h2>回收，再制造。</h2><p>每一次实际建造，都让这条产线继续运转。</p>${automation()}</div></div></div>`;
   }
   function sceneLines(lines) {
     return `<div class="scene-transcript">${lines.map((line) => `<div class="scene-line"><strong>${escape(line.speaker)}</strong><p>${escape(line.text)}</p></div>`).join("")}</div>`;
@@ -424,7 +436,7 @@
       story = r.story && D.STORIES[r.story];
     const text = story ? E.storyText(state, r.story) : r.succeeded ? "探索船安全归航，回收物已经送达。" : "裂隙干扰超出预期，探索船安全撤回，带回 1 份样本。";
     const summary = text.split(/(?<=[。！？])/)[0];
-    return `<section class="report" id="report" tabindex="-1" aria-label="归航报告"><h2>${story ? story.title : D.MISSIONS.find((m) => m.id === r.id).name + " · 归航报告"}</h2><p class="report-summary">${escape(summary)}</p><p class="report-reward">回收 ${number(r.dust)} 星尘 · ${r.samples} 份样本${r.module ? ` · 舰装「${D.MODULES.find((m) => m.id === r.module).name}」` : ""}</p><p class="report-next">${story ? "下一步：阅读发现并选择回应，领取后永久记录。" : state.afterword.active && r.id === "supply-run" ? "下一步：领取补给，再回居民委托留下回信。" : "下一步：领取回收物，继续当前航线。"}</p>${story ? `<details class="report-discovery" data-details-key="report-discovery-${r.story}"><summary>阅读完整发现</summary><p>${escape(text)}</p></details>` : ""}
+    return `<section class="report" id="report" tabindex="-1" aria-label="归航报告">${story?V.media(r.story==="garden"?"greenhouse":"wreck",state):V.prop("salvage-tug","report-prop")}<h2>${story ? story.title : D.MISSIONS.find((m) => m.id === r.id).name + " · 归航报告"}</h2><p class="report-summary">${escape(summary)}</p><p class="report-reward">回收 ${number(r.dust)} 星尘 · ${r.samples} 份样本${r.module ? ` · 舰装「${D.MODULES.find((m) => m.id === r.module).name}」` : ""}</p><p class="report-next">${story ? "下一步：阅读发现并选择回应，领取后永久记录。" : state.afterword.active && r.id === "supply-run" ? "下一步：领取补给，再回居民委托留下回信。" : "下一步：领取回收物，继续当前航线。"}</p>${story ? `<details class="report-discovery" data-details-key="report-discovery-${r.story}"><summary>阅读完整发现</summary><p>${escape(text)}</p></details>` : ""}
       ${story ? sceneRecord(E.storyScene(state, r.story), `report-scene-${r.story}`) : ""}${story ? story.choices.map((c) => `<button class="story-choice" ${action("claim", c.id)}><strong>${c.name}</strong><small>${c.detail}</small></button>`).join("") : `<button class="primary" ${action("claim")}>收取回收物</button>`}</section>`;
   }
   function chapterMap() {
@@ -737,7 +749,7 @@
     if(!state.epilogue.ending) return '';
     const claimed=state.continuation.honors.claimed,next=D.HONORS.map(d=>E.honorOffer(state,d.id)).find(q=>!q.claimed),changes=E.recentHarborChanges(state),last=state.expeditions.records[0];
     const nextStory=D.COMMUNITY_STORIES.find(d=>!state.continuation.community.completed.includes(d.id)),terms=nextStory&&D.HARBOR_FOCUSES.map(f=>({...E.communityTerms(state,nextStory.id,f.id),name:f.name}));
-    return `<section class="panel" id="long-term-honors" tabindex="-1"><div class="section-title"><h2>星港长期荣誉</h2><span>陈列 ${claimed.length}/12</span></div><p>十二项有限纪念，由永久记录证明，手动陈列。没有货币、倍率、每日任务或失效日期。${next?`下一项：${next.name}（${next.value}/${next.target}）。`: '全部已陈列；仍可重访自己的航行纪录。'}</p>
+    return `<section class="panel" id="long-term-honors" tabindex="-1"><div class="section-title">${V.prop("orbit-honor","collection-prop")}<h2>星港长期荣誉</h2><span>陈列 ${claimed.length}/12</span></div><p>十二项有限纪念，由永久记录证明，手动陈列。没有货币、倍率、每日任务或失效日期。${next?`下一项：${next.name}（${next.value}/${next.target}）。`: '全部已陈列；仍可重访自己的航行纪录。'}</p>
       <div class="honor-showcase" aria-label="已陈列的长期荣誉">${claimed.length?claimed.map(id=>`<span>${D.HONORS.find(d=>d.id===id).name}</span>`).join(''):'第一份纪念等待你亲手放上陈列架。'}</div>
       ${last?`<details data-details-key="latest-voyage-ledger"><summary>最近完整归航 · ${D.VOYAGES.find(v=>v.id===last.id).name}收支</summary>${ledgerView(last)}</details>`:''}
       ${changes.length?`<details data-details-key="recent-harbor-changes"><summary>近期星港变化 · 最近 ${changes.length} 项</summary><ul>${changes.map(c=>`<li>${escape(c.text)}</li>`).join('')}</ul></details>`:''}
@@ -784,7 +796,7 @@
     if(state.discoveries < 3) return '';
     const a=state.atlas, active=a.active;
     return `<section id="sector-atlas" class="sector-atlas" tabindex="-1" aria-label="星区探索图谱"><div class="section-title"><h2>星区探索图谱</h2><span>已调查 ${a.nodes.length} / 9 处</span></div><p>三份归航报告确认了调查入口。选择优先线索，再沿安全短线逐处核验。动态发现可缩短相关调查；所有路径都能安全完成。</p>
-    <svg viewBox="0 0 600 400" role="group" aria-label="三条连续调查航线">${D.SECTORS.map((c,i)=>{const n=E.surveyCount(state,c.id);return `<path d="M100 ${75+i*125}H500" stroke="#354750"/>${c.nodes.map((name,j)=>`<g class="sector-node ${j<n?'is-complete':''}" role="button" tabindex="0" ${action('sector-select',c.id)} transform="translate(${100+j*200} ${75+i*125})" aria-label="${c.name} · ${name} · ${j<n?'已完成':j===n?'待调查':'待前序线索'}"><rect class="map-hit-area" x="-50" y="-50" width="100" height="100" rx="50" style="fill:transparent;stroke:none"/><circle r="18"/><text text-anchor="middle" y="5">${j<n?'✓':j+1}</text></g>`).join('')}`;}).join('')}</svg>
+    <div class="atlas-space">${V.media("sector",state,{eager:page==="explore"})}<svg viewBox="0 0 600 400" role="group" aria-label="三条连续调查航线">${D.SECTORS.map((c,i)=>{const n=E.surveyCount(state,c.id);return `${[0,1].map(j=>`<path class="atlas-route ${j+1<n?"is-charted":""}" style="--segment:${i*2+j}" d="M${100+j*200} ${75+i*125}h200"/>`).join("")}${c.nodes.map((name,j)=>`<g class="sector-node ${j<n?'is-complete':''}" role="button" tabindex="0" ${action('sector-select',c.id)} transform="translate(${100+j*200} ${75+i*125})" aria-label="${c.name} · ${name} · ${j<n?'已完成':j===n?'待调查':'待前序线索'}"><rect class="map-hit-area" x="-50" y="-50" width="100" height="100" rx="50" style="fill:transparent;stroke:none"/><circle r="18"/><text text-anchor="middle" y="5">${j<n?'✓':j+1}</text></g>`).join('')}`;}).join('')}</svg></div>
     <div class="sector-chains">${D.SECTORS.map(c=>{const count=E.surveyCount(state,c.id);return `<article><h3>${c.name} · ${count}/3</h3><p>${count===3?`已发现：${c.discovery} · 纪念品「${c.collection}」 · ${c.route}`:`下一项：${c.nodes[count]}`}</p><button class="outline" ${action('sector-select',c.id)} aria-pressed="${a.priority===c.id}">${count===3?'重读发现档案':'优先调查此线'}</button></article>`;}).join('')}</div>
     ${active?`<article class="harbor-active"><h3>${D.SECTORS.find(c=>c.id===active.chain).nodes[active.node]}</h3><p data-survey-time></p><p>锁定收益 ${number(active.dust)} 星尘 + ${active.samples} 样本 · 分流 ${Math.round(active.diversion*100)}%</p><button class="primary" ${action('survey-claim',String(active.token))} ${state.clock>=active.end?'':'disabled'}>归档本次调查</button></article>`:a.priority && E.surveyCount(state,a.priority)<3?`<div class="survey-methods">${D.SURVEY_METHODS.map(m=>{const p=E.surveyPreview(state,a.priority,m.id);return `<article><h3>${m.name}</h3><p>${duration(p.seconds)} · 分流 ${Math.round(p.diversion*100)}% · 支出 ${p.costSamples} 样本</p><p>回收 ${number(p.dust)} 星尘 + ${p.samples} 样本 · 事件证据 ${p.evidence} 份</p><button class="outline" ${action('survey-start',m.id)} data-node="${p.node}" ${p.available?'':'disabled'}>安排调查</button><small>${p.reason}</small></article>`;}).join('')}</div>`:''}
     <details data-details-key="sector-records"><summary>已完成节点与发现档案</summary>${a.nodes.map(n=>`<p>${D.SECTORS.find(c=>c.id===n.chain).nodes[n.node]} · ${D.SURVEY_METHODS.find(m=>m.id===n.approach).name} · ${number(n.dust)} 星尘 / ${n.samples} 样本</p>`).join('')||'<p>首份调查归档后，后续坐标将点亮。</p>'}</details></section>`;
@@ -816,12 +828,12 @@
     const event = E.encounterOffer(state);
     const history = state.encounters.history;
     if (!event && !history.length && !state.encounters.catalog.length) return "";
-    return `<section class="encounter-panel" id="encounter-panel" tabindex="-1" aria-label="动态拾荒发现"><h2>${event ? event.name : "航行发现记录"}</h2><p>永久发现收藏 ${state.encounters.catalog.length} / ${D.ENCOUNTERS.reduce((n, e) => n + e.choices.length, 0)}</p>${event ? `<p>${event.description}</p><p>本次额外发现 · 普通探索收益独立领取 · 无选择期限</p>${event.choice ? `<p>正在处理 · 剩余 <strong data-encounter-time></strong> · 原结果已锁定</p>` : `<div class="event-choices">${event.choices.map(c => `<button class="outline" ${action("encounter", c.id)} data-token="${event.token}" ${c.available ? "" : "disabled"}><strong>${c.name}</strong><small>+${number(c.dust)} 星尘 · +${c.samples} 样本 · ${duration(c.seconds)}${c.costSamples ? ` · 支出 ${c.costSamples} 样本` : ""}</small></button>`).join("")}</div>`}` : ""}${history.length ? `<details data-details-key="encounter-history"><summary>已记录 ${history.length} 次发现（保留最近32次）</summary>${history.map(r => `<p>${escape(D.ENCOUNTERS.find(e => e.id === r.id).choices.find(c => c.id === r.choice).record)}</p>`).join("")}</details>` : ""}<details data-details-key="encounter-catalog"><summary>永久发现收藏</summary>${state.encounters.catalog.map(key => { const e = D.ENCOUNTERS.find(e => key.startsWith(e.id + ":")); const c = e.choices.find(c => `${e.id}:${c.id}` === key); return `<p>${escape(c.record)}</p>`; }).join("")}</details></section>`;
+    return `<section class="encounter-panel" id="encounter-panel" tabindex="-1" aria-label="动态拾荒发现">${event?V.media("wreck",state):V.prop("resident-letter","collection-prop")}<h2>${event ? event.name : "航行发现记录"}</h2><p>永久发现收藏 ${state.encounters.catalog.length} / ${D.ENCOUNTERS.reduce((n, e) => n + e.choices.length, 0)}</p>${event ? `<p>${event.description}</p><p>本次额外发现 · 普通探索收益独立领取 · 无选择期限</p>${event.choice ? `<p>正在处理 · 剩余 <strong data-encounter-time></strong> · 原结果已锁定</p>` : `<div class="event-choices">${event.choices.map(c => `<button class="outline" ${action("encounter", c.id)} data-token="${event.token}" ${c.available ? "" : "disabled"}><strong>${c.name}</strong><small>+${number(c.dust)} 星尘 · +${c.samples} 样本 · ${duration(c.seconds)}${c.costSamples ? ` · 支出 ${c.costSamples} 样本` : ""}</small></button>`).join("")}</div>`}` : ""}${history.length ? `<details data-details-key="encounter-history"><summary>已记录 ${history.length} 次发现（保留最近32次）</summary>${history.map(r => `<p>${escape(D.ENCOUNTERS.find(e => e.id === r.id).choices.find(c => c.id === r.choice).record)}</p>`).join("")}</details>` : ""}<details data-details-key="encounter-catalog"><summary>永久发现收藏</summary>${state.encounters.catalog.map(key => { const e = D.ENCOUNTERS.find(e => key.startsWith(e.id + ":")); const c = e.choices.find(c => `${e.id}:${c.id}` === key); return `<p>${escape(c.record)}</p>`; }).join("")}</details></section>`;
   }
   function explore() {
     const port = D.PORT[state.starport];
-    return `<div class="page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${encounterPanel()}${residentLinks()}${communityPanel()}${honorsPanel()}${longVoyages()}${sectorAtlas()}${reviewsPanel()}${harborPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
+    return `<div class="page exploration-page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
+      ${missionReport()}${sectorAtlas()}${encounterPanel()}${reviewsPanel()}${residentLinks()}${communityPanel()}${honorsPanel()}${longVoyages()}${harborPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
         .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
@@ -834,7 +846,7 @@
         D.MODULES.filter((m) => state.modules[m.id])
           .map((m) => {
             const offer = E.moduleOffer(state, m.id);
-            return `<div class="module-row" id="module-${m.id}" tabindex="-1" data-module-id="${m.id}"><div><h3>${m.name}</h3><p>${m.detail}</p></div><small>${state.modules[m.id]} / ${D.MODULE_MAX_LEVEL} 级</small><div class="row-action"><button ${action("equip", m.id)} ${!state.equipped.includes(m.id) && state.equipped.length >= 2 ? "disabled" : ""}>${state.equipped.includes(m.id) ? "卸下" : "装备"}</button>${offer.level < D.MODULE_MAX_LEVEL ? `<button class="outline" ${action("module", m.id)} ${offer.available ? "" : "disabled"}>升级 · ${offer.samples} 样本</button>` : "<small>已达到最高等级</small>"}</div></div>`;
+            return `<div class="module-row" id="module-${m.id}" tabindex="-1" data-module-id="${m.id}"><div>${V.prop("power-module","module-thumb")}<h3>${m.name}</h3><p>${m.detail}</p></div><small>${state.modules[m.id]} / ${D.MODULE_MAX_LEVEL} 级</small><div class="row-action"><button ${action("equip", m.id)} ${!state.equipped.includes(m.id) && state.equipped.length >= 2 ? "disabled" : ""}>${state.equipped.includes(m.id) ? "卸下" : "装备"}</button>${offer.level < D.MODULE_MAX_LEVEL ? `<button class="outline" ${action("module", m.id)} ${offer.available ? "" : "disabled"}>升级 · ${offer.samples} 样本</button>` : "<small>已达到最高等级</small>"}</div></div>`;
           })
           .join("") ||
         '<p class="empty">回应医院船的信号，或进入裂隙寻找第一件舰装。</p>'
@@ -853,9 +865,18 @@
       '<p class="empty">所有舰装均已装配。可以继续升级已有舰装。</p>'
     }</details>`;
   }
+  function voyage() {
+    return `<div class="page bridge-page"><header class="page-header"><div><h1>把灯火，带向更远处。</h1><p>每一段都由你确认，已出发的航程保留原编成。</p></div></header>${V.media("bridge", state,{eager:true})}${longVoyages()}${loadoutPanel()}</div>`;
+  }
+  function residents() {
+    return `<div class="page residents-page"><header class="page-header"><div><h1>这里，开始有人生活。</h1><p>来信、餐桌与下一班值守，来自真正抵达的居民。</p></div></header><div class="habitat-layout">${V.media("habitat",state,{eager:true})}<div class="resident-reading">${residentPanel() || '<h2>第一支船队已安全抵达</h2><p>继续两港交接，居民的下一封信会在主线终章后开放。</p>'}${residentLinks()}</div></div>${state.chapter.includes("nursery")?`<section class="greenhouse-wing">${V.media("greenhouse",state)}<div><h2>一座温室，留住新的日出。</h2><p>永久育种舱已建成，旧光照记录由新的种植者接续。</p></div></section>`:""}${communityPanel()}${harborPanel()}</div>`;
+  }
+  function archive() {
+    return `<div class="page archive-page"><header class="page-header"><div><h1>每一束信号，都有来处。</h1><p>已确认的故事与收藏，在这里保留原貌。重读不会重复结算。</p></div></header><div class="exhibit-intro">${V.media("wreck",state,{eager:true})}<div><h2>航行记忆陈列馆</h2><p>已归档 ${state.lore.length} 段决定 · 永久荣誉 ${state.continuation.honors.claimed.length}/12</p><button class="outline" ${action("archive-open")}>打开航线与人物档案</button></div></div><div class="archive-wall" aria-label="航行收藏陈列"><figure>${V.prop("resident-letter")}<figcaption><strong>留存的通信</strong><small>${state.lore.length} 段原始决定</small></figcaption></figure>${Object.values(state.modules).some(Boolean)?`<figure>${V.prop("power-module")}<figcaption><strong>随舰的旧设备</strong><small>${Object.values(state.modules).filter(Boolean).length} 种已获得舰装</small></figcaption></figure>`:""}${state.continuation.honors.claimed.length?`<figure>${V.prop("orbit-honor")}<figcaption><strong>星港的纪念</strong><small>${state.continuation.honors.claimed.length}/12 份永久荣誉</small></figcaption></figure>`:'<div class="museum-vacancy"><h3>留给下一段航程</h3><p>达成荣誉后，可在下方亲手陈列。</p></div>'}</div>${routeArchive()}${honorsPanel()}${encounterPanel()}</div>`;
+  }
   function jump() {
     const gain = E.prestigeGain(state);
-    return `<div class="page"><div class="page-header"><div><h1>下一次启航，会有所不同。</h1><p>用这一航次的积累换取星核和永久能力。舰装、故事、样本、修复的星港与远航建设会与你同行。</p></div></div><div class="jump-layout"><div><div class="jump-number">${gain || 4} <small>星核${gain ? "可获得" : "起"}</small></div><p>本航次收集 <strong data-run-dust>${number(state.run.dust)}</strong> / ${number(D.PRESTIGE_DUST)} 星尘</p><div class="progress" role="progressbar" aria-label="跃迁进度" aria-valuemin="0" aria-valuemax="100" data-jump-progress><span></span></div><p>星核带来的全舰队产量：×${number(1 + Math.sqrt(state.totalCores) * 0.25)}。消费星核修复航站也不会减少这项历史加成。</p><p><small>新航次从 1 艘无人机与 12 星尘开始。临时设施与研究需要重新建设。</small></p>${state.mission || state.result || state.atlas.active || state.expeditions.active || state.continuation.reviews.active ? '<p class="save-warning">请先等待探索或调查归航，并处理报告。</p>' : ""}<button class="primary" ${action("jump")} ${gain && !state.mission && !state.result && !state.atlas.active && !state.expeditions.active ? "" : "disabled"}>${gain ? "开启下一航次" : "尚在积累能量"}</button></div><div><h2>每次都能解锁新工作</h2>${D.CAPABILITIES.map((c) => `<div class="capability-row ${E.capability(state, c.id) ? "unlocked" : ""}"><span>${E.capability(state, c.id) ? "已解锁" : `第 ${c.run} 次跃迁`}</span><div><h3>${c.name}</h3><p>${c.detail}</p></div></div>`).join("")}</div></div><section><h2>最近的航次</h2>${state.records.map((r, i) => `<div class="history-row"><span>${D.ROUTES.find((route) => route.id === r.route).name}</span><span>${duration(r.seconds)}</span><span>+${number(r.gain)} 星核</span></div>`).join("") || '<p class="empty">第一条航线正在由你写下。</p>'}</section></div>`;
+    return `<div class="page jump-page"><div class="page-header"><div><h1>下一次启航，会有所不同。</h1><p>用这一航次的积累换取星核和永久能力。舰装、故事、样本、修复的星港与远航建设会与你同行。</p></div></div>${V.media("jump",state,{eager:true})}<div class="jump-layout"><div><div class="jump-number">${gain || 4} <small>星核${gain ? "可获得" : "起"}</small></div><p>本航次收集 <strong data-run-dust>${number(state.run.dust)}</strong> / ${number(D.PRESTIGE_DUST)} 星尘</p><div class="progress" role="progressbar" aria-label="跃迁进度" aria-valuemin="0" aria-valuemax="100" data-jump-progress><span></span></div><p>星核带来的全舰队产量：×${number(1 + Math.sqrt(state.totalCores) * 0.25)}。消费星核修复航站也不会减少这项历史加成。</p><p><small>新航次从 1 艘无人机与 12 星尘开始。临时设施与研究需要重新建设。</small></p>${state.mission || state.result || state.atlas.active || state.expeditions.active || state.continuation.reviews.active ? '<p class="save-warning">请先等待探索或调查归航，并处理报告。</p>' : ""}<button class="primary" ${action("jump")} ${gain && !state.mission && !state.result && !state.atlas.active && !state.expeditions.active ? "" : "disabled"}>${gain ? "开启下一航次" : "尚在积累能量"}</button></div><div><h2>每次都能解锁新工作</h2>${D.CAPABILITIES.map((c) => `<div class="capability-row ${E.capability(state, c.id) ? "unlocked" : ""}"><span>${E.capability(state, c.id) ? "已解锁" : `第 ${c.run} 次跃迁`}</span><div><h3>${c.name}</h3><p>${c.detail}</p></div></div>`).join("")}</div></div><section><h2>最近的航次</h2>${state.records.map((r, i) => `<div class="history-row"><span>${D.ROUTES.find((route) => route.id === r.route).name}</span><span>${duration(r.seconds)}</span><span>+${number(r.gain)} 星核</span></div>`).join("") || '<p class="empty">第一条航线正在由你写下。</p>'}</section></div>`;
   }
   function updateNumbers() {
     $("#dust-value").textContent = number(state.dust);
@@ -1012,7 +1033,10 @@
       let cursor = host.firstChild;
       for (const next of [...fresh.childNodes]) {
         const id = key(next);
-        const node = previous.find(n => !used.has(n) && compatible(n, next) && (id || n.nodeType !== 1 || n.className === next.className));
+        // SVG className is an SVGAnimatedString object, unlike HTML's string.
+        // Compare attribute values so input blur cannot replace a pressed icon
+        // and move its label between pointerdown and WebKit's click dispatch.
+        const node = previous.find(n => !used.has(n) && compatible(n, next) && (id || n.nodeType !== 1 || (n.getAttribute("class") || "") === (next.getAttribute("class") || "")));
         if (!node) {
           host.insertBefore(next, cursor);
           continue;
@@ -1023,7 +1047,7 @@
           if (node.nodeValue !== next.nodeValue) node.nodeValue = next.nodeValue;
         } else {
           const editing = node === document.activeElement && node.matches("input,textarea,select");
-          const keep = name => (node.tagName === "DETAILS" && name === "open") || (editing && ["value", "checked", "selected"].includes(name));
+          const keep = name => (["data-in-view","data-cue"].includes(name) && node.matches(".world-scene,.atlas-space")) || (node.tagName === "DETAILS" && name === "open") || (editing && ["value", "checked", "selected"].includes(name));
           for (const attr of [...node.attributes]) if (!keep(attr.name) && !next.hasAttribute(attr.name)) node.removeAttribute(attr.name);
           for (const attr of [...next.attributes]) if (!keep(attr.name) && node.getAttribute(attr.name) !== attr.value) node.setAttribute(attr.name, attr.value);
           if (!editing && node.matches('input[type="checkbox"]')) node.checked = next.checked;
@@ -1039,7 +1063,8 @@
   }
   function render() {
     if (rebuilding) return;
-    if (!E.reachable(state, page)) page = "home";
+    if (!V.reachable(state, page)) page = "home";
+    document.documentElement.dataset.surface = page;
     const goal = E.nextGoal(state);
     const tiers = [40, 120, 150, 600, 1500, 2400, 15000].map(
       (n) => state.run.dust >= n,
@@ -1115,15 +1140,16 @@
           ["home", "航站"],
           ["fleet", "舰队"],
           ["explore", "探索"],
+          ["voyage", "远航"], ["residents", "居民"], ["archive", "档案"],
           ["jump", "跃迁"],
         ]
-          .filter(([id]) => E.reachable(state, id))
+          .filter(([id]) => V.reachable(state, id))
           .map(
             ([id, label]) =>
               `<button ${action("nav", id)} class="${page === id ? "active" : ""}" ${page === id ? 'disabled aria-current="page"' : id === "fleet" && !state.buildings.drone && page === "home" ? 'disabled title="从下一个目标启动舰队"' : ""}>${icon(id)}${label}</button>`,
           )
           .join(""));
-        patchContent($("#main"), (page === "home" ? "" : currentGoal()) + { home, fleet, explore, jump }[page]());
+        patchContent($("#main"), (page === "home" ? "" : currentGoal()) + { home, fleet, explore, voyage, residents, archive, jump }[page]());
         Array.from(
           $("#main").querySelectorAll("details[data-details-key]"),
         ).forEach((el) => {
@@ -1148,6 +1174,7 @@
         rebuilding = false;
       }
       signature = next;
+      M.observe();
     }
     updateNumbers();
     lastPaintClock=state.clock;
@@ -1250,6 +1277,12 @@
     const button = event.target.closest("[data-action]");
     if (!button || button.disabled) return;
     const { action: kind, id } = button.dataset;
+    if (kind === "motion-mode") {
+      M.set(id);dialog.querySelectorAll('[data-action="motion-mode"]').forEach(el=>el.setAttribute("aria-pressed",String(el.dataset.id===id)));return;
+    }
+    if (kind === "archive-open") {
+      const archive = $("#route-archive"); archive.open = true; archive.querySelector("summary").focus(); archive.scrollIntoView({block:"start"}); return;
+    }
     if (kind === "settings") { settings(); return; }
     if (kind === "reading-size") {
       if (!["normal", "large", "larger"].includes(id)) return;
@@ -1276,7 +1309,7 @@
       render();
       return;
     }
-    if(kind==='honor-claim'){if(E.claimHonor(state,id)){save();render();toast('有限荣誉已陈列，永久保留。');}return;}
+    if(kind==='honor-claim'){if(E.claimHonor(state,id)){save();render();toast('有限荣誉已陈列，永久保留。');M.notice('honor','新的荣誉已陈列',true);}return;}
     if(kind==='community-focus'){if(E.setHarborFocus(state,id)){save();render();toast('下一份居民协作将按新方向准备。');}return;}
     if(kind==='community-accept'){if(E.acceptCommunity(state,id,button.dataset.serial)){save();render();toast('居民协作已接下，条件已锁定，无交付期限。');}return;}
     if(kind==='community-path'){if(E.setCommunityPath(state,button.dataset.serial,id)){save();render();}return;}
@@ -1302,13 +1335,13 @@
       if(kind==='plan-pause'||kind==='plan-resume') ok=E.pauseItinerary(state,id,kind==='plan-resume');
       if(kind==='plan-restore') ok=E.restoreItineraryEquipment(state,id);
       if(kind==='plan-stop') ok=E.stopItinerary(state,id);
-      save();render();toast(ok?'远航安排已更新，资源和阶段记录已保存。':E.itineraryStatus(state)?.reason||'条件已变化，请核对编成与费用。');return;
+      save();render();if(ok&&["plan-start","plan-next"].includes(kind))M.notice("departure","远航安排已接续",true);toast(ok?'远航安排已更新，资源和阶段记录已保存。':E.itineraryStatus(state)?.reason||'条件已变化，请核对编成与费用。');return;
     }
     if(kind === 'deep-loadout') { if(E.applyLoadout(state,id)) {save();render();toast('已换装，已出发的阶段仍沿用原编成。');} return; }
     if(kind === 'deep-start') { if(E.startVoyage(state,id)) {save();render();toast('远航已编排，请选择第一段方案。');} return; }
-    if(kind === 'deep-dispatch') { if(E.dispatchVoyageLeg(state,button.dataset.token,button.dataset.stage,id)) {save();render();toast('本阶段已出发，收益与编成已锁定。');} return; }
+    if(kind === 'deep-dispatch') { if(E.dispatchVoyageLeg(state,button.dataset.token,button.dataset.stage,id)) {save();render();toast('本阶段已出发，收益与编成已锁定。');M.notice('departure','远航舰队正在离港',true);} return; }
     if(kind === 'deep-claim') { if(E.claimVoyageLeg(state,id,button.dataset.stage)) {save();render();toast('阶段报告已记录，回收物仍随船封存。');} return; }
-    if(kind === 'deep-finish') { if(E.finishVoyage(state,id)) {save();render();toast('远航已归航入库，永久档案已保存。');} return; }
+    if(kind === 'deep-finish') { if(E.finishVoyage(state,id)) {save();render();toast('远航已归航入库，永久档案已保存。');M.notice('arrival','远航归来，回收物已入库',true);} return; }
     if (kind === "sector-select") {
       if(E.setSurveyPriority(state,id)) { save(); render(); }
       return;
@@ -1336,7 +1369,7 @@
       render(); save(); return;
     }
     if (kind === "harbor-build") {
-      if (E.buildHarborProject(state, id, button.dataset.level)) toast("星港工程已建成一期，总览与后续任务能力已更新。");
+      if (E.buildHarborProject(state, id, button.dataset.level)) {toast("星港工程已建成一期，总览与后续任务能力已更新。");M.notice("build","永久工程已建成一期",true);}
       render(); save(); return;
     }
     if (kind === "port-region") { showPortRegion(id); return; }
@@ -1375,6 +1408,7 @@
         button.classList.remove("flash");
         void button.offsetWidth;
         button.classList.add("flash");
+        M.notice("scan", `星尘 +${number(gain)}`);
       }
     } else if (kind === "buy") {
       const count = E.buy(
@@ -1382,11 +1416,13 @@
         id,
         buyMode === "max" ? "max" : Number(buyMode),
       );
-      if (count)
+      if (count) {
         toast(`建造 ${count} 艘${D.BUILDINGS.find((b) => b.id === id).name}。`);
+        M.notice("build","设备已激活");
+      }
     } else if (kind === "mode") buyMode = id;
     else if (kind === "route") { if (E.chooseRoute(state, id)) toast("航线已确认，当前目标已更新。"); }
-    else if (kind === "research") { if (E.research(state, id)) toast(`研究完成：${D.RESEARCH.find(r => r.id === id).name}。`); }
+    else if (kind === "research") { if (E.research(state, id)) toast(`研究完成：${D.RESEARCH.find(r => r.id === id).name}。`); M.notice("research","研究节点已点亮"); }
     else if (kind === "beacon") { const gain = E.claimBeacon(state); if (gain) toast(`信标补给 +${number(gain)} 星尘。`); }
     else if (kind === "prepare")
       E.prepareMission(state, button.dataset.mission, id);
@@ -1400,9 +1436,9 @@
         );
         return;
       }
-      if (E.startMission(state, id)) { recentStory = null; toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
+      if (E.startMission(state, id)) { recentStory = null; M.notice("departure","探索船正在离港",true); toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
     } else if (kind === "risk") {
-      if (E.startMission(state, id)) { recentStory = null; toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
+      if (E.startMission(state, id)) { recentStory = null; M.notice("departure","探索船正在离港",true); toast(`探索已派遣，约 ${duration(state.mission.seconds)} 后归航。`); }
       closeDialog();
     } else if (kind === "claim") {
       const story = state.result?.story;
@@ -1411,6 +1447,7 @@
           ? story
           : null;
         toast(story ? "重要发现已永久归档，故事奖励已入库。" : "探索回收物已入库，当前目标已更新。");
+        M.notice(story?"discovery":"arrival",story?"重要发现已永久归档":"回收物已送达",Boolean(story));
       }
     } else if (kind === "encounter") {
       if (E.chooseEncounter(state, button.dataset.token, id)) toast("发现处理方案已确认，结果与航行记录会自动保存。");
@@ -1484,12 +1521,12 @@
           `${D.MODULES.find((m) => m.id === id).name}已升至 ${state.modules[id]} 级。${state.equipped.includes(id) ? "舰装效果已生效。" : "可在随舰装备中替换装备。"}`,
         );
     } else if (kind === "port") {
-      if (E.repairPort(state)) toast("航站的一盏灯，重新亮起了。");
+      if (E.repairPort(state)) {toast("航站的一盏灯，重新亮起了。");M.notice("lights","星港供电已接通",true);}
     } else if (kind === "project") {
-      if (E.buildProject(state, id))
-        toast(
-          `${D.PROJECTS.find((p) => p.id === id).name}已建成，永久效果已生效。`,
-        );
+      if (E.buildProject(state, id)) {
+        toast(`${D.PROJECTS.find((p) => p.id === id).name}已建成，永久效果已生效。`);
+        M.notice("build","永久工程已经接通",true);
+      }
     } else if (kind === "dispatch-stop") {
       E.configure(state, { dispatch: false });
       toast("本次探索继续。归航后将等待你的下一次安排。");
@@ -1505,6 +1542,7 @@
         closeDialog();
         page = "fleet";
         toast("新的航次已开始，自动购买已启动。");
+        M.notice("jump","能量释放，下一条航线已开启",true);
       }
     } else if (kind === "export") {
       exportSave();

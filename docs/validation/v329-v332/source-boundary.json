@@ -1,0 +1,75 @@
+{
+  "base": "4d87e7fcd835c300815b0609e0ad4bb65e13fa2d",
+  "files": [
+    {
+      "file": "v3/engine.js",
+      "sha256": "7f2b87c70ea57b97c2d6e85c300a50ca85a5a8afbb69adc2820582809b1fb081",
+      "byteIdentical": true
+    },
+    {
+      "file": "v3/storage.js",
+      "sha256": "44f22e45a3699a253697faf630b661d5dc44cd89a12300b7a7dc2faf71ea65d4",
+      "byteIdentical": true
+    },
+    {
+      "file": "game.js",
+      "sha256": "d2dacbb2e25bc4c056da5a76bce83eea477a169905ef99c4731a1e86a9c5ecb2",
+      "byteIdentical": true
+    },
+    {
+      "file": "game-math.js",
+      "sha256": "518b0621e307ca638d2f2566c90785a3e3d9c38bd361ff272a025756ba22b673",
+      "byteIdentical": true
+    },
+    {
+      "file": "cloud-save.js",
+      "sha256": "7dc97474b83d393b0f3f1f9da3a9831ca61379b85a0ebcb16276dd61dee59d8f",
+      "byteIdentical": true
+    },
+    {
+      "file": "v2-systems.js",
+      "sha256": "3cdc0590c84c2743a5684c38e84cbc8dfe2300cb1f1f291281656db6c41718c5",
+      "byteIdentical": true
+    },
+    {
+      "file": "legacy-systems.js",
+      "sha256": "e8ec704c1a2458d7e697ffa5cf9d5cd3b44708901e5f7657f7e1d345eca51ead",
+      "byteIdentical": true
+    },
+    {
+      "file": "index.html",
+      "sha256": "3c223c934e023d2495433008e7d8363ea5983e9d42ecb4b8033b4b9c29de6a83",
+      "byteIdentical": true
+    },
+    {
+      "file": "styles.css",
+      "sha256": "b81fc3362e99eeb861ae48cdcb300a0a3c922aed0996770b9fbd22ab3b07f3e6",
+      "byteIdentical": true
+    },
+    {
+      "file": "firebase-config.js",
+      "sha256": "5288e2e0d233603a81c8fa97584bf781f2ce2cc38efe4c7ce222ab14736ca341",
+      "byteIdentical": true
+    },
+    {
+      "file": "firestore.rules",
+      "sha256": "b5883f0c2f7628747105f672864e9a489164db55e74f5df16e5080f824b8e0c6",
+      "byteIdentical": true
+    },
+    {
+      "file": "firebase.json",
+      "sha256": "66ef4f23a1827256eb78ec2dcc50d108b7c1eda2a74317b88cbab2b90f09a8c0",
+      "byteIdentical": true
+    },
+    {
+      "file": ".github/workflows/deploy-pages.yml",
+      "sha256": "3e905115cd581186f43afafa6f2950d4580da709e99fc35489ddf308658aff06",
+      "byteIdentical": true
+    },
+    {
+      "file": ".github/workflows/public-acceptance.yml",
+      "sha256": "18f6aca16ee2879c5989e2ab9a8c7a81e14a8f658064de853fd44ee292b79d62",
+      "byteIdentical": true
+    }
+  ]
+}

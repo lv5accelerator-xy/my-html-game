@@ -1,0 +1,108 @@
+{
+  "version": "3.32.0-preview.1",
+  "browser": "151.0.7922.173",
+  "requestedRealSeconds": 300,
+  "method": "375px cloud Chromium, same earned save, full ambient motion, actual wall clock, GC before heap samples; does not represent real low-end phone or iPhone",
+  "samples": [
+    {
+      "elapsedRealMs": 81,
+      "heapBytes": 2086116,
+      "taskSeconds": 0.075365,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 38912
+    },
+    {
+      "elapsedRealMs": 30105,
+      "heapBytes": 2434992,
+      "taskSeconds": 0.398754,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 38942
+    },
+    {
+      "elapsedRealMs": 60146,
+      "heapBytes": 2505664,
+      "taskSeconds": 0.64259,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 38972
+    },
+    {
+      "elapsedRealMs": 90176,
+      "heapBytes": 2507752,
+      "taskSeconds": 0.895088,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 39002
+    },
+    {
+      "elapsedRealMs": 120220,
+      "heapBytes": 2581316,
+      "taskSeconds": 1.184881,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 39032
+    },
+    {
+      "elapsedRealMs": 150256,
+      "heapBytes": 2604724,
+      "taskSeconds": 1.422845,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 39062
+    },
+    {
+      "elapsedRealMs": 180299,
+      "heapBytes": 2605048,
+      "taskSeconds": 1.642183,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 39092
+    },
+    {
+      "elapsedRealMs": 210336,
+      "heapBytes": 2607988,
+      "taskSeconds": 1.838685,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 39122
+    },
+    {
+      "elapsedRealMs": 240358,
+      "heapBytes": 2608120,
+      "taskSeconds": 2.011888,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 39152
+    },
+    {
+      "elapsedRealMs": 270387,
+      "heapBytes": 2617236,
+      "taskSeconds": 2.224866,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 39182
+    },
+    {
+      "elapsedRealMs": 300020,
+      "heapBytes": 2617284,
+      "taskSeconds": 2.445953,
+      "nodes": 366,
+      "runningAnimations": 8,
+      "overflow": false,
+      "clock": 39212
+    }
+  ],
+  "errors": []
+}

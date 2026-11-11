@@ -1,0 +1,3 @@
+ok real touch 320px: three chains, persisted priority, retained SVG target, unchanged rewards
+ok real touch 375px: three chains, persisted priority, retained SVG target, unchanged rewards
+TOUCH_RESULT: 2 mobile viewports, 6 actual touchscreen selections, 0 failures

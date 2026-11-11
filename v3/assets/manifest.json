@@ -1,0 +1,204 @@
+[
+  {
+    "file": "orbital-dock.webp",
+    "width": 1280,
+    "height": 720,
+    "bytes": 195144,
+    "source": "exec-34b9d17a-e091-4f3a-8b7b-4e8d11f042d9.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "orbital-dock-mobile.webp",
+    "width": 640,
+    "height": 360,
+    "bytes": 60486,
+    "source": "exec-34b9d17a-e091-4f3a-8b7b-4e8d11f042d9.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "production-line.webp",
+    "width": 1280,
+    "height": 720,
+    "bytes": 228326,
+    "source": "production-line.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "production-line-mobile.webp",
+    "width": 640,
+    "height": 360,
+    "bytes": 69268,
+    "source": "production-line.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "sector-nebula.webp",
+    "width": 1280,
+    "height": 720,
+    "bytes": 85222,
+    "source": "exec-805186d1-fec9-41aa-8adc-014d49bdfc4e.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "sector-nebula-mobile.webp",
+    "width": 640,
+    "height": 360,
+    "bytes": 26104,
+    "source": "exec-805186d1-fec9-41aa-8adc-014d49bdfc4e.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "voyage-bridge.webp",
+    "width": 1280,
+    "height": 720,
+    "bytes": 130620,
+    "source": "exec-124a426c-bb2b-4078-a9ca-f4afacb3e5aa.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "voyage-bridge-mobile.webp",
+    "width": 640,
+    "height": 360,
+    "bytes": 42128,
+    "source": "exec-124a426c-bb2b-4078-a9ca-f4afacb3e5aa.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "wreck-investigation.webp",
+    "width": 1280,
+    "height": 720,
+    "bytes": 166252,
+    "source": "exec-dbb7e6c9-a222-41f9-bf7f-961b0c2e9085.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "wreck-investigation-mobile.webp",
+    "width": 640,
+    "height": 360,
+    "bytes": 54612,
+    "source": "exec-dbb7e6c9-a222-41f9-bf7f-961b0c2e9085.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "resident-habitat.webp",
+    "width": 1280,
+    "height": 720,
+    "bytes": 220340,
+    "source": "exec-13b10a3e-809a-4c1d-85af-e2d442083e3c.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "resident-habitat-mobile.webp",
+    "width": 640,
+    "height": 360,
+    "bytes": 66926,
+    "source": "exec-13b10a3e-809a-4c1d-85af-e2d442083e3c.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "ecology-greenhouse.webp",
+    "width": 1280,
+    "height": 720,
+    "bytes": 223608,
+    "source": "ecology-greenhouse.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "ecology-greenhouse-mobile.webp",
+    "width": 640,
+    "height": 360,
+    "bytes": 73174,
+    "source": "ecology-greenhouse.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "starcore-jump.webp",
+    "width": 1280,
+    "height": 720,
+    "bytes": 170948,
+    "source": "exec-f8231404-e277-4255-a0e8-be915f9e2419.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "starcore-jump-mobile.webp",
+    "width": 640,
+    "height": 360,
+    "bytes": 53504,
+    "source": "exec-f8231404-e277-4255-a0e8-be915f9e2419.png",
+    "tool": "OpenAI Image Gen; original scene generated for this task"
+  },
+  {
+    "file": "salvage-tug.webp",
+    "width": 280,
+    "height": 157,
+    "bytes": 21710,
+    "tool": "OpenAI Image Gen; original isolated prop sprite",
+    "source": "exec-df482db1-48b8-4756-8c5e-5b353475c2b4.png; sprite isolated from original props via Image Gen"
+  },
+  {
+    "file": "power-module.webp",
+    "width": 240,
+    "height": 188,
+    "bytes": 19966,
+    "tool": "OpenAI Image Gen; original isolated prop sprite",
+    "source": "exec-a3f0b7b9-8d28-4872-be97-a221a9d9d147.png"
+  },
+  {
+    "file": "resident-letter.webp",
+    "width": 240,
+    "height": 162,
+    "bytes": 16992,
+    "tool": "OpenAI Image Gen; original isolated prop sprite",
+    "source": "exec-a3f0b7b9-8d28-4872-be97-a221a9d9d147.png"
+  },
+  {
+    "file": "orbit-honor.webp",
+    "width": 137,
+    "height": 200,
+    "bytes": 12992,
+    "tool": "OpenAI Image Gen; original isolated prop sprite",
+    "source": "exec-a3f0b7b9-8d28-4872-be97-a221a9d9d147.png"
+  },
+  {
+    "file": "unrepaired-orbit.webp",
+    "width": 1280,
+    "height": 853,
+    "bytes": 127124,
+    "source": "salvage-orbit.webp (existing repository original, responsive derivative)"
+  },
+  {
+    "file": "unrepaired-orbit-mobile.webp",
+    "width": 640,
+    "height": 427,
+    "bytes": 43738,
+    "source": "salvage-orbit.webp (existing repository original, responsive derivative)"
+  },
+  {
+    "file": "resident-habitat-thumb.webp",
+    "width": 320,
+    "height": 180,
+    "bytes": 16282,
+    "source": "resident-habitat.webp; small completed-district thumbnail"
+  },
+  {
+    "file": "production-line-thumb.webp",
+    "width": 320,
+    "height": 180,
+    "bytes": 17088,
+    "source": "production-line.webp; small completed-district thumbnail"
+  },
+  {
+    "file": "voyage-bridge-thumb.webp",
+    "width": 320,
+    "height": 180,
+    "bytes": 10656,
+    "source": "voyage-bridge.webp; small completed-district thumbnail"
+  },
+  {
+    "file": "orbital-dock-thumb.webp",
+    "width": 320,
+    "height": 180,
+    "bytes": 15080,
+    "source": "orbital-dock.webp; small completed-district thumbnail"
+  }
+]

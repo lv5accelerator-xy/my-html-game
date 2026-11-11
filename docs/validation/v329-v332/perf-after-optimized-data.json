@@ -1,0 +1,396 @@
+{
+  "version": "3.32.0-preview.1",
+  "browser": "151.0.7922.173",
+  "date": "2026-11-11T16:33:31.266Z",
+  "method": "isolated fresh contexts, same v3.24 earned save; local uncompressed HTTP, networkidle; 6 x fleet/explore synchronous DOM+layout switches; 5 real seconds each foreground home/explore and simulated visibilitychange background; no competing local test runner",
+  "rows": [
+    {
+      "width": 1280,
+      "first": {
+        "navigation": {
+          "name": "http://127.0.0.1:34761/v3/",
+          "entryType": "navigation",
+          "startTime": 0,
+          "duration": 486.69999999925494,
+          "navigationId": 5285,
+          "initiatorType": "navigation",
+          "deliveryType": "",
+          "nextHopProtocol": "http/1.1",
+          "renderBlockingStatus": "non-blocking",
+          "contentType": "text/html",
+          "contentEncoding": "",
+          "workerStart": 0,
+          "workerRouterEvaluationStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerMatchedSourceType": "",
+          "workerFinalSourceType": "",
+          "redirectStart": 0,
+          "redirectEnd": 0,
+          "fetchStart": 0.7999999998137355,
+          "domainLookupStart": 0.7999999998137355,
+          "domainLookupEnd": 0.7999999998137355,
+          "connectStart": 0.7999999998137355,
+          "secureConnectionStart": 0,
+          "connectEnd": 0.7999999998137355,
+          "requestStart": 15.399999999441206,
+          "responseStart": 21.399999999441206,
+          "firstInterimResponseStart": 0,
+          "finalResponseHeadersStart": 21.399999999441206,
+          "responseEnd": 22.199999999254942,
+          "transferSize": 3407,
+          "encodedBodySize": 3107,
+          "decodedBodySize": 3107,
+          "responseStatus": 200,
+          "serverTiming": [],
+          "unloadEventStart": 0,
+          "unloadEventEnd": 0,
+          "domInteractive": 79,
+          "domContentLoadedEventStart": 405.59999999962747,
+          "domContentLoadedEventEnd": 405.79999999981374,
+          "domComplete": 486.69999999925494,
+          "loadEventStart": 486.69999999925494,
+          "loadEventEnd": 486.69999999925494,
+          "type": "navigate",
+          "redirectCount": 0,
+          "activationStart": 0,
+          "criticalCHRestart": 0,
+          "notRestoredReasons": null,
+          "confidence": {
+            "randomizedTriggerRate": 0.4994798,
+            "value": "high"
+          }
+        },
+        "resources": [
+          {
+            "name": "style.css?v=3.32.0-preview.1",
+            "bytes": 49279,
+            "durationMs": 52.30000000074506
+          },
+          {
+            "name": "data.js?v=3.32.0-preview.1",
+            "bytes": 149348,
+            "durationMs": 56
+          },
+          {
+            "name": "engine.js?v=3.32.0-preview.1",
+            "bytes": 173734,
+            "durationMs": 67
+          },
+          {
+            "name": "storage.js?v=3.32.0-preview.1",
+            "bytes": 11284,
+            "durationMs": 76.29999999981374
+          },
+          {
+            "name": "visual.css?v=3.32.0-preview.1",
+            "bytes": 28163,
+            "durationMs": 66.09999999962747
+          },
+          {
+            "name": "visuals.js?v=3.32.0-preview.1",
+            "bytes": 5074,
+            "durationMs": 93.29999999981374
+          },
+          {
+            "name": "motion.js?v=3.32.0-preview.1",
+            "bytes": 3605,
+            "durationMs": 92.5
+          },
+          {
+            "name": "app.js?v=3.32.0-preview.1",
+            "bytes": 163560,
+            "durationMs": 93.79999999981374
+          },
+          {
+            "name": "assets/orbital-dock.webp",
+            "bytes": 195144,
+            "durationMs": 9.700000000186265
+          },
+          {
+            "name": "assets/salvage-tug.webp",
+            "bytes": 21710,
+            "durationMs": 58.89999999944121
+          }
+        ],
+        "nodes": 366,
+        "overflow": false,
+        "totalEncodedBodyBytes": 804008
+      },
+      "switches": [
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 24.59999999962747,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 64.09999999962747,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 13.5,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 36.89999999944121,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 9,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 33,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 11.100000000558794,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 27,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 8.199999999254942,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 28.5,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 8.099999999627471,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 29.09999999962747,
+          "nodes": 2726
+        }
+      ],
+      "work": [],
+      "errors": []
+    },
+    {
+      "width": 375,
+      "first": {
+        "navigation": {
+          "name": "http://127.0.0.1:34761/v3/",
+          "entryType": "navigation",
+          "startTime": 0,
+          "duration": 242,
+          "navigationId": 482,
+          "initiatorType": "navigation",
+          "deliveryType": "",
+          "nextHopProtocol": "http/1.1",
+          "renderBlockingStatus": "non-blocking",
+          "contentType": "text/html",
+          "contentEncoding": "",
+          "workerStart": 0,
+          "workerRouterEvaluationStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerMatchedSourceType": "",
+          "workerFinalSourceType": "",
+          "redirectStart": 0,
+          "redirectEnd": 0,
+          "fetchStart": 1.2999999998137355,
+          "domainLookupStart": 1.2999999998137355,
+          "domainLookupEnd": 1.2999999998137355,
+          "connectStart": 1.2999999998137355,
+          "secureConnectionStart": 0,
+          "connectEnd": 1.2999999998137355,
+          "requestStart": 9.099999999627471,
+          "responseStart": 9.599999999627471,
+          "firstInterimResponseStart": 0,
+          "finalResponseHeadersStart": 9.599999999627471,
+          "responseEnd": 10.399999999441206,
+          "transferSize": 3407,
+          "encodedBodySize": 3107,
+          "decodedBodySize": 3107,
+          "responseStatus": 200,
+          "serverTiming": [],
+          "unloadEventStart": 0,
+          "unloadEventEnd": 0,
+          "domInteractive": 31.59999999962747,
+          "domContentLoadedEventStart": 208.5,
+          "domContentLoadedEventEnd": 208.59999999962747,
+          "domComplete": 242,
+          "loadEventStart": 242,
+          "loadEventEnd": 242,
+          "type": "navigate",
+          "redirectCount": 0,
+          "activationStart": 0,
+          "criticalCHRestart": 0,
+          "notRestoredReasons": null,
+          "confidence": {
+            "randomizedTriggerRate": 0.4994798,
+            "value": "high"
+          }
+        },
+        "resources": [
+          {
+            "name": "style.css?v=3.32.0-preview.1",
+            "bytes": 49279,
+            "durationMs": 34.80000000074506
+          },
+          {
+            "name": "data.js?v=3.32.0-preview.1",
+            "bytes": 149348,
+            "durationMs": 36.69999999925494
+          },
+          {
+            "name": "storage.js?v=3.32.0-preview.1",
+            "bytes": 11284,
+            "durationMs": 36.200000000186265
+          },
+          {
+            "name": "engine.js?v=3.32.0-preview.1",
+            "bytes": 173734,
+            "durationMs": 36.59999999962747
+          },
+          {
+            "name": "visual.css?v=3.32.0-preview.1",
+            "bytes": 28163,
+            "durationMs": 34.80000000074506
+          },
+          {
+            "name": "visuals.js?v=3.32.0-preview.1",
+            "bytes": 5074,
+            "durationMs": 36.30000000074506
+          },
+          {
+            "name": "motion.js?v=3.32.0-preview.1",
+            "bytes": 3605,
+            "durationMs": 45.700000000186265
+          },
+          {
+            "name": "app.js?v=3.32.0-preview.1",
+            "bytes": 163560,
+            "durationMs": 45.700000000186265
+          },
+          {
+            "name": "assets/orbital-dock-mobile.webp",
+            "bytes": 60486,
+            "durationMs": 16.5
+          },
+          {
+            "name": "assets/salvage-tug.webp",
+            "bytes": 21710,
+            "durationMs": 68.20000000018626
+          }
+        ],
+        "nodes": 366,
+        "overflow": false,
+        "totalEncodedBodyBytes": 669350
+      },
+      "switches": [
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 24.100000000558794,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 60.90000000037253,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 10.799999999813735,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 32.09999999962747,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 8.200000000186265,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 28.899999999441206,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 8.299999999813735,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 34.200000000186265,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 11.5,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 27.59999999962747,
+          "nodes": 2726
+        },
+        {
+          "surface": "fleet",
+          "domAndLayoutMs": 6.900000000372529,
+          "nodes": 277
+        },
+        {
+          "surface": "explore",
+          "domAndLayoutMs": 29,
+          "nodes": 2726
+        }
+      ],
+      "work": [
+        {
+          "surface": "home",
+          "hidden": false,
+          "realSeconds": 5,
+          "wallMs": 5004.203335,
+          "taskMs": 58.397000000000006,
+          "scriptMs": 11.978,
+          "layoutCount": 6,
+          "nodes": 366,
+          "runningAnimations": 8,
+          "overflow": false
+        },
+        {
+          "surface": "explore",
+          "hidden": false,
+          "realSeconds": 5,
+          "wallMs": 5002.706989,
+          "taskMs": 108.16300000000001,
+          "scriptMs": 14.381000000000006,
+          "layoutCount": 24,
+          "nodes": 2726,
+          "runningAnimations": 1,
+          "overflow": false
+        },
+        {
+          "surface": "explore",
+          "hidden": true,
+          "realSeconds": 5,
+          "taskMs": 22.781000000000052,
+          "scriptMs": 2.9490000000000003,
+          "runningAnimations": 0,
+          "nodes": 2726
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

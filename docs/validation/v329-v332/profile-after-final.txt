@@ -1,0 +1,89 @@
+SOAK {"simulatedSeconds":1800,"wallMs":38748.923842000004,"samples":[{"virtualSeconds":0,"heapBytes":3488636,"nodes":2755},{"virtualSeconds":300,"heapBytes":3797712,"nodes":2746},{"virtualSeconds":600,"heapBytes":3948404,"nodes":2746},{"virtualSeconds":900,"heapBytes":4105700,"nodes":2746},{"virtualSeconds":1200,"heapBytes":4119240,"nodes":2746},{"virtualSeconds":1500,"heapBytes":4160252,"nodes":2746},{"virtualSeconds":1800,"heapBytes":4173248,"nodes":2746}]}
+{
+  "version": "3.32.0-preview.1",
+  "browser": "151.0.7922.173",
+  "model": "fixed v3.24 earned full-history save;375px;60 virtual seconds per surface/state;instrumentation overhead included",
+  "rows": [
+    {
+      "surface": "home",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 182.44100000000003,
+      "scriptMs": 1.466000000000002,
+      "layouts": 64,
+      "wallMs": 1107.664227,
+      "calls": {
+        "advance": 240,
+        "reachable": 180,
+        "nextGoal": 120,
+        "communityStatus": 120,
+        "voyagePreview": 540,
+        "harborStatus": 120,
+        "harborProjectOffer": 300,
+        "productionRate": 60,
+        "purchasePreview": 60,
+        "scanValue": 60,
+        "harborSchedule": 60,
+        "sanitize": 1,
+        "routeArchive": 1
+      },
+      "mutations": 301,
+      "writes": 12,
+      "nodes": 366,
+      "overflow": false
+    },
+    {
+      "surface": "home",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 14.629000000000003,
+      "scriptMs": 0.683000000000003,
+      "layouts": 1,
+      "wallMs": 1020.4066209999996,
+      "calls": {},
+      "mutations": 5,
+      "writes": 0,
+      "nodes": 366,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": false,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 310.217,
+      "scriptMs": 1.576000000000008,
+      "layouts": 248,
+      "wallMs": 1222.8604979999996,
+      "calls": {
+        "advance": 240,
+        "reachable": 180,
+        "nextGoal": 120,
+        "communityStatus": 120,
+        "voyagePreview": 540,
+        "harborStatus": 120,
+        "harborProjectOffer": 300,
+        "productionRate": 60,
+        "itineraryOffer": 180,
+        "harborSchedule": 60
+      },
+      "mutations": 422,
+      "writes": 12,
+      "nodes": 2746,
+      "overflow": false
+    },
+    {
+      "surface": "explore",
+      "hidden": true,
+      "simulatedSeconds": 60,
+      "mainThreadTaskMs": 17.495999999999956,
+      "scriptMs": 0.7269999999999915,
+      "layouts": 1,
+      "wallMs": 1019.1580560000002,
+      "calls": {},
+      "mutations": 4,
+      "writes": 0,
+      "nodes": 2746,
+      "overflow": false
+    }
+  ]
+}

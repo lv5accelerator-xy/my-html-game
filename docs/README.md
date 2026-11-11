@@ -21,3 +21,6 @@
 
 - [v3.25～v3.28连续开发验收](v325-v328-validation.md)
 - [3.28新玩家说明与稳定候选检查表](v328-stability-checklist.md)
+
+- [v3.29～v3.32视觉重制与实际验收](v329-v332-validation.md)
+- [原创美术、生成简报与设计对照](v329-v332-art-direction.md)

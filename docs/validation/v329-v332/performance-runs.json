@@ -1,0 +1,71 @@
+[
+  {
+    "label": "perf-before",
+    "command": [
+      "node",
+      "scripts/v332-performance.cjs"
+    ],
+    "env": {
+      "PERF_ROOT": "/workspace/scratch/reference-v328",
+      "PERF_OUT": "/workspace/starport-visual/docs/validation/v329-v332/perf-before-data.json"
+    },
+    "started": "2026-11-11T16:24:42Z",
+    "seconds": 18.78512614200008,
+    "exit": 0
+  },
+  {
+    "label": "perf-after",
+    "command": [
+      "node",
+      "scripts/v332-performance.cjs"
+    ],
+    "env": {
+      "PERF_ROOT": "/workspace/starport-visual",
+      "PERF_OUT": "/workspace/starport-visual/docs/validation/v329-v332/perf-after-data.json"
+    },
+    "started": "2026-11-11T16:25:01Z",
+    "seconds": 18.626769851999597,
+    "exit": 0
+  },
+  {
+    "label": "profile-reference-final",
+    "command": [
+      "node",
+      "scripts/v328-profile.cjs"
+    ],
+    "env": {
+      "PROFILE_SITE_ROOT": "/workspace/scratch/reference-v328",
+      "PROFILE_SOAK_SECONDS": "1800"
+    },
+    "started": "2026-11-11T16:25:20Z",
+    "seconds": 42.928378439999506,
+    "exit": 0
+  },
+  {
+    "label": "profile-after-final",
+    "command": [
+      "node",
+      "scripts/v328-profile.cjs"
+    ],
+    "env": {
+      "PROFILE_SOAK_SECONDS": "1800"
+    },
+    "started": "2026-11-11T16:26:03Z",
+    "seconds": 44.462334457,
+    "exit": 0
+  },
+  {
+    "label": "real-soak",
+    "command": [
+      "node",
+      "scripts/v332-soak.cjs"
+    ],
+    "env": {
+      "SOAK_SECONDS": "300",
+      "SOAK_OUT": "/workspace/starport-visual/docs/validation/v329-v332/real-soak-data.json"
+    },
+    "started": "2026-11-11T16:26:47Z",
+    "seconds": 301.78805682499933,
+    "exit": 0
+  }
+]

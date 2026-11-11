@@ -1,0 +1,652 @@
+{
+  "parentCommit": "648ba8b81c399c04e5ff6e2b335b8203260350da",
+  "sourceSHA256": {
+    "v3/app.js": "5620f0ca2d5b108868a3accb5a6943d5af12eaccbd93882c1c84c807f9569c82",
+    "v3/visuals.js": "5f5fe3902a1593795b5e0a9a29f927228412e23bae966f3d50d5eb46e3ea0aaa",
+    "v3/motion.js": "03459df93ee7e35c92029b5966dd74bdf86d8cb1f632425c43573165d782bab2",
+    "v3/style.css": "0e3120f9c61a4b2109efad1a7963a4e58a73d3730e028582b8751dda7a347e14",
+    "v3/visual.css": "993d305375d76cbb840ab0147487f25c4c2fbc2af97a9ac29010b377b1467fa2",
+    "v3/data.js": "3035e6f983f3fc1a41709a90d31ec4e7009d681bf99b2872258928e526f351b2",
+    "v3/engine.js": "7f2b87c70ea57b97c2d6e85c300a50ca85a5a8afbb69adc2820582809b1fb081",
+    "v3/storage.js": "44f22e45a3699a253697faf630b661d5dc44cd89a12300b7a7dc2faf71ea65d4"
+  },
+  "version": "3.32.0-preview.1",
+  "browser": "151.0.7922.173",
+  "date": "2026-11-11T16:38:09.479Z",
+  "rows": [
+    {
+      "page": "home",
+      "width": 1280,
+      "screenshot": "home-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 19.289238999999725,
+      "nodes": 366,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": [
+        {
+          "src": "assets/orbital-dock.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "fleet",
+      "width": 1280,
+      "screenshot": "fleet-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 89.89459699999998,
+      "nodes": 277,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": [
+        {
+          "src": "assets/orbital-dock.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "explore",
+      "width": 1280,
+      "screenshot": "explore-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 151.15020300000015,
+      "nodes": 2726,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": [
+        {
+          "src": "assets/sector-nebula.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "voyage",
+      "width": 1280,
+      "screenshot": "voyage-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 103.51230299999997,
+      "nodes": 814,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": [
+        {
+          "src": "assets/voyage-bridge.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "residents",
+      "width": 1280,
+      "screenshot": "residents-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 72.58564099999967,
+      "nodes": 414,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": [
+        {
+          "src": "assets/resident-habitat.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "archive",
+      "width": 1280,
+      "screenshot": "archive-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 84.83241099999941,
+      "nodes": 1184,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": [
+        {
+          "src": "assets/wreck-investigation.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "jump",
+      "width": 1280,
+      "screenshot": "jump-1280.webp",
+      "switchIncludingPWAndImageDecodeMs": 73.08421099999941,
+      "nodes": 156,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "images": [
+        {
+          "src": "assets/starcore-jump.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "first": {
+        "nodes": 366,
+        "resources": [
+          {
+            "name": "style.css?v=3.32.0-preview.1",
+            "bytes": 49279,
+            "duration": 33.799999999813735
+          },
+          {
+            "name": "data.js?v=3.32.0-preview.1",
+            "bytes": 149348,
+            "duration": 97.6000000005588
+          },
+          {
+            "name": "engine.js?v=3.32.0-preview.1",
+            "bytes": 173734,
+            "duration": 131.6000000005588
+          },
+          {
+            "name": "storage.js?v=3.32.0-preview.1",
+            "bytes": 11284,
+            "duration": 124.59999999962747
+          },
+          {
+            "name": "visual.css?v=3.32.0-preview.1",
+            "bytes": 28163,
+            "duration": 110.20000000018626
+          },
+          {
+            "name": "visuals.js?v=3.32.0-preview.1",
+            "bytes": 5074,
+            "duration": 113.5
+          },
+          {
+            "name": "motion.js?v=3.32.0-preview.1",
+            "bytes": 3605,
+            "duration": 135.70000000018626
+          },
+          {
+            "name": "app.js?v=3.32.0-preview.1",
+            "bytes": 163560,
+            "duration": 176.19999999925494
+          },
+          {
+            "name": "assets/orbital-dock.webp",
+            "bytes": 195144,
+            "duration": 16
+          },
+          {
+            "name": "assets/salvage-tug.webp",
+            "bytes": 21710,
+            "duration": 183.5
+          }
+        ],
+        "navigation": 883.5
+      },
+      "errors": [],
+      "bad": []
+    },
+    {
+      "page": "home",
+      "width": 375,
+      "screenshot": "home-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 4.56765600000017,
+      "nodes": 366,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": [
+        {
+          "src": "assets/orbital-dock-mobile.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "fleet",
+      "width": 375,
+      "screenshot": "fleet-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 71.7005709999994,
+      "nodes": 277,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": [
+        {
+          "src": "assets/orbital-dock-mobile.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "explore",
+      "width": 375,
+      "screenshot": "explore-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 144.9404139999997,
+      "nodes": 2726,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": [
+        {
+          "src": "assets/sector-nebula-mobile.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "voyage",
+      "width": 375,
+      "screenshot": "voyage-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 99.81030100000044,
+      "nodes": 814,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": [
+        {
+          "src": "assets/voyage-bridge-mobile.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "residents",
+      "width": 375,
+      "screenshot": "residents-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 90.9999969999999,
+      "nodes": 414,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": [
+        {
+          "src": "assets/resident-habitat-mobile.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "archive",
+      "width": 375,
+      "screenshot": "archive-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 54.120020000000295,
+      "nodes": 1184,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": [
+        {
+          "src": "assets/wreck-investigation-mobile.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/resident-letter.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/power-module.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "jump",
+      "width": 375,
+      "screenshot": "jump-375.webp",
+      "switchIncludingPWAndImageDecodeMs": 48.524521999999706,
+      "nodes": 156,
+      "scrollWidth": 375,
+      "viewport": 375,
+      "images": [
+        {
+          "src": "assets/starcore-jump-mobile.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "first": {
+        "nodes": 366,
+        "resources": [
+          {
+            "name": "style.css?v=3.32.0-preview.1",
+            "bytes": 49279,
+            "duration": 59.40000000037253
+          },
+          {
+            "name": "engine.js?v=3.32.0-preview.1",
+            "bytes": 173734,
+            "duration": 66.80000000074506
+          },
+          {
+            "name": "data.js?v=3.32.0-preview.1",
+            "bytes": 149348,
+            "duration": 66.90000000037253
+          },
+          {
+            "name": "visual.css?v=3.32.0-preview.1",
+            "bytes": 28163,
+            "duration": 63.90000000037253
+          },
+          {
+            "name": "storage.js?v=3.32.0-preview.1",
+            "bytes": 11284,
+            "duration": 66.5
+          },
+          {
+            "name": "visuals.js?v=3.32.0-preview.1",
+            "bytes": 5074,
+            "duration": 66.3999999994412
+          },
+          {
+            "name": "motion.js?v=3.32.0-preview.1",
+            "bytes": 3605,
+            "duration": 71.5
+          },
+          {
+            "name": "app.js?v=3.32.0-preview.1",
+            "bytes": 163560,
+            "duration": 73.8999999994412
+          },
+          {
+            "name": "assets/orbital-dock-mobile.webp",
+            "bytes": 60486,
+            "duration": 8.899999999441206
+          },
+          {
+            "name": "assets/salvage-tug.webp",
+            "bytes": 21710,
+            "duration": 78.6000000005588
+          }
+        ],
+        "navigation": 302.79999999981374
+      },
+      "errors": [],
+      "bad": []
+    },
+    {
+      "page": "home",
+      "width": 320,
+      "screenshot": "home-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 6.387609999999768,
+      "nodes": 366,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": [
+        {
+          "src": "assets/orbital-dock-mobile.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "fleet",
+      "width": 320,
+      "screenshot": "fleet-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 72.57453499999974,
+      "nodes": 277,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": [
+        {
+          "src": "assets/orbital-dock-mobile.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/salvage-tug.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "explore",
+      "width": 320,
+      "screenshot": "explore-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 179.55213999999978,
+      "nodes": 2726,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": [
+        {
+          "src": "assets/sector-nebula-mobile.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "voyage",
+      "width": 320,
+      "screenshot": "voyage-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 94.30641900000046,
+      "nodes": 814,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": [
+        {
+          "src": "assets/voyage-bridge-mobile.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "residents",
+      "width": 320,
+      "screenshot": "residents-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 57.72509199999877,
+      "nodes": 414,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": [
+        {
+          "src": "assets/resident-habitat-mobile.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "archive",
+      "width": 320,
+      "screenshot": "archive-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 56.38793199999964,
+      "nodes": 1184,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": [
+        {
+          "src": "assets/wreck-investigation-mobile.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/resident-letter.webp",
+          "loaded": true
+        },
+        {
+          "src": "assets/power-module.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "page": "jump",
+      "width": 320,
+      "screenshot": "jump-320.webp",
+      "switchIncludingPWAndImageDecodeMs": 57.178585999999996,
+      "nodes": 156,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "images": [
+        {
+          "src": "assets/starcore-jump-mobile.webp",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "first": {
+        "nodes": 366,
+        "resources": [
+          {
+            "name": "style.css?v=3.32.0-preview.1",
+            "bytes": 49279,
+            "duration": 36.89999999944121
+          },
+          {
+            "name": "data.js?v=3.32.0-preview.1",
+            "bytes": 149348,
+            "duration": 38.5
+          },
+          {
+            "name": "engine.js?v=3.32.0-preview.1",
+            "bytes": 173734,
+            "duration": 47.89999999944121
+          },
+          {
+            "name": "visual.css?v=3.32.0-preview.1",
+            "bytes": 28163,
+            "duration": 37.40000000037253
+          },
+          {
+            "name": "motion.js?v=3.32.0-preview.1",
+            "bytes": 3605,
+            "duration": 49.10000000055879
+          },
+          {
+            "name": "storage.js?v=3.32.0-preview.1",
+            "bytes": 11284,
+            "duration": 47.60000000055879
+          },
+          {
+            "name": "app.js?v=3.32.0-preview.1",
+            "bytes": 163560,
+            "duration": 50.10000000055879
+          },
+          {
+            "name": "visuals.js?v=3.32.0-preview.1",
+            "bytes": 5074,
+            "duration": 47.60000000055879
+          },
+          {
+            "name": "assets/orbital-dock-mobile.webp",
+            "bytes": 60486,
+            "duration": 11.599999999627471
+          },
+          {
+            "name": "assets/salvage-tug.webp",
+            "bytes": 21710,
+            "duration": 38.69999999925494
+          }
+        ],
+        "navigation": 362.09999999962747
+      },
+      "errors": [],
+      "bad": []
+    }
+  ]
+}

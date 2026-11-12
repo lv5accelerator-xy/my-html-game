@@ -228,6 +228,7 @@
       "航站设置",
       `<p>进度保存在这台设备。跃迁不会清除舰装、故事、航站修复和永久能力。</p>${blocked ? '<p class="save-warning">自动保存已暂停。请先导出记录，再恢复备份或重新启航。</p>' : ""}
       <fieldset class="reading-settings"><legend>场景动态</legend><div>${[["auto","跟随设备"],["off","关闭动态"],["full","完整动态"]].map(([id,label])=>`<button class="outline" ${action("motion-mode",id)} aria-pressed="${M.mode()===id}">${label}</button>`).join("")}</div><p>减少动态偏好始终优先；省流或低性能设备自动降级，不改变生产与航时。</p></fieldset>
+      ${window.SalvageMusic?.panel() || ""}
       <fieldset class="reading-settings"><legend>阅读字号</legend><div>${[["normal", "标准"], ["large", "大字"], ["larger", "特大"]].map(([id, label]) => `<button class="outline" ${action("reading-size", id)} aria-pressed="${reading.size === id}">${label}</button>`).join("")}</div><p>仅改变这台设备的显示，航线进度独立保存。</p></fieldset>
       <div class="settings-links"><button ${action("export")}>导出当前航线</button><button ${action("raw-export")}>导出本机原始记录</button><button ${action("import")} ${conflicted ? "disabled" : ""}>导入记录</button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
       ${backupPanel()}
@@ -247,6 +248,7 @@
       <p><small>拾荒航线 ${D.GAME_VERSION} · 离线结算最多 ${D.OFFLINE_SECONDS / 3600} 小时。故事选择不会自动代选。</small></p>`,
     );
     updateNumbers();
+    window.SalvageMusic?.render();
   }
   $("#settings-button").addEventListener("click", settings);
   function navigate(target, focusId) {

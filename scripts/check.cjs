@@ -11,7 +11,7 @@ try { require(process.env.CODEX_PLAYWRIGHT_PATH); } catch (error) {
   console.error(`Playwright unavailable: ${error.message}`); process.exit(1);
 }
 const scripts = ['game.js','game-math.js','cloud-save.js','v2-systems.js','legacy-systems.js',
-  'v3/data.js','v3/engine.js','v3/storage.js','v3/visuals.js','v3/motion.js','v3/app.js'];
+  'v3/data.js','v3/engine.js','v3/storage.js','v3/visuals.js','v3/motion.js','v3/music.js','v3/app.js'];
 const tests = fs.readdirSync(path.join(root,'tests')).filter(file => file.endsWith('.test.js')).sort();
 if (!tests.length) throw new Error('No test scripts discovered');
 let failed = 0;

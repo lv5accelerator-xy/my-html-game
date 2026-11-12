@@ -2025,3 +2025,13 @@ summary { padding-block:10px; cursor:pointer; }
   #navigation button { min-height:48px; }
   #toast { bottom:calc(82px + env(safe-area-inset-bottom,0px)); }
 }
+
+/* Background music (v3/music.js) */
+.music-button { display:inline-flex; align-items:center; gap:6px; }
+.music-button.off { opacity:.62; }
+.music-button.off [aria-hidden="true"] { text-decoration:line-through; }
+.music-settings label { display:block; margin:14px 0 6px; font-size:.9rem; }
+.music-settings select { width:100%; max-width:360px; min-height:44px; padding:8px; color:var(--text); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); }
+.music-settings input[type="range"] { width:100%; max-width:360px; accent-color:var(--amber); }
+.music-settings output { color:var(--amber); margin-left:6px; }
+@media (max-width: 760px) { .music-button-label { display:none; } .topbar > .music-button { padding:8px 4px 8px 8px; font-size:16px; } }

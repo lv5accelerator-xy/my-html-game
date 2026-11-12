@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="visual.css?v=3.32.0-preview.1" />
     <script defer src="visuals.js?v=3.32.0-preview.1"></script>
     <script defer src="motion.js?v=3.32.0-preview.1"></script>
+    <script defer src="music.js?v=3.32.0-preview.1"></script>
     <script defer src="app.js?v=3.32.0-preview.1"></script>
   </head>
   <body>
@@ -46,6 +47,9 @@
           星核 <strong id="core-value">0</strong>
         </div>
       </div>
+      <button id="music-button" class="text-button music-button" type="button" data-music="toggle" aria-pressed="true">
+        <span aria-hidden="true">♫</span><span class="music-button-label" data-music-label>音乐开</span>
+      </button>
       <button id="settings-button" class="text-button" type="button">
         设置
       </button>

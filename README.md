@@ -5,7 +5,9 @@
 </p>
 
 <p align="center">
-  <a href="https://lv5accelerator-xy.github.io/my-html-game/"><strong>▶ 在线试玩</strong></a>
+  <a href="https://lv5accelerator-xy.github.io/my-html-game/v3/"><strong>▶ 在线试玩（新版 v3）</strong></a>
+  ·
+  <a href="https://lv5accelerator-xy.github.io/my-html-game/">旧版 v2</a>
   ·
   <a href="patch-notes/README.md">更新记录</a>
   ·
@@ -45,7 +47,7 @@
 
 v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)。本开发分支已完成 **3.29～3.32 视觉重制**，当前版本 **3.32.0-preview.1**。七种页面构图复用真实游戏规则，探索聚合入口与所有旧目标定位保留。最新 main 基线为已合并的 v3.28（`4d87e7f`）；本分支不合并、不部署。完整实测、素材和截图见[视觉重制验收](docs/v329-v332-validation.md)。原六章、三个结局、经营、远航、备份、schema32 与 v2/v3 存储隔离保留。
 
-旧版主入口保留 **v2.3.0「归航之约」**。
+旧版主入口保留 **v2.3.0「归航之约」**，仍可游玩；首页顶部有前往新版的醒目入口，本机旧记录可在 v3 中继承。
 
 - **v2.3.0**：1/4/8 小时归航安排，补给换材料，回访短篇，无准点签到要求。
 - **v2.2.0**：远征信号、伴星解读、航站加工与八篇收藏联动。

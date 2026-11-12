@@ -13389,3 +13389,65 @@ body:not([data-expedition-skin="standard"]) .collect-core {
 @media (max-width: 420px) {
   .offline-report-stats  { grid-template-columns: 1fr; }
 }
+
+/* v3 引导横幅：旧版首页顶部的新版入口 */
+.v3-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 201, 104, 0.45);
+  border-radius: var(--radius-small);
+  background: linear-gradient(100deg, rgba(255, 201, 104, 0.16), rgba(98, 230, 255, 0.1));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+.v3-banner-mark {
+  flex: none;
+  color: var(--gold);
+  font-size: 1.3rem;
+}
+.v3-banner-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  min-width: 0;
+  margin: 0;
+}
+.v3-banner-text strong {
+  color: var(--gold);
+}
+.v3-banner-text span {
+  color: var(--muted);
+}
+.v3-banner-link {
+  flex: none;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #1a1204;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.v3-banner-link:hover {
+  filter: brightness(1.08);
+}
+.v3-banner-link:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .v3-banner {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .v3-banner-mark {
+    display: none;
+  }
+  .v3-banner-link {
+    width: 100%;
+    text-align: center;
+  }
+}

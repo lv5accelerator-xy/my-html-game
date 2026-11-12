@@ -78,9 +78,11 @@ async function main() {
     assert.equal(m.audio.src, null, "no audio source before a gesture");
     assert.equal(audioRequests.length, 0, "no mp3 request on first paint");
     const button = page.locator("#music-button");
+    assert.equal(await button.isHidden(), true, "first screen keeps its three controls");
     assert.equal(await button.getAttribute("aria-pressed"), "true");
     assert.match(await button.getAttribute("aria-label"), /暂停背景音乐：猎户座外的前哨/);
     await page.locator("#main").click({ position: { x: 5, y: 5 } });
+    assert.equal(await button.isVisible(), true, "toggle appears once music can play");
     await page.waitForFunction(() => SalvageMusic.state().trackId === "outpost-beyond-orion");
     m = await music(page);
     assert.match(m.audio.src, /^\.\.\/assets\/outpost-beyond-orion\.mp3/);
@@ -98,12 +100,14 @@ async function main() {
     assert.equal(await page.locator("#dialog").isVisible(), true);
     await page.keyboard.press("Shift");
     assert.equal((await music(page)).audio.src, null, "disabled music stays silent after a gesture");
+    assert.equal(await page.locator("#music-button").isVisible(), true, "a disabled player can be turned on from the topbar");
     const legacy = JSON.parse(await stored(page, "stellarOutpostIdleSave_v1"));
     assert.equal(legacy.bgmVolume, 0.5, "v2 save untouched");
   });
 
   await scenario("topbar toggle, settings track/volume persist across reload without touching the game save", null, async (page) => {
     const before = await stored(page, V3_KEY);
+    await page.locator("#main").click({ position: { x: 5, y: 5 } });
     await page.locator("#music-button").click();
     let m = await music(page);
     assert.equal(m.prefs.enabled, false);
@@ -158,6 +162,7 @@ async function main() {
   });
 
   await scenario("phone: compact music button fits the topbar without horizontal overflow", null, async (page) => {
+    await page.locator("#main").tap({ position: { x: 5, y: 5 } });
     const info = await page.evaluate(() => {
       const button = document.getElementById("music-button");
       const rect = button.getBoundingClientRect();

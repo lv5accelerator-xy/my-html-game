@@ -108,6 +108,7 @@
   function toggle() {
     prefs.enabled = !prefs.enabled;
     unlocked = true;
+    reveal();
     if (prefs.enabled) play(); else audio.pause();
     persist(); render();
   }
@@ -149,9 +150,14 @@
     if (event.target?.dataset?.music === 'volume') setVolume(event.target.value, false);
   });
   // Browsers only allow media playback after a user gesture.
+  // The first screen keeps its three controls; the topbar toggle appears once music can play.
+  function reveal() {
+    const button = document.getElementById('music-button');
+    if (button) button.hidden = false;
+  }
   const unlock = event => {
     if (event.target?.closest?.('[data-music="toggle"]')) return; // the toggle decides
-    unlocked = true; play();
+    unlocked = true; reveal(); play();
   };
   document.addEventListener('pointerdown', unlock, { once: true, capture: true });
   document.addEventListener('keydown', unlock, { once: true, capture: true });

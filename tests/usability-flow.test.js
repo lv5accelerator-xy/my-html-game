@@ -101,6 +101,18 @@ async function verifyVisibleGoalAndReachableActions() {
       assert.ok(goal.text, "下一个目标的文本必须非空");
       assert.equal(goal.hiddenAncestor, false, "下一个目标不能位于 hidden 容器内");
       assert.equal(goal.hasLayout, true, "下一个目标必须可见，offsetParent 不能为 null");
+      const banner = await page.locator(".v3-banner-link").evaluate((link) => {
+        const rect = link.getBoundingClientRect();
+        return {
+          href: link.getAttribute("href"), hiddenAncestor: Boolean(link.closest("[hidden]")),
+          inViewport: rect.top >= 0 && rect.bottom <= innerHeight && rect.left >= 0 && rect.right <= innerWidth,
+          overflow: document.documentElement.scrollWidth - innerWidth,
+        };
+      });
+      assert.equal(banner.href, "v3/", "首页新版入口必须指向 v3/");
+      assert.equal(banner.hiddenAncestor, false, "新版入口不能被隐藏");
+      assert.equal(banner.inViewport, true, `新版入口必须在 ${width}px 首屏内`);
+      assert.equal(banner.overflow, 0, `新版入口不能造成 ${width}px 横向溢出`);
     }
     const failures = await page.evaluate(() => {
       const api = window.usabilityTest;
@@ -119,7 +131,7 @@ async function verifyVisibleGoalAndReachableActions() {
     });
     assert.deepEqual(failures, [], "关闭全部系统后，每个推荐动作必须可达");
     assert.deepEqual(errors, [], "页面不能出现运行时异常");
-    console.log("usability browser ok: visible goal at 1280/375px; recommendations reachable");
+    console.log("usability browser ok: visible goal and v3 entry at 1280/375px; recommendations reachable");
   } finally {
     if (browser) await browser.close();
     await new Promise((resolve) => server.close(resolve));

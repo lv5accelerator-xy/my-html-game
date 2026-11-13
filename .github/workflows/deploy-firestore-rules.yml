@@ -1,0 +1,69 @@
+name: Deploy Firestore rules
+
+# Publishes firestore.rules to the production project only after the emulator rules tests pass
+# on the exact commit. Runs on merges to main that change the rules, or by hand.
+# Needs the repository secret FIREBASE_RULES_SERVICE_ACCOUNT: the JSON key of a service account
+# holding only "Firebase Rules Admin" and "Service Usage Consumer" on project stellar-outpost-idle.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - firestore.rules
+      - tests/rules/**
+      - .github/workflows/deploy-firestore-rules.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firestore-rules
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install emulator test runtime
+        run: npm install --no-save firebase-tools@14.27.0 @firebase/rules-unit-testing@4.0.1 firebase@11.10.0
+      - name: Verify rules in emulator
+        run: npx firebase emulators:exec --only firestore --project demo-stellar-rules "node tests/rules/firestore-rules.cjs"
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install Firebase CLI
+        run: npm install --no-save firebase-tools@14.27.0
+      - name: Publish rules
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_RULES_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SERVICE_ACCOUNT" ]; then
+            echo "::error::Secret FIREBASE_RULES_SERVICE_ACCOUNT is not set; rules were NOT published."
+            exit 1
+          fi
+          key="$RUNNER_TEMP/rules-sa.json"
+          umask 077
+          printf '%s' "$SERVICE_ACCOUNT" > "$key"
+          trap 'rm -f "$key"' EXIT
+          GOOGLE_APPLICATION_CREDENTIALS="$key" npx firebase deploy --only firestore:rules --project stellar-outpost-idle --non-interactive

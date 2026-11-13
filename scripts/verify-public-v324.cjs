@@ -69,7 +69,12 @@ async function run() {
     const sceneReady = async () => {
       if (!new URL(target).pathname.endsWith("/v3/")) return;
       await page.locator(".scene").waitFor();
-      const asset = new URL("assets/salvage-orbit.webp", target).href;
+      // Since v3.29 the scene is a <picture> (the CSS background is none), so check the image
+      // the browser actually chose — desktop or mobile source — instead of salvage-orbit.webp.
+      const img = page.locator(".scene .scene-picture img").first();
+      await img.waitFor();
+      await page.waitForFunction(el => el.complete && el.naturalWidth > 0, await img.elementHandle());
+      const asset = await img.evaluate(el => el.currentSrc);
       const response = responses.get(asset) || await page.waitForResponse(r => r.url() === asset);
       assert.equal(response.status(), 200, "visible scene image HTTP status");
       assert.equal(await response.finished(), null, "visible scene image body fully loaded");

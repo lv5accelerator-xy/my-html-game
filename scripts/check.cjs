@@ -23,6 +23,16 @@ function run(args) {
   }
 }
 for (const script of scripts) run(['--check',script]);
+// Static lint (undefined functions/variables and similar). Needs eslint+globals installed;
+// without them it is reported as skipped, never as passed.
+let lint = 'skipped';
+try {
+  if (process.env.CODEX_ESLINT_PATH) require.resolve(process.env.CODEX_ESLINT_PATH);
+  else require.resolve('eslint', { paths: [root] });
+  const before = failed; run(['scripts/lint.cjs', ...scripts]); lint = failed === before ? 'passed' : 'failed';
+} catch (_) {
+  console.log('LINT_SKIPPED: eslint not installed (npm install --no-save eslint@9.39.5 globals@17.14.0, or set CODEX_ESLINT_PATH)');
+}
 for (const test of tests) run([`tests/${test}`]);
-console.log(`RESULT: ${scripts.length} syntax checks, ${tests.length} test scripts, ${failed} failed checks.`);
+console.log(`RESULT: ${scripts.length} syntax checks, lint ${lint}, ${tests.length} test scripts, ${failed} failed checks.`);
 process.exitCode = failed ? 1 : 0;

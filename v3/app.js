@@ -128,6 +128,7 @@
       const result = S.save(storage, state, Date.now(), { expected: persistedText });
       persistedText = JSON.stringify(state);
       $("#save-label").textContent = result.backupError ? "已保存 · 备份未更新" : "自动保存";
+      window.SalvageCloud?.saved();
       if (result.backupError && !backupWarningShown) {
         backupWarningShown = true;
         toast("当前进度已保存，但自动备份未能更新。请导出记录留存。");
@@ -227,6 +228,7 @@
     openDialog(
       "航站设置",
       `<p>进度保存在这台设备。跃迁不会清除舰装、故事、航站修复和永久能力。</p>${blocked ? '<p class="save-warning">自动保存已暂停。请先导出记录，再恢复备份或重新启航。</p>' : ""}
+      ${window.SalvageCloud?.panel() || ""}
       <fieldset class="reading-settings"><legend>场景动态</legend><div>${[["auto","跟随设备"],["off","关闭动态"],["full","完整动态"]].map(([id,label])=>`<button class="outline" ${action("motion-mode",id)} aria-pressed="${M.mode()===id}">${label}</button>`).join("")}</div><p>减少动态偏好始终优先；省流或低性能设备自动降级，不改变生产与航时。</p></fieldset>
       ${window.SalvageMusic?.panel() || ""}
       <fieldset class="reading-settings"><legend>阅读字号</legend><div>${[["normal", "标准"], ["large", "大字"], ["larger", "特大"]].map(([id, label]) => `<button class="outline" ${action("reading-size", id)} aria-pressed="${reading.size === id}">${label}</button>`).join("")}</div><p>仅改变这台设备的显示，航线进度独立保存。</p></fieldset>
@@ -249,6 +251,7 @@
     );
     updateNumbers();
     window.SalvageMusic?.render();
+    window.SalvageCloud?.render();
   }
   $("#settings-button").addEventListener("click", settings);
   function navigate(target, focusId) {
@@ -1181,7 +1184,7 @@
     updateNumbers();
     lastPaintClock=state.clock;
   }
-  function importText(text) {
+  function importText(text, message = "航线记录已接续，恢复前的记录已备份。") {
     try {
       if (conflicted) throw new Error("另一窗口正在运行，请先接续最新进度。");
       state = S.restore(storage, text, Date.now(), {
@@ -1198,12 +1201,14 @@
       signature = "";
       closeDialog();
       render();
-      toast("航线记录已接续，恢复前的记录已备份。");
+      toast(message);
+      return true;
     } catch (error) {
       toast(`未能接续：${error.message}`);
+      return false;
     }
   }
-  function previewRestore(text, source, confirmId = "confirm-import") {
+  function previewRestore(text, source, confirmId = "confirm-import", onDone = null) {
     if (conflicted) throw new Error("另一窗口正在运行，请先接续最新进度。");
     const incoming = S.inspect(text), next = incoming.summary, current = S.summarize(state);
     const warnings = [];
@@ -1238,8 +1243,9 @@
     const confirm = document.getElementById(confirmId);
     confirm.addEventListener("click", () => {
       confirm.disabled = true;
-      importText(text);
+      const ok = importText(text);
       if (dialog.open) confirm.disabled = false;
+      onDone?.(ok);
     });
   }
   document.addEventListener("change", async (event) => {
@@ -1697,5 +1703,20 @@
     $("#reload-game").addEventListener("click", () => location.reload(), {
       once: true,
     });
+  });
+  // Optional cloud save: sees saves only through these calls and restores only through
+  // the same backup-first paths a player uses for imports.
+  window.SalvageCloud?.attach({
+    storage,
+    bootText: loaded.source ?? null,
+    currentText: () => persistedText ?? null,
+    blocked: () => blocked || conflicted,
+    inspect: (text) => S.inspect(text),
+    summary: () => S.summarize(state),
+    summaryOf: (text) => S.inspect(text).summary,
+    schema: () => `${state.schema}/${state.version}`,
+    checkpoint: (text, label) => S.checkpoint(storage, text, "manual", label),
+    importText, previewRestore, openDialog, closeDialog, toast, escape, number,
+    gameVersion: D.GAME_VERSION,
   });
 })();

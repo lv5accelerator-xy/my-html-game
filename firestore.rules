@@ -29,6 +29,48 @@ service cloud.firestore {
       allow create, update: if isOwner() && hasValidEnvelope();
     }
 
+    // v3「拾荒航线」云存档：与旧版 saves 完全分开，旧版云档不会被新版写入。
+    // revision 每次只能 +1（新建为 1），由服务器保证两台设备不会互相悄悄覆盖。
+    match /savesV3/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function hasValidV3Save() {
+        let data = request.resource.data;
+        return data.keys().hasAll(["revision", "snapshot", "encoding", "updatedAt"])
+          && data.keys().hasOnly([
+            "revision",
+            "snapshot",
+            "encoding",
+            "schema",
+            "gameVersion",
+            "deviceId",
+            "clientSavedAt",
+            "summary",
+            "updatedAt"
+          ])
+          && data.revision is int
+          && data.snapshot is string
+          && data.snapshot.size() >= 1
+          && data.snapshot.size() <= 700000
+          && data.encoding in ["gzip-base64", "json"]
+          && (!data.keys().hasAll(["schema"]) || (data.schema is string && data.schema.size() <= 40))
+          && (!data.keys().hasAll(["gameVersion"]) || (data.gameVersion is string && data.gameVersion.size() <= 40))
+          && (!data.keys().hasAll(["deviceId"]) || (data.deviceId is string && data.deviceId.size() <= 64))
+          && (!data.keys().hasAll(["clientSavedAt"]) || (data.clientSavedAt is number && data.clientSavedAt >= 0))
+          && (!data.keys().hasAll(["summary"]) || (data.summary is map && data.summary.size() <= 24))
+          && data.updatedAt is timestamp
+          && data.updatedAt == request.time;
+      }
+
+      allow read, delete: if isOwner();
+      allow create: if isOwner() && hasValidV3Save() && request.resource.data.revision == 1;
+      allow update: if isOwner()
+        && hasValidV3Save()
+        && request.resource.data.revision == resource.data.revision + 1;
+    }
+
     match /leaderboards/{userId} {
       function isOwner() {
         return request.auth != null && request.auth.uid == userId;

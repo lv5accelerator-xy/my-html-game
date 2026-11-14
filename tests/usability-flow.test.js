@@ -92,7 +92,7 @@ async function verifyVisibleGoalAndReachableActions() {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     await page.waitForFunction(() => Boolean(window.StellarOutpostCloudBridge));
-    for (const width of [1280, 375]) {
+    for (const width of [1440, 1280, 375]) {
       await page.setViewportSize({ width, height: 900 });
       const goal = await page.locator("#next-goal-title").evaluate((element) => ({
         text: element.textContent.trim(), hiddenAncestor: Boolean(element.closest("[hidden]")),
@@ -113,6 +113,26 @@ async function verifyVisibleGoalAndReachableActions() {
       assert.equal(banner.hiddenAncestor, false, "新版入口不能被隐藏");
       assert.equal(banner.inViewport, true, `新版入口必须在 ${width}px 首屏内`);
       assert.equal(banner.overflow, 0, `新版入口不能造成 ${width}px 横向溢出`);
+      // Let width transitions from the resize finish before measuring the layout.
+      await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => {}))));
+      const topbar = await page.evaluate(() => {
+        const visible = (el) => el.offsetParent !== null;
+        const actions = [...document.querySelectorAll(".top-actions > *, .music-player-shell > *")].filter(visible);
+        const cells = [...document.querySelectorAll(".resource-strip > *")].filter(visible);
+        const overlaps = [];
+        for (const a of actions) for (const c of cells) {
+          const ra = a.getBoundingClientRect(), rc = c.getBoundingClientRect();
+          const x = Math.min(ra.right, rc.right) - Math.max(ra.left, rc.left), y = Math.min(ra.bottom, rc.bottom) - Math.max(ra.top, rc.top);
+          if (x > 0.5 && y > 0.5) overlaps.push(`${a.id || a.className} × ${c.className}`);
+        }
+        const bar = document.querySelector(".topbar").getBoundingClientRect();
+        const last = actions.filter((el) => el.parentElement.matches(".top-actions")).pop().getBoundingClientRect();
+        const save = document.querySelector("#save-button");
+        return { overlaps, inside: last.right <= bar.right && last.right <= innerWidth,
+          saveOneLine: !visible(save) || save.scrollHeight <= parseFloat(getComputedStyle(save).lineHeight) * 1.5 + 12 };
+      });
+      assert.deepEqual(topbar.overlaps, [], `${width}px 顶栏操作区不能压住资源条`);
+      assert.equal(topbar.inside, true, `${width}px 顶栏操作区不能超出顶栏`);
     }
     const failures = await page.evaluate(() => {
       const api = window.usabilityTest;
@@ -131,7 +151,7 @@ async function verifyVisibleGoalAndReachableActions() {
     });
     assert.deepEqual(failures, [], "关闭全部系统后，每个推荐动作必须可达");
     assert.deepEqual(errors, [], "页面不能出现运行时异常");
-    console.log("usability browser ok: visible goal and v3 entry at 1280/375px; recommendations reachable");
+    console.log("usability browser ok: visible goal, v3 entry and topbar fit at 1440/1280/375px; recommendations reachable");
   } finally {
     if (browser) await browser.close();
     await new Promise((resolve) => server.close(resolve));

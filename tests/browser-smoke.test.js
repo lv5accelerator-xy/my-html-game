@@ -385,6 +385,9 @@ async function main() {
     });
 
     await page.selectOption("#bgm-track", "playlist", { force: true });
+    // A real "ended" only fires after the track's metadata loaded; the player ignores it while
+    // a switch is in flight. Wait for that state so the result does not depend on machine load.
+    await page.waitForFunction(() => document.querySelector("#bgm-audio").readyState >= 1);
     await page.evaluate(() => {
       document.querySelector("#bgm-audio").dispatchEvent(new Event("ended"));
     });

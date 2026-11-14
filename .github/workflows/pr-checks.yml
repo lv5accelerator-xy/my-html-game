@@ -45,6 +45,12 @@ jobs:
         run: node scripts/check.cjs
 
   webkit:
+    # One v3-browser shard per machine: WebKit is timing-sensitive when several instances share CPUs.
+    name: webkit (shard ${{ matrix.shard }}/3)
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.55.0-noble@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29
@@ -72,8 +78,9 @@ jobs:
         env:
           CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
           V3_BROWSER_ENGINE: webkit
-        run: node tests/v3-browser.test.js
+        run: node scripts/v3-browser-shards.cjs --only ${{ matrix.shard }}/3
       - name: Verify v3 visual and motion flows in WebKit
+        if: matrix.shard == 0
         env:
           CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
           V3_BROWSER_ENGINE: webkit

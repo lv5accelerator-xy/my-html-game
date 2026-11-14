@@ -125,7 +125,7 @@ my-html-game/
 
 ## 测试
 
-统一完整入口为 `node scripts/check.cjs`，需设置 `CODEX_PLAYWRIGHT_PATH`，可通过 `CODEX_CHROMIUM_PATH` 指定浏览器。执行 12 项运行脚本语法检查、静态检查（`node scripts/lint.cjs`，发现调用不存在的函数等问题）与 tests/ 中全部测试脚本。静态检查需先 `npm install --no-save eslint@9.39.5 globals@17.14.0`（或设置 `CODEX_ESLINT_PATH`），未安装时显示 `lint skipped`，不算通过；PR 检查会强制运行。新增 `node tests/v3-visual.test.js` 检查真实插画、七页、手机、动画和焦点；独立 WebKit 由原生浏览器流程及视觉流程共同检查。
+统一完整入口为 `node scripts/check.cjs`，需设置 `CODEX_PLAYWRIGHT_PATH`，可通过 `CODEX_CHROMIUM_PATH` 指定浏览器。执行 12 项运行脚本语法检查、静态检查（`node scripts/lint.cjs`，发现调用不存在的函数等问题）与 tests/ 中全部测试脚本。静态检查需先 `npm install --no-save eslint@9.39.5 globals@17.14.0`（或设置 `CODEX_ESLINT_PATH`），未安装时显示 `lint skipped`，不算通过；PR 检查会强制运行。测试默认并行执行（`CHECK_JOBS` 控制并行数，默认按 CPU 2–4；v3 浏览器测试按 `CHECK_V3_SHARDS` 分片并核对 116 个流程恰好各跑一次；使用真实时间的浏览器测试仍逐个运行；`CHECK_JOBS=1` 恢复串行）。新增 `node tests/v3-visual.test.js` 检查真实插画、七页、手机、动画和焦点；独立 WebKit 由原生浏览器流程及视觉流程共同检查。
 
 基础语法与数值测试只需要 Node.js：
 

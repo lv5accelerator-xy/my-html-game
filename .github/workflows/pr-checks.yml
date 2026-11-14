@@ -72,7 +72,7 @@ jobs:
         env:
           CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
           V3_BROWSER_ENGINE: webkit
-        run: node tests/v3-browser.test.js
+        run: node scripts/v3-browser-shards.cjs
       - name: Verify v3 visual and motion flows in WebKit
         env:
           CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright

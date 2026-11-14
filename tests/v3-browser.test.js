@@ -53,9 +53,16 @@ async function run() {
   });
   const screenshotDir = process.env.V3_SCREENSHOT_DIR;
   if (screenshotDir) fs.mkdirSync(screenshotDir, { recursive: true });
-  let checks = 0;
+  let checks = 0, declaredFlows = 0;
+  const shardMatch = /^(\d+)\/(\d+)$/.exec(process.env.V3_SHARD || "");
+  const shard = shardMatch ? { index: Number(shardMatch[1]), count: Number(shardMatch[2]) } : null;
+  if (process.env.V3_SHARD && (!shard || shard.count < 1 || shard.index >= shard.count)) throw new Error(`Invalid V3_SHARD ${process.env.V3_SHARD}`);
   async function scenario(name, initial, check, options = {}) {
+    // V3_SHARD=i/n runs every n-th declared flow (0-based i); scripts/check.cjs runs all
+    // shards in parallel and verifies every declared flow ran exactly once.
+    const index = declaredFlows++;
     if (process.env.V3_TEST_FILTER && !name.includes(process.env.V3_TEST_FILTER)) return;
+    if (shard && index % shard.count !== shard.index) return;
     const context = await browser.newContext({
       viewport: { width: 1280, height: 900 },
       acceptDownloads: true,
@@ -3319,6 +3326,7 @@ async function run() {
       const entries=await page.evaluate(()=>SalvageStorage.backups(localStorage).entries);
       assert.ok(entries.some(entry=>entry.valid&&entry.text===target),"the recovery source is still recoverable");
     });
+    if (shard) console.log(`V3_SHARD_RESULT ${JSON.stringify({ shard: `${shard.index}/${shard.count}`, flows: checks, declared: declaredFlows })}`);
     assert.ok(checks > 0, "At least one browser flow must execute; unmatched filters are errors");
     console.log(
       `v3 browser ok: ${checks} complete flows; identity/content/assets/console checked in every flow`,

@@ -11,7 +11,7 @@
     Object.freeze({ id: 'signal-at-kestrel-nine', title: '红隼九号信号', src: '../assets/signal-at-kestrel-nine.mp3?v=2.0.0', loopStart: 0.7, endTrim: 0 }),
     Object.freeze({ id: 'signal-at-kestrel-nine-2', title: '红隼九号·深空回声', src: '../assets/signal-at-kestrel-nine-2.mp3?v=2.0.0', loopStart: 0.7, endTrim: 2 }),
   ]);
-  const DEFAULTS = Object.freeze({ enabled: true, track: PLAYLIST, volume: 0.22 });
+  const DEFAULTS = Object.freeze({ enabled: true, track: PLAYLIST, volume: 0.22, sfx: true });
 
   function normalize(raw) {
     const track = String(raw?.track ?? '');
@@ -20,6 +20,7 @@
       enabled: raw?.enabled !== false,
       track: track === PLAYLIST || TRACKS.some(t => t.id === track) ? track : DEFAULTS.track,
       volume: Number.isFinite(volume) ? Math.min(1, Math.max(0, volume)) : DEFAULTS.volume,
+      sfx: raw?.sfx !== false,
     };
   }
   function loadPrefs() {
@@ -29,7 +30,7 @@
       // First visit: carry over the v2 player's choice, read-only.
       const legacy = JSON.parse(localStorage.getItem(LEGACY_SAVE) || 'null');
       if (legacy && typeof legacy === 'object')
-        return normalize({ enabled: legacy.bgmEnabled, track: legacy.bgmTrackSelection, volume: legacy.bgmVolume });
+        return normalize({ enabled: legacy.bgmEnabled, track: legacy.bgmTrackSelection, volume: legacy.bgmVolume, sfx: legacy.sound });
     } catch (_) { /* Corrupt or unavailable storage falls back to defaults. */ }
     return { ...DEFAULTS };
   }
@@ -98,6 +99,10 @@
       const label = button.querySelector('[data-music-label]');
       if (label) label.textContent = prefs.enabled ? '音乐开' : '音乐关';
     }
+    for (const button of document.querySelectorAll('[data-music="sfx"]')) {
+      button.setAttribute('aria-pressed', String(prefs.sfx));
+      button.textContent = prefs.sfx ? '按键音效开' : '按键音效关';
+    }
     for (const select of document.querySelectorAll('[data-music="track"]')) if (select.value !== prefs.track) select.value = prefs.track;
     const percent = Math.round(prefs.volume * 100);
     for (const range of document.querySelectorAll('[data-music="volume"]')) if (Number(range.value) !== percent) range.value = String(percent);
@@ -131,15 +136,50 @@
     const options = [[PLAYLIST, '自动轮播'], ...TRACKS.map(t => [t.id, t.title])]
       .map(([id, title]) => `<option value="${id}">${title}</option>`).join('');
     return `<fieldset class="reading-settings music-settings"><legend>背景音乐</legend>
-      <div><button class="outline" type="button" data-music="toggle" aria-pressed="${prefs.enabled}"><span aria-hidden="true">♫</span> <span data-music-label>${prefs.enabled ? '音乐开' : '音乐关'}</span></button></div>
+      <div><button class="outline" type="button" data-music="toggle" aria-pressed="${prefs.enabled}"><span aria-hidden="true">♫</span> <span data-music-label>${prefs.enabled ? '音乐开' : '音乐关'}</span></button>
+        <button class="outline" type="button" data-music="sfx" aria-pressed="${prefs.sfx}">${prefs.sfx ? '按键音效开' : '按键音效关'}</button></div>
       <label for="music-track">曲目</label><select id="music-track" data-music="track">${options}</select>
-      <label for="music-volume">音量 <output data-music="volume-value" for="music-volume">${Math.round(prefs.volume * 100)}%</output></label>
+      <label for="music-volume">音量（音乐与音效） <output data-music="volume-value" for="music-volume">${Math.round(prefs.volume * 100)}%</output></label>
       <input id="music-volume" data-music="volume" type="range" min="0" max="100" step="1" value="${Math.round(prefs.volume * 100)}">
       <p data-music="now"></p><p>只保存在这台设备；首次点击页面后开始播放。</p></fieldset>`;
   }
 
+  // Button tones, synthesised like the v2 station's (no audio files). Created on first click only.
+  let tones = null;
+  function tone(frequency, duration = 0.032, volume = 0.011) {
+    if (!prefs.sfx || prefs.volume <= 0) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      tones ||= new Ctx();
+      if (tones.state === 'suspended') tones.resume().catch(() => {});
+      const osc = tones.createOscillator(), gain = tones.createGain(), now = tones.currentTime;
+      // Scaled by the shared volume slider; at the default 22% this equals the v2 level.
+      const level = Math.max(0.0002, volume * (prefs.volume / DEFAULTS.volume));
+      osc.type = 'triangle';
+      osc.frequency.value = frequency;
+      gain.gain.setValueAtTime(level, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain); gain.connect(tones.destination);
+      osc.start(now); osc.stop(now + duration);
+    } catch (_) { /* Sound is optional. */ }
+  }
+  function buttonTone(button) {
+    if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
+    let frequency = 340;
+    if (button.closest('#navigation')) frequency = 430;
+    if (button.classList.contains('primary')) frequency = 520;
+    tone(frequency);
+  }
+  function toggleSfx() {
+    prefs.sfx = !prefs.sfx;
+    persist(); render();
+    if (prefs.sfx) tone(520, 0.08, 0.02);
+  }
   document.addEventListener('click', event => {
     if (event.target.closest?.('[data-music="toggle"]')) toggle();
+    if (event.target.closest?.('[data-music="sfx"]')) { toggleSfx(); return; }
+    buttonTone(event.target.closest?.('button'));
   });
   document.addEventListener('change', event => {
     const el = event.target;
@@ -164,7 +204,7 @@
 
   render();
   window.SalvageMusic = Object.freeze({
-    panel, render, toggle, select,
+    panel, render, toggle, select, tone,
     tracks: TRACKS, prefs: () => ({ ...prefs }),
     state: () => ({ trackId: audio.dataset.trackId || null, paused: audio.paused, volume: audio.volume, src: audio.getAttribute('src') }),
   });

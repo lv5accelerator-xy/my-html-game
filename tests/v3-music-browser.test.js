@@ -74,7 +74,7 @@ async function main() {
 
   await scenario("defaults: nothing loads before a gesture, first click starts the playlist from ../assets", null, async (page, { audioRequests }) => {
     let m = await music(page);
-    assert.deepEqual(m.prefs, { enabled: true, track: "playlist", volume: 0.22 });
+    assert.deepEqual(m.prefs, { enabled: true, track: "playlist", volume: 0.22, sfx: true });
     assert.equal(m.audio.src, null, "no audio source before a gesture");
     assert.equal(audioRequests.length, 0, "no mp3 request on first paint");
     const button = page.locator("#music-button");
@@ -94,7 +94,7 @@ async function main() {
     stellarOutpostIdleSave_v1: JSON.stringify({ version: 31, bgmEnabled: false, bgmTrackSelection: "signal-at-kestrel-nine-2", bgmVolume: 0.5 }),
   }, async (page) => {
     const m = await music(page);
-    assert.deepEqual(m.prefs, { enabled: false, track: "signal-at-kestrel-nine-2", volume: 0.5 });
+    assert.deepEqual(m.prefs, { enabled: false, track: "signal-at-kestrel-nine-2", volume: 0.5, sfx: true });
     assert.equal(await page.locator("#music-button").getAttribute("aria-pressed"), "false");
     // v3 offers to inherit the v2 station here; a key press is a gesture that leaves it open.
     assert.equal(await page.locator("#dialog").isVisible(), true);
@@ -125,7 +125,7 @@ async function main() {
     await page.waitForFunction(() => SalvageMusic.state().trackId === "signal-at-kestrel-nine");
     await dialog.locator("#music-volume").fill("40");
     m = await music(page);
-    assert.deepEqual(m.prefs, { enabled: true, track: "signal-at-kestrel-nine", volume: 0.4 });
+    assert.deepEqual(m.prefs, { enabled: true, track: "signal-at-kestrel-nine", volume: 0.4, sfx: true });
     assert.equal(m.audio.volume, 0.4);
     assert.equal(await dialog.locator("[data-music='volume-value']").innerText(), "40%");
     // Settings toggle and topbar stay in sync.
@@ -138,7 +138,7 @@ async function main() {
 
     await page.reload();
     await page.locator("#next-goal-title").waitFor();
-    assert.deepEqual((await music(page)).prefs, { enabled: true, track: "signal-at-kestrel-nine", volume: 0.4 });
+    assert.deepEqual((await music(page)).prefs, { enabled: true, track: "signal-at-kestrel-nine", volume: 0.4, sfx: true });
   });
 
   await scenario("playlist advances on track end; single-track selection repeats", null, async (page) => {
@@ -175,11 +175,80 @@ async function main() {
     assert.equal((await music(page)).prefs.enabled, false);
   }, { viewport: { width: 375, height: 800 }, hasTouch: true, isMobile: true });
 
+  // Records every oscillator the page starts instead of making sound.
+  async function withRecorder(page) {
+    await page.addInitScript(() => {
+      window.__tones = [];
+      window.__audioContexts = 0;
+      class FakeParam { constructor() { this.value = 0; this.events = []; } setValueAtTime(v) { this.events.push(v); this.value = v; } exponentialRampToValueAtTime() {} }
+      class FakeContext {
+        constructor() { window.__audioContexts++; this.state = "running"; this.currentTime = 0; this.destination = {}; }
+        resume() { return Promise.resolve(); }
+        createOscillator() { const o = { type: "", frequency: new FakeParam(), connect() {}, start() { window.__tones.push({ f: o.frequency.value, type: o.type, gain: o.gainNode?.gain.events[0] }); }, stop() {} }; this.last = o; return o; }
+        createGain() { const g = { gain: new FakeParam(), connect() {} }; if (this.last) this.last.gainNode = g; return g; }
+      }
+      window.AudioContext = FakeContext;
+      window.webkitAudioContext = FakeContext;
+    });
+  }
+  const tones = (page) => page.evaluate(() => window.__tones.map((t) => t.f));
+
+  await scenario("button tones: v2 pitches by button kind, silent before clicks and for disabled buttons", null, async (page) => {
+    await withRecorder(page);
+    await page.reload();
+    await page.locator("#next-goal-title").waitFor();
+    assert.equal(await page.evaluate(() => window.__audioContexts), 0, "no audio context before a click");
+    await page.locator("#main").click({ position: { x: 5, y: 5 } });
+    assert.deepEqual(await tones(page), [], "clicking empty space plays nothing");
+    await page.locator("#settings-button").click();
+    assert.deepEqual(await tones(page), [340], "ordinary button");
+    await page.keyboard.press("Escape");
+    const primary = page.locator("button.primary:not([disabled])").first();
+    await primary.click();
+    assert.equal((await tones(page)).at(-1), 520, "primary button");
+    const nav = page.locator("#navigation button:not([disabled])").first();
+    if (await nav.count()) { await nav.click(); assert.equal((await tones(page)).at(-1), 430, "navigation button"); }
+    const count = (await tones(page)).length;
+    await page.evaluate(() => { const b = document.createElement("button"); b.disabled = true; b.id = "probe-disabled"; b.textContent = "x"; document.body.append(b); b.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+    assert.equal((await tones(page)).length, count, "disabled button is silent");
+    const gains = await page.evaluate(() => window.__tones.map((t) => t.gain));
+    assert.ok(gains.every((g) => Math.abs(g - 0.011) < 1e-9), `default volume matches v2 level: ${gains}`);
+    assert.equal(await page.evaluate(() => window.__audioContexts), 1, "one shared audio context");
+  });
+
+  await scenario("sound effects toggle and shared volume persist; v2 sound-off carries over", {
+    stellarOutpostIdleSave_v1: JSON.stringify({ version: 31, sound: false, bgmVolume: 0.44 }),
+  }, async (page) => {
+    await withRecorder(page);
+    await page.reload();
+    await page.locator("#next-goal-title").waitFor();
+    assert.equal((await music(page)).prefs.sfx, false, "v2 sound off carries over");
+    await page.keyboard.press("Escape"); // v3 offers to inherit the v2 station here
+    await page.locator("#settings-button").click();
+    assert.deepEqual(await tones(page), [], "effects off: settings click is silent");
+    const sfx = page.locator("#dialog [data-music='sfx']");
+    assert.equal(await sfx.getAttribute("aria-pressed"), "false");
+    assert.equal(await sfx.innerText(), "按键音效关");
+    await sfx.click();
+    assert.equal(await sfx.getAttribute("aria-pressed"), "true");
+    assert.deepEqual(await tones(page), [520], "turning effects on gives a confirmation tone");
+    assert.ok(Math.abs((await page.evaluate(() => window.__tones.at(-1).gain)) - 0.04) < 1e-9, "confirmation scaled by 44% volume");
+    await page.locator("#music-volume").fill("0");
+    const before = (await tones(page)).length;
+    await page.keyboard.press("Escape");
+    await page.locator("#settings-button").click();
+    assert.equal((await tones(page)).length, before, "volume 0 silences effects");
+    await page.locator("#music-volume").fill("22");
+    await page.reload();
+    await page.locator("#next-goal-title").waitFor();
+    assert.deepEqual((await music(page)).prefs, { enabled: true, track: "playlist", volume: 0.22, sfx: true });
+  });
+
   await scenario("corrupt music preference falls back to defaults", { [MUSIC_KEY]: "{bad json" }, async (page) => {
-    assert.deepEqual((await music(page)).prefs, { enabled: true, track: "playlist", volume: 0.22 });
+    assert.deepEqual((await music(page)).prefs, { enabled: true, track: "playlist", volume: 0.22, sfx: true });
   });
   await scenario("out-of-range music preference is clamped", { [MUSIC_KEY]: JSON.stringify({ enabled: "yes", track: "<script>", volume: 9 }) }, async (page) => {
-    assert.deepEqual((await music(page)).prefs, { enabled: true, track: "playlist", volume: 1 });
+    assert.deepEqual((await music(page)).prefs, { enabled: true, track: "playlist", volume: 1, sfx: true });
   });
 
   console.log(`v3 music browser ok: ${checks} scenarios`);

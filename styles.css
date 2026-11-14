@@ -13451,3 +13451,19 @@ body:not([data-expedition-skin="standard"]) .collect-core {
     text-align: center;
   }
 }
+
+/* 顶栏：操作区按内容定宽（音乐播放器 + 四个按钮），由资源条在 420–640px 内让出空间，
+   避免 1180px 以上操作区向左溢出、压住资源条，以及“保存”被挤成两行。 */
+@media (min-width: 1181px) {
+  .topbar { grid-template-columns: minmax(200px, 1fr) minmax(420px, 640px) auto; }
+}
+.top-actions .text-button { white-space: nowrap; }
+@media (min-width: 1181px) and (max-width: 1365px) {
+  .music-player-button { width: 140px; }
+  .music-player-select { width: 38px; padding-right: 17px; }
+}
+/* 手机：音乐按钮只保留图标（曲名仍在旁边的下拉框里），让“菜单”按钮完整留在屏幕内。 */
+@media (max-width: 480px) {
+  .music-player-button { width: 42px; padding: 0; justify-content: center; }
+  .music-player-copy { display: none; }
+}

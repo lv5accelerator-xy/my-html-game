@@ -65,7 +65,7 @@ jobs:
         env:
           CODEX_PLAYWRIGHT_PATH: ${{ github.workspace }}/node_modules/playwright
           V3_BROWSER_ENGINE: ${{ matrix.engine }}
-          V3_TEST_URL: https://lv5accelerator-xy.github.io/my-html-game/v3/
+          V3_TEST_URL: https://lv5accelerator-xy.github.io/starfall-homecoming/v3/
           V3_SCREENSHOT_DIR: public-audit/${{ matrix.engine }}/full-suite
         run: node tests/v3-browser.test.js
       - name: Preserve screenshots, timing and machine-readable evidence

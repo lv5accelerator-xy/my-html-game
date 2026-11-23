@@ -1,177 +1,98 @@
-<h1 align="center">星港拾荒者</h1>
+# 星骸归航：STARFALL HOMECOMING
 
-<p align="center">
-  一款以深空回收、舰队自动化和多层轮回为核心的中文挂机游戏。
-</p>
+[![Deploy Pages](https://github.com/lv5accelerator-xy/starfall-homecoming/actions/workflows/deploy-pages.yml/badge.svg?branch=main)](https://github.com/lv5accelerator-xy/starfall-homecoming/actions/workflows/deploy-pages.yml)
 
-<p align="center">
-  <a href="https://lv5accelerator-xy.github.io/my-html-game/v3/"><strong>▶ 在线试玩（新版 v3）</strong></a>
-  ·
-  <a href="https://lv5accelerator-xy.github.io/my-html-game/">旧版 v2</a>
-  ·
-  <a href="patch-notes/README.md">更新记录</a>
-  ·
-  <a href="docs/README.md">维护文档</a>
-  ·
-  <a href="历史版本/README.md">历史版本</a>
-</p>
+于群星废墟中拾起希望，在漫长航途中重建家园。以深空回收、舰队自动化、星港建设与多层轮回为核心的中文挂机经营游戏。原生 HTML / CSS / JavaScript，无框架、无构建步骤，浏览器本地运行。
 
-<p align="center">
-  <a href="https://github.com/lv5accelerator-xy/my-html-game/actions/workflows/deploy-pages.yml">
-    <img alt="GitHub Pages 部署状态" src="https://github.com/lv5accelerator-xy/my-html-game/actions/workflows/deploy-pages.yml/badge.svg">
-  </a>
-</p>
+> 本作原名《星港拾荒者》，游戏内标题仍在逐步更换为新名。
 
-![轨道星港概念图](assets/starport.png)
+**[▶ 在线试玩（新版 v3）](https://lv5accelerator-xy.github.io/starfall-homecoming/v3/)** · [旧版 v2](https://lv5accelerator-xy.github.io/starfall-homecoming/)
 
-## 游戏简介
+| 航站 | 远航 | 居民 |
+| --- | --- | --- |
+| ![航站：扫描信标与下一目标](docs/validation/v329-v332/after-89698b4/home-1280.webp) | ![远航：航线与远征](docs/validation/v329-v332/after-89698b4/voyage-1280.webp) | ![居民：星港住民与关系](docs/validation/v329-v332/after-89698b4/residents-1280.webp) |
 
-《星港拾荒者》使用原生 HTML、CSS 与 JavaScript 制作，无框架、无构建步骤。玩家从手动回收第一份星尘开始，逐步建立自动化舰队、强化研究与星港、抵御袭击、执行深空跃迁，并进入奇点坍缩与无限边境循环。
-
-核心游戏可以离线运行，进度自动保存在浏览器中；连接 Google/Firebase 后，还可以跨设备同步存档、参加排行榜、阅读公告并提交反馈。
-
-## 核心玩法
+## 玩法
 
 - **信标与舰队**：手动回收星尘，扩建十类生产设施并建立自动化产线。
-- **研究与星核**：沿四条双分支科技树发展，深空跃迁后以星核获得长期强化。
+- **研究与星核**：四条双分支科技树；深空跃迁后以星核获得长期强化。
 - **舰队编成**：在工业、守备和远征之间配置单位、阵型、武器与战术方案。
 - **战斗与星港**：清剿目标获取材料，建设六座生产或战斗附属建筑。
-- **航站作业**：用既有资源加工舰队、星港和远征所需组件。
-- **星区远征**：在五段航程中选择航线、词条、舰装与临时协议，挑战机制首领。
-- **轮回成长**：通过深空跃迁、奇点超越、伴星观测和循环星区形成多层长期目标。
-- **任务与收藏**：每日/每周委托、航路章节、星海图鉴和限时活动提供明确短期目标。
-- **动态规则**：归航值守、跃迁学说和每周深空异象改变当前航线策略，但不无限堆叠倍率。
-- **群星归航**：统一当前航程、三选一今日航线、带取舍的跃迁 Build、循环赛季与伴星记忆故事，把既有系统收束为可读的回流闭环。
+- **星区远征**：五段航程中选择航线、词条、舰装与临时协议，挑战机制首领。
+- **轮回成长**：深空跃迁、奇点超越、伴星观测和循环星区构成多层长期目标。
+- **任务与收藏**：每日/每周委托、航路章节、星海图鉴和限时活动。
+- **云端功能（可选）**：连接 Google/Firebase 后可跨设备同步存档、参加排行榜、阅读公告与提交反馈；不连接也能完整离线游玩。
+
+访问 `?expert=1`，或在设置中打开“显示全部系统”，可加载星港、星雨寄航与委托的完整交互；两个入口存档互通。
 
 ## 当前版本
 
-v3「拾荒航线」入口为 [/v3/](https://lv5accelerator-xy.github.io/my-html-game/v3/)。本开发分支已完成 **3.29～3.32 视觉重制**，当前版本 **3.32.0-preview.1**。七种页面构图复用真实游戏规则，探索聚合入口与所有旧目标定位保留。最新 main 基线为已合并的 v3.28（`4d87e7f`）；本分支不合并、不部署。完整实测、素材和截图见[视觉重制验收](docs/v329-v332-validation.md)。原六章、三个结局、经营、远航、备份、schema32 与 v2/v3 存储隔离保留。
+<!-- CURRENT_VERSION_START -->
+**v3「拾荒航线」3.32.0-preview.1**
+3.29～3.32 视觉重制：七种页面构图复用真实游戏规则，探索聚合入口与旧目标定位保留；原六章、三个结局、经营、远航、备份、存档结构 32 与 v2/v3 存储隔离不变。实测与截图见[视觉重制验收](docs/v329-v332-validation.md)。
 
-旧版主入口保留 **v2.3.0「归航之约」**，仍可游玩；首页顶部有前往新版的醒目入口，本机旧记录可在 v3 中继承。
+旧版主入口保留 **v2.3.0「归航之约」**，首页顶部可前往新版，本机旧记录可在 v3 中继承。
+<!-- CURRENT_VERSION_END -->
 
-- **v2.3.0**：1/4/8 小时归航安排，补给换材料，回访短篇，无准点签到要求。
-- **v2.2.0**：远征信号、伴星解读、航站加工与八篇收藏联动。
-- **v2.1.0**：三条航线、六种行动委托，现有资源奖励，不叠永久倍率。
-- **v2.0.1**：更新记录与可选目标折叠，购买增产回本预览。
+完整更新记录见 [Patch Notes](patch-notes/README.md)；v0.25～v2.3 的版本摘要已移至 [版本摘要](docs/VERSION_HISTORY.md)。
 
-完整新版本说明见 [v2.3.0 维护与验证说明](docs/RELEASE-v2.3.0.md)。
+## 本地运行
 
-- **v2.0.0**：重做回流与每日目标，新增带种子的路线/协议 Build、单轮互斥研究、可导出航线报告、常驻循环赛季、分组榜、八条伴星记忆线和隐私友好反馈；旧档自动升级到存档结构 31。
-- **v1.10.0**：舰队、研究、战斗与超越页面新增四张独立场景插图，并完成 WebP 压缩、懒加载与手机端裁切适配。
-- **v1.9.0**：新增星港收藏陈列廊、伴星每日短事件、扩展归航简报，以及可由公告发布的实时全服目标。
-- **v1.8.0**：边境长航加入逐段信号判断、三种应对方案、机制型终点、航柜纪念品与归档航线资源结算。
-- **v1.7.0**：航站作业台新增四套资源再生配方，让建材、组件、补给和残片重新进入现有生产与整备循环。
-- **v1.6.0**：新增航站全景总览，将一项主目标和至多两项可选目标放回首屏，并补充推荐理由、预计用时与直达入口。
-- **v1.5.0**：远征页新增三条四阶段边境长航，用生产、守备与测绘目标串联已有系统并留下航线收藏。
-- **v1.4.0**：八只伴星新增观测后续故事，以既有玩法进度解锁两种叙事选择和一次性资源奖励。
-- **v1.3.0**：新增三套跃迁重建方案，按正常费用与解锁条件逐项恢复舰队设施和研究，减少重复周目点击。
-- **v1.2.0**：首屏保留归航简报与新手航路，补给、可选目标和每日路线收进“其他安排”；默认名称与三步教学减少首次进入阻力。
-- **v1.1.0**：新增常驻当前行动、三项目标追踪、图鉴下一缺失记录、超越恢复预览、数值来源、一键领奖和手机版快捷导航。
-- **v1.0.1**：修复超越后图鉴回退与伴星观测不解锁，并自动恢复受影响旧存档的收藏记录。
-- **v1.0.0**：正式版收口，新增本地备份恢复、键盘可达性、完整发布检查与稳定性回归。
-- **v0.31.0**：现有敌人新增每周机制词条，战斗页加入三战术边境回响与维护/材料回收项。
-- **v0.30.0**：新增三套星港协同蓝图，以现有作业组件切换并预览真实产量、攻防与战利品变化。
-- **v0.29.0**：将分散目标收束为一项主航程和至多两项可选航程，新增预计时间、奖励预览与稍后提醒。
-- **v0.28.0**：远征页新增每周三选一深空异象，以有限收益、明确风险和收藏档案提高重复游玩变化。
-- **v0.27.0**：新增三种跃迁学说，每次深空跃迁后选择当前航线的临时规则。
-- **v0.26.0**：新增归航简报、每日三选一值守目标和个人体验里程碑。
-- **v0.25.0**：新增八章航路、33 项图鉴、每日机制首领与全服共同航标。
-
-完整变化见 [Patch Notes](patch-notes/README.md)。
-
-## 开始游玩
-
-在线地址：<https://lv5accelerator-xy.github.io/my-html-game/>
-
-本地运行无需安装依赖：
+无需安装依赖：
 
 ```bash
-git clone https://github.com/lv5accelerator-xy/my-html-game.git
-cd my-html-game
+git clone https://github.com/lv5accelerator-xy/starfall-homecoming.git
+cd starfall-homecoming
 python -m http.server 8000
 ```
 
-随后打开 <http://localhost:8000/>。直接打开 `index.html` 也能运行核心游戏，但浏览器可能限制模块脚本或云端功能，因此更推荐使用本地 HTTP 服务。
+随后打开 <http://localhost:8000/>（新版为 `/v3/`）。直接双击 `index.html` 也能运行核心游戏，但浏览器可能限制模块脚本或云端功能。
 
-## 存档与兼容
+## 存档
 
-- 浏览器本地自动存档，并维护三份轮换备份。
-- 支持完整 JSON 存档导入与导出。
-- 页面进入后台后暂停视觉循环，返回时按真实时间差补算收益。
-- 基础离线收益最多累计 8 小时，可通过长期强化延长。
-- Google 登录和 Firebase 云存档属于可选功能；云服务不可用时不影响本地游戏。
-- 新版本加载旧存档时会自动补齐新增字段，不会重复执行数值压缩迁移。
+- 进度自动保存在浏览器本地，并维护三份轮换备份；支持完整 JSON 存档导入与导出。
+- 页面转入后台时暂停视觉循环，返回后按真实时间差补算收益；基础离线收益最多 8 小时，可通过长期强化延长。
+- Google 登录和 Firebase 云存档为可选功能，云服务不可用时不影响本地游戏。
+- 新版本加载旧存档时自动补齐新增字段，不会重复执行数值压缩迁移。
 
-## 项目结构
+## 仓库结构
 
-```text
-my-html-game/
-├─ index.html                 # 游戏入口与页面结构
-├─ styles.css                 # 界面、动画和响应式布局
-├─ game.js                    # 游戏状态、玩法、存档与渲染
-├─ game-math.js               # 数值安全、软上限与格式化
-├─ v2-systems.js              # v2 每日航线、Build、赛季、伴星故事与留存适配层
-├─ cloud-save.js              # 登录、云存档、排行榜、公告与反馈
-├─ firebase-config.js         # Firebase Web 公共配置
-├─ firestore.rules            # Firestore 安全规则
-├─ firebase/functions/        # 可选的赛季与长期共同航标服务端增量聚合
-├─ assets/                    # 压缩后的游戏贴图与原创背景音乐
-├─ docs/                      # 云端、运营和换机维护文档
-├─ patch-notes/               # 累计版本更新记录
-├─ tests/                     # 数值、浏览器和移动端回归测试
-├─ 历史版本/                  # 每个正式版本的 ZIP 快照
-└─ .github/workflows/         # GitHub Pages 自动部署
-```
+| 路径 | 内容 |
+| --- | --- |
+| `index.html`、`styles.css`、`game.js` | 旧版 v2 入口、样式与游戏状态/玩法/存档/渲染 |
+| `game-math.js`、`v2-systems.js`、`legacy-systems.js` | 数值安全与格式化、v2 航线/Build/赛季/伴星故事、旧系统适配 |
+| `v3/` | 新版「拾荒航线」入口与模块 |
+| `cloud-save.js`、`firebase-config.js`、`firestore.rules`、`firebase/` | 登录、云存档、排行榜、公告、反馈及可选服务端聚合 |
+| `assets/` | 压缩后的游戏贴图与原创背景音乐 |
+| `tests/`、`scripts/` | 数值、浏览器与移动端回归，统一检查脚本 |
+| `docs/` | 云端、运营、维护与验收文档，[文档索引](docs/README.md) |
+| `patch-notes/`、`历史版本/` | 逐版更新记录与正式版本 ZIP 快照 |
+| `.github/` | Pages 部署与 PR 检查工作流 |
 
-## 测试
+## 开发与测试
 
-统一完整入口为 `node scripts/check.cjs`，需设置 `CODEX_PLAYWRIGHT_PATH`，可通过 `CODEX_CHROMIUM_PATH` 指定浏览器。执行 12 项运行脚本语法检查、静态检查（`node scripts/lint.cjs`，发现调用不存在的函数等问题）与 tests/ 中全部测试脚本。静态检查需先 `npm install --no-save eslint@9.39.5 globals@17.14.0`（或设置 `CODEX_ESLINT_PATH`），未安装时显示 `lint skipped`，不算通过；PR 检查会强制运行。测试默认并行执行（`CHECK_JOBS` 控制并行数，默认按 CPU 2–4；v3 浏览器测试按 `CHECK_V3_SHARDS` 分片并核对 116 个流程恰好各跑一次；使用真实时间的浏览器测试仍逐个运行；`CHECK_JOBS=1` 恢复串行）。新增 `node tests/v3-visual.test.js` 检查真实插画、七页、手机、动画和焦点；独立 WebKit 由原生浏览器流程及视觉流程共同检查。
-
-基础语法与数值测试只需要 Node.js：
+维护工具需要 Node.js，不是游玩前提。
 
 ```bash
-node --check game.js
-node --check cloud-save.js
-node --check v2-systems.js
-node tests/numeric-balance.test.js
-node tests/usability-flow.test.js
-node tests/retention-flow.test.js
-node tests/daily-route.test.js
-node tests/doctrine-build.test.js
-node tests/season.test.js
-node tests/companion-story.test.js
+node scripts/check.cjs          # 语法、静态检查与 tests/ 全部回归（需设置 CODEX_PLAYWRIGHT_PATH）
+node tests/numeric-balance.test.js   # 只需 Node 的数值测试示例
+node tests/browser-smoke.test.js     # 浏览器测试示例，需要 Playwright
 ```
 
-浏览器测试需要 Playwright，并可通过 `CODEX_PLAYWRIGHT_PATH` 与 `CODEX_CHROMIUM_PATH` 指定本机模块和浏览器：
+- 静态检查需先 `npm install --no-save eslint@9.39.5 globals@17.14.0`（或设置 `CODEX_ESLINT_PATH`）；未安装时显示 `lint skipped`，不算通过，PR 检查会强制运行。
+- 测试默认并行，`CHECK_JOBS` 控制并行数（`CHECK_JOBS=1` 为串行）；v3 浏览器测试按 `CHECK_V3_SHARDS` 分片，并核对 116 个流程恰好各跑一次。
+- 可用 `CODEX_CHROMIUM_PATH` 指定浏览器；独立 WebKit 由原生浏览器流程和 `tests/v3-visual.test.js` 共同检查。
 
-```bash
-node tests/browser-smoke.test.js
-node tests/mobile-performance.test.js
-node tests/save-migration-v200.test.js
-```
+## 发布
 
-测试覆盖 v1.10 旧档迁移、后台收益、数值上限、今日航线、单轮 Build、循环赛季、伴星故事、任务与远征、云端序列化、手机布局、省电模式和版本检测。
+推送到 `main` 后，[Deploy Pages](.github/workflows/deploy-pages.yml) 先补齐当前版本的历史 ZIP，全量测试通过后只发布游戏运行文件；历史 ZIP、测试和维护文档不进入公开网页。由 `GITHUB_TOKEN` 写入的归档提交不会再次触发工作流。
 
-## 部署
+## 文档
 
-推送到 `main` 后，[Deploy clean GitHub Pages site](.github/workflows/deploy-pages.yml) 会先补齐缺失的当前版本历史 ZIP，并在全量测试通过后只发布游戏运行文件。历史 ZIP、测试和维护文档不会进入公开网页产物；由 `GITHUB_TOKEN` 写入的归档提交不会再次触发工作流。
+- [文档索引](docs/README.md) · [新电脑维护交接](docs/MAINTENANCE.md) · [正式版发布检查清单](docs/RELEASE-CHECKLIST.md)
+- [Firebase、账号与云存档](docs/FIREBASE-SETUP.txt) · [公告与玩家反馈](docs/COMMUNICATIONS-GUIDE.txt) · [赛季、Analytics 与安全聚合](docs/FIREBASE-SEASONS-ANALYTICS.md)
+- [更新记录](patch-notes/README.md) · [版本摘要](docs/VERSION_HISTORY.md) · [历史版本归档规则](历史版本/README.md)
 
-## 相关文档
-
-- [文档索引](docs/README.md)
-- [Firebase、账号与云存档配置](docs/FIREBASE-SETUP.txt)
-- [公告发布与玩家反馈处理](docs/COMMUNICATIONS-GUIDE.txt)
-- [v2 赛季、Analytics 与安全聚合](docs/FIREBASE-SEASONS-ANALYTICS.md)
-- [新电脑维护交接说明](docs/MAINTENANCE.md)
-- [v1.0 正式版发布检查清单](docs/RELEASE-CHECKLIST.md)
-- [历史版本归档规则](历史版本/README.md)
-
-## 音乐与授权
+## 授权
 
 背景音乐、美术与代码随项目发布，但仓库当前未附带开源许可证。仓库公开可见不代表内容可被任意复制、修改或再发布；如需使用，请先联系仓库所有者取得授权。
-
-## 专家模式
-
-默认入口只加载核心系统。访问 `?expert=1` 可加载星港、星雨寄航与委托的完整交互。
-设置中的“显示全部系统”会保存进度并切换到专家入口；关闭会保存并返回普通入口。
-后台共享产出和存档字段仍保留在主入口，两个模式的存档兼容。

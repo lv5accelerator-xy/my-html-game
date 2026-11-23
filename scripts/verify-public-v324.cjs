@@ -14,7 +14,7 @@ const canonicalSets=['v311','v316','v320','v321','v322','v323'].map(version=>({v
 const isolate = require("../tests/helpers/isolate-browser.cjs");
 const engineName = process.env.V3_BROWSER_ENGINE || "chromium";
 const playwright = require(process.env.CODEX_PLAYWRIGHT_PATH || "playwright");
-const base = new URL(process.env.PUBLIC_GAME_URL || "https://lv5accelerator-xy.github.io/my-html-game/");
+const base = new URL(process.env.PUBLIC_GAME_URL || "https://lv5accelerator-xy.github.io/starfall-homecoming/");
 assert.ok(base.pathname.endsWith("/"), "PUBLIC_GAME_URL must end with /");
 const root = path.resolve(__dirname, "..");
 const output = process.env.PUBLIC_AUDIT_DIR || path.join(root, "public-audit", engineName);

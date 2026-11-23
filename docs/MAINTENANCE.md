@@ -1,14 +1,14 @@
 # 《星港拾荒者》新电脑维护交接说明
 
-> 两个独立入口：根目录v2.3.0「归航之约」；`/v3/`代码版本为3.24.0-preview.1，沿用preview命名；本轮部署、精确main SHA与公网双引擎结果见[v3.21～v3.24验收](v321-v324-validation.md)及[PR #20最终记录](https://github.com/lv5accelerator-xy/my-html-game/pull/20)。旧版说明见[RELEASE-v2.3.0](RELEASE-v2.3.0.md)。
+> 两个独立入口：根目录v2.3.0「归航之约」；`/v3/`代码版本为3.24.0-preview.1，沿用preview命名；本轮部署、精确main SHA与公网双引擎结果见[v3.21～v3.24验收](v321-v324-validation.md)及[PR #20最终记录](https://github.com/lv5accelerator-xy/starfall-homecoming/pull/20)。旧版说明见[RELEASE-v2.3.0](RELEASE-v2.3.0.md)。
 > 更新日期：2026-11-10
 > 技术栈：原生HTML/CSS/JavaScript；GitHub Pages。仅根v2使用可选Firebase，v3不连接旧版云服务。
 
 ## 项目地址
 
-- GitHub：https://github.com/lv5accelerator-xy/my-html-game
-- 在线游戏：https://lv5accelerator-xy.github.io/my-html-game/
-- v3入口：https://lv5accelerator-xy.github.io/my-html-game/v3/
+- GitHub：https://github.com/lv5accelerator-xy/starfall-homecoming
+- 在线游戏：https://lv5accelerator-xy.github.io/starfall-homecoming/
+- v3入口：https://lv5accelerator-xy.github.io/starfall-homecoming/v3/
 - Firebase 项目：`stellar-outpost-idle`
 - 默认分支：`main`
 
@@ -18,8 +18,8 @@
 2. 克隆仓库：
 
    ```bash
-   git clone https://github.com/lv5accelerator-xy/my-html-game.git
-   cd my-html-game
+   git clone https://github.com/lv5accelerator-xy/starfall-homecoming.git
+   cd starfall-homecoming
    ```
 
 3. 开发前先同步：

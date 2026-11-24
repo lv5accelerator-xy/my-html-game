@@ -69,6 +69,8 @@
         });
       },
       remove: (id) => fs.deleteDoc(ref(id)),
+      // Read-only: v3 never writes the old station's cloud save.
+      async readLegacy(id) { const snap = await fs.getDoc(fs.doc(db, C.LEGACY_COLLECTION, id)); return snap.exists() ? snap.data() : null; },
     };
   }
   async function connect(interactive) {
@@ -255,6 +257,29 @@
     if (status === "synced") bridge.toast("已保留这台设备的进度；原云端进度已存入本机备份。");
   }
 
+  // ---------- inheriting the old station's cloud save ----------
+  let legacyBusy = false;
+  async function inheritLegacyCloud() {
+    if (!uid || legacyBusy || status === "choose") return;
+    if (typeof adapter?.readLegacy !== "function") { bridge.toast("旧航站云存档暂时无法读取。"); return; }
+    legacyBusy = true; render();
+    let text = null;
+    try { text = C.legacyText(await adapter.readLegacy(uid)); }
+    catch (error) { bridge.toast(`旧航站云存档未能读取：${friendly(error)}`); return; }
+    finally { legacyBusy = false; render(); }
+    if (!text) { bridge.toast("这个账号在云端没有可继承的旧航站记录。"); return; }
+    try {
+      bridge.inspect(text);
+      bridge.previewRestore(text, "云端旧航站（只读取一次，旧版云存档保持不变）", "confirm-legacy-cloud", (ok) => {
+        if (!ok) return;
+        // The inherited route is new local progress: send it to the v3 cloud save soon.
+        if (C.hash(bridge.currentText()) !== meta.syncedHash) { setStatus("pending", "已继承旧航站，稍后自动上传。"); schedule(1500, true); }
+      });
+    } catch (error) {
+      bridge.toast(`旧航站云存档无法继承：${error.message}`);
+    }
+  }
+
   // ---------- account actions ----------
   async function signOut() {
     // No final upload: it could meet a newer cloud copy mid-sign-out. Unsynced progress stays
@@ -292,6 +317,7 @@
     const buttons = !uid
       ? `<button type="button" class="outline" data-cloud-action="sign-in" ${status === "connecting" ? "disabled" : ""}>使用 Google 登录</button>`
       : `${status === "choose" ? '<button type="button" class="primary" data-cloud-action="resolve">选择要保留的进度</button>' : `<button type="button" class="outline" data-cloud-action="sync" ${busy || stopped ? "disabled" : ""}>立即同步</button>`}
+         <button type="button" class="outline" data-cloud-action="legacy-cloud" ${legacyBusy || status === "choose" ? "disabled" : ""}>继承云端旧航站</button>
          <button type="button" class="outline" data-cloud-action="sign-out">退出登录</button>
          <button type="button" class="outline" data-cloud-action="delete">删除云存档</button>`;
     return `<legend>云存档</legend>
@@ -321,6 +347,7 @@
     else if (act === "resolve") openChoice();
     else if (act === "use-cloud") useCloud();
     else if (act === "keep-local") keepLocal();
+    else if (act === "legacy-cloud") inheritLegacyCloud();
   });
   const markInteracted = () => { interacted = true; };
   document.addEventListener("pointerdown", markInteracted, { once: true, capture: true });

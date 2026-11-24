@@ -7,6 +7,7 @@
   "use strict";
   const META_KEY = "stellarOutpostIdle_v3_cloud";
   const COLLECTION = "savesV3";
+  const LEGACY_COLLECTION = "saves"; // the old station's cloud save; v3 only ever reads it
   const MAX_SNAPSHOT_CHARS = 700000; // mirrors firestore.rules
   const SYNC_DELAY = 30000;
   const RETRY_DELAY = 45000;
@@ -120,8 +121,21 @@
     return out;
   }
 
+  // The old station stores its save as JSON text (older records: a plain map). Returns the
+  // same JSON text a local old-station save holds, or null when there is nothing usable.
+  function legacyText(record) {
+    let raw = record?.snapshot;
+    if (typeof raw === "string") {
+      if (raw.length < 2 || raw.length > MAX_SNAPSHOT_CHARS) return null;
+      try { raw = JSON.parse(raw); } catch (_) { return null; }
+    }
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    if (raw.schema === "salvage-orbit") return null; // not an old-station record
+    return JSON.stringify(raw);
+  }
+
   return Object.freeze({
-    META_KEY, COLLECTION, MAX_SNAPSHOT_CHARS, SYNC_DELAY, RETRY_DELAY, ACTIVE_GRACE_SECONDS,
+    META_KEY, COLLECTION, LEGACY_COLLECTION, legacyText, MAX_SNAPSHOT_CHARS, SYNC_DELAY, RETRY_DELAY, ACTIVE_GRACE_SECONDS,
     hash, normalizeMeta, progressOf, changedSince, loadMeta, saveMeta, decide, encode, decode, fits, summaryFields,
   });
 });

@@ -8,7 +8,7 @@ const root = path.resolve(__dirname, '..');
 
 const SHIPPED = Object.freeze([
   'game.js', 'game-math.js', 'cloud-save.js', 'v2-systems.js', 'legacy-systems.js',
-  'v3/data.js', 'v3/engine.js', 'v3/storage.js', 'v3/visuals.js', 'v3/motion.js', 'v3/music.js', 'v3/app.js',
+  'v3/data.js', 'v3/engine.js', 'v3/storage.js', 'v3/visuals.js', 'v3/motion.js', 'v3/music.js', 'v3/cloud-core.js', 'v3/cloud.js', 'v3/app.js',
 ]);
 
 function resolveTools() {

@@ -1220,7 +1220,7 @@
       if ((current.residentLinks>0&&next.linkChoices!==current.linkChoices) || next.ending !== current.ending || current.lore.some(item => next.lore.some(other => item.story === other.story && item.choice !== other.choice)))
         warnings.push("故事选择或结局与当前记录不同，接续后以所选记录为准。");
     }
-    if (incoming.legacy) warnings.push("这是旧版航站记录，将按迁移规则接入；不覆盖旧版原存档，也不连接旧版云端。");
+    if (incoming.legacy) warnings.push("这是旧版航站记录，将按迁移规则接入；旧版原存档（本机与云端）都不会被改写。");
     const rows = [
       ["保存时间", savedDate(current.savedAt), savedDate(next.savedAt)],
       ["主线章节", `第 ${current.chapter} 章`, `第 ${next.chapter} 章`],

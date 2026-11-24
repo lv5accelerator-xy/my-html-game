@@ -27,7 +27,8 @@ const server = http.createServer((request, response) => {
 const SAVE_KEY = "stellarOutpostIdleSave_v3";
 const ALLOWED = new Set(["revision", "snapshot", "encoding", "schema", "gameVersion", "deviceId", "clientSavedAt", "summary", "updatedAt"]);
 const cloud = {
-  docs: new Map(), fail: null, writes: 0,
+  docs: new Map(), legacy: new Map(), legacyReads: 0, fail: null, writes: 0,
+  readLegacy(id) { if (this.fail) return { error: this.fail }; this.legacyReads++; return { doc: this.legacy.get(id) || null }; },
   read(id) { if (this.fail) return { error: this.fail }; return { doc: this.docs.get(id) || null }; },
   commit(id, expected, payload) {
     if (this.fail) return { error: this.fail };
@@ -61,6 +62,7 @@ const FAKE_ADAPTER = () => {
     read: async (id) => (await call("read", id)).doc,
     commit: async (id, expected, payload) => (await call("commit", id, expected, payload)).revision,
     remove: async (id) => { await call("remove", id); },
+    readLegacy: async (id) => (await call("readLegacy", id)).doc,
   };
 };
 
@@ -247,6 +249,34 @@ async function main() {
     cloud.docs.set("player-1", goodDoc);
     await closeDialog(A);
     ok("unreadable cloud record is refused without touching local progress");
+
+    // 11b. Inherit the old station's cloud save: read-only, previewed, then uploaded to savesV3.
+    await closeDialog(A);
+    await closeDialog(B);
+    await (await settings(B)).locator('[data-cloud-action="legacy-cloud"]').click();
+    await B.page.locator("#toast", { hasText: "没有可继承的旧航站记录" }).waitFor({ timeout: 15000 });
+    const oldStation = { version: 31, dust: 54321.5, cores: 9, rebirths: 3, buildings: { drone: 11, lab: 4 }, upgrades: ["gloves"], season: { unclaimed: [2] } };
+    const oldDoc = { revision: 7, deviceId: "old-device", clientSavedAt: 1, snapshot: JSON.stringify(oldStation) };
+    cloud.legacy.set("player-1", oldDoc);
+    const legacyRev = cloud.docs.get("player-1").revision;
+    await (await settings(B)).locator('[data-cloud-action="legacy-cloud"]').click();
+    await B.page.locator("#confirm-legacy-cloud").waitFor();
+    assert.match(await B.page.locator("#dialog-body").innerText(), /云端旧航站[\s\S]*旧版原存档（本机与云端）都不会被改写/);
+    assert.equal(cloud.legacy.get("player-1"), oldDoc);
+    await B.page.locator("#confirm-legacy-cloud").click();
+    const inherited = JSON.parse(await local(B));
+    assert.equal(inherited.cores, oldStation.cores);
+    assert.equal(inherited.buildings.drone, oldStation.buildings.drone);
+    assert.deepEqual(inherited.legacyArchive, oldStation);
+    assert.equal(await B.page.evaluate(() => localStorage.getItem("stellarOutpostIdleSave_v31_backup_before_v3")), JSON.stringify(oldStation));
+    await play(B, 3000);
+    await until(B, (r) => SalvageCloud.state().status === "synced" && SalvageCloud.state().revision > r, legacyRev);
+    assert.equal(cloud.docs.get("player-1").revision, (await cs(B)).revision, "inherited route uploaded to the v3 cloud save");
+    assert.deepEqual(JSON.parse(await cloudText()).legacyArchive, oldStation);
+    assert.deepEqual(cloud.legacy.get("player-1"), oldDoc, "old station cloud save untouched");
+    assert.equal(cloud.legacyReads, 2);
+    await closeDialog(B);
+    ok("old station cloud save: read once, previewed, inherited, uploaded to v3; old record untouched");
 
     // 12. Sign out keeps the cloud; delete removes it and signs out.
     await (await settings(A)).locator('[data-cloud-action="sign-out"]').click();

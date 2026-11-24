@@ -117,6 +117,16 @@ async function main() {
   assert.ok(Object.keys(C.summaryFields({ savedAt: 1, chapter: 1, starport: 1, rebirths: 1, cores: 1, samples: 1, dust: 1 })).length <= 24);
   ok("summary keeps finite non-negative known fields only");
 
+  // old station's cloud save (read-only inheritance)
+  const oldSave = { version: 31, dust: 12, cores: 3, buildings: { drone: 2 } };
+  assert.equal(C.LEGACY_COLLECTION, "saves");
+  assert.deepEqual(JSON.parse(C.legacyText({ revision: 4, snapshot: JSON.stringify(oldSave) })), oldSave, "JSON text snapshot");
+  assert.deepEqual(JSON.parse(C.legacyText({ revision: 1, snapshot: oldSave })), oldSave, "older map snapshot");
+  for (const bad of [null, {}, { snapshot: "" }, { snapshot: "{oops" }, { snapshot: "[1,2]" }, { snapshot: [1] }, { snapshot: 5 },
+    { snapshot: JSON.stringify({ schema: "salvage-orbit", version: 32 }) }, { snapshot: "x".repeat(C.MAX_SNAPSHOT_CHARS + 1) }])
+    assert.equal(C.legacyText(bad), null, JSON.stringify(bad)?.slice(0, 60));
+  ok("old station cloud save decodes from text or map; empty, broken and v3 records are refused");
+
   console.log(`v3 cloud core ok: ${checks} checks`);
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

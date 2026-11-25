@@ -847,7 +847,10 @@
   function showExploreTab(id) {
     exploreTab = id;
     for (const tab of document.querySelectorAll("[data-explore-tab]")) tab.setAttribute("aria-selected", String(tab.dataset.id === id));
-    for (const panel of document.querySelectorAll("[data-explore-panel]")) panel.hidden = panel.dataset.explorePanel !== id;
+    for (const panel of document.querySelectorAll("[data-explore-panel]")) {
+      panel.hidden = panel.dataset.explorePanel !== id;
+      if (!panel.hidden) M.flag(panel, "data-enter", "true", 400);
+    }
   }
   function explore() {
     const port = D.PORT[state.starport];

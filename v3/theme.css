@@ -334,9 +334,10 @@ small { font-size: max(12px, 0.86em); }
 .goal-rail[data-fresh] h2 { animation: lamp-fade .5s .3s ease-out both; }
 @keyframes goal-sweep { to { transform: translateX(100%); } }
 
-/* 4. 按钮：按下时轻微下沉，主按钮亮一下 */
-:root[data-motion="on"] button { transition: background-color .16s, color .16s, border-color .16s, transform .08s, box-shadow .16s; }
-:root[data-motion="on"] button:active:not(:disabled) { transform: translateY(1px) scale(.985); }
+/* 4. 按钮：按下时亮一下。
+   不改变按钮几何（不用 transform）：WebKit 在按下与松开之间命中区域变化时会丢失 click。 */
+:root[data-motion="on"] button { transition: background-color .16s, color .16s, border-color .16s, box-shadow .16s; }
+:root[data-motion="on"] .outline:active:not(:disabled) { background: #f2b8662a; }
 :root[data-motion="on"] .primary:active:not(:disabled),
 :root[data-motion="on"] .scan-button:active:not(:disabled) { box-shadow: 0 0 0 1px #00000040, 0 0 28px -4px #f2b866cc, inset 0 1px 0 #fff3d8aa; }
 

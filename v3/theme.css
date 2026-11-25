@@ -1,0 +1,231 @@
+/* 星骸归航 · 方向 A「暖光重建」
+   冷的深空船壳上，亮起港灯。只换视觉层：颜色、字阶、面板材质；不改结构与规则。
+   载入顺序在 style.css / visual.css 之后。 */
+
+:root {
+  /* 色板：舱夜 / 舱壁 / 铆线 / 港灯 / 锈铜 / 苔铜 / 骨白 */
+  --hull: #0a1016;
+  --bulkhead: #131c23;
+  --bulkhead-raised: #18232b;
+  --seam: #31404a;
+  --lamp: #f2b866;
+  --lamp-soft: #f7cf93;
+  --rust: #c0784a;
+  --verdigris: #84cdb6;
+  --bone: #ede7dc;
+  --bone-muted: #aeb4b3;
+
+  /* 字阶：12 / 14 / 16 / 20 / 28 / 40（正文 15–16） */
+  --t-xs: 12px;
+  --t-sm: 14px;
+  --t-md: 16px;
+  --t-lg: 20px;
+  --t-xl: 28px;
+  --t-xxl: 40px;
+
+  --font-display: "Songti SC", "STSongti-SC-Bold", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "STZhongsong", "华文中宋", "SimSun", serif;
+
+  /* 映射到既有变量，旧规则自动跟上 */
+  --bg: var(--hull);
+  --ink: var(--hull);
+  --surface: var(--bulkhead);
+  --line: var(--seam);
+  --text: var(--bone);
+  --paper: var(--bone);
+  --muted: var(--bone-muted);
+  --amber: var(--lamp);
+  --teal: var(--verdigris);
+  --system-accent: var(--lamp);
+}
+:root[data-surface="explore"],
+:root[data-surface="voyage"] { --system-accent: #8fd0dc; }
+:root[data-surface="residents"] { --system-accent: #e6cf98; }
+:root[data-surface="archive"] { --system-accent: #dda877; }
+:root[data-surface="jump"] { --system-accent: #c4b6f4; }
+
+body {
+  background:
+    radial-gradient(1200px 520px at 70% -180px, #f2b86612, transparent 70%),
+    var(--hull);
+  color: var(--bone);
+}
+
+/* ---------- 标题：宋体 + 港灯余晖，全游戏唯一的“大胆处” ---------- */
+h1,
+.page-header h1,
+.scene-heading h1,
+.brand-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--bone);
+  text-shadow: 0 0 28px #f2b8662e, 0 2px 0 #00000080;
+}
+.page-header h1 { font-size: clamp(28px, 2.9vw, var(--t-xxl)); line-height: 1.3; }
+.scene-heading h1 { font-size: clamp(30px, 3.2vw, 44px); }
+h2 { font-size: var(--t-lg); letter-spacing: 0.02em; }
+h3 { font-size: var(--t-md); }
+.page-header p { font-size: var(--t-md); color: var(--bone-muted); max-width: 40em; }
+
+/* ---------- 品牌 ---------- */
+.topbar {
+  background: linear-gradient(180deg, #0f171d, #0b1217);
+  border-bottom: 1px solid var(--seam);
+  box-shadow: inset 0 -1px 0 #f2b86614;
+}
+.brand { gap: 14px; }
+.brand svg { width: 40px; height: 40px; stroke: var(--lamp); }
+.brand svg .brand-trail { stroke: var(--rust); stroke-dasharray: 2 4; }
+.brand > div { display: flex; flex-direction: column; align-items: flex-start; gap: 0; letter-spacing: 0; line-height: 1.15; }
+.brand .brand-name { display: inline; font-size: 22px; color: var(--bone); font-weight: 700; letter-spacing: 0.14em; text-shadow: 0 0 18px #f2b86633; }
+.brand > div > span[lang] {
+  font-family: var(--font-display);
+  font-size: var(--t-xs);
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: #c9a985;
+}
+
+/* ---------- 按钮 ---------- */
+button { border-radius: 3px; }
+.primary,
+.scan-button {
+  background: linear-gradient(180deg, var(--lamp-soft), var(--lamp) 55%, #dba052);
+  border-color: #e6aa5c;
+  color: #1c140a;
+  box-shadow: 0 0 0 1px #00000040, 0 6px 22px -8px #f2b86699, inset 0 1px 0 #fff3d8aa;
+}
+.primary:hover:not(:disabled),
+.scan-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fbdcad, var(--lamp-soft) 55%, var(--lamp));
+}
+.outline {
+  border-color: #c99a5e;
+  color: var(--lamp-soft);
+  background: #f2b8660a;
+}
+.outline:hover:not(:disabled) { background: #f2b8661c; border-color: var(--lamp); }
+button:focus-visible,
+summary:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible { outline: 2px solid var(--lamp-soft); outline-offset: 4px; }
+
+/* ---------- 面板材质：舱壁板 ----------
+   上缘一道港灯光带 + 四角铆钉。只用在“主面板”，不铺满全站。 */
+.current-goal,
+.goal-rail,
+.harbor-active,
+#dialog {
+  position: relative;
+  background:
+    radial-gradient(circle at 9px 9px, #7d6a55 1.6px, transparent 2.4px),
+    radial-gradient(circle at calc(100% - 9px) 9px, #7d6a55 1.6px, transparent 2.4px),
+    radial-gradient(circle at 9px calc(100% - 9px), #7d6a55 1.6px, transparent 2.4px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #7d6a55 1.6px, transparent 2.4px),
+    linear-gradient(180deg, #f2b86610, transparent 46px),
+    linear-gradient(180deg, var(--bulkhead-raised), var(--bulkhead));
+  border: 1px solid var(--seam);
+  box-shadow: inset 0 1px 0 #f2b86640, 0 10px 30px -18px #000;
+}
+.goal-rail { border-width: 0 0 0 1px; }
+#dialog { border-color: #4a3b2c; }
+
+/* ---------- 当前目标：压成一行 ---------- */
+.current-goal {
+  border-left: 3px solid var(--system-accent);
+  padding: 12px 22px 12px 26px;
+  margin-bottom: 8px;
+}
+.current-goal > div > small:first-child { display: none; }
+.current-goal strong { font-size: var(--t-md); color: var(--system-accent); }
+.current-goal p[data-goal-detail] {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--t-sm);
+  margin-block: 2px;
+}
+.current-goal [data-goal-eta] { font-size: var(--t-xs); color: var(--verdigris); }
+
+/* ---------- 场景图：与面板同一套框 ---------- */
+.world-scene {
+  border: 1px solid var(--seam);
+  box-shadow: 0 18px 40px -24px #000;
+}
+.world-scene figcaption {
+  background: linear-gradient(180deg, #131c23, #0e161c);
+  border-bottom: 2px solid var(--rust);
+}
+.world-scene figcaption strong {
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--bone);
+}
+.world-scene figcaption span { font-size: var(--t-xs); color: var(--bone-muted); }
+.dock-layout { border-top-color: var(--rust); background: var(--bulkhead); }
+
+/* ---------- 导航 ---------- */
+#navigation { background: linear-gradient(180deg, #0d151b, #0a1116); border-right: 1px solid var(--seam); }
+#navigation button.active {
+  color: var(--system-accent);
+  background: linear-gradient(90deg, #f2b86614, transparent);
+  border-color: var(--system-accent);
+}
+
+/* ---------- 列表：完成的研究不再抢视线 ---------- */
+.research-row.is-researched { opacity: 0.55; }
+.research-row.is-researched h3 { color: var(--bone-muted); }
+.research-row.is-researched p { display: none; }
+.research-row.is-researched .row-action button {
+  border-color: transparent;
+  background: transparent;
+  color: var(--verdigris);
+  opacity: 1;
+}
+
+/* 区块标题前的锈铜刻线，标明“这是一块舱段” */
+.section-title h2,
+.chapter-map .section-title h2 {
+  padding-left: 14px;
+  border-left: 3px solid var(--rust);
+  line-height: 1.3;
+}
+
+/* 折叠区块 */
+details > summary { color: var(--bone); }
+details > summary:hover { color: var(--lamp-soft); }
+
+/* 进度条 */
+progress { accent-color: var(--lamp); }
+.goal-meter .progress > span,
+.progress > span { background: linear-gradient(90deg, var(--rust), var(--lamp)); box-shadow: 0 0 10px #f2b86666; }
+
+/* ---------- 字号下限：正文说明不小于 12px ---------- */
+.brand span,
+.fleet-page .building-row .milestone-track span,
+.world-scene figcaption span,
+.current-goal [data-goal-eta] { font-size: var(--t-xs); }
+small { font-size: max(12px, 0.86em); }
+
+/* ---------- 手机 ---------- */
+@media (max-width: 1100px) {
+  .brand > div > span[lang] { display: none; }
+}
+@media (max-width: 760px) {
+  .brand svg { width: 32px; height: 32px; }
+  .brand .brand-name { font-size: 18px; letter-spacing: 0.1em; }
+  .brand > div > span[lang] { display: none; }
+  .current-goal { padding: 10px 14px 10px 16px; }
+  .current-goal p[data-goal-detail] { font-size: var(--t-xs); }
+  .current-goal strong { font-size: var(--t-sm); }
+  #navigation button { font-size: var(--t-xs); }
+  .page-header h1 { font-size: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary, .scan-button { transition: none; }
+}

@@ -27,8 +27,13 @@ const server = http.createServer((request, response) => {
 const SAVE_KEY = "stellarOutpostIdleSave_v3";
 const ALLOWED = new Set(["revision", "snapshot", "encoding", "schema", "gameVersion", "deviceId", "clientSavedAt", "summary", "updatedAt"]);
 const cloud = {
-  docs: new Map(), legacy: new Map(), legacyReads: 0, fail: null, writes: 0,
-  readLegacy(id) { if (this.fail) return { error: this.fail }; this.legacyReads++; return { doc: this.legacy.get(id) || null }; },
+  docs: new Map(), legacy: new Map(), legacyReads: 0, legacyGate: null, fail: null, writes: 0,
+  async readLegacy(id) {
+    if (this.fail) return { error: this.fail };
+    if (this.legacyGate) await this.legacyGate;
+    this.legacyReads++;
+    return { doc: this.legacy.get(id) || null };
+  },
   read(id) { if (this.fail) return { error: this.fail }; return { doc: this.docs.get(id) || null }; },
   commit(id, expected, payload) {
     if (this.fail) return { error: this.fail };
@@ -255,10 +260,92 @@ async function main() {
     await closeDialog(B);
     await (await settings(B)).locator('[data-cloud-action="legacy-cloud"]').click();
     await B.page.locator("#toast", { hasText: "没有可继承的旧航站记录" }).waitFor({ timeout: 15000 });
+    const clearToast = (d) => d.page.evaluate(() => { document.querySelector("#toast").textContent = ""; });
+    const toastSays = (d, text) => d.page.locator("#toast", { hasText: text }).waitFor({ timeout: 15000 });
+    const legacyKey = "stellarOutpostIdleSave_v31_backup_before_v3";
+    // The installed page clock keeps flowing, so autosave can rewrite timing fields at any moment;
+    // compare the route itself rather than the exact text.
+    const route = async (d) => { const r = JSON.parse(await local(d)); return { createdAt: r.createdAt, legacyArchive: r.legacyArchive, cores: r.cores, rebirths: r.rebirths, buildings: r.buildings }; };
+    const bSteady = await local(B), bRoute = await route(B);
+    assert.equal(await B.page.evaluate((k) => localStorage.getItem(k), legacyKey), null, "B has not migrated an old station yet");
+
+    // Broken, wrong-shaped and v3 records are refused without opening a preview or touching progress.
+    for (const bad of [{ revision: 2, snapshot: "{oops" }, { revision: 2, snapshot: "[1,2]" },
+      { revision: 2, snapshot: JSON.parse(bSteady) }, { revision: 2, snapshot: bSteady }]) {
+      cloud.legacy.set("player-1", bad);
+      await clearToast(B);
+      await (await settings(B)).locator('[data-cloud-action="legacy-cloud"]').click();
+      await toastSays(B, "没有可继承的旧航站记录");
+      assert.equal(await B.page.locator("#confirm-legacy-cloud").count(), 0);
+      assert.deepEqual(await route(B), bRoute);
+    }
+    ok("broken, non-object and v3 records in the old cloud are refused; progress untouched");
+
     const oldStation = { version: 31, dust: 54321.5, cores: 9, rebirths: 3, buildings: { drone: 11, lab: 4 }, upgrades: ["gloves"], season: { unclaimed: [2] } };
     const oldDoc = { revision: 7, deviceId: "old-device", clientSavedAt: 1, snapshot: JSON.stringify(oldStation) };
     cloud.legacy.set("player-1", oldDoc);
+    const syncedRev = cloud.docs.get("player-1").revision;
+
+    // Offline / refused read: a message only, nothing changes and nothing is uploaded.
+    for (const code of ["unavailable", "permission-denied"]) {
+      cloud.fail = code;
+      const reads = cloud.legacyReads, statusBefore = (await cs(B)).status;
+      await clearToast(B);
+      await (await settings(B)).locator('[data-cloud-action="legacy-cloud"]').click();
+      await toastSays(B, "旧航站云存档未能读取");
+      cloud.fail = null;
+      assert.equal(cloud.legacyReads, reads);
+      assert.equal(await B.page.locator("#confirm-legacy-cloud").count(), 0);
+      assert.deepEqual(await route(B), bRoute);
+      assert.ok([statusBefore, "pending"].includes((await cs(B)).status), "the failed read does not change the cloud status (an autosave may mark pending)");
+      assert.equal(await B.page.locator('[data-cloud-action="legacy-cloud"]').isEnabled(), true, "button usable again after a failed read");
+    }
+    assert.equal(cloud.docs.get("player-1").revision, syncedRev);
+    ok("offline or refused read of the old cloud save only shows a message; progress and cloud unchanged");
+
+    // A conflict that arrives while the old record is being read wins: no preview over the choice.
+    let release;
+    cloud.legacyGate = new Promise((resolve) => { release = resolve; });
+    await (await settings(B)).locator('[data-cloud-action="legacy-cloud"]').click();
+    await until(B, () => document.querySelector('[data-cloud-action="legacy-cloud"]')?.disabled === true);
+    const other = JSON.parse(await cloudText());
+    other.dust += 1234; other.clock += 500;
+    cloud.docs.set("player-1", { ...cloud.docs.get("player-1"), ...(await Core.encode(JSON.stringify(other))), deviceId: "other-device", revision: syncedRev + 1 });
+    await closeDialog(B);
+    await play(B, 70000); // B also progresses and its upload meets the newer revision
+    await status(B, "choose");
+    const bBeforeRelease = await route(B);
+    await clearToast(B);
+    cloud.legacyGate = null;
+    release();
+    await toastSays(B, "请先选择要保留的进度，再继承旧航站");
+    assert.equal(await B.page.locator("#confirm-legacy-cloud").count(), 0, "no restore preview while a choice is pending");
+    assert.equal((await cs(B)).status, "choose");
+    assert.deepEqual(await route(B), bBeforeRelease);
+    assert.equal(cloud.docs.get("player-1").revision, syncedRev + 1);
+    await (await settings(B)).locator('[data-cloud-action="resolve"]').click();
+    await B.page.locator('[data-cloud-action="keep-local"]').click();
+    await until(B, (r) => !SalvageCloud.state().choice && SalvageCloud.state().revision > r, syncedRev + 1);
+    ok("a conflict arriving during the old-cloud read keeps the choice; no preview, nothing overwritten");
+
+    // Cancelling the preview changes nothing and schedules no upload.
+    await closeDialog(B);
+    const bKept = await route(B), keptRev = cloud.docs.get("player-1").revision, keptBackups = (await backups(B)).length;
+    await (await settings(B)).locator('[data-cloud-action="legacy-cloud"]').click();
+    await B.page.locator("#confirm-legacy-cloud").waitFor();
+    await B.page.locator('#dialog-body [data-action="cancel"]').click();
+    await play(B, 3000); // an inherited route would be uploaded 1.5 s after confirming
+    assert.deepEqual(await route(B), bKept);
+    assert.equal(await B.page.evaluate((k) => localStorage.getItem(k), legacyKey), null);
+    assert.equal((await backups(B)).length, keptBackups, "no restore backup taken");
+    assert.equal(cloud.docs.get("player-1").revision, keptRev);
+    assert.doesNotMatch(await (await settings(B)).locator("[data-cloud-status]").innerText(), /已继承旧航站/);
+    await closeDialog(B);
+    let after;
+    ok("cancelling the old-cloud preview leaves progress, backups and the cloud unchanged");
+
     const legacyRev = cloud.docs.get("player-1").revision;
+    const readsBefore = cloud.legacyReads;
     await (await settings(B)).locator('[data-cloud-action="legacy-cloud"]').click();
     await B.page.locator("#confirm-legacy-cloud").waitFor();
     assert.match(await B.page.locator("#dialog-body").innerText(), /云端旧航站[\s\S]*旧版原存档（本机与云端）都不会被改写/);
@@ -270,13 +357,32 @@ async function main() {
     assert.deepEqual(inherited.legacyArchive, oldStation);
     assert.equal(await B.page.evaluate(() => localStorage.getItem("stellarOutpostIdleSave_v31_backup_before_v3")), JSON.stringify(oldStation));
     await play(B, 3000);
-    await until(B, (r) => SalvageCloud.state().status === "synced" && SalvageCloud.state().revision > r, legacyRev);
+    // Wait for the upload itself: a later autosave may already have marked the next round pending.
+    await until(B, (r) => SalvageCloud.state().revision > r, legacyRev);
     assert.equal(cloud.docs.get("player-1").revision, (await cs(B)).revision, "inherited route uploaded to the v3 cloud save");
     assert.deepEqual(JSON.parse(await cloudText()).legacyArchive, oldStation);
     assert.deepEqual(cloud.legacy.get("player-1"), oldDoc, "old station cloud save untouched");
-    assert.equal(cloud.legacyReads, 2);
+    assert.equal(cloud.legacyReads, readsBefore + 1);
     await closeDialog(B);
     ok("old station cloud save: read once, previewed, inherited, uploaded to v3; old record untouched");
+
+    // Inheriting again replaces rather than stacks, and never overwrites the first-migration backup.
+    const newerStation = { version: 31, dust: 7.25, cores: 2, rebirths: 1, buildings: { drone: 3 }, upgrades: [] };
+    cloud.legacy.set("player-1", { revision: 8, snapshot: newerStation });
+    const againRev = cloud.docs.get("player-1").revision;
+    await (await settings(B)).locator('[data-cloud-action="legacy-cloud"]').click();
+    await B.page.locator("#confirm-legacy-cloud").click();
+    const again = JSON.parse(await local(B));
+    assert.equal(again.cores, newerStation.cores, "cores replaced, not added");
+    assert.equal(again.buildings.drone, newerStation.buildings.drone);
+    assert.deepEqual(again.legacyArchive, newerStation);
+    assert.equal(await B.page.evaluate((k) => localStorage.getItem(k), legacyKey), JSON.stringify(oldStation), "first-migration backup kept");
+    assert.ok((await backups(B)).some((b) => JSON.parse(b.text).legacyArchive?.cores === oldStation.cores), "the replaced inherited route is in the backups");
+    await play(B, 3000);
+    await until(B, (r) => SalvageCloud.state().revision > r, againRev);
+    assert.deepEqual(JSON.parse(await cloudText()).legacyArchive, newerStation);
+    await closeDialog(B);
+    ok("inheriting twice replaces the route without stacking; the first-migration backup is never overwritten");
 
     // 12. Sign out keeps the cloud; delete removes it and signs out.
     await (await settings(A)).locator('[data-cloud-action="sign-out"]').click();
@@ -300,6 +406,39 @@ async function main() {
     assert.match(await C.page.locator("#dialog-body").innerText(), /本机记录未能正常载入/);
     assert.equal(cloud.docs.get("player-1").revision, 1);
     ok("a broken local save is never uploaded; only the cloud copy is offered");
+
+    // 13b. Sync stopped for size: inheriting keeps the "too large" status instead of promising an upload.
+    const L = await device("L");
+    await signIn(L);
+    await status(L, "synced");
+    const json = Array.from({ length: 126 - 32 }, (_, i) => String.fromCharCode(32 + i)).filter((c) => c !== '"' && c !== "\\").join("");
+    let seed = 7; // xorshift32: incompressible enough that the gzip snapshot exceeds the cloud limit
+    const next = () => { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return seed >>> 0; };
+    const noise = Array.from({ length: 720000 }, () => json[next() % json.length]).join("");
+    assert.equal(Core.fits(await Core.encode(JSON.stringify({ notes: noise }))), false, "fixture really is over the cloud limit");
+    cloud.legacy.set("player-1", { revision: 9, snapshot: { version: 31, dust: 5, cores: 1, buildings: { drone: 1 }, notes: noise } });
+    const bigRev = cloud.docs.get("player-1").revision;
+    await closeDialog(L);
+    await (await settings(L)).locator('[data-cloud-action="legacy-cloud"]').click();
+    await L.page.locator("#confirm-legacy-cloud").click();
+    await play(L, 3000);
+    await status(L, "large");
+    assert.equal((await cs(L)).stopped, true);
+    assert.equal(cloud.docs.get("player-1").revision, bigRev, "an oversized route is not uploaded");
+    cloud.legacy.set("player-1", { revision: 10, snapshot: JSON.stringify(newerStation) });
+    await (await settings(L)).locator('[data-cloud-action="legacy-cloud"]').click();
+    await L.page.locator("#confirm-legacy-cloud").click();
+    assert.equal(JSON.parse(await local(L)).cores, newerStation.cores);
+    after = await cs(L);
+    assert.equal(after.status, "large", "stopped sync keeps its status");
+    assert.equal(after.scheduled, false);
+    await closeDialog(L);
+    assert.match(await (await settings(L)).locator("[data-cloud-status]").innerText(), /超过云端上限/);
+    assert.doesNotMatch(await L.page.locator("[data-cloud-status]").innerText(), /稍后自动上传/);
+    await play(L, 60000);
+    assert.equal(cloud.docs.get("player-1").revision, bigRev);
+    await closeDialog(L);
+    ok("with sync stopped for size, inheriting keeps the stop explanation and uploads nothing");
 
     // 14. Phone width: the settings panel fits.
     const P = await device("phone", { viewport: { width: 375, height: 800 } });

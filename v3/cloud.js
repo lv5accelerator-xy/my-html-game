@@ -267,11 +267,14 @@
     try { text = C.legacyText(await adapter.readLegacy(uid)); }
     catch (error) { bridge.toast(`旧航站云存档未能读取：${friendly(error)}`); return; }
     finally { legacyBusy = false; render(); }
+    // Another device may have produced a conflict while the old record was being read.
+    if (status === "choose") { bridge.toast("云端和本机都有新进度，请先选择要保留的进度，再继承旧航站。"); return; }
     if (!text) { bridge.toast("这个账号在云端没有可继承的旧航站记录。"); return; }
     try {
       bridge.inspect(text);
       bridge.previewRestore(text, "云端旧航站（只读取一次，旧版云存档保持不变）", "confirm-legacy-cloud", (ok) => {
-        if (!ok) return;
+        // Stopped (too large) or awaiting a choice: keep that status and its explanation visible.
+        if (!ok || stopped || status === "choose") return;
         // The inherited route is new local progress: send it to the v3 cloud save soon.
         if (C.hash(bridge.currentText()) !== meta.syncedHash) { setStatus("pending", "已继承旧航站，稍后自动上传。"); schedule(1500, true); }
       });

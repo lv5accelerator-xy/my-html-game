@@ -215,9 +215,14 @@ small { font-size: max(12px, 0.86em); }
 @media (max-width: 1100px) {
   .brand > div > span[lang] { display: none; }
 }
+/* 与原设计一致：≤900px 只保留标志。顶栏在手机上不能换行，
+   否则星尘数字每秒变化时顶栏高度会跳动，整页随之位移。 */
+@media (max-width: 900px) {
+  .brand { gap: 10px; }
+  .brand .brand-name { display: none; }
+}
 @media (max-width: 760px) {
-  .brand svg { width: 32px; height: 32px; }
-  .brand .brand-name { font-size: 18px; letter-spacing: 0.1em; }
+  .brand svg { width: 30px; height: 30px; }
   .brand > div > span[lang] { display: none; }
   .current-goal { padding: 10px 14px 10px 16px; }
   .current-goal p[data-goal-detail] { font-size: var(--t-xs); }

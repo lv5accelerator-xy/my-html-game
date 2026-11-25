@@ -247,7 +247,7 @@
             `<tr><th scope="row">${label}<small data-timing-source="${id}"></small></th><td data-timing-active="${id}"></td><td data-timing-elapsed="${id}"></td></tr>`,
         )
         .join("")}</tbody></table></details>
-      <p><small>拾荒航线 ${D.GAME_VERSION} · 离线结算最多 ${D.OFFLINE_SECONDS / 3600} 小时。故事选择不会自动代选。</small></p>`,
+      <p><small>星骸归航 · 拾荒航线 ${D.GAME_VERSION} · 离线结算最多 ${D.OFFLINE_SECONDS / 3600} 小时。故事选择不会自动代选。</small></p>`,
     );
     updateNumbers();
     window.SalvageMusic?.render();

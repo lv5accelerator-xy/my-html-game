@@ -261,6 +261,7 @@
       focusId && $("#main").contains(document.getElementById(focusId))) target = page;
     if (!V.reachable(state, target)) return;
     page = target;
+    exploreFocus = target === "explore" ? focusId || null : null;
     signature = "";
     render();
     $("#main").focus({ preventScroll: true });
@@ -837,7 +838,7 @@
     if (!event && !history.length && !state.encounters.catalog.length) return "";
     return `<section class="encounter-panel" id="encounter-panel" tabindex="-1" aria-label="动态拾荒发现">${event?V.media("wreck",state):V.prop("resident-letter","collection-prop")}<h2>${event ? event.name : "航行发现记录"}</h2><p>永久发现收藏 ${state.encounters.catalog.length} / ${D.ENCOUNTERS.reduce((n, e) => n + e.choices.length, 0)}</p>${event ? `<p>${event.description}</p><p>本次额外发现 · 普通探索收益独立领取 · 无选择期限</p>${event.choice ? `<p>正在处理 · 剩余 <strong data-encounter-time></strong> · 原结果已锁定</p>` : `<div class="event-choices">${event.choices.map(c => `<button class="outline" ${action("encounter", c.id)} data-token="${event.token}" ${c.available ? "" : "disabled"}><strong>${c.name}</strong><small>+${number(c.dust)} 星尘 · +${c.samples} 样本 · ${duration(c.seconds)}${c.costSamples ? ` · 支出 ${c.costSamples} 样本` : ""}</small></button>`).join("")}</div>`}` : ""}${history.length ? `<details data-details-key="encounter-history"><summary>已记录 ${history.length} 次发现（保留最近32次）</summary>${history.map(r => `<p>${escape(D.ENCOUNTERS.find(e => e.id === r.id).choices.find(c => c.id === r.choice).record)}</p>`).join("")}</details>` : ""}<details data-details-key="encounter-catalog"><summary>永久发现收藏</summary>${state.encounters.catalog.map(key => { const e = D.ENCOUNTERS.find(e => key.startsWith(e.id + ":")); const c = e.choices.find(c => `${e.id}:${c.id}` === key); return `<p>${escape(c.record)}</p>`; }).join("")}</details></section>`;
   }
-  let exploreTab = "routes";
+  let exploreTab = "routes", exploreFocus = null;
   const EXPLORE_TABS = [["routes", "航线与主线"], ["port", "星港居民"], ["voyage", "长期远航"], ["archive", "档案"]];
   function exploreBadge(id) {
     if (id === "routes") return state.result ? "回报待领" : state.mission ? "探索中" : "";
@@ -879,6 +880,12 @@
       archive: `${routeArchive()}`,
     };
     const tabs = EXPLORE_TABS.filter(([id]) => groups[id].trim());
+    // 目标跳转：渲染时就选中目标所在分区，不依赖渲染后的 DOM 切换。
+    if (exploreFocus) {
+      const owner = tabs.find(([id]) => groups[id].includes(`id="${exploreFocus}"`));
+      if (owner) exploreTab = owner[0];
+      exploreFocus = null;
+    }
     if (!tabs.some(([id]) => id === exploreTab)) exploreTab = tabs[0][0];
     const bar = tabs.length > 1 ? `<div class="explore-tabs" role="tablist" aria-label="探索分区">${tabs.map(([id, name]) => { const badge = exploreBadge(id); return `<button type="button" role="tab" id="explore-tab-${id}" aria-controls="explore-panel-${id}" aria-selected="${id === exploreTab}" ${action("explore-tab", id)} data-explore-tab>${name}${badge ? `<small>${badge}</small>` : ""}</button>`; }).join("")}</div>` : "";
     return `<div class="page exploration-page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>${bar}

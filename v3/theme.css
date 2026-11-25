@@ -305,7 +305,9 @@ small { font-size: max(12px, 0.86em); }
 
 /* 2. 资源栏：获得时暖光闪动、◈ 转一圈；花费时锈铜色下沉 */
 :root[data-motion="on"] .resources[data-bump="gain"] #dust-value { animation: dust-gain .9s ease-out; }
-:root[data-motion="on"] .resources[data-bump="gain"] .dust-mark { display: inline-block; animation: dust-spin .9s cubic-bezier(.3,.8,.3,1); }
+/* ◈ 始终是 inline-block：动效开始/结束时不改变顶栏高度，避免页面在点击中途位移。 */
+.resources .dust-mark { display: inline-block; }
+:root[data-motion="on"] .resources[data-bump="gain"] .dust-mark { animation: dust-spin .9s cubic-bezier(.3,.8,.3,1); }
 :root[data-motion="on"] .resources[data-bump="spend"] #dust-value { animation: dust-spend .7s ease-out; }
 @keyframes dust-gain {
   0% { color: #fff3d6; text-shadow: 0 0 18px #f2b866; }
@@ -317,22 +319,22 @@ small { font-size: max(12px, 0.86em); }
   100% { color: inherit; transform: none; }
 }
 
-/* 3. 目标更新：一道光从左向右扫过横幅 */
-.current-goal[data-fresh],
-.goal-rail[data-fresh] { overflow: hidden; }
+/* 3. 目标更新：一道光从左向右扫过横幅。
+   只动背景位置，不改 overflow / 尺寸，避免布局位移。 */
 .current-goal[data-fresh]::after,
 .goal-rail[data-fresh]::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(100deg, transparent 30%, #f2b86630 48%, #fff0d050 50%, #f2b86630 52%, transparent 70%);
-  transform: translateX(-100%);
+  background: linear-gradient(100deg, transparent 40%, #f2b86630 48%, #fff0d050 50%, #f2b86630 52%, transparent 60%) no-repeat;
+  background-size: 300% 100%;
+  background-position: 100% 0;
   animation: goal-sweep 1.2s ease-in-out both;
 }
 .current-goal[data-fresh] strong,
-.goal-rail[data-fresh] h2 { animation: lamp-fade .5s .3s ease-out both; }
-@keyframes goal-sweep { to { transform: translateX(100%); } }
+.goal-rail[data-fresh] #next-goal-title { animation: lamp-fade .5s .3s ease-out both; }
+@keyframes goal-sweep { from { background-position: 100% 0; } to { background-position: 0 0; } }
 
 /* 4. 按钮：按下时亮一下。
    不改变按钮几何（不用 transform）：WebKit 在按下与松开之间命中区域变化时会丢失 click。 */

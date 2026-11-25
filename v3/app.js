@@ -267,6 +267,8 @@
     window.scrollTo({ top: 0, behavior: "instant" });
     if (focusId) {
       const destination = document.getElementById(focusId);
+      const panel = destination?.closest("[data-explore-panel]");
+      if (panel?.hidden) showExploreTab(panel.dataset.explorePanel);
       if (destination?.matches("details")) destination.open = true;
       for (
         let parent = destination?.parentElement;
@@ -835,10 +837,22 @@
     if (!event && !history.length && !state.encounters.catalog.length) return "";
     return `<section class="encounter-panel" id="encounter-panel" tabindex="-1" aria-label="动态拾荒发现">${event?V.media("wreck",state):V.prop("resident-letter","collection-prop")}<h2>${event ? event.name : "航行发现记录"}</h2><p>永久发现收藏 ${state.encounters.catalog.length} / ${D.ENCOUNTERS.reduce((n, e) => n + e.choices.length, 0)}</p>${event ? `<p>${event.description}</p><p>本次额外发现 · 普通探索收益独立领取 · 无选择期限</p>${event.choice ? `<p>正在处理 · 剩余 <strong data-encounter-time></strong> · 原结果已锁定</p>` : `<div class="event-choices">${event.choices.map(c => `<button class="outline" ${action("encounter", c.id)} data-token="${event.token}" ${c.available ? "" : "disabled"}><strong>${c.name}</strong><small>+${number(c.dust)} 星尘 · +${c.samples} 样本 · ${duration(c.seconds)}${c.costSamples ? ` · 支出 ${c.costSamples} 样本` : ""}</small></button>`).join("")}</div>`}` : ""}${history.length ? `<details data-details-key="encounter-history"><summary>已记录 ${history.length} 次发现（保留最近32次）</summary>${history.map(r => `<p>${escape(D.ENCOUNTERS.find(e => e.id === r.id).choices.find(c => c.id === r.choice).record)}</p>`).join("")}</details>` : ""}<details data-details-key="encounter-catalog"><summary>永久发现收藏</summary>${state.encounters.catalog.map(key => { const e = D.ENCOUNTERS.find(e => key.startsWith(e.id + ":")); const c = e.choices.find(c => `${e.id}:${c.id}` === key); return `<p>${escape(c.record)}</p>`; }).join("")}</details></section>`;
   }
+  let exploreTab = "routes";
+  const EXPLORE_TABS = [["routes", "航线与主线"], ["port", "星港居民"], ["voyage", "长期远航"], ["archive", "档案"]];
+  function exploreBadge(id) {
+    if (id === "routes") return state.result ? "回报待领" : state.mission ? "探索中" : "";
+    if (id === "port") return E.harborStatus(state)?.available || E.communityStatus(state)?.available ? "可交付" : "";
+    return "";
+  }
+  function showExploreTab(id) {
+    exploreTab = id;
+    for (const tab of document.querySelectorAll("[data-explore-tab]")) tab.setAttribute("aria-selected", String(tab.dataset.id === id));
+    for (const panel of document.querySelectorAll("[data-explore-panel]")) panel.hidden = panel.dataset.explorePanel !== id;
+  }
   function explore() {
     const port = D.PORT[state.starport];
-    return `<div class="page exploration-page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>
-      ${missionReport()}${sectorAtlas()}${encounterPanel()}${reviewsPanel()}${residentLinks()}${communityPanel()}${honorsPanel()}${longVoyages()}${harborPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${residentPanel()}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
+    const groups = {
+      routes: `${missionReport()}${sectorAtlas()}${encounterPanel()}${reviewsPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
       <section aria-label="探索航线">${E.missionOptions(state)
         .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
@@ -847,7 +861,7 @@
         })
         .join("")}</section>
       <section class="port-panel" id="port-panel" tabindex="-1"><span class="port-progress">星港修复 ${state.starport} / ${D.PORT.length}</span><h2>${port ? port.name : "这里终于可以成为家。"}</h2><p>${port ? `需要 ${port.cores} 星核与 ${port.samples} 份样本。你拥有 ${number(state.cores)} 星核与 ${number(state.samples)} 份样本。` : D.PORT.at(-1).text}</p>${port ? `<button class="outline" ${action("port")} ${state.cores >= port.cores && state.samples >= port.samples ? "" : "disabled"}>修复航站</button>` : "<p>归航星港已建成。远航星图已经开放，新的回信正在等待。</p>"}</section>
-      ${loadoutPanel()}<section><div class="section-title"><h2>随舰装备</h2><small>${state.equipped.length} / 2 槽位 · 跃迁保留</small></div>${
+<section><div class="section-title"><h2>随舰装备</h2><small>${state.equipped.length} / 2 槽位 · 跃迁保留</small></div>${
         D.MODULES.filter((m) => state.modules[m.id])
           .map((m) => {
             const offer = E.moduleOffer(state, m.id);
@@ -856,7 +870,16 @@
           .join("") ||
         '<p class="empty">回应医院船的信号，或进入裂隙寻找第一件舰装。</p>'
       }</section>
-      ${workshop()}${routeArchive()}</div>`;
+      ${workshop()}`,
+      port: `${harborPanel()}${residentPanel()}${residentLinks()}${communityPanel()}${honorsPanel()}`,
+      voyage: `${longVoyages()}${loadoutPanel()}`,
+      archive: `${routeArchive()}`,
+    };
+    const tabs = EXPLORE_TABS.filter(([id]) => groups[id].trim());
+    if (!tabs.some(([id]) => id === exploreTab)) exploreTab = tabs[0][0];
+    const bar = tabs.length > 1 ? `<div class="explore-tabs" role="tablist" aria-label="探索分区">${tabs.map(([id, name]) => { const badge = exploreBadge(id); return `<button type="button" role="tab" id="explore-tab-${id}" aria-controls="explore-panel-${id}" aria-selected="${id === exploreTab}" ${action("explore-tab", id)} data-explore-tab>${name}${badge ? `<small>${badge}</small>` : ""}</button>`; }).join("")}</div>` : "";
+    return `<div class="page exploration-page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>${bar}
+      ${tabs.map(([id, name]) => `<div class="explore-panel" id="explore-panel-${id}" data-explore-panel="${id}" ${tabs.length > 1 ? `role="tabpanel" aria-labelledby="explore-tab-${id}"` : ""} ${id === exploreTab ? "" : "hidden"}>${groups[id]}</div>`).join("")}</div>`;
   }
   function workshop() {
     const missing = D.MODULES.filter((m) => !state.modules[m.id]);
@@ -1389,6 +1412,10 @@
     if (kind === "current-goal") {
       const goal = E.nextGoal(state);
       navigate(goal.action, goal.focus);
+      return;
+    }
+    if (kind === "explore-tab") {
+      showExploreTab(id);
       return;
     }
     if (kind === "nav") {

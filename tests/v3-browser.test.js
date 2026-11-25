@@ -1,4 +1,5 @@
 "use strict";
+const { showExploreSection } = require('./helpers/explore-tabs.cjs');
 const assert = require("node:assert/strict"),
   fs = require("node:fs"),
   http = require("node:http"),
@@ -70,6 +71,7 @@ async function run() {
     });
     await require("./helpers/isolate-browser.cjs")(context, url);
     const page = await context.newPage();
+    require('./helpers/explore-tabs.cjs')(page);
     const errors = [],
       badResponses = [],
       logs = [];
@@ -455,6 +457,7 @@ async function run() {
         assert.deepEqual(clean.modules,fixture.modules); assert.equal(clean.epilogue.ending,'city');
         await page.reload(); assert.deepEqual((await read(page)).equipped,['battery']);
         await page.locator('#navigation [data-id="explore"]').click();
+        await showExploreSection(page,'#harbor-management');
         assert.ok(await page.locator('#harbor-management').isVisible());
       });
     }
@@ -1661,6 +1664,7 @@ async function run() {
           for (const width of [1280, 375]) {
             await page.setViewportSize({ width, height: 900 });
             await noOverflow(page);
+            await showExploreSection(page, "#port-focus");
             assert.ok(await page.locator("#port-focus").isVisible());
             if (screenshotDir && focus.id === "reception")
               await page.locator(".council-panel").screenshot({

@@ -1,3 +1,13 @@
+/* 标题字体：思源黑体（Noto Sans SC）Black 900 的子集，SIL OFL 1.1。
+   由 scripts/build-display-font.py 生成；子集外的字回退到系统黑体。 */
+@font-face {
+  font-family: "Starfall Display";
+  src: url("assets/fonts/starfall-display-900.woff2") format("woff2");
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* 星骸归航 · 方向 A「暖光重建」
    冷的深空船壳上，亮起港灯。只换视觉层：颜色、字阶、面板材质；不改结构与规则。
    载入顺序在 style.css / visual.css 之后。 */
@@ -23,7 +33,7 @@
   --t-xl: 28px;
   --t-xxl: 40px;
 
-  --font-display: "Songti SC", "STSongti-SC-Bold", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "STZhongsong", "华文中宋", "SimSun", serif;
+  --font-display: "Starfall Display", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", sans-serif;
 
   /* 映射到既有变量，旧规则自动跟上 */
   --bg: var(--hull);
@@ -56,8 +66,8 @@ h1,
 .scene-heading h1,
 .brand-name {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-weight: 900;
+  letter-spacing: 0.02em;
   color: var(--bone);
   text-shadow: 0 0 28px #f2b8662e, 0 2px 0 #00000080;
 }
@@ -77,12 +87,11 @@ h3 { font-size: var(--t-md); }
 .brand svg { width: 40px; height: 40px; stroke: var(--lamp); }
 .brand svg .brand-trail { stroke: var(--rust); stroke-dasharray: 2 4; }
 .brand > div { display: flex; flex-direction: column; align-items: flex-start; gap: 0; letter-spacing: 0; line-height: 1.15; }
-.brand .brand-name { display: inline; font-size: 22px; color: var(--bone); font-weight: 700; letter-spacing: 0.14em; text-shadow: 0 0 18px #f2b86633; }
+.brand .brand-name { display: inline; font-size: 22px; color: var(--bone); font-weight: 900; letter-spacing: 0.1em; text-shadow: 0 0 18px #f2b86633; }
 .brand > div > span[lang] {
-  font-family: var(--font-display);
   font-size: var(--t-xs);
-  font-style: italic;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   color: #c9a985;
 }
 
@@ -1019,3 +1028,14 @@ small { font-size: max(12px, 0.86em); }
   .mission-row, .module-row { grid-template-columns: minmax(0, 1fr) 120px; gap: 14px; }
   .research-row { grid-template-columns: minmax(0, 1fr) auto; }
 }
+
+/* 数字与关键数值也用标题字体：资源、产量、圆盘 */
+#dust-value,
+.resources strong,
+.terminal-metric,
+.goal-meter strong,
+.building-stats strong { font-family: var(--font-display); font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+h2,
+.section-title h2,
+.current-goal strong,
+#next-goal-title { font-family: var(--font-display); font-weight: 900; letter-spacing: 0.02em; }

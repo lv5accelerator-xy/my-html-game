@@ -785,3 +785,147 @@ small { font-size: max(12px, 0.86em); }
 #toast[data-tone="warn"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23c0784a'/%3E%3Cpath d='M9 4.5v6' stroke='%230c1419' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='13.3' r='1.2' fill='%230c1419'/%3E%3C/svg%3E"); }
 #toast.visible { transform: translate(-50%, 0); }
 :root[data-motion="on"] #toast.visible::before { animation: badge-pop .5s .1s cubic-bezier(.3,1.7,.5,1) both; }
+
+/* ======================================================================
+   航站一屏布局（电脑端）
+   - 宽 ≥1101px 且高 ≥640px 时：整页不再上下滚动。左侧画面铺满，入口热点放在
+     图中对应的物体上；右侧一栏放目标与其余内容，自行滚动。
+   - 更小的屏幕保持原有的纵向排列（.home-side 退化为 display: contents）。
+   ====================================================================== */
+.home-side { display: contents; }
+.home-side > .return-banner { order: -1; grid-column: 1 / -1; }
+.home-side > :not(.goal-rail):not(.return-banner) { order: 2; grid-column: 1 / -1; }
+.home-layout > .scene { order: 0; }
+.home-side > .goal-rail { order: 1; }
+.stage-spots { display: none; }
+
+@media (min-width: 1101px) and (min-height: 640px) {
+  :root[data-surface="home"] body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  :root[data-surface="home"] .shell { flex: 1; min-height: 0; }
+  :root[data-surface="home"] #main { min-height: 0; overflow: hidden; }
+  :root[data-surface="home"] footer { flex: none; }
+
+  .home-layout {
+    height: 100%;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 420px);
+  }
+  .home-layout > .scene { min-height: 0; height: 100%; container-type: size; }
+  .home-side {
+    display: block;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--seam) transparent;
+    background: #0d151b;
+    border-left: 1px solid var(--seam);
+    container-type: inline-size;
+  }
+  .home-side > .goal-rail { border-width: 0 0 1px; }
+  .home-side > :not(.goal-rail) { margin: 0; border-left: 0; border-right: 0; }
+  /* 港务终端在电脑端由画面热点承担 */
+  .home-side > .harbor-terminal { display: none; }
+  .home-side > p { margin: 0; padding: 4px 22px 18px; }
+
+  /* 右栏里的内容统一为单列 */
+  .home-side :is(.starport-overview, .arrival-actions, .finished-districts, .community-scene, .honors-home, .story-scene, .quick-row) {
+    padding: 22px 22px;
+    border-top: 1px solid var(--seam);
+  }
+  .home-side :is(.starport-overview, .arrival-actions, .community-scene) :is([class*="grid"], .overview-grid, .ready-grid) { grid-template-columns: 1fr !important; }
+  .home-side .finished-districts > div { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .home-side .finished-districts .scene-picture { height: 92px; }
+  .home-side .quick-row { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; }
+  .home-side .quick-row button { grid-column: 1 / -1; }
+
+  /* ---------- 画面热点 ---------- */
+  .stage-spots {
+    /* 与 object-fit: cover + object-position: 56% center 的图片完全重合 */
+    --W: max(100cqw, calc(100cqh * var(--ratio)));
+    --H: max(100cqh, calc(100cqw / var(--ratio)));
+    --L: calc((100cqw - var(--W)) * .56);
+    --T: calc((100cqh - var(--H)) * .5);
+    display: block;
+    position: absolute;
+    z-index: 2;
+    width: var(--W);
+    height: var(--H);
+    left: var(--L);
+    top: var(--T);
+    pointer-events: none;
+  }
+  .stage-spot {
+    position: absolute;
+    /* 落点按图片坐标计算，但始终留在可见画面内（窄屏时图片两侧被裁掉） */
+    left: clamp(calc(18px - var(--L)), calc(var(--W) * var(--x) / 100), calc(100cqw - var(--L) - 200px));
+    top: clamp(calc(30px - var(--T)), calc(var(--H) * var(--y) / 100), calc(100cqh - var(--T) - 120px));
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--bone);
+    text-align: left;
+    pointer-events: auto;
+    cursor: pointer;
+    transform: translate(-11px, -50%);
+  }
+  .stage-spot.is-left {
+    left: clamp(calc(200px - var(--L)), calc(var(--W) * var(--x) / 100), calc(100cqw - var(--L) - 18px));
+    flex-direction: row-reverse;
+    text-align: right;
+    transform: translate(calc(-100% + 11px), -50%);
+  }
+  /* 画面标题在一屏布局里收小，给热点留出天空 */
+  .home-layout > .scene .scene-heading { max-width: 380px; padding: 12px 16px; }
+  .home-layout > .scene .scene-heading h1 { font-size: clamp(24px, 2.2vw, 32px); }
+  .home-layout > .scene .scene-heading p { font-size: 14px; margin-top: 6px; }
+  .spot-pin {
+    position: relative;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--lamp) 0 4px, #0c1419 5px 7px, #f2b866aa 8px 9px, transparent 10px);
+    box-shadow: 0 0 14px #f2b86680;
+  }
+  .spot-pin::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px solid #f2b86688;
+    opacity: 0;
+  }
+  .spot-card {
+    position: relative;
+    display: grid;
+    gap: 1px;
+    padding: 7px 12px 7px 12px;
+    background: linear-gradient(180deg, #0f181ee8, #0b1217e8);
+    border: 1px solid #f2b86655;
+    border-left: 2px solid var(--lamp);
+    box-shadow: 0 8px 24px -10px #000;
+    backdrop-filter: blur(3px);
+    white-space: nowrap;
+  }
+  .stage-spot.is-left .spot-card { border-left: 1px solid #f2b86655; border-right: 2px solid var(--lamp); }
+  .spot-card strong { font-family: var(--font-display); font-size: 15px; letter-spacing: .06em; }
+  .spot-card small { font-size: 12px; color: var(--bone-muted); }
+  .stage-spot:hover .spot-card,
+  .stage-spot:focus-visible .spot-card { background: linear-gradient(180deg, #1d1912f0, #15130ff0); border-color: var(--lamp); }
+  .stage-spot:hover .spot-card small { color: var(--lamp-soft); }
+  .stage-spot:focus-visible { outline: none; }
+  .stage-spot:focus-visible .spot-pin { outline: 2px solid var(--lamp-soft); outline-offset: 3px; }
+  /* 需要处理的入口：港灯色卡片 */
+  .stage-spot.is-hot .spot-card { background: linear-gradient(180deg, var(--lamp-soft), var(--lamp)); border-color: var(--lamp); color: #1c140a; }
+  .stage-spot.is-hot .spot-card small { color: #3a2810; }
+  :root[data-motion="on"] .stage-spot.is-hot .spot-pin::after { animation: spot-ping 1.8s ease-out infinite; }
+  :root[data-motion="on"] .stage-spot .spot-pin { transition: box-shadow .2s; }
+  :root[data-motion="on"] .stage-spot:hover .spot-pin { box-shadow: 0 0 22px #f2b866; }
+  @keyframes spot-ping { 0% { opacity: .9; transform: scale(.6); } 100% { opacity: 0; transform: scale(1.8); } }
+  :root[data-terminal-boot] .stage-spot { animation: lamp-fade .5s calc(.4s + var(--i, 0) * .08s) both; }
+}

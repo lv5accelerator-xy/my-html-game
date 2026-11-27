@@ -372,7 +372,58 @@
       <div class="scan-area"><button id="scan-control" class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
       <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p data-goal-detail>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${E.actionCenter(state).primaryRepresented?"查看完整条款与进度":goal.label} →</button>
       <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
-      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${readyActions()}${starportOverview()}${V.districts(state)}${communityScene()}${honorsHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
+      ${harborTerminal()}${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${readyActions()}${starportOverview()}${V.districts(state)}${communityScene()}${honorsHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
+  }
+  // 港务终端：航站首页的总览台。只读状态、只负责跳转，不改规则。
+  function harborTerminal() {
+    const can = (p) => E.reachable(state, p);
+    const pages = ["fleet", "explore", "voyage", "residents", "archive", "jump"].filter(can);
+    if (pages.length < 2) return "";
+    const ratio = (a, b) => (b ? Math.min(1, a / b) : 0);
+    const parts = [ratio(state.starport, D.PORT.length), ratio(state.chapter.length, D.PROJECTS.length), ratio(state.atlas.nodes.length, 9), ratio(state.continuation.reviews.earned.length, D.REVIEWS.length), ratio(state.continuation.honors.claimed.length, D.HONORS.length)];
+    const percent = Math.floor((parts.reduce((a, b) => a + b, 0) / parts.length) * 100);
+    const go = (page, focus) => `${action("terminal", page)}${focus ? ` data-terminal-focus="${focus}"` : ""}`;
+    const mission = state.mission && D.MISSIONS.find((m) => m.id === state.mission.id);
+    const survey = state.result ? ["回报待领", "探索船已归航，等待清点。", true] : mission ? [`${mission.name} · 探索中`, `剩余 <span data-terminal-mission-time>${duration(Math.max(0, state.mission.end - state.clock))}</span>`, false] : ["待派遣", `已发现 ${state.discoveries} 处残骸，航线等待安排。`, false];
+    const atlas = Array.from({ length: 9 }, (_, i) => `<i class="${i < state.atlas.nodes.length ? "on" : ""}"></i>`).join("");
+    const counts = D.BUILDINGS.map((b) => [b.name, state.buildings[b.id] || 0]);
+    const top = Math.max(1, ...counts.map(([, n]) => n));
+    const bars = counts.map(([name, n]) => `<span title="${name} ${n} 艘" style="--h:${Math.max(6, Math.round((n / top) * 100))}%"></span>`).join("");
+    const requests = can("residents") ? (E.residentRequests(state) || []).length : 0;
+    const gain = can("jump") ? E.prestigeGain(state) : 0;
+    const card = (cls, page, focus, zh, en, body, glyph, hot) => `<button type="button" class="terminal-card ${cls}${hot ? " is-hot" : ""}" ${go(page, focus)}><span class="terminal-glyph" aria-hidden="true">${glyph}</span><span class="terminal-title"><strong>${zh}</strong><small lang="en">${en}</small></span>${body}</button>`;
+    const g = {
+      survey: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="2"/></svg>`,
+      fleet: `<svg viewBox="0 0 24 24"><path d="M3 15l9-10 9 10-9 4z"/><path d="M12 5v14"/></svg>`,
+      residents: `<svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3 20c1-4 9-4 10 0M11 20c1-4 9-4 10 0"/></svg>`,
+      voyage: `<svg viewBox="0 0 24 24"><path d="M4 18c4-8 12-12 16-12"/><circle cx="20" cy="6" r="2"/><path d="M4 18h6"/></svg>`,
+      port: `<svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>`,
+      archive: `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>`,
+      jump: `<svg viewBox="0 0 24 24"><path d="M12 3l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L3 10l6-1z"/></svg>`,
+    };
+    const lower = [
+      can("explore") && state.starport >= D.PORT.length ? card("terminal-strip", "explore", "harbor-management", "星港建造", "Harbor works", "", g.port, false) : "",
+      can("archive") ? card("terminal-strip", "archive", "", "航线档案", "Route archive", "", g.archive, false) : "",
+      can("jump") ? card("terminal-strip", "jump", "", "跃迁", "Jump", gain > 0 ? `<em>可得 ${number(gain)} 星图</em>` : "", g.jump, gain > 0) : "",
+    ].filter(Boolean);
+    const ticker = [`星尘 ${number(state.dust)}`, `${number(E.productionRate(state))}/秒`, `样本 ${number(state.samples)}`, `发现 ${state.discoveries}`, `设施 ${counts.reduce((a, [, n]) => a + n, 0)}`];
+    return `<section class="harbor-terminal" aria-labelledby="terminal-title">
+      <h2 id="terminal-title" class="visually-hidden">港务终端</h2>
+      <div class="terminal-dial" role="img" aria-label="归航进度 ${percent}%">
+        <svg class="dial-ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="dial-track" cx="60" cy="60" r="50"/><circle class="dial-fill" cx="60" cy="60" r="50" pathLength="100" style="--p:${percent}"/><path class="dial-ticks" d="M60 4v6M60 110v6M4 60h6M110 60h6"/></svg>
+        <div class="dial-core" aria-hidden="true"><b style="--n:${percent}">${percent}</b><small>%</small></div>
+        <span class="dial-arc-label" aria-hidden="true">归航进度</span>
+        <div class="dial-tags" aria-hidden="true"><span>港区 ${Math.min(state.starport, D.PORT.length)}/${D.PORT.length}</span><span>主线 ${Math.min(state.chapter.length, D.PROJECTS.length)}/${D.PROJECTS.length}</span></div>
+      </div>
+      ${can("explore") ? card("terminal-feature", "explore", state.result ? "report" : mission ? "active-mission" : "", "探索调度", "Survey dispatch", `<span class="terminal-status"><b>${survey[0]}</b><span>${survey[1]}</span></span><span class="terminal-atlas" aria-label="星区图谱 ${state.atlas.nodes.length}/9">${atlas}</span>`, g.survey, survey[2]) : ""}
+      <div class="terminal-grid">
+        ${card("terminal-tile", "fleet", "", "舰队", "Fleet", `<span class="terminal-bars" aria-hidden="true">${bars}</span><span class="terminal-metric">+${number(E.productionRate(state))}<small>星尘/秒</small></span>`, g.fleet, false)}
+        ${can("residents") ? card("terminal-tile", "residents", requests ? "resident-requests" : "", "居民", "Residents", `<span class="terminal-metric">${requests ? `${requests}<small>项委托待处理</small>` : "<small>暂无新委托</small>"}</span>`, g.residents, requests > 0) : ""}
+        ${can("voyage") ? card("terminal-tile", "voyage", "", "长期远航", "Long voyage", `<span class="terminal-metric"><small>查看航程与补给</small></span>`, g.voyage, false) : ""}
+        ${lower.join("")}
+      </div>
+      <p class="terminal-ticker" aria-hidden="true">${ticker.map((t) => `<span>${t}</span>`).join("")}</p>
+    </section>`;
   }
   function routePanel() {
     const route = D.ROUTES.find((r) => r.id === state.run.route);
@@ -1041,6 +1092,7 @@
           Math.max(0, m.end - state.clock),
         );
       progress("[data-mission-progress]", (state.clock - m.start) / m.seconds);
+      if ($("[data-terminal-mission-time]")) $("[data-terminal-mission-time]").textContent = duration(Math.max(0, m.end - state.clock));
     }
     if ($("[data-timing-total]")) {
       $("[data-timing-total]").textContent =
@@ -1422,6 +1474,10 @@
     if (kind === "current-goal") {
       const goal = E.nextGoal(state);
       navigate(goal.action, goal.focus);
+      return;
+    }
+    if (kind === "terminal") {
+      navigate(id, button.dataset.terminalFocus);
       return;
     }
     if (kind === "explore-tab") {

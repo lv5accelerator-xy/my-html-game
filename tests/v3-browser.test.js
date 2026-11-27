@@ -1,5 +1,5 @@
 "use strict";
-const { showExploreSection } = require('./helpers/explore-tabs.cjs');
+const { showExploreSection, revealSection } = require('./helpers/explore-tabs.cjs');
 const assert = require("node:assert/strict"),
   fs = require("node:fs"),
   http = require("node:http"),
@@ -71,7 +71,6 @@ async function run() {
     });
     await require("./helpers/isolate-browser.cjs")(context, url);
     const page = await context.newPage();
-    require('./helpers/explore-tabs.cjs')(page);
     const errors = [],
       badResponses = [],
       logs = [];
@@ -119,11 +118,11 @@ async function run() {
   const openArchiveRecord = async (page, selector) => {
     await openDetails(page, "#route-archive");
     const chapter = await page.locator(selector).evaluate((node) => node.closest(".archive-chapter").id);
-    await page.locator(`#route-archive .archive-nav [data-goal-focus="${chapter}"]`).click();
+    await (await revealSection(page.locator(`#route-archive .archive-nav [data-goal-focus="${chapter}"]`))).click();
   };
   const openDetails = async (page, selector) => {
     if (!(await page.locator(selector).evaluate(node => node.open)))
-      await page.locator(`${selector} > summary`).click();
+      await (await revealSection(page.locator(`${selector} > summary`))).click();
   };
   try {
     await require("./helpers/quality-browser.cjs")({scenario,read,E,D,S,TIME,openDetails,fs,path,screenshotDir});
@@ -146,7 +145,7 @@ async function run() {
         };
         await page.locator('#navigation [data-id="explore"]').click();
         assert.match(await page.locator(`#deep-route-${def.id}`).innerText(),/对比/);
-        await page.locator(`[data-action="deep-start"][data-id="${def.id}"]`).click();
+        await (await revealSection(page.locator(`[data-action="deep-start"][data-id="${def.id}"]`))).click();
         for(let stage=0;stage<4;stage++) {
           await applyPreset(stage===2&&def.module==='medbay'?'production':'voyage');
           const choice=['secure','recover','investigate','secure'][stage],before=await read(page),preview=E.voyagePreview(before,def.id,choice);
@@ -169,7 +168,7 @@ async function run() {
             assert.match(await page.locator('#dialog-body .return-ready').innerText(),/远航阶段报告已到达/);
           } else await page.clock.fastForward(snapshot.seconds*1000+1000);
           await closeBrief();
-          await page.locator('[data-action="deep-claim"]').click();assert.equal((await read(page)).expeditions.active.stage,stage+1);
+          await (await revealSection(page.locator('[data-action="deep-claim"]'))).click();assert.equal((await read(page)).expeditions.active.stage,stage+1);
           if(stage===0) {
             const checkpoint=await read(page);await page.locator('#settings-button').click();
             const [download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-action="export"]').click()]);const text=fs.readFileSync(await download.path(),'utf8');
@@ -187,7 +186,7 @@ async function run() {
         assert.equal(done.samples,before.samples+reward.samples+6);assert.equal(done.expeditions.completed[def.id],1);assert.equal(done.expeditions.records[0].legs.length,4);
         await page.reload();assert.deepEqual((await read(page)).expeditions,done.expeditions);
         await page.locator('#navigation [data-id="explore"]').click();
-        await page.locator(`[data-action="deep-start"][data-id="${def.id}"]`).click();
+        await (await revealSection(page.locator(`[data-action="deep-start"][data-id="${def.id}"]`))).click();
         for(let stage=0;stage<4;stage++) {
           await page.locator('[data-action="deep-dispatch"][data-id="recover"]').click();const leg=(await read(page)).expeditions.active.leg;
           await page.clock.fastForward(leg.seconds*1000+1000);await closeBrief();await page.locator('[data-action="deep-claim"]').click();
@@ -203,7 +202,7 @@ async function run() {
       await scenario(`v3.19 ${ending.title}: live scheduling, real escrow, construction credit, alternate voyage and locked terms`,{[S.KEY]:JSON.stringify(fixture)},async page=>{
         await page.locator('#navigation [data-id="explore"]').click();
         for(const focus of D.HARBOR_FOCUSES) {
-          await page.locator(`[data-action="harbor-focus"][data-id="${focus.id}"]`).click();
+          await (await revealSection(page.locator(`[data-action="harbor-focus"][data-id="${focus.id}"]`))).click();
           await page.locator('[data-action="harbor-accept"]').first().click();
           const t=(await read(page)).management.active;
           await page.locator(`[data-action="harbor-focus"][data-id="${focus.id==='production'?'reception':'production'}"]`).click();
@@ -223,7 +222,7 @@ async function run() {
             await page.reload();await page.locator('#navigation [data-id="explore"]').click();
             assert.deepEqual((await read(page)).management.active.plan,packed.plan);
           } else {
-            await page.locator('#mission-belt [data-action="mission"]').click();
+            await (await revealSection(page.locator('#mission-belt [data-action="mission"]'))).click();
             const m=(await read(page)).mission;assert.equal(m.harborOrder,t.serial);
             await page.clock.runFor(m.seconds*1000+1000);
             await page.locator('#report [data-action="claim"]').click();
@@ -231,7 +230,7 @@ async function run() {
           }
           await page.clock.runFor((t.workSeconds+1)*1000);
           assert.match(await page.locator('#harbor-schedule').innerText(),/当前可用生产/);
-          await page.locator('[data-action="harbor-deliver"]').click();
+          await (await revealSection(page.locator('[data-action="harbor-deliver"]'))).click();
           assert.equal((await read(page)).management.active,null);
         }
         for(const width of [1280,375]) {
@@ -312,7 +311,7 @@ async function run() {
         }
         await row.locator('[data-action="mission"]').click();
         const snapshot = (await read(page)).mission;
-        await page.locator('#loadouts [data-action="loadout-apply"][data-id="voyage"]').click();
+        await (await revealSection(page.locator('#loadouts [data-action="loadout-apply"][data-id="voyage"]'))).click();
         assert.deepEqual((await read(page)).mission, snapshot);
         await page.reload(); assert.deepEqual((await read(page)).mission, snapshot);
       });
@@ -341,12 +340,12 @@ async function run() {
       fixture.lastAt = TIME; fixture.run.dust = D.PRESTIGE_DUST;
       await scenario(`v3.16 ${ending.title}: four deliveries, both preparation paths, strategy, construction, atlas, export/import and jump`, { [S.KEY]: JSON.stringify(fixture) }, async page => {
         await page.locator('#navigation [data-id="explore"]').click();
-        await page.locator('#harbor-management [data-action="harbor-accept"][data-id="food"]').click();
+        await (await revealSection(page.locator('#harbor-management [data-action="harbor-accept"][data-id="food"]'))).click();
         let state = await read(page); const task = structuredClone(state.management.active);
         assert.equal(task.id, 'food');
         await page.locator('#harbor-management [data-action="harbor-focus"][data-id="reception"]').click();
         assert.deepEqual((await read(page)).management.active, task);
-        await page.locator('#mission-garden [data-action="mission"]').click();
+        await (await revealSection(page.locator('#mission-garden [data-action="mission"]'))).click();
         state = await read(page); const seconds = state.mission.seconds;
         assert.equal(state.mission.harborOrder, task.serial);
         await page.clock.runFor(seconds * 1000);
@@ -356,7 +355,7 @@ async function run() {
         await page.locator('#report [data-action="claim"]').click();
         state = await read(page); assert.equal(state.management.active.trips, 1);
         const before = state.dust;
-        await page.locator('#harbor-management [data-action="harbor-deliver"]').click();
+        await (await revealSection(page.locator('#harbor-management [data-action="harbor-deliver"]'))).click();
         state = await read(page); assert.equal(state.management.stats.deliveries, 1);
         assert.equal(state.dust, before - task.dustCost);
         assert.ok(state.management.collections.includes('need-food'));
@@ -452,7 +451,7 @@ async function run() {
       await scenario("v3.16 damaged identifier restore retains real equipment/story and renders exploration safely", { [S.KEY]: JSON.stringify(fixture) }, async page => {
         assert.equal(await page.locator('#dialog[open]').count(),0);
         await page.locator('#navigation [data-id="explore"]').click();
-        await page.locator('#harbor-management [data-action="harbor-focus"][data-id="reception"]').click();
+        await (await revealSection(page.locator('#harbor-management [data-action="harbor-focus"][data-id="reception"]'))).click();
         const clean=await read(page); assert.deepEqual(clean.equipped,['battery']); assert.deepEqual(clean.lore,lore);
         assert.deepEqual(clean.modules,fixture.modules); assert.equal(clean.epilogue.ending,'city');
         await page.reload(); assert.deepEqual((await read(page)).equipped,['battery']);
@@ -1831,16 +1830,14 @@ async function run() {
       { [S.KEY]: JSON.stringify(presetSave) },
       async (page) => {
         await page.locator('#navigation [data-id="explore"]').click();
-        await page
-          .locator('[data-action="loadout-save"][data-id="voyage"]')
-          .click();
-        await page.locator('[data-action="equip"][data-id="nav"]').click();
+        await (await revealSection(page
+          .locator('[data-action="loadout-save"][data-id="voyage"]'))).click();
+        await (await revealSection(page.locator('[data-action="equip"][data-id="nav"]'))).click();
         await page.locator('[data-action="equip"][data-id="scanner"]').click();
         await page.locator('[data-action="equip"][data-id="battery"]').click();
         await page.locator('[data-action="equip"][data-id="medbay"]').click();
-        await page
-          .locator('[data-action="loadout-save"][data-id="production"]')
-          .click();
+        await (await revealSection(page
+          .locator('[data-action="loadout-save"][data-id="production"]'))).click();
         const production = await read(page);
         assert.deepEqual(production.loadouts.production, ["battery", "medbay"]);
         assert.deepEqual(production.loadouts.voyage, ["nav", "scanner"]);
@@ -1863,14 +1860,13 @@ async function run() {
           E.rawRate(await read(page)),
           E.loadoutPreview(production, "voyage", "white-noise").rate,
         );
-        await page.locator('[data-action="prepare"][data-id="supply"]').click();
+        await (await revealSection(page.locator('[data-action="prepare"][data-id="supply"]'))).click();
         await page
           .locator('[data-action="mission"][data-id="white-noise"]')
           .click();
         const launched = (await read(page)).mission;
-        await page
-          .locator('[data-action="loadout-apply"][data-id="production"]')
-          .click();
+        await (await revealSection(page
+          .locator('[data-action="loadout-apply"][data-id="production"]'))).click();
         assert.deepEqual((await read(page)).mission, launched);
         assert.deepEqual((await read(page)).equipped, ["battery", "medbay"]);
         await page.reload();
@@ -1879,9 +1875,8 @@ async function run() {
         await page.locator('#main [data-goal-focus="active-mission"]').click();
         await page.locator('[data-action="module"][data-id="nav"]').click();
         assert.equal((await read(page)).modules.nav, 3);
-        await page
-          .locator('[data-action="loadout-apply"][data-id="voyage"]')
-          .click();
+        await (await revealSection(page
+          .locator('[data-action="loadout-apply"][data-id="voyage"]'))).click();
         assert.deepEqual((await read(page)).mission, launched);
         assert.deepEqual((await read(page)).equipped, ["nav", "scanner"]);
         const saved = await read(page);
@@ -2430,9 +2425,8 @@ async function run() {
             await page.locator("#confirm-import").click();
             assert.deepEqual((await read(page)).epilogue, finished.epilogue);
             await page.locator('#navigation [data-id="explore"]').click();
-            await page
-              .locator('.ending-actions [data-goal-focus="mission-supply-run"]')
-              .click();
+            await (await revealSection(page
+              .locator('.ending-actions [data-goal-focus="mission-supply-run"]'))).click();
             await page
               .locator('[data-action="mission"][data-id="supply-run"]')
               .click();
@@ -2544,7 +2538,7 @@ async function run() {
             const button = page.locator(
               `[data-action="mission"][data-id="${mission}"]`,
             );
-            await button.click();
+            await (await revealSection(button)).click();
             const active = await read(page);
             assert.equal(active.mission.id, mission);
             await page.clock.fastForward(active.mission.seconds * 1000 + 5000);
@@ -2610,7 +2604,7 @@ async function run() {
             assert.deepEqual(await read(page), claimed);
             await page.setViewportSize({ width: 375, height: 900 });
             await noOverflow(page);
-            await page.locator('[data-action="scene-dismiss"]').click();
+            await (await revealSection(page.locator('[data-action="scene-dismiss"]'))).click();
             assert.deepEqual(await read(page), claimed);
             await page.reload();
             assert.deepEqual(await read(page), claimed);
@@ -2632,7 +2626,7 @@ async function run() {
               });
             if (story === "hospital") {
               for (const stage of D.PORT)
-                await page.locator('[data-action="port"]').click();
+                await (await revealSection(page.locator('[data-action="port"]'))).click();
               assert.equal((await read(page)).starport, 3);
               assert.equal(
                 await page
@@ -2651,9 +2645,8 @@ async function run() {
                   .count(),
                 0,
               );
-              await page
-                .locator(`[data-action="project"][data-id="${project.id}"]`)
-                .click();
+              await (await revealSection(page
+                .locator(`[data-action="project"][data-id="${project.id}"]`))).click();
               const built = await read(page);
               const record = page.locator(
                 `[data-details-key="archive-scene-${project.id}-built"]`,
@@ -2804,9 +2797,8 @@ async function run() {
                     .count(),
                   0,
                 );
-              await page
-                .locator(`[data-action="port-focus"][data-id="${focus.id}"]`)
-                .click();
+              await (await revealSection(page
+                .locator(`[data-action="port-focus"][data-id="${focus.id}"]`))).click();
               await page
                 .locator(
                   `[data-action="confirm-port-focus"][data-id="${focus.id}"]`,
@@ -2918,7 +2910,7 @@ async function run() {
             assert.deepEqual(await read(page), before);
           }
           for (const c of D.RESCUE_CONFIRMATIONS)
-            await page.locator(`[data-action="rescue-check"][data-id="${c.id}"]`).click();
+            await (await revealSection(page.locator(`[data-action="rescue-check"][data-id="${c.id}"]`))).click();
           await page.locator(`[data-action="prepare"][data-mission="${m.id}"][data-id="${plan.id}"]`).click();
           await page.locator(`[data-action="mission"][data-id="${m.id}"]`).click();
           const active = await read(page);
@@ -2959,7 +2951,7 @@ async function run() {
         }
         assert.equal(await page.locator('[data-details-key="archive-scene-keeper-signed"]').count(), 0);
         const before = await read(page);
-        await page.locator('[data-details-key="keeper-scene"] > summary').click();
+        await (await revealSection(page.locator('[data-details-key="keeper-scene"] > summary'))).click();
         assert.deepEqual(await read(page), before);
         assert.equal(before.rescue.protocol, false);
         await page.locator('[data-action="keeper-protocol"]').click();
@@ -3079,7 +3071,7 @@ async function run() {
           assert.equal((await read(page)).afterword.ready, true);
           const resources = await read(page);
           if (screenshotDir && index === 1 && request.id === "seeds") await page.locator("#resident-seeds").screenshot({path:path.join(screenshotDir,"v3.10-residents-mobile.png")});
-          await page.locator(`[data-action="resident-reply"][data-id="${request.id}"][data-reply="${request.replies[index % 2].id}"]`).click();
+          await (await revealSection(page.locator(`[data-action="resident-reply"][data-id="${request.id}"][data-reply="${request.replies[index % 2].id}"]`))).click();
           const completed = await read(page);
           assert.deepEqual([completed.dust,completed.cores,completed.samples],[resources.dust,resources.cores,resources.samples]);
           assert.equal(completed.afterword.completed.at(-1).id,request.id);
@@ -3132,7 +3124,7 @@ async function run() {
       assert.equal(await page.locator("html").getAttribute("data-reading-size"),"larger");
       await page.locator('[data-action="nav"][data-id="explore"]').first().click();
       assert.ok(await page.locator('#story-hospital').evaluate(el=>el.open));
-      await page.locator('[data-action="archive-resume"]').click();
+      await (await revealSection(page.locator('[data-action="archive-resume"]'))).click();
       assert.equal(await page.evaluate(()=>document.activeElement.id),"story-hospital");
       assert.ok(Math.abs(await page.locator('#story-hospital').evaluate(el=>el.getBoundingClientRect().top)-preferences.offset)<8);
       await page.locator('[data-action="archive-current"]').click();

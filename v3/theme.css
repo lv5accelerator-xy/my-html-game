@@ -933,10 +933,15 @@ small { font-size: max(12px, 0.86em); }
 /* ======================================================================
    其余六页的一屏布局（电脑端）：左侧固定画面 + 热点，右侧内容自行滚动
    ====================================================================== */
+/* 窗口缩小到断点以下、尚未换页时：桌面结构按普通纵向页面显示 */
+@media not ((min-width: 1101px) and (min-height: 640px)) {
+  .page.has-stage > .page-stage { display: none; }
+  .page.has-stage > .page-side { display: contents; }
+}
 @media (min-width: 1101px) and (min-height: 640px) {
-  :root:not([data-surface="home"]) body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-  :root:not([data-surface="home"]) .shell { flex: 1; min-height: 0; }
-  :root:not([data-surface="home"]) footer { flex: none; }
+  :root:not([data-surface="home"]) body:has(.has-stage) { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  :root:not([data-surface="home"]) body:has(.has-stage) .shell { flex: 1; min-height: 0; }
+  :root:not([data-surface="home"]) body:has(.has-stage) footer { flex: none; }
   #main:has(> .has-stage) { min-height: 0; height: 100%; overflow: hidden; display: flex; flex-direction: column; }
   #main:has(> .has-stage) > .current-goal { flex: none; margin: 0; border-width: 0 0 1px 3px; }
 

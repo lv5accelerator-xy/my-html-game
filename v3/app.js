@@ -114,6 +114,7 @@
     readingTimer = setTimeout(rememberReading, 200);
   }, { passive: true });
   function toast(message) {
+    $("#toast").dataset.tone = /未能|失败|超过|请/.test(message) ? "warn" : "ok";
     $("#toast").textContent = message;
     $("#toast").classList.add("visible");
     clearTimeout(toastTimer);
@@ -388,7 +389,7 @@
     const atlas = Array.from({ length: 9 }, (_, i) => `<i class="${i < state.atlas.nodes.length ? "on" : ""}"></i>`).join("");
     const counts = D.BUILDINGS.map((b) => [b.name, state.buildings[b.id] || 0]);
     const top = Math.max(1, ...counts.map(([, n]) => n));
-    const bars = counts.map(([name, n]) => `<span title="${name} ${n} 艘" style="--h:${Math.max(6, Math.round((n / top) * 100))}%"></span>`).join("");
+    const bars = counts.map(([name, n], i) => `<span title="${name} ${n} 艘" style="--h:${Math.max(6, Math.round((n / top) * 100))}%;--d:${(0.9 + i * 0.23).toFixed(2)}s"></span>`).join("");
     const requests = can("residents") ? (E.residentRequests(state) || []).length : 0;
     const gain = can("jump") ? E.prestigeGain(state) : 0;
     const card = (cls, page, focus, zh, en, body, glyph, hot) => `<button type="button" class="terminal-card ${cls}${hot ? " is-hot" : ""}" ${go(page, focus)}><span class="terminal-glyph" aria-hidden="true">${glyph}</span><span class="terminal-title"><strong>${zh}</strong><small lang="en">${en}</small></span>${body}</button>`;
@@ -415,10 +416,10 @@
         <span class="dial-arc-label" aria-hidden="true">归航进度</span>
         <div class="dial-tags" aria-hidden="true"><span>港区 ${Math.min(state.starport, D.PORT.length)}/${D.PORT.length}</span><span>主线 ${Math.min(state.chapter.length, D.PROJECTS.length)}/${D.PROJECTS.length}</span></div>
       </div>
-      ${can("explore") ? card("terminal-feature", "explore", state.result ? "report" : mission ? "active-mission" : "", "探索调度", "Survey dispatch", `<span class="terminal-status"><b>${survey[0]}</b><span>${survey[1]}</span></span><span class="terminal-atlas" aria-label="星区图谱 ${state.atlas.nodes.length}/9">${atlas}</span>`, g.survey, survey[2]) : ""}
+      ${can("explore") ? card("terminal-feature", "explore", state.result ? "report" : mission ? "active-mission" : "", "探索调度", "Survey dispatch", `<span class="terminal-status"><b>${survey[0]}</b><span>${survey[1]}</span></span>${mission && !state.result ? `<span class="terminal-radar" aria-hidden="true"><i></i></span>` : `<span class="terminal-atlas" aria-label="星区图谱 ${state.atlas.nodes.length}/9">${atlas}</span>`}`, g.survey, survey[2]) : ""}
       <div class="terminal-grid">
         ${card("terminal-tile", "fleet", "", "舰队", "Fleet", `<span class="terminal-bars" aria-hidden="true">${bars}</span><span class="terminal-metric">+${number(E.productionRate(state))}<small>星尘/秒</small></span>`, g.fleet, false)}
-        ${can("residents") ? card("terminal-tile", "residents", requests ? "resident-requests" : "", "居民", "Residents", `<span class="terminal-metric">${requests ? `${requests}<small>项委托待处理</small>` : "<small>暂无新委托</small>"}</span>`, g.residents, requests > 0) : ""}
+        ${can("residents") ? card("terminal-tile", "residents", requests ? "resident-requests" : "", "居民", "Residents", `${requests ? `<span class="terminal-badge" aria-hidden="true">${requests}</span>` : ""}<span class="terminal-metric">${requests ? `${requests}<small>项委托待处理</small>` : "<small>暂无新委托</small>"}</span>`, g.residents, requests > 0) : ""}
         ${can("voyage") ? card("terminal-tile", "voyage", "", "长期远航", "Long voyage", `<span class="terminal-metric"><small>查看航程与补给</small></span>`, g.voyage, false) : ""}
         ${lower.join("")}
       </div>

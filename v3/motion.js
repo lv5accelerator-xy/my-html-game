@@ -31,7 +31,7 @@
   }
   function observe() {
     for(const el of observed)if(!el.isConnected){observer?.unobserve(el);observed.delete(el);}
-    for(const el of document.querySelectorAll('.world-scene,.atlas-space'))if(!observed.has(el)){
+    for(const el of document.querySelectorAll('.world-scene,.atlas-space,.harbor-terminal'))if(!observed.has(el)){
       observed.add(el);if(observer)observer.observe(el);else el.dataset.inView='false';
     }
     // 换页：港灯点亮一次。只在页面真正切换时播放，普通重绘不重复。

@@ -660,7 +660,128 @@ small { font-size: max(12px, 0.86em); }
 @keyframes boot-fill { from { --p: 0; } }
 @keyframes boot-count { from { --n: 0; } }
 
-/* 唯一的循环：待处理卡上的斜纹缓慢移动（只在动效开启时） */
-:root[data-motion="on"] .terminal-card.is-hot:not(.terminal-feature) { background-size: 17px 17px, 100% 100%; animation: hazard-crawl 2.4s linear infinite; }
-:root[data-motion="on"][data-terminal-boot] .terminal-card.is-hot:not(.terminal-feature) { animation: boot-wipe .55s cubic-bezier(.6,0,.2,1) both; animation-delay: calc(.35s + var(--i, 0) * .09s); }
-@keyframes hazard-crawl { to { background-position: 17px 0, 0 0; } }
+
+/* ======================================================================
+   微交互第一批：流动光边 / 雷达 / 产量波形 / 数字滚入与角标 / 轻提示
+   循环动效只在港务终端内，并在终端离开视口、标签页隐藏或关闭动效时停止。
+   所有效果都不改变元素位置和尺寸。
+   ====================================================================== */
+@property --a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.harbor-terminal[data-in-view="false"] *,
+.harbor-terminal[data-in-view="false"] *::before,
+.harbor-terminal[data-in-view="false"] *::after { animation-play-state: paused; }
+
+/* 1. 流动光边：一段港灯光沿着待处理卡的边框绕行 */
+.terminal-card.is-hot::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  pointer-events: none;
+  background: conic-gradient(from var(--a), transparent 0 62%, #f2b86600 64%, #fff3d6 76%, var(--lamp) 80%, #f2b86600 90%, transparent);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0;
+}
+:root[data-motion="on"] .terminal-card.is-hot::before { opacity: 1; animation: border-orbit 3.2s linear infinite; }
+.terminal-card.is-hot:not(.terminal-feature) { box-shadow: 0 0 22px -6px #f2b866aa; }
+@keyframes border-orbit { to { --a: 360deg; } }
+
+/* 2. 雷达：探索船在外时，主卡右侧显示扫描扇面 */
+.terminal-radar {
+  grid-area: atlas;
+  position: relative;
+  width: 74px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid #84cdb666;
+  background:
+    radial-gradient(circle, transparent 0 32%, #84cdb633 33% 34%, transparent 35% 64%, #84cdb633 65% 66%, transparent 67%),
+    linear-gradient(#84cdb622, #84cdb622) center / 1px 100% no-repeat,
+    linear-gradient(#84cdb622, #84cdb622) center / 100% 1px no-repeat,
+    #0d1a1c;
+  overflow: hidden;
+}
+.terminal-radar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg, #84cdb600 0 70%, #84cdb655 96%, #b9f2e2 99%, transparent 100%);
+  border-radius: 50%;
+}
+.terminal-radar i {
+  position: absolute;
+  left: 64%;
+  top: 30%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #b9f2e2;
+  box-shadow: 0 0 8px #84cdb6;
+}
+:root[data-motion="on"] .terminal-radar::before { animation: radar-sweep 2.6s linear infinite; }
+:root[data-motion="on"] .terminal-radar i { animation: radar-blip 2.6s linear infinite; }
+@keyframes radar-sweep { to { transform: rotate(1turn); } }
+@keyframes radar-blip { 0%, 20% { opacity: .15; } 28% { opacity: 1; } 70%, 100% { opacity: .15; } }
+@media (max-width: 600px) { .terminal-radar { justify-self: start; width: 64px; } }
+
+/* 3. 产量波形：设施柱随生产起伏（只缩放，不改尺寸） */
+.terminal-bars span { transform-origin: 50% 100%; }
+:root[data-motion="on"] .terminal-bars span { animation: wave-bar var(--d, 1.1s) ease-in-out infinite alternate; }
+@keyframes wave-bar { from { transform: scaleY(1); } to { transform: scaleY(.72); } }
+
+/* 4a. 数字滚入：获得星尘时数值从上方滚入到位，显示的始终是真实数值 */
+.resources > div:first-child { overflow: clip; overflow-clip-margin: 6px; }
+#dust-value { display: inline-block; }
+:root[data-motion="on"] .resources[data-bump="gain"] #dust-value { animation: dust-roll .45s cubic-bezier(.2,.8,.2,1), dust-gain .9s ease-out; }
+@keyframes dust-roll {
+  from { transform: translateY(-75%); opacity: .1; filter: blur(1.5px); }
+  to { transform: none; opacity: 1; filter: none; }
+}
+
+/* 4b. 角标弹出：分区标签与终端上的待处理数量 */
+.terminal-badge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #1c140a;
+  color: var(--lamp-soft);
+  box-shadow: 0 0 0 2px var(--lamp);
+}
+:root[data-motion="on"] .terminal-badge,
+:root[data-motion="on"] .explore-tabs small { animation: badge-pop .55s cubic-bezier(.3,1.7,.5,1) both; }
+@keyframes badge-pop { 0% { transform: scale(0); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
+
+/* 5. 轻提示：带状态色条与图标，从下方浮入 */
+#toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px 12px 14px;
+  background: linear-gradient(180deg, #1a242b, #121a20);
+  border: 1px solid var(--seam);
+  border-left: 3px solid var(--verdigris);
+  border-radius: 3px;
+  color: var(--bone);
+  transform: translate(-50%, 10px);
+  transition: opacity .2s, transform .28s cubic-bezier(.2,.8,.2,1);
+}
+#toast::before {
+  content: "";
+  flex: 0 0 18px;
+  height: 18px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%2384cdb6'/%3E%3Cpath d='M5 9.4l2.6 2.6L13 6.6' fill='none' stroke='%230c1419' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+#toast[data-tone="warn"] { border-left-color: var(--rust); }
+#toast[data-tone="warn"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='9' r='9' fill='%23c0784a'/%3E%3Cpath d='M9 4.5v6' stroke='%230c1419' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='13.3' r='1.2' fill='%230c1419'/%3E%3C/svg%3E"); }
+#toast.visible { transform: translate(-50%, 0); }
+:root[data-motion="on"] #toast.visible::before { animation: badge-pop .5s .1s cubic-bezier(.3,1.7,.5,1) both; }

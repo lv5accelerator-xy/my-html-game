@@ -929,3 +929,88 @@ small { font-size: max(12px, 0.86em); }
   @keyframes spot-ping { 0% { opacity: .9; transform: scale(.6); } 100% { opacity: 0; transform: scale(1.8); } }
   :root[data-terminal-boot] .stage-spot { animation: lamp-fade .5s calc(.4s + var(--i, 0) * .08s) both; }
 }
+
+/* ======================================================================
+   其余六页的一屏布局（电脑端）：左侧固定画面 + 热点，右侧内容自行滚动
+   ====================================================================== */
+@media (min-width: 1101px) and (min-height: 640px) {
+  :root:not([data-surface="home"]) body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  :root:not([data-surface="home"]) .shell { flex: 1; min-height: 0; }
+  :root:not([data-surface="home"]) footer { flex: none; }
+  #main:has(> .has-stage) { min-height: 0; height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+  #main:has(> .has-stage) > .current-goal { flex: none; margin: 0; border-width: 0 0 1px 3px; }
+
+  .page.has-stage {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(460px, 42vw, 660px);
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  .page-stage {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    container-type: size;
+    border-right: 1px solid var(--seam);
+    background: #070c10;
+  }
+  .page-stage > .world-scene { position: absolute; inset: 0; margin: 0; border: 0; box-shadow: none; }
+  .page-stage .art-stage { height: 100%; aspect-ratio: auto; }
+  .page-stage .scene-picture,
+  .page-stage .scene-picture img { width: 100%; height: 100%; }
+  .page-stage .scene-picture img { object-fit: cover; object-position: 50% 50% !important; }
+  .page-stage .world-scene figcaption {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    right: auto;
+    max-width: 60%;
+    padding: 6px 10px;
+    background: #07121dcc;
+    border: 0;
+  }
+  /* 页面热点：图片居中裁切 */
+  .page-stage .stage-spots { --L: calc((100cqw - var(--W)) * .5); }
+
+  .page-side {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--seam) transparent;
+    padding: 26px 26px 40px;
+    container-type: inline-size;
+    background: #0b1318;
+  }
+  .page-side > .page-header { margin-bottom: 20px; }
+  .page-side > .page-header h1 { font-size: clamp(24px, 2vw, 32px); }
+  .page-side > .page-header p { font-size: 14px; line-height: 1.75; }
+  .page-side > * + * { margin-top: 24px; }
+  .page-side :is(section, .panel, .dock-layout, .habitat-layout, .exhibit-intro, .jump-layout, .production-band, .greenhouse-wing) { max-width: 100%; }
+  /* 右栏宽度有限，常见的左右分栏改为上下 */
+  .page-side :is(.dock-layout, .habitat-layout, .exhibit-intro, .jump-layout, .production-band, .greenhouse-wing) { display: block; }
+  .page-side :is(.dock-layout, .habitat-layout, .exhibit-intro, .jump-layout, .production-band, .greenhouse-wing) > * + * { margin-top: 16px; }
+  .page-side .explore-tabs { top: -26px; margin-inline: -26px; padding-inline: 26px; }
+
+  /* 点热点跳到的区块：港灯描边闪一下 */
+  [data-spot-flash] { outline: 2px solid var(--lamp); outline-offset: 6px; transition: outline-color 1.2s ease-out .4s; }
+  :root[data-motion="on"] [data-spot-flash] { animation: spot-flash 1.4s ease-out both; }
+  @keyframes spot-flash { 0% { outline-color: var(--lamp-soft); } 100% { outline-color: #f2b86600; } }
+}
+
+/* 右栏较窄时（容器宽 < 760px）沿用手机端的行布局 */
+@container (max-width: 760px) {
+  .fleet-page .building-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) 84px; gap: 12px; }
+  .fleet-page .building-row .row-action { grid-column: 1 / -1; width: 100%; }
+  .fleet-page .building-row .row-action button { width: 100%; }
+  .equipment-thumb { width: 58px; height: 65px; }
+  .fleet-page .building-stats strong { font-size: 19px; }
+  .fleet-page .building-row .milestone-track { gap: 4px; flex-wrap: wrap; }
+  .page-header { flex-wrap: wrap; }
+  .page-header .buy-modes { margin-top: 4px; }
+  .mission-row, .module-row { grid-template-columns: minmax(0, 1fr) 120px; gap: 14px; }
+  .research-row { grid-template-columns: minmax(0, 1fr) auto; }
+}

@@ -120,6 +120,12 @@ async function run() {
     const chapter = await page.locator(selector).evaluate((node) => node.closest(".archive-chapter").id);
     await (await revealSection(page.locator(`#route-archive .archive-nav [data-goal-focus="${chapter}"]`))).click();
   };
+  // 原生 <dialog> 按 Esc 关闭后，close 事件排队触发（WebKit 下明显晚于按键返回），
+  // 游戏在该事件里归还焦点。先等它完成再读取焦点；断言本身不变，只是不在事件之前读取。
+  const focusAfterClose = async (page, id) => {
+    await page.waitForFunction((want) => document.activeElement?.id === want, id, { timeout: 5000 }).catch(() => {});
+    return page.evaluate(() => document.activeElement.id);
+  };
   const openDetails = async (page, selector) => {
     if (!(await page.locator(selector).evaluate(node => node.open)))
       await (await revealSection(page.locator(`${selector} > summary`))).click();
@@ -583,10 +589,7 @@ async function run() {
         assert.ok(await page.locator("#dialog").isVisible());
         await page.keyboard.press("Escape");
         assert.equal(await page.locator("#dialog").isVisible(), false);
-        assert.equal(
-          await page.evaluate(() => document.activeElement.id),
-          "settings-button",
-        );
+        assert.equal(await focusAfterClose(page, "settings-button"), "settings-button");
       },
     );
     await scenario(
@@ -792,10 +795,7 @@ async function run() {
           );
         }
         await page.keyboard.press("Escape");
-        assert.equal(
-          await page.evaluate(() => document.activeElement.id),
-          "settings-button",
-        );
+        assert.equal(await focusAfterClose(page, "settings-button"), "settings-button");
       },
     );
     const extreme = ready();

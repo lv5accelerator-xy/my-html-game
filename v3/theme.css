@@ -230,6 +230,26 @@ small { font-size: max(12px, 0.86em); }
   .brand { gap: 10px; }
   .brand .brand-name { display: none; }
 }
+/* 手机资源条固定两行：第一行星尘，第二行产量与星核。
+   原来允许按宽度自动换行，数值跨过宽度时顶栏在一行/两行间跳动、整页位移，
+   WebKit 下点击随之落空。固定两行后，顶栏高度与数值宽度无关。 */
+@media (max-width: 760px) {
+  .resources {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-auto-rows: auto;
+    justify-content: end;
+    justify-items: end;
+    align-items: baseline;
+    column-gap: 8px;
+    row-gap: 2px;
+    min-width: 0;
+  }
+  .resources > div:first-child { grid-column: 1 / -1; }
+  .resources > div + div { padding-left: 0; border-left: 0; }
+  .resources > .rate-label { grid-column: 1 / -1; }
+  .resources > .rate-label:has(+ #core-resource:not([hidden])) { grid-column: auto; }
+}
 @media (max-width: 760px) {
   .brand svg { width: 30px; height: 30px; }
   .brand > div > span[lang] { display: none; }

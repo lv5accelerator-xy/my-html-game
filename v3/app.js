@@ -114,6 +114,7 @@
     readingTimer = setTimeout(rememberReading, 200);
   }, { passive: true });
   function toast(message) {
+    $("#toast").dataset.tone = /未能|失败|超过|请/.test(message) ? "warn" : "ok";
     $("#toast").textContent = message;
     $("#toast").classList.add("visible");
     clearTimeout(toastTimer);
@@ -261,6 +262,7 @@
       focusId && $("#main").contains(document.getElementById(focusId))) target = page;
     if (!V.reachable(state, target)) return;
     page = target;
+    stageMode = desktopStage;
     exploreFocus = target === "explore" ? focusId || null : null;
     signature = "";
     render();
@@ -367,12 +369,115 @@
   function home() {
     const goal = E.nextGoal(state),
       recent = state.journal.slice(0, 3);
-    return `${lastReturnReport ? `<section class="return-banner"><div><strong>上次归航简报</strong><p>${duration(lastReturnReport.seconds)} · 探索归航 ${lastReturnReport.missionsCompleted} 次</p></div><button class="outline" ${action("return-report")}>查看简报</button></section>` : ""}<div class="home-layout"><section class="scene" aria-label="归航航站">${V.media("home",state,{eager:true})}<div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
+    const banner = lastReturnReport ? `<section class="return-banner"><div><strong>上次归航简报</strong><p>${duration(lastReturnReport.seconds)} · 探索归航 ${lastReturnReport.missionsCompleted} 次</p></div><button class="outline" ${action("return-report")}>查看简报</button></section>` : "";
+    return `<div class="home-layout"><section class="scene" aria-label="归航航站">${V.media("home",state,{eager:true})}${stageSpots()}<div class="scene-heading"><h1>在寂静里，重建航线。</h1><p>一次扫描，一艘无人机，一段更远的旅程。</p></div>
       <button class="beacon-button" ${action("beacon")} ${state.beacon.expiresAt ? "" : "hidden"}>捕获金色信标<small>剩余 <span data-beacon-seconds>15</span> 秒</small></button>
       <div class="scan-area"><button id="scan-control" class="primary scan-button" ${action("scan")}>${icon("scan")}扫描信标 <strong>+<span data-scan-value>2</span> 星尘</strong></button><p>无人机启动后，离线也会继续生产。</p></div></section>
-      <aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p data-goal-detail>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${E.actionCenter(state).primaryRepresented?"查看完整条款与进度":goal.label} →</button>
-      <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside></div>
-      ${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${readyActions()}${starportOverview()}${V.districts(state)}${communityScene()}${honorsHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}`;
+      <div class="home-side">${banner}<aside class="goal-rail"><h2 class="rail-heading">下一个目标</h2>${tutorialFeedback()}<h2 id="next-goal-title">${goal.title}</h2><p data-goal-detail>${goal.detail}</p><p class="goal-eta" data-goal-eta></p><div class="goal-meter"><div><strong data-goal-value>0</strong> / <span>${number(goal.target)}</span></div><div class="progress" role="progressbar" aria-label="下一个目标进度" aria-valuemin="0" aria-valuemax="100" data-goal-progress><span></span></div></div><button class="outline" ${action("nav", goal.action)} data-goal-focus="${goal.focus || ""}">${E.actionCenter(state).primaryRepresented?"查看完整条款与进度":goal.label} →</button>
+      <div class="journal"><h3>航站日志</h3>${recent.length ? recent.map((r) => `<p>${escape(r.text)}</p>`).join("") : "<p>航站仍在沉默中，但远处的星光从未熄灭。</p><p>每一块漂泊的残骸，都能让航线再向前延伸一点。</p>"}</div></aside>
+      ${harborTerminal()}${state.buildings.drone ? `<div class="quick-row"><h3>拾荒无人机</h3><span>${state.buildings.drone} 艘</span><span>基础每艘 +0.8 星尘/秒</span><button class="outline" ${action("buy", "drone")} data-buy-id="drone"></button></div>` : ""}${state.discoveries>=3?`<p><button class="outline" ${action("nav","explore")} data-goal-focus="sector-atlas">查看星区图谱 · ${state.atlas.nodes.length}/9</button></p>`:""}${readyActions()}${starportOverview()}${V.districts(state)}${communityScene()}${honorsHome()}${sceneRecord(E.storyScene(state, "awakening"), "home-awakening")}</div></div>`;
+  }
+  // 电脑端一屏布局：左侧固定画面（带入口热点），右侧内容自行滚动。手机与平板保持原样。
+  const STAGE_MQ = typeof matchMedia === "function" ? matchMedia("(min-width: 1101px) and (min-height: 640px)") : null;
+  let desktopStage = Boolean(STAGE_MQ && STAGE_MQ.matches);
+  // 当前页面采用的布局：只在换页时更新，定时刷新不会改变页面结构。
+  let stageMode = desktopStage;
+  // 跨越断点时不重绘（重绘会替换正在操作的元素）；下一次换页时才采用新布局，期间由 CSS 保持旧结构可用。
+  if (STAGE_MQ && STAGE_MQ.addEventListener) STAGE_MQ.addEventListener("change", (event) => { desktopStage = event.matches; });
+  function stageSpotButton([target, title, status, x, y, hot]) {
+    const tab = target.startsWith("tab:");
+    return `<button type="button" class="stage-spot${hot ? " is-hot" : ""}${x > 66 ? " is-left" : ""}" style="--x:${x};--y:${y}" ${tab ? action("explore-tab", target.slice(4)) : action("spot-focus", target)}><span class="spot-pin" aria-hidden="true"></span><span class="spot-card"><strong>${title}</strong><small>${status}</small></span></button>`;
+  }
+  function staged(cls, kind, spots, body) {
+    if (!stageMode) return `<div class="page ${cls}">${body}</div>`;
+    const list = spots.filter(([target]) => body.includes(target.startsWith("tab:") ? `id="explore-tab-${target.slice(4)}"` : `id="${target}"`));
+    return `<div class="page ${cls} has-stage"><div class="page-stage">${V.media(kind, state, { eager: true })}${list.length ? `<div class="stage-spots" style="--ratio:${16 / 9}" role="group" aria-label="画面入口">${list.map(stageSpotButton).join("")}</div>` : ""}</div><div class="page-side">${body}</div></div>`;
+  }
+  function focusSection(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const panel = el.closest("[data-explore-panel]");
+    if (panel && panel.hidden) showExploreTab(panel.dataset.explorePanel);
+    if (el.tagName === "DETAILS") el.open = true;
+    el.scrollIntoView({ block: "start", behavior: document.documentElement.dataset.motion === "on" ? "smooth" : "auto" });
+    if (el.hasAttribute("tabindex")) el.focus({ preventScroll: true });
+    M.flag(el, "data-spot-flash", "true", 1600);
+  }
+  // 航站画面上的热点：把可点的入口放在图片里对应的位置（电脑端显示，手机端由港务终端承担）。
+  const STAGE_SPOTS = {
+    "orbital-dock": { ar: "16 / 9", ratio: 16 / 9, spots: { fleet: [45, 45], explore: [58, 25], voyage: [86, 50], residents: [21, 56], works: [86, 22], archive: [57, 73], jump: [76, 36] } },
+    "unrepaired-orbit": { ar: "1280 / 853", ratio: 1280 / 853, spots: { fleet: [28, 52], explore: [24, 76], voyage: [86, 22], residents: [72, 30], works: [68, 46], archive: [55, 66], jump: [22, 36] } },
+  };
+  function stageSpots() {
+    const can = (p) => V.reachable(state, p);
+    const art = STAGE_SPOTS[V.model(state).repair === 3 ? "orbital-dock" : "unrepaired-orbit"];
+    const mission = state.mission && D.MISSIONS.find((m) => m.id === state.mission.id);
+    const requests = can("residents") ? (E.residentRequests(state) || []).length : 0;
+    const gain = can("jump") ? E.prestigeGain(state) : 0;
+    const list = [
+      can("fleet") && ["fleet", "fleet", "", "舰队", `+${number(E.productionRate(state))} 星尘/秒`, false],
+      can("explore") && ["explore", "explore", state.result ? "report" : mission ? "active-mission" : "", "探索调度", state.result ? "回报待领" : mission ? `${mission.name} · 探索中` : "待派遣", Boolean(state.result)],
+      can("voyage") && ["voyage", "voyage", "", "长期远航", "查看航程", false],
+      can("residents") && ["residents", "residents", requests ? "resident-requests" : "", "居民", requests ? `${requests} 项委托待处理` : "暂无新委托", requests > 0],
+      can("explore") && state.starport >= D.PORT.length && ["works", "explore", "harbor-management", "星港建造", "扩建与维护", false],
+      can("explore") && state.starport < D.PORT.length && ["works", "explore", "port-panel", "修复星港", `港区 ${state.starport}/${D.PORT.length}`, false],
+      can("archive") && ["archive", "archive", "", "航线档案", "人物与航线记录", false],
+      can("jump") && ["jump", "jump", "", "跃迁", gain > 0 ? `可得 ${number(gain)} 星图` : "积累中", gain > 0],
+    ].filter(Boolean);
+    // 与港务终端一致：新档只保留最少的入口，至少解锁两个区域后才在画面上放热点。
+    if (list.length < 2) return "";
+    return `<div class="stage-spots" style="--ar:${art.ar};--ratio:${art.ratio}" role="group" aria-label="星港入口">${list.map(([key, page, focus, title, status, hot]) => { const [x, y] = art.spots[key]; return `<button type="button" class="stage-spot${hot ? " is-hot" : ""}${x > 66 ? " is-left" : ""}" style="--x:${x};--y:${y}" ${action("spot", page)}${focus ? ` data-terminal-focus="${focus}"` : ""}><span class="spot-pin" aria-hidden="true"></span><span class="spot-card"><strong>${title}</strong><small>${status}</small></span></button>`; }).join("")}</div>`;
+  }
+  // 港务终端：航站首页的总览台。只读状态、只负责跳转，不改规则。
+  function harborTerminal() {
+    const can = (p) => V.reachable(state, p);
+    const pages = ["fleet", "explore", "voyage", "residents", "archive", "jump"].filter(can);
+    if (pages.length < 2) return "";
+    const ratio = (a, b) => (b ? Math.min(1, a / b) : 0);
+    const parts = [ratio(state.starport, D.PORT.length), ratio(state.chapter.length, D.PROJECTS.length), ratio(state.atlas.nodes.length, 9), ratio(state.continuation.reviews.earned.length, D.REVIEWS.length), ratio(state.continuation.honors.claimed.length, D.HONORS.length)];
+    const percent = Math.floor((parts.reduce((a, b) => a + b, 0) / parts.length) * 100);
+    const go = (page, focus) => `${action("terminal", page)}${focus ? ` data-terminal-focus="${focus}"` : ""}`;
+    const mission = state.mission && D.MISSIONS.find((m) => m.id === state.mission.id);
+    const survey = state.result ? ["回报待领", "探索船已归航，等待清点。", true] : mission ? [`${mission.name} · 探索中`, `剩余 <span data-terminal-mission-time>${duration(Math.max(0, state.mission.end - state.clock))}</span>`, false] : ["待派遣", `已发现 ${state.discoveries} 处残骸，航线等待安排。`, false];
+    const atlas = Array.from({ length: 9 }, (_, i) => `<i class="${i < state.atlas.nodes.length ? "on" : ""}"></i>`).join("");
+    const counts = D.BUILDINGS.map((b) => [b.name, state.buildings[b.id] || 0]);
+    const top = Math.max(1, ...counts.map(([, n]) => n));
+    const bars = counts.map(([name, n], i) => `<span title="${name} ${n} 艘" style="--h:${Math.max(6, Math.round((n / top) * 100))}%;--d:${(0.9 + i * 0.23).toFixed(2)}s"></span>`).join("");
+    const requests = can("residents") ? (E.residentRequests(state) || []).length : 0;
+    const gain = can("jump") ? E.prestigeGain(state) : 0;
+    const card = (cls, page, focus, zh, en, body, glyph, hot) => `<button type="button" class="terminal-card ${cls}${hot ? " is-hot" : ""}" ${go(page, focus)}><span class="terminal-glyph" aria-hidden="true">${glyph}</span><span class="terminal-title"><strong>${zh}</strong><small lang="en">${en}</small></span>${body}</button>`;
+    const g = {
+      survey: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="2"/></svg>`,
+      fleet: `<svg viewBox="0 0 24 24"><path d="M3 15l9-10 9 10-9 4z"/><path d="M12 5v14"/></svg>`,
+      residents: `<svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3 20c1-4 9-4 10 0M11 20c1-4 9-4 10 0"/></svg>`,
+      voyage: `<svg viewBox="0 0 24 24"><path d="M4 18c4-8 12-12 16-12"/><circle cx="20" cy="6" r="2"/><path d="M4 18h6"/></svg>`,
+      port: `<svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>`,
+      archive: `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>`,
+      jump: `<svg viewBox="0 0 24 24"><path d="M12 3l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L3 10l6-1z"/></svg>`,
+    };
+    const lower = [
+      can("explore") && state.starport >= D.PORT.length ? card("terminal-strip", "explore", "harbor-management", "星港建造", "Harbor works", "", g.port, false) : "",
+      can("archive") ? card("terminal-strip", "archive", "", "航线档案", "Route archive", "", g.archive, false) : "",
+      can("jump") ? card("terminal-strip", "jump", "", "跃迁", "Jump", gain > 0 ? `<em>可得 ${number(gain)} 星图</em>` : "", g.jump, gain > 0) : "",
+    ].filter(Boolean);
+    const ticker = [`星尘 ${number(state.dust)}`, `${number(E.productionRate(state))}/秒`, `样本 ${number(state.samples)}`, `发现 ${state.discoveries}`, `设施 ${counts.reduce((a, [, n]) => a + n, 0)}`];
+    return `<section class="harbor-terminal" aria-labelledby="terminal-title">
+      <h2 id="terminal-title" class="visually-hidden">港务终端</h2>
+      <div class="terminal-dial" role="img" aria-label="归航进度 ${percent}%">
+        <svg class="dial-ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="dial-track" cx="60" cy="60" r="50"/><circle class="dial-fill" cx="60" cy="60" r="50" pathLength="100" style="--p:${percent}"/><path class="dial-ticks" d="M60 4v6M60 110v6M4 60h6M110 60h6"/></svg>
+        <div class="dial-core" aria-hidden="true"><b style="--n:${percent}">${percent}</b><small>%</small></div>
+        <span class="dial-arc-label" aria-hidden="true">归航进度</span>
+        <div class="dial-tags" aria-hidden="true"><span>港区 ${Math.min(state.starport, D.PORT.length)}/${D.PORT.length}</span><span>主线 ${Math.min(state.chapter.length, D.PROJECTS.length)}/${D.PROJECTS.length}</span></div>
+      </div>
+      ${can("explore") ? card("terminal-feature", "explore", state.result ? "report" : mission ? "active-mission" : "", "探索调度", "Survey dispatch", `<span class="terminal-status"><b>${survey[0]}</b><span>${survey[1]}</span></span>${mission && !state.result ? `<span class="terminal-radar" aria-hidden="true"><i></i></span>` : `<span class="terminal-atlas" aria-label="星区图谱 ${state.atlas.nodes.length}/9">${atlas}</span>`}`, g.survey, survey[2]) : ""}
+      <div class="terminal-grid">
+        ${card("terminal-tile", "fleet", "", "舰队", "Fleet", `<span class="terminal-bars" aria-hidden="true">${bars}</span><span class="terminal-metric">+${number(E.productionRate(state))}<small>星尘/秒</small></span>`, g.fleet, false)}
+        ${can("residents") ? card("terminal-tile", "residents", requests ? "resident-requests" : "", "居民", "Residents", `${requests ? `<span class="terminal-badge" aria-hidden="true">${requests}</span>` : ""}<span class="terminal-metric">${requests ? `${requests}<small>项委托待处理</small>` : "<small>暂无新委托</small>"}</span>`, g.residents, requests > 0) : ""}
+        ${can("voyage") ? card("terminal-tile", "voyage", "", "长期远航", "Long voyage", `<span class="terminal-metric"><small>查看航程与补给</small></span>`, g.voyage, false) : ""}
+        ${lower.join("")}
+      </div>
+      <p class="terminal-ticker" aria-hidden="true">${ticker.map((t) => `<span>${t}</span>`).join("")}</p>
+    </section>`;
   }
   function routePanel() {
     const route = D.ROUTES.find((r) => r.id === state.run.route);
@@ -390,7 +495,7 @@
       ${E.capability(state, "autoDispatch") ? `<div class="control-row"><label><input type="checkbox" data-config="dispatch" data-focus="config-dispatch" ${state.automation.dispatch ? "checked" : ""}>重复派遣${D.MISSIONS.find((m) => m.id === state.repeatId).name} · 新故事出现时暂停</label></div>` : ""}</section>`;
   }
   function fleet() {
-    return `<div class="page fleet-page"><div class="page-header"><div><h1>把残骸，变成舰队。</h1><p>每种设施在 10、25、50 艘时产量翻倍。研究与路线会改变它们如何协同。</p></div><div class="buy-modes" aria-label="每次购买上限">${[
+    return staged("fleet-page", "dock", [["fleet-build", "设施建造", "无人机与产线", 45, 45], ["dock-console", "生产控制台", "航线与预算", 57, 73], ["fleet-research", "航站研究", "本航次有效", 86, 22], ["fleet-production", "自动化生产线", "回收，再制造", 21, 56]], `<div class="page-header"><div><h1>把残骸，变成舰队。</h1><p>每种设施在 10、25、50 艘时产量翻倍。研究与路线会改变它们如何协同。</p></div><div class="buy-modes" aria-label="每次购买上限">${[
       ["1", "1 艘"],
       ["10", "最多 10"],
       ["max", "最大"],
@@ -400,7 +505,7 @@
           `<button ${action("mode", value)} aria-pressed="${buyMode === value}" class="${buyMode === value ? "selected" : ""}">${label}</button>`,
       )
       .join("")}</div></div>
-      <div class="dock-layout">${V.media("dock",state,{eager:true})}<aside class="dock-console"><h2>生产控制台</h2>${routePanel()}<p>设施、研究与预算均采用当前航次的实际配置。</p></aside></div><section class="manufacturing-floor" aria-label="生产设施">${D.BUILDINGS.filter(
+      <div class="dock-layout">${stageMode ? "" : V.media("dock",state,{eager:true})}<aside class="dock-console" id="dock-console" tabindex="-1"><h2>生产控制台</h2>${routePanel()}<p>设施、研究与预算均采用当前航次的实际配置。</p></aside></div><section class="manufacturing-floor" id="fleet-build" tabindex="-1" aria-label="生产设施">${D.BUILDINGS.filter(
         (b) => state.run.dust >= b.unlock || state.buildings[b.id],
       )
         .map(
@@ -412,7 +517,7 @@
         )}</section><p class="estimate-note">增产包含路线、研究、舰装和里程碑；回本按常态产量估算。等待时间按现有舰队估算，自动购买与研究会使用星尘，实际等待会变化。</p>
       ${
         state.run.dust >= 40
-          ? `<section><div class="section-title"><h2>航站研究</h2><small>本航次有效</small></div>${D.RESEARCH.filter(
+          ? `<section id="fleet-research" tabindex="-1"><div class="section-title"><h2>航站研究</h2><small>本航次有效</small></div>${D.RESEARCH.filter(
               (r) => state.run.dust >= r.unlock,
             )
               .map(
@@ -422,7 +527,7 @@
               .join("")}</section>`
           : ""
       }
-      <div class="production-band">${V.media("production",state)}<div><h2>回收，再制造。</h2><p>每一次实际建造，都让这条产线继续运转。</p>${automation()}</div></div></div>`;
+      <div class="production-band" id="fleet-production" tabindex="-1">${V.media("production",state)}<div><h2>回收，再制造。</h2><p>每一次实际建造，都让这条产线继续运转。</p>${automation()}</div></div>`);
   }
   function sceneLines(lines) {
     return `<div class="scene-transcript">${lines.map((line) => `<div class="scene-line"><strong>${escape(line.speaker)}</strong><p>${escape(line.text)}</p></div>`).join("")}</div>`;
@@ -857,7 +962,7 @@
     const port = D.PORT[state.starport];
     const groups = {
       routes: `${missionReport()}${sectorAtlas()}${encounterPanel()}${reviewsPanel()}${state.mission ? `<section class="mission-status" id="active-mission" tabindex="-1"><h3>${D.MISSIONS.find((m) => m.id === state.mission.id).name} · 探索中</h3><p>剩余 <strong data-mission-time></strong> · 当前分流 ${Math.round(state.mission.diversion * 1000) / 10}% 产量${state.mission.plan ? ` · ${D.EXPEDITION_PLANS.find((p) => p.id === state.mission.plan).name}` : ""}</p><div class="progress" role="progressbar" aria-label="探索进度" aria-valuemin="0" aria-valuemax="100" data-mission-progress><span></span></div>${state.automation.dispatch ? `<button class="outline" ${action("dispatch-stop")}>本次归航后暂停派遣</button>` : ""}</section>` : ""}${epiloguePanel()}${rescuePanel()}${councilPanel()}${campaignPanel()}${chapterMap()}
-      <section aria-label="探索航线">${E.missionOptions(state)
+      <section aria-label="探索航线" id="mission-list" tabindex="-1">${E.missionOptions(state)
         .filter((m) => !m.chapter && !m.campaign && !m.council && !m.rescue)
         .map((m) => {
           const p = E.missionPreview(state, m.id);
@@ -888,8 +993,9 @@
     }
     if (!tabs.some(([id]) => id === exploreTab)) exploreTab = tabs[0][0];
     const bar = tabs.length > 1 ? `<div class="explore-tabs" role="tablist" aria-label="探索分区">${tabs.map(([id, name]) => { const badge = exploreBadge(id); return `<button type="button" role="tab" id="explore-tab-${id}" aria-controls="explore-panel-${id}" aria-selected="${id === exploreTab}" ${action("explore-tab", id)} data-explore-tab>${name}${badge ? `<small>${badge}</small>` : ""}</button>`; }).join("")}</div>` : "";
-    return `<div class="page exploration-page"><div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>${bar}
-      ${tabs.map(([id, name]) => `<div class="explore-panel" id="explore-panel-${id}" data-explore-panel="${id}" ${tabs.length > 1 ? `role="tabpanel" aria-labelledby="explore-tab-${id}"` : ""} ${id === exploreTab ? "" : "hidden"}>${groups[id]}</div>`).join("")}</div>`;
+    const mission = state.mission && D.MISSIONS.find((m) => m.id === state.mission.id);
+    return staged("exploration-page", "sector", [["report", "归航回报", "等待清点", 52, 30, true], ["active-mission", "探索中", mission ? mission.name : "", 52, 30], ["mission-list", "派遣航线", "安全与风险探索", 86, 64], ["sector-atlas", "星区图谱", `已调查 ${state.atlas.nodes.length}/9`, 30, 42], ["tab:port", "星港居民", "经营与委托", 82, 24, Boolean(exploreBadge("port"))], ["tab:voyage", "长期远航", "航程与装备", 22, 18], ["tab:archive", "档案", "航线与人物", 22, 78]], `<div class="page-header"><div><h1>有些残骸，仍在等待。</h1><p>安全探索只分流产量。风险探索由你主动选择，结果与回收预期会在派遣前显示。</p></div></div>${bar}
+      ${tabs.map(([id, name]) => `<div class="explore-panel" id="explore-panel-${id}" data-explore-panel="${id}" ${tabs.length > 1 ? `role="tabpanel" aria-labelledby="explore-tab-${id}"` : ""} ${id === exploreTab ? "" : "hidden"}>${groups[id]}</div>`).join("")}`);
   }
   function workshop() {
     const missing = D.MODULES.filter((m) => !state.modules[m.id]);
@@ -904,17 +1010,17 @@
     }</details>`;
   }
   function voyage() {
-    return `<div class="page bridge-page"><header class="page-header"><div><h1>把灯火，带向更远处。</h1><p>每一段都由你确认，已出发的航程保留原编成。</p></div></header>${V.media("bridge", state,{eager:true})}${longVoyages()}${loadoutPanel()}</div>`;
+    return staged("bridge-page", "bridge", [["long-voyages", "长期远航", "航段与补给", 62, 30], ["loadouts", "装备方案", "随舰配置", 18, 62]], `<header class="page-header"><div><h1>把灯火，带向更远处。</h1><p>每一段都由你确认，已出发的航程保留原编成。</p></div></header>${stageMode ? "" : V.media("bridge", state,{eager:true})}${longVoyages()}${loadoutPanel()}`);
   }
   function residents() {
-    return `<div class="page residents-page"><header class="page-header"><div><h1>这里，开始有人生活。</h1><p>来信、餐桌与下一班值守，来自真正抵达的居民。</p></div></header><div class="habitat-layout">${V.media("habitat",state,{eager:true})}<div class="resident-reading">${residentPanel() || '<h2>第一支船队已安全抵达</h2><p>继续两港交接，居民的下一封信会在主线终章后开放。</p>'}${residentLinks()}</div></div>${state.chapter.includes("nursery")?`<section class="greenhouse-wing">${V.media("greenhouse",state)}<div><h2>一座温室，留住新的日出。</h2><p>永久育种舱已建成，旧光照记录由新的种植者接续。</p></div></section>`:""}${communityPanel()}${harborPanel()}</div>`;
+    return staged("residents-page", "habitat", [["resident-reading", "居民来信", "来自抵达的居民", 18, 64], ["community-life", "居民生活与接班", "值守与协作", 46, 74], ["harbor-management", "星港经营", "需求与设施", 82, 40], ["greenhouse-wing", "生态温室", "永久育种舱", 62, 22]], `<header class="page-header"><div><h1>这里，开始有人生活。</h1><p>来信、餐桌与下一班值守，来自真正抵达的居民。</p></div></header><div class="habitat-layout">${stageMode ? "" : V.media("habitat",state,{eager:true})}<div class="resident-reading" id="resident-reading" tabindex="-1">${residentPanel() || '<h2>第一支船队已安全抵达</h2><p>继续两港交接，居民的下一封信会在主线终章后开放。</p>'}${residentLinks()}</div></div>${state.chapter.includes("nursery")?`<section class="greenhouse-wing" id="greenhouse-wing" tabindex="-1">${V.media("greenhouse",state)}<div><h2>一座温室，留住新的日出。</h2><p>永久育种舱已建成，旧光照记录由新的种植者接续。</p></div></section>`:""}${communityPanel()}${harborPanel()}`);
   }
   function archive() {
-    return `<div class="page archive-page"><header class="page-header"><div><h1>每一束信号，都有来处。</h1><p>已确认的故事与收藏，在这里保留原貌。重读不会重复结算。</p></div></header><div class="exhibit-intro">${V.media("wreck",state,{eager:true})}<div><h2>航行记忆陈列馆</h2><p>已归档 ${state.lore.length} 段决定 · 永久荣誉 ${state.continuation.honors.claimed.length}/12</p><button class="outline" ${action("archive-open")}>打开航线与人物档案</button></div></div><div class="archive-wall" aria-label="航行收藏陈列"><figure>${V.prop("resident-letter")}<figcaption><strong>留存的通信</strong><small>${state.lore.length} 段原始决定</small></figcaption></figure>${Object.values(state.modules).some(Boolean)?`<figure>${V.prop("power-module")}<figcaption><strong>随舰的旧设备</strong><small>${Object.values(state.modules).filter(Boolean).length} 种已获得舰装</small></figcaption></figure>`:""}${state.continuation.honors.claimed.length?`<figure>${V.prop("orbit-honor")}<figcaption><strong>星港的纪念</strong><small>${state.continuation.honors.claimed.length}/12 份永久荣誉</small></figcaption></figure>`:'<div class="museum-vacancy"><h3>留给下一段航程</h3><p>达成荣誉后，可在下方亲手陈列。</p></div>'}</div>${routeArchive()}${honorsPanel()}${encounterPanel()}</div>`;
+    return staged("archive-page", "wreck", [["exhibit-intro", "航行记忆陈列馆", `已归档 ${state.lore.length} 段`, 74, 66], ["route-archive", "航线与人物档案", "重读不会重复结算", 38, 46], ["long-term-honors", "长期荣誉", `${state.continuation.honors.claimed.length}/12`, 88, 18], ["encounter-panel", "航行发现记录", "永久收藏", 22, 82]], `<header class="page-header"><div><h1>每一束信号，都有来处。</h1><p>已确认的故事与收藏，在这里保留原貌。重读不会重复结算。</p></div></header><div class="exhibit-intro" id="exhibit-intro" tabindex="-1">${stageMode ? "" : V.media("wreck",state,{eager:true})}<div><h2>航行记忆陈列馆</h2><p>已归档 ${state.lore.length} 段决定 · 永久荣誉 ${state.continuation.honors.claimed.length}/12</p><button class="outline" ${action("archive-open")}>打开航线与人物档案</button></div></div><div class="archive-wall" aria-label="航行收藏陈列"><figure>${V.prop("resident-letter")}<figcaption><strong>留存的通信</strong><small>${state.lore.length} 段原始决定</small></figcaption></figure>${Object.values(state.modules).some(Boolean)?`<figure>${V.prop("power-module")}<figcaption><strong>随舰的旧设备</strong><small>${Object.values(state.modules).filter(Boolean).length} 种已获得舰装</small></figcaption></figure>`:""}${state.continuation.honors.claimed.length?`<figure>${V.prop("orbit-honor")}<figcaption><strong>星港的纪念</strong><small>${state.continuation.honors.claimed.length}/12 份永久荣誉</small></figcaption></figure>`:'<div class="museum-vacancy"><h3>留给下一段航程</h3><p>达成荣誉后，可在下方亲手陈列。</p></div>'}</div>${routeArchive()}${honorsPanel()}${encounterPanel()}`);
   }
   function jump() {
     const gain = E.prestigeGain(state);
-    return `<div class="page jump-page"><div class="page-header"><div><h1>下一次启航，会有所不同。</h1><p>用这一航次的积累换取星核和永久能力。舰装、故事、样本、修复的星港与远航建设会与你同行。</p></div></div>${V.media("jump",state,{eager:true})}<div class="jump-layout"><div><div class="jump-number">${gain || 4} <small>星核${gain ? "可获得" : "起"}</small></div><p>本航次收集 <strong data-run-dust>${number(state.run.dust)}</strong> / ${number(D.PRESTIGE_DUST)} 星尘</p><div class="progress" role="progressbar" aria-label="跃迁进度" aria-valuemin="0" aria-valuemax="100" data-jump-progress><span></span></div><p>星核带来的全舰队产量：×${number(1 + Math.sqrt(state.totalCores) * 0.25)}。消费星核修复航站也不会减少这项历史加成。</p><p><small>新航次从 1 艘无人机与 12 星尘开始。临时设施与研究需要重新建设。</small></p>${state.mission || state.result || state.atlas.active || state.expeditions.active || state.continuation.reviews.active ? '<p class="save-warning">请先等待探索或调查归航，并处理报告。</p>' : ""}<button class="primary" ${action("jump")} ${gain && !state.mission && !state.result && !state.atlas.active && !state.expeditions.active ? "" : "disabled"}>${gain ? "开启下一航次" : "尚在积累能量"}</button></div><div><h2>每次都能解锁新工作</h2>${D.CAPABILITIES.map((c) => `<div class="capability-row ${E.capability(state, c.id) ? "unlocked" : ""}"><span>${E.capability(state, c.id) ? "已解锁" : `第 ${c.run} 次跃迁`}</span><div><h3>${c.name}</h3><p>${c.detail}</p></div></div>`).join("")}</div></div><section><h2>最近的航次</h2>${state.records.map((r, i) => `<div class="history-row"><span>${D.ROUTES.find((route) => route.id === r.route).name}</span><span>${duration(r.seconds)}</span><span>+${number(r.gain)} 星核</span></div>`).join("") || '<p class="empty">第一条航线正在由你写下。</p>'}</section></div>`;
+    return staged("jump-page", "jump", [["jump-console", "星核跃迁", gain > 0 ? `可得 ${number(gain)} 星核` : "积累星尘中", 42, 42, gain > 0], ["jump-history", "最近的航次", `${state.records.length} 条记录`, 14, 72]], `<div class="page-header"><div><h1>下一次启航，会有所不同。</h1><p>用这一航次的积累换取星核和永久能力。舰装、故事、样本、修复的星港与远航建设会与你同行。</p></div></div>${stageMode ? "" : V.media("jump",state,{eager:true})}<div class="jump-layout" id="jump-console" tabindex="-1"><div><div class="jump-number">${gain || 4} <small>星核${gain ? "可获得" : "起"}</small></div><p>本航次收集 <strong data-run-dust>${number(state.run.dust)}</strong> / ${number(D.PRESTIGE_DUST)} 星尘</p><div class="progress" role="progressbar" aria-label="跃迁进度" aria-valuemin="0" aria-valuemax="100" data-jump-progress><span></span></div><p>星核带来的全舰队产量：×${number(1 + Math.sqrt(state.totalCores) * 0.25)}。消费星核修复航站也不会减少这项历史加成。</p><p><small>新航次从 1 艘无人机与 12 星尘开始。临时设施与研究需要重新建设。</small></p>${state.mission || state.result || state.atlas.active || state.expeditions.active || state.continuation.reviews.active ? '<p class="save-warning">请先等待探索或调查归航，并处理报告。</p>' : ""}<button class="primary" ${action("jump")} ${gain && !state.mission && !state.result && !state.atlas.active && !state.expeditions.active ? "" : "disabled"}>${gain ? "开启下一航次" : "尚在积累能量"}</button></div><div><h2>每次都能解锁新工作</h2>${D.CAPABILITIES.map((c) => `<div class="capability-row ${E.capability(state, c.id) ? "unlocked" : ""}"><span>${E.capability(state, c.id) ? "已解锁" : `第 ${c.run} 次跃迁`}</span><div><h3>${c.name}</h3><p>${c.detail}</p></div></div>`).join("")}</div></div><section id="jump-history" tabindex="-1"><h2>最近的航次</h2>${state.records.map((r, i) => `<div class="history-row"><span>${D.ROUTES.find((route) => route.id === r.route).name}</span><span>${duration(r.seconds)}</span><span>+${number(r.gain)} 星核</span></div>`).join("") || '<p class="empty">第一条航线正在由你写下。</p>'}</section>`);
   }
   function updateNumbers() {
     $("#dust-value").textContent = number(state.dust);
@@ -1041,6 +1147,7 @@
           Math.max(0, m.end - state.clock),
         );
       progress("[data-mission-progress]", (state.clock - m.start) / m.seconds);
+      if ($("[data-terminal-mission-time]")) $("[data-terminal-mission-time]").textContent = duration(Math.max(0, m.end - state.clock));
     }
     if ($("[data-timing-total]")) {
       $("[data-timing-total]").textContent =
@@ -1422,6 +1529,14 @@
     if (kind === "current-goal") {
       const goal = E.nextGoal(state);
       navigate(goal.action, goal.focus);
+      return;
+    }
+    if (kind === "spot-focus") {
+      focusSection(id);
+      return;
+    }
+    if (kind === "terminal" || kind === "spot") {
+      navigate(id, button.dataset.terminalFocus);
       return;
     }
     if (kind === "explore-tab") {

@@ -17,7 +17,7 @@
     timers[name]=setTimeout(()=>el.removeAttribute(name),ms);
   }
   const GAIN=['scan','arrival','return','discovery','honor'], SPEND=['build','research'];
-  let lastSurface=null,lastGoal=null;
+  let lastSurface=null,lastGoal=null,terminalBooted=false;
   function dismiss() { const restore=feedback.contains(document.activeElement);clearTimeout(timer);feedback.hidden=true;feedback.replaceChildren();document.querySelectorAll('[data-cue]').forEach(el=>el.removeAttribute('data-cue'));if(restore)(origin?.isConnected&&!origin.disabled?origin:document.getElementById('main')).focus({preventScroll:true}); }
   function apply() {
     root.dataset.motion=mode==='off'||reduced.matches||(mode==='auto'&&constrained)?'off':'on';
@@ -31,7 +31,7 @@
   }
   function observe() {
     for(const el of observed)if(!el.isConnected){observer?.unobserve(el);observed.delete(el);}
-    for(const el of document.querySelectorAll('.world-scene,.atlas-space'))if(!observed.has(el)){
+    for(const el of document.querySelectorAll('.world-scene,.atlas-space,.harbor-terminal'))if(!observed.has(el)){
       observed.add(el);if(observer)observer.observe(el);else el.dataset.inView='false';
     }
     // 换页：港灯点亮一次。只在页面真正切换时播放，普通重绘不重复。
@@ -39,6 +39,8 @@
     const moved=lastSurface!==null&&surface!==lastSurface;
     if(moved)flag(root,'data-arrive',surface,1300);
     lastSurface=surface;
+    // 港务终端：本次打开游戏第一次出现时播放开场。
+    if(!terminalBooted&&document.querySelector('#main .harbor-terminal')){terminalBooted=true;flag(root,'data-terminal-boot','true',2600);}
     // 目标更新：同一页内目标换了，横幅扫过一道光。
     const goalEl=document.querySelector('.current-goal, .goal-rail');
     const goal=goalEl?.querySelector('#next-goal-title, strong')?.textContent||null;

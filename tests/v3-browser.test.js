@@ -3070,7 +3070,7 @@ async function run() {
           await page.locator('[data-action="claim"]').click();
           assert.equal((await read(page)).afterword.ready, true);
           const resources = await read(page);
-          if (screenshotDir && index === 1 && request.id === "seeds") await page.locator("#resident-seeds").screenshot({path:path.join(screenshotDir,"v3.10-residents-mobile.png")});
+          if (screenshotDir && index === 1 && request.id === "seeds") await (await revealSection(page.locator("#resident-seeds"))).screenshot({path:path.join(screenshotDir,"v3.10-residents-mobile.png")});
           await (await revealSection(page.locator(`[data-action="resident-reply"][data-id="${request.id}"][data-reply="${request.replies[index % 2].id}"]`))).click();
           const completed = await read(page);
           assert.deepEqual([completed.dust,completed.cores,completed.samples],[resources.dust,resources.cores,resources.samples]);
